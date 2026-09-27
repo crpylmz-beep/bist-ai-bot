@@ -1,1 +1,1 @@
-worker: python bis_bot.py
+worker: python bist_bot.py
