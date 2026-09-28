@@ -8,11 +8,11 @@ print("TOKEN DURUMU:", bool(TOKEN), "UZUNLUK:", len(TOKEN) if TOKEN else 0)
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    keyboard = [
-    [InlineKeyboardButton("📈 Hisse Özeti", callback_data="ozet")],
-    [InlineKeyboardButton("📡 Sinyaller", callback_data="sinyal")],
-    [InlineKeyboardButton("🔥 Agresif Hisse Bulucu", callback_data="agresif")]
 
+    keyboard = [
+        [InlineKeyboardButton("📈 Hisse Özeti", callback_data="ozet")],
+        [InlineKeyboardButton("📡 Sinyaller", callback_data="sinyal")],
+        [InlineKeyboardButton("🔥 Agresif Hisse Bulucu", callback_data="agresif")]
     ]
 
     await update.message.reply_text(
@@ -22,10 +22,12 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def buton(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
     query = update.callback_query
     await query.answer()
 
     if query.data == "ozet":
+
         context.user_data["hisse_bekleniyor"] = True
         context.user_data["mod"] = "ozet"
 
@@ -36,6 +38,7 @@ async def buton(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
     elif query.data == "sinyal":
+
         context.user_data["hisse_bekleniyor"] = True
         context.user_data["mod"] = "sinyal"
 
@@ -45,13 +48,156 @@ async def buton(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "Örnek: PSGYO"
         )
 
-     elif query.data == "agresif":
-        await query.message.reply_text(
-            "🔥 AGRESİF HİSSE BULUCU\n\n"
-            "BIST hisseleri teknik göstergelere göre taranacak.\n"
-            "Bir sonraki adımda tarama sistemi eklenecek."
+    elif query.data == "agresif":
+
+        await agresif_tarama(update, context)
+
+
+async def agresif_tarama(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    mesaj_gonder = update.callback_query.message
+
+    await mesaj_gonder.reply_text(
+        "🔥 AGRESİF HİSSE TARAMASI BAŞLIYOR...\n\n"
+        "📊 Teknik göstergeler hesaplanıyor.\n"
+        "⏳ Lütfen bekleyin..."
+    )
+
+    hisseler = [
+        "THYAO", "ASELS", "TUPRS", "EREGL", "BIMAS",
+        "SISE", "AKBNK", "YKBNK", "GARAN", "ISCTR",
+        "KCHOL", "SAHOL", "PETKM", "PGSUS", "TOASO",
+        "FROTO", "TCELL", "TTKOM", "HEKTS", "SASA",
+        "OYAKC", "EKGYO", "KOZAL", "ASTOR", "ENKAI",
+        "GUBRF", "MIATK", "REEDR", "GESAN", "PSGYO"
+    ]
+
+    adaylar = []
+
+    for sembol in hisseler:
+
+        try:
+
+            hisse = bp.Ticker(sembol)
+            veri = hisse.history(period="3mo")
+
+            if veri is None or veri.empty or len(veri) < 50:
+                continue
+
+            kapanis = float(veri["Close"].iloc[-1])
+
+            # RSI
+            delta = veri["Close"].diff()
+
+            kazanc = delta.clip(lower=0)
+            kayip = -delta.clip(upper=0)
+
+            ort_kazanc = kazanc.rolling(14).mean()
+            ort_kayip = kayip.rolling(14).mean()
+
+            rs = ort_kazanc / ort_kayip
+            rsi = 100 - (100 / (1 + rs))
+
+            rsi_son = float(rsi.iloc[-1])
+
+            # MACD
+            ema12 = veri["Close"].ewm(span=12, adjust=False).mean()
+            ema26 = veri["Close"].ewm(span=26, adjust=False).mean()
+
+            macd = ema12 - ema26
+            macd_signal = macd.ewm(span=9, adjust=False).mean()
+
+            macd_son = float(macd.iloc[-1])
+            macd_onceki = float(macd.iloc[-2])
+            macd_signal_son = float(macd_signal.iloc[-1])
+
+            # Hacim
+            hacim = float(veri["Volume"].iloc[-1])
+            hacim20 = float(veri["Volume"].rolling(20).mean().iloc[-1])
+
+            if hacim20 <= 0:
+                continue
+
+            hacim_orani = (hacim / hacim20) * 100
+
+            # MACD momentum
+            macd_yukseliyor = macd_son > macd_onceki
+
+            # Agresif aday puanı
+            puan = 0
+
+            if rsi_son < 30:
+                puan += 30
+
+            elif rsi_son < 40:
+                puan += 15
+
+            if macd_yukseliyor:
+                puan += 25
+
+            if macd_son > macd_signal_son:
+                puan += 20
+
+            if hacim_orani > 120:
+                puan += 25
+
+            elif hacim_orani > 100:
+                puan += 15
+
+            # Aday
+            if puan >= 40:
+
+                adaylar.append(
+                    (
+                        sembol,
+                        puan,
+                        kapanis,
+                        rsi_son,
+                        hacim_orani
+                    )
+                )
+
+        except Exception:
+            continue
+
+    # Puana göre sırala
+    adaylar.sort(key=lambda x: x[1], reverse=True)
+
+    # Aday yoksa
+    if not adaylar:
+
+        await mesaj_gonder.reply_text(
+            "🔎 Tarama tamamlandı.\n\n"
+            "Şu anda belirlenen kriterlere uyan "
+            "güçlü agresif aday bulunamadı."
         )
-        
+
+        return
+
+    # Sonuç mesajı
+    mesaj = (
+        "🔥 AGRESİF HİSSE ADAYLARI\n"
+        "━━━━━━━━━━━━━━\n\n"
+    )
+
+    for i, (sembol, puan, fiyat, rsi, hacim_orani) in enumerate(
+        adaylar[:10], 1
+    ):
+
+        mesaj += (
+            f"{i}. 🔥 {sembol}\n"
+            f"   ⭐ Puan: {puan}/100\n"
+            f"   💰 Fiyat: {fiyat:.2f} TL\n"
+            f"   RSI: {rsi:.2f}\n"
+            f"   📦 Hacim: %{hacim_orani:.1f}\n\n"
+        )
+
+    mesaj += (
+        "⚠️ Bunlar teknik göstergelere göre "
+        "algoritmik adaylardır; kesin al/sat sonucu değildir."
+    )
+
+    await mesaj_gonder.reply_text(mesaj)
 
 
 async def hisse_oku(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -63,13 +209,16 @@ async def hisse_oku(update: Update, context: ContextTypes.DEFAULT_TYPE):
     mod = context.user_data.get("mod")
 
     try:
+
         hisse = bp.Ticker(sembol)
         veri = hisse.history(period="3mo")
 
         if veri is None or veri.empty or len(veri) < 50:
+
             await update.message.reply_text(
                 "❌ Bu hisse için yeterli veri bulunamadı."
             )
+
             return
 
         son = veri.iloc[-1]
@@ -118,7 +267,8 @@ async def hisse_oku(update: Update, context: ContextTypes.DEFAULT_TYPE):
         signal_onceki = float(macd_signal.iloc[-2])
 
         macd_yukseliyor = macd_son > macd_onceki
-        # Destek / Direnç ve AL-SAT bölgeleri
+
+        # Destek / Direnç
         son_20 = veri.tail(20)
 
         destek = float(son_20["Low"].min())
@@ -150,6 +300,10 @@ async def hisse_oku(update: Update, context: ContextTypes.DEFAULT_TYPE):
             and macd_son < macd_signal_son
         )
 
+        # =========================
+        # HİSSE ÖZETİ
+        # =========================
+
         if mod == "ozet":
 
             mesaj = (
@@ -169,6 +323,10 @@ async def hisse_oku(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 f"MACD Sinyal: {macd_signal_son:.4f}\n"
             )
 
+        # =========================
+        # GELİŞMİŞ SİNYAL
+        # =========================
+
         else:
 
             puan = 50
@@ -176,80 +334,98 @@ async def hisse_oku(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             # SMA20
             if kapanis > sma20:
+
                 puan += 10
                 nedenler.append("Fiyat SMA20 üzerinde")
 
             else:
+
                 puan -= 10
                 nedenler.append("Fiyat SMA20 altında")
 
             # SMA50
             if kapanis > sma50:
+
                 puan += 10
                 nedenler.append("Fiyat SMA50 üzerinde")
 
             else:
+
                 puan -= 10
                 nedenler.append("Fiyat SMA50 altında")
 
             # RSI
             if 50 <= rsi_son < 70:
+
                 puan += 10
                 nedenler.append("RSI pozitif bölgede")
 
             elif rsi_son >= 70:
+
                 puan -= 5
                 nedenler.append("RSI aşırı alım bölgesinde")
 
             elif rsi_son < 30:
+
                 puan += 5
                 nedenler.append("RSI aşırı satım bölgesinde")
 
             else:
+
                 nedenler.append("RSI nötr bölgede")
 
             # MACD
             if macd_son > macd_signal_son:
+
                 puan += 10
                 nedenler.append("MACD sinyal çizgisinin üzerinde")
 
             else:
+
                 puan -= 10
                 nedenler.append("MACD sinyal çizgisinin altında")
 
             # MACD kesişimi
             if macd_al_kesisim:
+
                 puan += 10
                 nedenler.append("MACD yukarı kesişim yaptı")
 
             elif macd_sat_kesisim:
+
                 puan -= 10
                 nedenler.append("MACD aşağı kesişim yaptı")
 
             # MACD momentum
             if macd_yukseliyor:
+
                 puan += 5
                 nedenler.append("MACD yükseliyor")
 
             else:
+
                 puan -= 5
                 nedenler.append("MACD düşüyor")
 
             # Hacim
             if hacim > hacim20:
+
                 puan += 10
                 nedenler.append("Hacim 20G ortalamasının üzerinde")
 
             else:
+
                 puan -= 5
                 nedenler.append("Hacim 20G ortalamasının altında")
 
             # Günlük momentum
             if degisim > 0:
+
                 puan += 5
                 nedenler.append("Günlük momentum pozitif")
 
             elif degisim < 0:
+
                 puan -= 5
                 nedenler.append("Günlük momentum negatif")
 
@@ -258,28 +434,39 @@ async def hisse_oku(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             # Sinyal
             if rsi_son < 25 and macd_yukseliyor:
+
                 sinyal = "🟠 AŞIRI SATIM / TEPKİ ADAYI"
 
             elif rsi_son < 25 and puan <= 35:
+
                 sinyal = "🟠 AŞIRI SATIM / RİSKLİ BÖLGE"
 
             elif puan >= 70:
+
                 sinyal = "🟢 AL ADAYI"
 
             elif puan <= 35:
+
                 sinyal = "🔴 SAT / RİSK AZALT ADAYI"
 
             else:
+
                 sinyal = "🟡 BEKLE"
 
             # Risk durumu
             if rsi_son < 30:
-                risk = "⚠️ RSI aşırı satım: sert tepki veya devam eden düşüş görülebilir."
+
+                risk = (
+                    "⚠️ RSI aşırı satım: sert tepki veya "
+                    "devam eden düşüş görülebilir."
+                )
 
             elif rsi_son > 70:
+
                 risk = "⚠️ RSI aşırı alım bölgesinde."
 
             else:
+
                 risk = "ℹ️ RSI aşırı satım/alım bölgesinde değil."
 
             mesaj = (
@@ -304,6 +491,7 @@ async def hisse_oku(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 f"{sinyal}\n\n"
 
                 f"⭐ TEKNİK PUAN: {puan}/100\n\n"
+
                 f"💰 ALIM BÖLGESİ\n"
                 f"{al_alt:.2f} - {al_ust:.2f} TL\n\n"
 
@@ -321,6 +509,7 @@ async def hisse_oku(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
 
             for neden in nedenler:
+
                 mesaj += f"• {neden}\n"
 
             mesaj += (
@@ -333,6 +522,7 @@ async def hisse_oku(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(mesaj)
 
     except Exception as e:
+
         await update.message.reply_text(
             f"❌ Hata:\n{e}"
         )
