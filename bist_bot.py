@@ -115,8 +115,8 @@ async def hisse_oku(update: Update, context: ContextTypes.DEFAULT_TYPE):
         direnc = float(son_20["High"].max())
 
         # Teknik AL bölgesi
-        al_alt = destek
-        al_ust = min(kapanis, destek * 1.03)
+        al_alt = destek * 0.99
+        al_ust = destek * 1.03
 
         # Hedefler
         hedef1 = kapanis + (direnc - kapanis) * 0.50
@@ -126,7 +126,7 @@ async def hisse_oku(update: Update, context: ContextTypes.DEFAULT_TYPE):
         risk_seviyesi = destek * 0.97
 
         # Teknik SAT bölgesi
-        sat_alt = max(kapanis, direnc * 0.97)
+        sat_alt = direnc * 0.97
         sat_ust = direnc
 
         # MACD kesişimi
