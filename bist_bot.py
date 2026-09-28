@@ -250,11 +250,14 @@ async def hisse_oku(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if rsi_son < 25 and macd_yukseliyor:
                 sinyal = "🟠 AŞIRI SATIM / TEPKİ ADAYI"
 
+            elif rsi_son < 25 and puan <= 35:
+                sinyal = "🟠 AŞIRI SATIM / RİSKLİ BÖLGE"
+
             elif puan >= 70:
                 sinyal = "🟢 AL ADAYI"
 
             elif puan <= 35:
-                sinyal = "🔴 SAT ADAYI"
+                sinyal = "🔴 SAT / RİSK AZALT ADAYI"
 
             else:
                 sinyal = "🟡 BEKLE"
