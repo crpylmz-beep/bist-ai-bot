@@ -9,8 +9,10 @@ print("TOKEN DURUMU:", bool(TOKEN), "UZUNLUK:", len(TOKEN) if TOKEN else 0)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
-        [InlineKeyboardButton("📈 Hisse Özeti", callback_data="ozet")],
-        [InlineKeyboardButton("📡 Sinyaller", callback_data="sinyal")]
+    [InlineKeyboardButton("📈 Hisse Özeti", callback_data="ozet")],
+    [InlineKeyboardButton("📡 Sinyaller", callback_data="sinyal")],
+    [InlineKeyboardButton("🔥 Agresif Hisse Bulucu", callback_data="agresif")]
+
     ]
 
     await update.message.reply_text(
@@ -42,6 +44,14 @@ async def buton(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "Hisse kodunu yazın.\n"
             "Örnek: PSGYO"
         )
+
+     elif query.data == "agresif":
+        await query.message.reply_text(
+            "🔥 AGRESİF HİSSE BULUCU\n\n"
+            "BIST hisseleri teknik göstergelere göre taranacak.\n"
+            "Bir sonraki adımda tarama sistemi eklenecek."
+        )
+        
 
 
 async def hisse_oku(update: Update, context: ContextTypes.DEFAULT_TYPE):
