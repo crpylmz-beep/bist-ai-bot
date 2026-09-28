@@ -1,8 +1,9 @@
+import os
 import borsapy as bp
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, ContextTypes, CallbackQueryHandler, MessageHandler, filters
 
-TOKEN = "BURAYA_TOKEN_GELECEK"
+TOKEN = os.getenv("BOT_TOKEN")
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
