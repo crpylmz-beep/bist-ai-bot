@@ -108,6 +108,26 @@ async def hisse_oku(update: Update, context: ContextTypes.DEFAULT_TYPE):
         signal_onceki = float(macd_signal.iloc[-2])
 
         macd_yukseliyor = macd_son > macd_onceki
+        # Destek / Direnç ve AL-SAT bölgeleri
+        son_20 = veri.tail(20)
+
+        destek = float(son_20["Low"].min())
+        direnc = float(son_20["High"].max())
+
+        # Teknik AL bölgesi
+        al_alt = destek
+        al_ust = min(kapanis, destek * 1.03)
+
+        # Hedefler
+        hedef1 = kapanis + (direnc - kapanis) * 0.50
+        hedef2 = direnc
+
+        # Risk seviyesi
+        risk_seviyesi = destek * 0.97
+
+        # Teknik SAT bölgesi
+        sat_alt = max(kapanis, direnc * 0.97)
+        sat_ust = direnc
 
         # MACD kesişimi
         macd_al_kesisim = (
