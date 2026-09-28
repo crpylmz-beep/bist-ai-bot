@@ -1,11 +1,28 @@
 import os
 import borsapy as bp
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Application, CommandHandler, ContextTypes, CallbackQueryHandler, MessageHandler, filters
+from telegram.ext import (
+    Application,
+    CommandHandler,
+    ContextTypes,
+    CallbackQueryHandler,
+    MessageHandler,
+    filters
+)
 
 TOKEN = os.environ.get("BOT_TOKEN")
-print("TOKEN DURUMU:", bool(TOKEN), "UZUNLUK:", len(TOKEN) if TOKEN else 0)
 
+print(
+    "TOKEN DURUMU:",
+    bool(TOKEN),
+    "UZUNLUK:",
+    len(TOKEN) if TOKEN else 0
+)
+
+
+# =========================================================
+# START
+# =========================================================
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
@@ -16,14 +33,20 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ]
 
     await update.message.reply_text(
-        "🤖 BIST AI TERMINAL\n\nBir işlem seç:",
+        "🤖 BIST AI TERMINAL\n\n"
+        "Bir işlem seç:",
         reply_markup=InlineKeyboardMarkup(keyboard)
     )
 
 
+# =========================================================
+# BUTONLAR
+# =========================================================
+
 async def buton(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     query = update.callback_query
+
     await query.answer()
 
     if query.data == "ozet":
@@ -53,165 +76,680 @@ async def buton(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await agresif_tarama(update, context)
 
 
-async def agresif_tarama(update: Update, context: ContextTypes.DEFAULT_TYPE):
+# =========================================================
+# BIST GENELİ AGRESİF HİSSE TARAMASI
+# =========================================================
+
+async def agresif_tarama(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE
+):
 
     mesaj_gonder = update.callback_query.message
 
     await mesaj_gonder.reply_text(
-        "🔥 AGRESİF HİSSE TARAMASI BAŞLIYOR...\n\n"
-        "📊 Teknik göstergeler hesaplanıyor.\n"
-        "⏳ Lütfen bekleyin..."
+        "🔥 BIST GENELİ AGRESİF TARAMA BAŞLIYOR...\n\n"
+        "📊 BIST şirketleri otomatik olarak alınıyor.\n"
+        "🔎 Teknik göstergeler hesaplanıyor.\n"
+        "⏳ Çok sayıda hisse taranacağı için biraz sürebilir..."
     )
 
-    hisseler = [
-        "THYAO", "ASELS", "TUPRS", "EREGL", "BIMAS",
-        "SISE", "AKBNK", "YKBNK", "GARAN", "ISCTR",
-        "KCHOL", "SAHOL", "PETKM", "PGSUS", "TOASO",
-        "FROTO", "TCELL", "TTKOM", "HEKTS", "SASA",
-        "OYAKC", "EKGYO", "KOZAL", "ASTOR", "ENKAI",
-        "GUBRF", "MIATK", "REEDR", "GESAN", "PSGYO"
-    ]
+    try:
 
-    adaylar = []
+        # -------------------------------------------------
+        # BIST ŞİRKET LİSTESİNİ OTOMATİK AL
+        # -------------------------------------------------
 
-    for sembol in hisseler:
+        sirketler = bp.companies()
 
-        try:
+        if sirketler is None or sirketler.empty:
 
-            hisse = bp.Ticker(sembol)
-            veri = hisse.history(period="3mo")
+            await mesaj_gonder.reply_text(
+                "❌ BIST şirket listesi alınamadı."
+            )
 
-            if veri is None or veri.empty or len(veri) < 50:
-                continue
+            return
 
-            kapanis = float(veri["Close"].iloc[-1])
+        # Ticker sütununu bul
+        if "ticker" in sirketler.columns:
 
-            # RSI
-            delta = veri["Close"].diff()
+            hisseler = (
+                sirketler["ticker"]
+                .dropna()
+                .astype(str)
+                .str.upper()
+                .str.strip()
+                .tolist()
+            )
 
-            kazanc = delta.clip(lower=0)
-            kayip = -delta.clip(upper=0)
+        elif "symbol" in sirketler.columns:
 
-            ort_kazanc = kazanc.rolling(14).mean()
-            ort_kayip = kayip.rolling(14).mean()
+            hisseler = (
+                sirketler["symbol"]
+                .dropna()
+                .astype(str)
+                .str.upper()
+                .str.strip()
+                .tolist()
+            )
 
-            rs = ort_kazanc / ort_kayip
-            rsi = 100 - (100 / (1 + rs))
+        else:
 
-            rsi_son = float(rsi.iloc[-1])
+            await mesaj_gonder.reply_text(
+                "❌ BIST şirket listesindeki hisse kodu sütunu bulunamadı."
+            )
 
-            # MACD
-            ema12 = veri["Close"].ewm(span=12, adjust=False).mean()
-            ema26 = veri["Close"].ewm(span=26, adjust=False).mean()
+            return
 
-            macd = ema12 - ema26
-            macd_signal = macd.ewm(span=9, adjust=False).mean()
+        # Tekrarları kaldır
+        hisseler = list(dict.fromkeys(hisseler))
 
-            macd_son = float(macd.iloc[-1])
-            macd_onceki = float(macd.iloc[-2])
-            macd_signal_son = float(macd_signal.iloc[-1])
-
-            # Hacim
-            hacim = float(veri["Volume"].iloc[-1])
-            hacim20 = float(veri["Volume"].rolling(20).mean().iloc[-1])
-
-            if hacim20 <= 0:
-                continue
-
-            hacim_orani = (hacim / hacim20) * 100
-
-            # MACD momentum
-            macd_yukseliyor = macd_son > macd_onceki
-
-            # Agresif aday puanı
-            puan = 0
-
-            if rsi_son < 30:
-                puan += 30
-
-            elif rsi_son < 40:
-                puan += 15
-
-            if macd_yukseliyor:
-                puan += 25
-
-            if macd_son > macd_signal_son:
-                puan += 20
-
-            if hacim_orani > 120:
-                puan += 25
-
-            elif hacim_orani > 100:
-                puan += 15
-
-            # Aday
-            if puan >= 40:
-
-                adaylar.append(
-                    (
-                        sembol,
-                        puan,
-                        kapanis,
-                        rsi_son,
-                        hacim_orani
-                    )
-                )
-
-        except Exception:
-            continue
-
-    # Puana göre sırala
-    adaylar.sort(key=lambda x: x[1], reverse=True)
-
-    # Aday yoksa
-    if not adaylar:
+        toplam_hisse = len(hisseler)
 
         await mesaj_gonder.reply_text(
-            "🔎 Tarama tamamlandı.\n\n"
-            "Şu anda belirlenen kriterlere uyan "
-            "güçlü agresif aday bulunamadı."
+            f"📊 BIST GENELİ TARAMA\n\n"
+            f"🔎 Bulunan hisse: {toplam_hisse}\n"
+            f"⏳ Teknik analiz başlıyor..."
         )
 
-        return
+        adaylar = []
 
-    # Sonuç mesajı
-    mesaj = (
-        "🔥 AGRESİF HİSSE ADAYLARI\n"
-        "━━━━━━━━━━━━━━\n\n"
-    )
+        taranan = 0
 
-    for i, (sembol, puan, fiyat, rsi, hacim_orani) in enumerate(
-        adaylar[:10], 1
-    ):
+        # -------------------------------------------------
+        # TÜM BIST HİSSELERİNİ TARA
+        # -------------------------------------------------
+
+        for sembol in hisseler:
+
+            taranan += 1
+
+            try:
+
+                hisse = bp.Ticker(sembol)
+
+                veri = hisse.history(period="3mo")
+
+                if veri is None or veri.empty:
+                    continue
+
+                if len(veri) < 60:
+                    continue
+
+                # Gerekli sütunlar yoksa geç
+                gerekli = [
+                    "Close",
+                    "High",
+                    "Low",
+                    "Volume"
+                ]
+
+                if not all(
+                    sutun in veri.columns
+                    for sutun in gerekli
+                ):
+                    continue
+
+                # -------------------------------------------------
+                # FİYAT
+                # -------------------------------------------------
+
+                kapanis = float(
+                    veri["Close"].iloc[-1]
+                )
+
+                onceki = float(
+                    veri["Close"].iloc[-2]
+                )
+
+                if kapanis <= 0 or onceki <= 0:
+                    continue
+
+                gunluk_degisim = (
+                    (kapanis - onceki) / onceki
+                ) * 100
+
+                # -------------------------------------------------
+                # SMA
+                # -------------------------------------------------
+
+                sma20 = float(
+                    veri["Close"]
+                    .rolling(20)
+                    .mean()
+                    .iloc[-1]
+                )
+
+                sma50 = float(
+                    veri["Close"]
+                    .rolling(50)
+                    .mean()
+                    .iloc[-1]
+                )
+
+                if sma20 <= 0 or sma50 <= 0:
+                    continue
+
+                # -------------------------------------------------
+                # RSI
+                # -------------------------------------------------
+
+                delta = veri["Close"].diff()
+
+                kazanc = delta.clip(lower=0)
+                kayip = -delta.clip(upper=0)
+
+                ort_kazanc = (
+                    kazanc
+                    .rolling(14)
+                    .mean()
+                )
+
+                ort_kayip = (
+                    kayip
+                    .rolling(14)
+                    .mean()
+                )
+
+                rs = ort_kazanc / ort_kayip
+
+                rsi = 100 - (
+                    100 / (1 + rs)
+                )
+
+                rsi_son = float(
+                    rsi.iloc[-1]
+                )
+
+                if rsi_son != rsi_son:
+                    continue
+
+                # -------------------------------------------------
+                # MACD
+                # -------------------------------------------------
+
+                ema12 = (
+                    veri["Close"]
+                    .ewm(
+                        span=12,
+                        adjust=False
+                    )
+                    .mean()
+                )
+
+                ema26 = (
+                    veri["Close"]
+                    .ewm(
+                        span=26,
+                        adjust=False
+                    )
+                    .mean()
+                )
+
+                macd = ema12 - ema26
+
+                macd_signal = (
+                    macd
+                    .ewm(
+                        span=9,
+                        adjust=False
+                    )
+                    .mean()
+                )
+
+                macd_son = float(
+                    macd.iloc[-1]
+                )
+
+                macd_onceki = float(
+                    macd.iloc[-2]
+                )
+
+                macd_signal_son = float(
+                    macd_signal.iloc[-1]
+                )
+
+                macd_signal_onceki = float(
+                    macd_signal.iloc[-2]
+                )
+
+                macd_yukseliyor = (
+                    macd_son > macd_onceki
+                )
+
+                macd_ustunde = (
+                    macd_son > macd_signal_son
+                )
+
+                macd_al_kesisim = (
+                    macd_onceki
+                    <= macd_signal_onceki
+                    and
+                    macd_son
+                    > macd_signal_son
+                )
+
+                # -------------------------------------------------
+                # HACİM
+                # -------------------------------------------------
+
+                hacim = float(
+                    veri["Volume"].iloc[-1]
+                )
+
+                hacim20 = float(
+                    veri["Volume"]
+                    .rolling(20)
+                    .mean()
+                    .iloc[-1]
+                )
+
+                if hacim20 <= 0:
+                    continue
+
+                hacim_orani = (
+                    hacim / hacim20
+                ) * 100
+
+                # -------------------------------------------------
+                # DESTEK / DİRENÇ
+                # -------------------------------------------------
+
+                son20 = veri.tail(20)
+
+                destek = float(
+                    son20["Low"].min()
+                )
+
+                direnc = float(
+                    son20["High"].max()
+                )
+
+                if destek <= 0 or direnc <= 0:
+                    continue
+
+                # -------------------------------------------------
+                # TEKNİK PUAN
+                # -------------------------------------------------
+
+                puan = 0
+
+                nedenler = []
+
+                # RSI
+                if 25 <= rsi_son < 30:
+
+                    puan += 20
+
+                    nedenler.append(
+                        "RSI aşırı satıma yakın"
+                    )
+
+                elif 30 <= rsi_son < 40:
+
+                    puan += 15
+
+                    nedenler.append(
+                        "RSI düşük bölgede"
+                    )
+
+                elif 40 <= rsi_son < 55:
+
+                    puan += 8
+
+                    nedenler.append(
+                        "RSI dengeli"
+                    )
+
+                elif rsi_son < 25:
+
+                    puan += 10
+
+                    nedenler.append(
+                        "RSI aşırı satım"
+                    )
+
+                # MACD yükselişi
+                if macd_yukseliyor:
+
+                    puan += 15
+
+                    nedenler.append(
+                        "MACD yükseliyor"
+                    )
+
+                # MACD sinyal üstü
+                if macd_ustunde:
+
+                    puan += 15
+
+                    nedenler.append(
+                        "MACD sinyal üzerinde"
+                    )
+
+                # MACD yukarı kesişim
+                if macd_al_kesisim:
+
+                    puan += 15
+
+                    nedenler.append(
+                        "MACD yukarı kesişim"
+                    )
+
+                # Hacim
+                if hacim_orani >= 200:
+
+                    puan += 20
+
+                    nedenler.append(
+                        "Hacim çok güçlü"
+                    )
+
+                elif hacim_orani >= 150:
+
+                    puan += 15
+
+                    nedenler.append(
+                        "Hacim güçlü"
+                    )
+
+                elif hacim_orani >= 120:
+
+                    puan += 10
+
+                    nedenler.append(
+                        "Hacim ortalamanın üzerinde"
+                    )
+
+                elif hacim_orani >= 100:
+
+                    puan += 5
+
+                # SMA20
+                if kapanis > sma20:
+
+                    puan += 8
+
+                    nedenler.append(
+                        "Fiyat SMA20 üzerinde"
+                    )
+
+                else:
+
+                    puan -= 5
+
+                # SMA50
+                if kapanis > sma50:
+
+                    puan += 7
+
+                    nedenler.append(
+                        "Fiyat SMA50 üzerinde"
+                    )
+
+                else:
+
+                    puan -= 5
+
+                # Günlük momentum
+                if gunluk_degisim > 0:
+
+                    puan += 5
+
+                    nedenler.append(
+                        "Günlük momentum pozitif"
+                    )
+
+                # Destekten uzaklık
+                destek_uzaklik = (
+                    (kapanis - destek)
+                    / destek
+                ) * 100
+
+                if 0 <= destek_uzaklik <= 5:
+
+                    puan += 5
+
+                    nedenler.append(
+                        "Fiyat desteğe yakın"
+                    )
+
+                # -------------------------------------------------
+                # PUANI 0-100 ARASINA SINIRLA
+                # -------------------------------------------------
+
+                puan = max(
+                    0,
+                    min(100, puan)
+                )
+
+                # -------------------------------------------------
+                # AGRESİF ADAY KRİTERİ
+                # -------------------------------------------------
+
+                agresif = False
+
+                if puan >= 45:
+
+                    agresif = True
+
+                # Çok yüksek hacimli ve RSI düşük hisseler
+                if (
+                    hacim_orani >= 150
+                    and rsi_son < 35
+                    and macd_yukseliyor
+                ):
+
+                    agresif = True
+
+                # MACD yukarı kesişim + hacim
+                if (
+                    macd_al_kesisim
+                    and hacim_orani >= 120
+                ):
+
+                    agresif = True
+
+                if not agresif:
+                    continue
+
+                # -------------------------------------------------
+                # ALIM / HEDEF / STOP
+                # -------------------------------------------------
+
+                al_alt = destek * 0.99
+                al_ust = destek * 1.03
+
+                hedef1 = kapanis + (
+                    (direnc - kapanis) * 0.50
+                )
+
+                hedef2 = direnc
+
+                stop = destek * 0.97
+
+                # -------------------------------------------------
+                # ADAYI KAYDET
+                # -------------------------------------------------
+
+                adaylar.append(
+                    {
+                        "sembol": sembol,
+                        "puan": puan,
+                        "fiyat": kapanis,
+                        "rsi": rsi_son,
+                        "hacim": hacim_orani,
+                        "sma20": sma20,
+                        "sma50": sma50,
+                        "degisim": gunluk_degisim,
+                        "macd_yukseliyor": macd_yukseliyor,
+                        "macd_ustunde": macd_ustunde,
+                        "macd_kesisim": macd_al_kesisim,
+                        "destek": destek,
+                        "direnc": direnc,
+                        "al_alt": al_alt,
+                        "al_ust": al_ust,
+                        "hedef1": hedef1,
+                        "hedef2": hedef2,
+                        "stop": stop,
+                        "nedenler": nedenler
+                    }
+                )
+
+            except Exception:
+                continue
+
+        # -------------------------------------------------
+        # PUANA GÖRE SIRALA
+        # -------------------------------------------------
+
+        adaylar.sort(
+            key=lambda x: (
+                x["puan"],
+                x["hacim"]
+            ),
+            reverse=True
+        )
+
+        # -------------------------------------------------
+        # SONUÇ
+        # -------------------------------------------------
+
+        if not adaylar:
+
+            await mesaj_gonder.reply_text(
+                "🔎 BIST GENELİ TARAMA TAMAMLANDI.\n\n"
+                f"📊 Taranan hisse: {taranan}\n"
+                "🔥 Uygun agresif aday bulunamadı."
+            )
+
+            return
+
+        en_iyi = adaylar[:10]
+
+        mesaj = (
+            "🔥 BIST GENELİ AGRESİF TARAMA\n"
+            "━━━━━━━━━━━━━━\n\n"
+            f"📊 Taranan: {taranan} hisse\n"
+            f"🔥 Agresif aday: {len(adaylar)}\n"
+            "🏆 En yüksek teknik puanlı 10 hisse:\n\n"
+        )
+
+        # -------------------------------------------------
+        # EN İYİ 10
+        # -------------------------------------------------
+
+        for sira, aday in enumerate(
+            en_iyi,
+            1
+        ):
+
+            sembol = aday["sembol"]
+            puan = aday["puan"]
+            fiyat = aday["fiyat"]
+            rsi = aday["rsi"]
+            hacim = aday["hacim"]
+            degisim = aday["degisim"]
+
+            if aday["macd_kesisim"]:
+
+                macd_durum = "🟢 Yukarı kesişim"
+
+            elif aday["macd_yukseliyor"]:
+
+                macd_durum = "🟢 Yükseliyor"
+
+            elif aday["macd_ustunde"]:
+
+                macd_durum = "🟡 Sinyal üstü"
+
+            else:
+
+                macd_durum = "🔴 Zayıf"
+
+            mesaj += (
+                f"{sira}. 🔥 {sembol}\n"
+                f"⭐ Teknik Güven Puanı: {puan}/100\n"
+                f"💰 Fiyat: {fiyat:.2f} TL\n"
+                f"📈 Günlük: {degisim:+.2f}%\n"
+                f"RSI: {rsi:.2f}\n"
+                f"📦 Hacim: %{hacim:.1f}\n"
+                f"📊 MACD: {macd_durum}\n"
+                f"📉 SMA20: "
+                f"{'ÜZERİNDE' if fiyat > aday['sma20'] else 'ALTINDA'}\n"
+                f"📉 SMA50: "
+                f"{'ÜZERİNDE' if fiyat > aday['sma50'] else 'ALTINDA'}\n"
+                f"🎯 Destek: {aday['destek']:.2f} TL\n"
+                f"🚧 Direnç: {aday['direnc']:.2f} TL\n"
+                f"💰 Alım bölgesi: "
+                f"{aday['al_alt']:.2f} - "
+                f"{aday['al_ust']:.2f} TL\n"
+                f"🎯 Hedef 1: {aday['hedef1']:.2f} TL\n"
+                f"🎯 Hedef 2: {aday['hedef2']:.2f} TL\n"
+                f"🛑 Stop: {aday['stop']:.2f} TL\n"
+            )
+
+            if aday["nedenler"]:
+
+                mesaj += "🔎 Nedenler:\n"
+
+                for neden in aday["nedenler"][:4]:
+
+                    mesaj += f"• {neden}\n"
+
+            mesaj += "\n"
 
         mesaj += (
-            f"{i}. 🔥 {sembol}\n"
-            f"   ⭐ Puan: {puan}/100\n"
-            f"   💰 Fiyat: {fiyat:.2f} TL\n"
-            f"   RSI: {rsi:.2f}\n"
-            f"   📦 Hacim: %{hacim_orani:.1f}\n\n"
+            "━━━━━━━━━━━━━━\n"
+            "⚠️ Sıralama teknik göstergelerin "
+            "algoritmik puanlamasına göredir.\n"
+            "⚠️ 'Teknik Güven Puanı' kesin yükseliş "
+            "veya kazanç garantisi değildir.\n"
+            "⚠️ Yatırım tavsiyesi değildir."
         )
 
-    mesaj += (
-        "⚠️ Bunlar teknik göstergelere göre "
-        "algoritmik adaylardır; kesin al/sat sonucu değildir."
-    )
+        await mesaj_gonder.reply_text(
+            mesaj
+        )
 
-    await mesaj_gonder.reply_text(mesaj)
+    except Exception as e:
+
+        await mesaj_gonder.reply_text(
+            f"❌ Agresif tarama hatası:\n{e}"
+        )
 
 
-async def hisse_oku(update: Update, context: ContextTypes.DEFAULT_TYPE):
+# =========================================================
+# HİSSE OKUMA
+# =========================================================
 
-    if not context.user_data.get("hisse_bekleniyor"):
+async def hisse_oku(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE
+):
+
+    if not context.user_data.get(
+        "hisse_bekleniyor"
+    ):
         return
 
-    sembol = update.message.text.strip().upper()
-    mod = context.user_data.get("mod")
+    sembol = (
+        update.message.text
+        .strip()
+        .upper()
+    )
+
+    mod = context.user_data.get(
+        "mod"
+    )
 
     try:
 
         hisse = bp.Ticker(sembol)
-        veri = hisse.history(period="3mo")
+
+        veri = hisse.history(
+            period="3mo"
+        )
 
         if veri is None or veri.empty or len(veri) < 50:
 
@@ -223,223 +761,420 @@ async def hisse_oku(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         son = veri.iloc[-1]
 
-        kapanis = float(son["Close"])
-        onceki = float(veri.iloc[-2]["Close"])
+        kapanis = float(
+            son["Close"]
+        )
 
-        degisim = ((kapanis - onceki) / onceki) * 100
+        onceki = float(
+            veri.iloc[-2]["Close"]
+        )
 
+        degisim = (
+            (kapanis - onceki)
+            / onceki
+        ) * 100
+
+        # -------------------------------------------------
         # SMA
-        sma20 = veri["Close"].rolling(20).mean().iloc[-1]
-        sma50 = veri["Close"].rolling(50).mean().iloc[-1]
+        # -------------------------------------------------
 
-        # Hacim
-        hacim = float(son["Volume"])
-        hacim20 = veri["Volume"].rolling(20).mean().iloc[-1]
+        sma20 = (
+            veri["Close"]
+            .rolling(20)
+            .mean()
+            .iloc[-1]
+        )
 
-        hacim_orani = (hacim / hacim20) * 100 if hacim20 > 0 else 0
+        sma50 = (
+            veri["Close"]
+            .rolling(50)
+            .mean()
+            .iloc[-1]
+        )
 
-        # RSI 14
+        # -------------------------------------------------
+        # HACİM
+        # -------------------------------------------------
+
+        hacim = float(
+            son["Volume"]
+        )
+
+        hacim20 = (
+            veri["Volume"]
+            .rolling(20)
+            .mean()
+            .iloc[-1]
+        )
+
+        hacim_orani = (
+            (hacim / hacim20) * 100
+            if hacim20 > 0
+            else 0
+        )
+
+        # -------------------------------------------------
+        # RSI
+        # -------------------------------------------------
+
         delta = veri["Close"].diff()
 
-        kazanc = delta.clip(lower=0)
-        kayip = -delta.clip(upper=0)
+        kazanc = delta.clip(
+            lower=0
+        )
 
-        ort_kazanc = kazanc.rolling(14).mean()
-        ort_kayip = kayip.rolling(14).mean()
+        kayip = -delta.clip(
+            upper=0
+        )
 
-        rs = ort_kazanc / ort_kayip
-        rsi = 100 - (100 / (1 + rs))
+        ort_kazanc = (
+            kazanc
+            .rolling(14)
+            .mean()
+        )
 
-        rsi_son = float(rsi.iloc[-1])
+        ort_kayip = (
+            kayip
+            .rolling(14)
+            .mean()
+        )
 
+        rs = (
+            ort_kazanc
+            / ort_kayip
+        )
+
+        rsi = 100 - (
+            100 / (1 + rs)
+        )
+
+        rsi_son = float(
+            rsi.iloc[-1]
+        )
+
+        # -------------------------------------------------
         # MACD
-        ema12 = veri["Close"].ewm(span=12, adjust=False).mean()
-        ema26 = veri["Close"].ewm(span=26, adjust=False).mean()
+        # -------------------------------------------------
+
+        ema12 = (
+            veri["Close"]
+            .ewm(
+                span=12,
+                adjust=False
+            )
+            .mean()
+        )
+
+        ema26 = (
+            veri["Close"]
+            .ewm(
+                span=26,
+                adjust=False
+            )
+            .mean()
+        )
 
         macd = ema12 - ema26
-        macd_signal = macd.ewm(span=9, adjust=False).mean()
 
-        macd_son = float(macd.iloc[-1])
-        macd_signal_son = float(macd_signal.iloc[-1])
+        macd_signal = (
+            macd
+            .ewm(
+                span=9,
+                adjust=False
+            )
+            .mean()
+        )
 
-        # Önceki MACD değerleri
-        macd_onceki = float(macd.iloc[-2])
-        signal_onceki = float(macd_signal.iloc[-2])
+        macd_son = float(
+            macd.iloc[-1]
+        )
 
-        macd_yukseliyor = macd_son > macd_onceki
+        macd_signal_son = float(
+            macd_signal.iloc[-1]
+        )
 
-        # Destek / Direnç
+        macd_onceki = float(
+            macd.iloc[-2]
+        )
+
+        signal_onceki = float(
+            macd_signal.iloc[-2]
+        )
+
+        macd_yukseliyor = (
+            macd_son > macd_onceki
+        )
+
+        # -------------------------------------------------
+        # DESTEK / DİRENÇ
+        # -------------------------------------------------
+
         son_20 = veri.tail(20)
 
-        destek = float(son_20["Low"].min())
-        direnc = float(son_20["High"].max())
+        destek = float(
+            son_20["Low"].min()
+        )
 
-        # Teknik AL bölgesi
+        direnc = float(
+            son_20["High"].max()
+        )
+
+        # AL bölgesi
         al_alt = destek * 0.99
         al_ust = destek * 1.03
 
         # Hedefler
-        hedef1 = kapanis + (direnc - kapanis) * 0.50
+        hedef1 = kapanis + (
+            (direnc - kapanis) * 0.50
+        )
+
         hedef2 = direnc
 
-        # Risk seviyesi
-        risk_seviyesi = destek * 0.97
+        # Stop
+        risk_seviyesi = (
+            destek * 0.97
+        )
 
-        # Teknik SAT bölgesi
+        # SAT bölgesi
         sat_alt = direnc * 0.97
         sat_ust = direnc
 
-        # MACD kesişimi
+        # -------------------------------------------------
+        # MACD KESİŞİM
+        # -------------------------------------------------
+
         macd_al_kesisim = (
             macd_onceki <= signal_onceki
-            and macd_son > macd_signal_son
+            and
+            macd_son > macd_signal_son
         )
 
         macd_sat_kesisim = (
             macd_onceki >= signal_onceki
-            and macd_son < macd_signal_son
+            and
+            macd_son < macd_signal_son
         )
 
-        # =========================
+        # =================================================
         # HİSSE ÖZETİ
-        # =========================
+        # =================================================
 
         if mod == "ozet":
 
             mesaj = (
                 f"📊 {sembol} HİSSE ÖZETİ\n"
                 f"━━━━━━━━━━━━━━\n\n"
-                f"💰 Son Fiyat: {kapanis:.2f} TL\n"
-                f"📈 Günlük Değişim: {degisim:+.2f}%\n"
-                f"🔺 Günlük Yüksek: {float(son['High']):.2f}\n"
-                f"🔻 Günlük Düşük: {float(son['Low']):.2f}\n"
-                f"🔵 Açılış: {float(son['Open']):.2f}\n"
-                f"📦 Hacim: {hacim:,.0f}\n\n"
+                f"💰 Son Fiyat: "
+                f"{kapanis:.2f} TL\n"
+                f"📈 Günlük Değişim: "
+                f"{degisim:+.2f}%\n"
+                f"🔺 Günlük Yüksek: "
+                f"{float(son['High']):.2f}\n"
+                f"🔻 Günlük Düşük: "
+                f"{float(son['Low']):.2f}\n"
+                f"🔵 Açılış: "
+                f"{float(son['Open']):.2f}\n"
+                f"📦 Hacim: "
+                f"{hacim:,.0f}\n\n"
                 f"📊 TEKNİK\n"
-                f"20 Günlük Ortalama: {sma20:.2f}\n"
-                f"50 Günlük Ortalama: {sma50:.2f}\n"
-                f"RSI(14): {rsi_son:.2f}\n"
-                f"MACD: {macd_son:.4f}\n"
-                f"MACD Sinyal: {macd_signal_son:.4f}\n"
+                f"20 Günlük Ortalama: "
+                f"{sma20:.2f}\n"
+                f"50 Günlük Ortalama: "
+                f"{sma50:.2f}\n"
+                f"RSI(14): "
+                f"{rsi_son:.2f}\n"
+                f"MACD: "
+                f"{macd_son:.4f}\n"
+                f"MACD Sinyal: "
+                f"{macd_signal_son:.4f}\n"
             )
 
-        # =========================
+        # =================================================
         # GELİŞMİŞ SİNYAL
-        # =========================
+        # =================================================
 
         else:
 
             puan = 50
+
             nedenler = []
 
             # SMA20
             if kapanis > sma20:
 
                 puan += 10
-                nedenler.append("Fiyat SMA20 üzerinde")
+
+                nedenler.append(
+                    "Fiyat SMA20 üzerinde"
+                )
 
             else:
 
                 puan -= 10
-                nedenler.append("Fiyat SMA20 altında")
+
+                nedenler.append(
+                    "Fiyat SMA20 altında"
+                )
 
             # SMA50
             if kapanis > sma50:
 
                 puan += 10
-                nedenler.append("Fiyat SMA50 üzerinde")
+
+                nedenler.append(
+                    "Fiyat SMA50 üzerinde"
+                )
 
             else:
 
                 puan -= 10
-                nedenler.append("Fiyat SMA50 altında")
+
+                nedenler.append(
+                    "Fiyat SMA50 altında"
+                )
 
             # RSI
             if 50 <= rsi_son < 70:
 
                 puan += 10
-                nedenler.append("RSI pozitif bölgede")
+
+                nedenler.append(
+                    "RSI pozitif bölgede"
+                )
 
             elif rsi_son >= 70:
 
                 puan -= 5
-                nedenler.append("RSI aşırı alım bölgesinde")
+
+                nedenler.append(
+                    "RSI aşırı alım bölgesinde"
+                )
 
             elif rsi_son < 30:
 
                 puan += 5
-                nedenler.append("RSI aşırı satım bölgesinde")
+
+                nedenler.append(
+                    "RSI aşırı satım bölgesinde"
+                )
 
             else:
 
-                nedenler.append("RSI nötr bölgede")
+                nedenler.append(
+                    "RSI nötr bölgede"
+                )
 
             # MACD
             if macd_son > macd_signal_son:
 
                 puan += 10
-                nedenler.append("MACD sinyal çizgisinin üzerinde")
+
+                nedenler.append(
+                    "MACD sinyal çizgisinin üzerinde"
+                )
 
             else:
 
                 puan -= 10
-                nedenler.append("MACD sinyal çizgisinin altında")
+
+                nedenler.append(
+                    "MACD sinyal çizgisinin altında"
+                )
 
             # MACD kesişimi
             if macd_al_kesisim:
 
                 puan += 10
-                nedenler.append("MACD yukarı kesişim yaptı")
+
+                nedenler.append(
+                    "MACD yukarı kesişim yaptı"
+                )
 
             elif macd_sat_kesisim:
 
                 puan -= 10
-                nedenler.append("MACD aşağı kesişim yaptı")
+
+                nedenler.append(
+                    "MACD aşağı kesişim yaptı"
+                )
 
             # MACD momentum
             if macd_yukseliyor:
 
                 puan += 5
-                nedenler.append("MACD yükseliyor")
+
+                nedenler.append(
+                    "MACD yükseliyor"
+                )
 
             else:
 
                 puan -= 5
-                nedenler.append("MACD düşüyor")
+
+                nedenler.append(
+                    "MACD düşüyor"
+                )
 
             # Hacim
             if hacim > hacim20:
 
                 puan += 10
-                nedenler.append("Hacim 20G ortalamasının üzerinde")
+
+                nedenler.append(
+                    "Hacim 20G ortalamasının üzerinde"
+                )
 
             else:
 
                 puan -= 5
-                nedenler.append("Hacim 20G ortalamasının altında")
+
+                nedenler.append(
+                    "Hacim 20G ortalamasının altında"
+                )
 
             # Günlük momentum
             if degisim > 0:
 
                 puan += 5
-                nedenler.append("Günlük momentum pozitif")
+
+                nedenler.append(
+                    "Günlük momentum pozitif"
+                )
 
             elif degisim < 0:
 
                 puan -= 5
-                nedenler.append("Günlük momentum negatif")
+
+                nedenler.append(
+                    "Günlük momentum negatif"
+                )
 
             # Puan sınırı
-            puan = max(0, min(100, puan))
+            puan = max(
+                0,
+                min(100, puan)
+            )
 
             # Sinyal
-            if rsi_son < 25 and macd_yukseliyor:
+            if (
+                rsi_son < 25
+                and macd_yukseliyor
+            ):
 
-                sinyal = "🟠 AŞIRI SATIM / TEPKİ ADAYI"
+                sinyal = (
+                    "🟠 AŞIRI SATIM / "
+                    "TEPKİ ADAYI"
+                )
 
-            elif rsi_son < 25 and puan <= 35:
+            elif (
+                rsi_son < 25
+                and puan <= 35
+            ):
 
-                sinyal = "🟠 AŞIRI SATIM / RİSKLİ BÖLGE"
+                sinyal = (
+                    "🟠 AŞIRI SATIM / "
+                    "RİSKLİ BÖLGE"
+                )
 
             elif puan >= 70:
 
@@ -447,60 +1182,84 @@ async def hisse_oku(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             elif puan <= 35:
 
-                sinyal = "🔴 SAT / RİSK AZALT ADAYI"
+                sinyal = (
+                    "🔴 SAT / "
+                    "RİSK AZALT ADAYI"
+                )
 
             else:
 
                 sinyal = "🟡 BEKLE"
 
-            # Risk durumu
+            # Risk
             if rsi_son < 30:
 
                 risk = (
-                    "⚠️ RSI aşırı satım: sert tepki veya "
-                    "devam eden düşüş görülebilir."
+                    "⚠️ RSI aşırı satım: "
+                    "sert tepki veya devam eden "
+                    "düşüş görülebilir."
                 )
 
             elif rsi_son > 70:
 
-                risk = "⚠️ RSI aşırı alım bölgesinde."
+                risk = (
+                    "⚠️ RSI aşırı alım bölgesinde."
+                )
 
             else:
 
-                risk = "ℹ️ RSI aşırı satım/alım bölgesinde değil."
+                risk = (
+                    "ℹ️ RSI aşırı satım/alım "
+                    "bölgesinde değil."
+                )
 
             mesaj = (
                 f"📡 {sembol} GELİŞMİŞ SİNYAL\n"
                 f"━━━━━━━━━━━━━━\n\n"
-                f"💰 Fiyat: {kapanis:.2f} TL\n"
-                f"📈 Günlük: {degisim:+.2f}%\n\n"
+                f"💰 Fiyat: "
+                f"{kapanis:.2f} TL\n"
+                f"📈 Günlük: "
+                f"{degisim:+.2f}%\n\n"
 
                 f"📊 GÖSTERGELER\n"
-                f"RSI(14): {rsi_son:.2f}\n"
-                f"SMA20: {sma20:.2f}\n"
-                f"SMA50: {sma50:.2f}\n"
-                f"MACD: {macd_son:.4f}\n"
-                f"MACD Sinyal: {macd_signal_son:.4f}\n\n"
+                f"RSI(14): "
+                f"{rsi_son:.2f}\n"
+                f"SMA20: "
+                f"{sma20:.2f}\n"
+                f"SMA50: "
+                f"{sma50:.2f}\n"
+                f"MACD: "
+                f"{macd_son:.4f}\n"
+                f"MACD Sinyal: "
+                f"{macd_signal_son:.4f}\n\n"
 
                 f"📦 HACİM\n"
-                f"Mevcut: {hacim:,.0f}\n"
-                f"20G Ortalama: {hacim20:,.0f}\n"
-                f"Hacim Oranı: %{hacim_orani:.1f}\n\n"
+                f"Mevcut: "
+                f"{hacim:,.0f}\n"
+                f"20G Ortalama: "
+                f"{hacim20:,.0f}\n"
+                f"Hacim Oranı: "
+                f"%{hacim_orani:.1f}\n\n"
 
                 f"🎯 SİNYAL\n"
                 f"{sinyal}\n\n"
 
-                f"⭐ TEKNİK PUAN: {puan}/100\n\n"
+                f"⭐ TEKNİK PUAN: "
+                f"{puan}/100\n\n"
 
                 f"💰 ALIM BÖLGESİ\n"
-                f"{al_alt:.2f} - {al_ust:.2f} TL\n\n"
+                f"{al_alt:.2f} - "
+                f"{al_ust:.2f} TL\n\n"
 
                 f"🔴 SATIŞ BÖLGESİ\n"
-                f"{sat_alt:.2f} - {sat_ust:.2f} TL\n\n"
+                f"{sat_alt:.2f} - "
+                f"{sat_ust:.2f} TL\n\n"
 
                 f"🎯 HEDEFLER\n"
-                f"1. Hedef: {hedef1:.2f} TL\n"
-                f"2. Hedef: {hedef2:.2f} TL\n\n"
+                f"1. Hedef: "
+                f"{hedef1:.2f} TL\n"
+                f"2. Hedef: "
+                f"{hedef2:.2f} TL\n\n"
 
                 f"🛑 RİSK / STOP\n"
                 f"{risk_seviyesi:.2f} TL\n\n"
@@ -510,16 +1269,21 @@ async def hisse_oku(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             for neden in nedenler:
 
-                mesaj += f"• {neden}\n"
+                mesaj += (
+                    f"• {neden}\n"
+                )
 
             mesaj += (
                 f"\n{risk}\n\n"
-                "⚠️ Bu sistem teknik göstergelerden "
-                "algoritmik aday üretir. Kesin al/sat sonucu veya "
-                "yatırım tavsiyesi değildir."
+                "⚠️ Bu sistem teknik "
+                "göstergelerden algoritmik "
+                "aday üretir. Kesin al/sat "
+                "sonucu veya yatırım tavsiyesi değildir."
             )
 
-        await update.message.reply_text(mesaj)
+        await update.message.reply_text(
+            mesaj
+        )
 
     except Exception as e:
 
@@ -527,16 +1291,48 @@ async def hisse_oku(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"❌ Hata:\n{e}"
         )
 
-    context.user_data["hisse_bekleniyor"] = False
-    context.user_data["mod"] = None
+    context.user_data[
+        "hisse_bekleniyor"
+    ] = False
+
+    context.user_data[
+        "mod"
+    ] = None
 
 
-app = Application.builder().token(TOKEN).build()
+# =========================================================
+# TELEGRAM UYGULAMASI
+# =========================================================
 
-app.add_handler(CommandHandler("start", start))
-app.add_handler(CallbackQueryHandler(buton))
-app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, hisse_oku))
+app = (
+    Application
+    .builder()
+    .token(TOKEN)
+    .build()
+)
 
-print("BIST AI Terminal çalışıyor...")
+app.add_handler(
+    CommandHandler(
+        "start",
+        start
+    )
+)
+
+app.add_handler(
+    CallbackQueryHandler(
+        buton
+    )
+)
+
+app.add_handler(
+    MessageHandler(
+        filters.TEXT & ~filters.COMMAND,
+        hisse_oku
+    )
+)
+
+print(
+    "BIST AI Terminal çalışıyor..."
+)
 
 app.run_polling()
