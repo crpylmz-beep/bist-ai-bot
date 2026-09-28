@@ -291,6 +291,18 @@ async def hisse_oku(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 f"{sinyal}\n\n"
 
                 f"⭐ TEKNİK PUAN: {puan}/100\n\n"
+                f"💰 ALIM BÖLGESİ\n"
+                f"{al_alt:.2f} - {al_ust:.2f} TL\n\n"
+
+                f"🔴 SATIŞ BÖLGESİ\n"
+                f"{sat_alt:.2f} - {sat_ust:.2f} TL\n\n"
+
+                f"🎯 HEDEFLER\n"
+                f"1. Hedef: {hedef1:.2f} TL\n"
+                f"2. Hedef: {hedef2:.2f} TL\n\n"
+
+                f"🛑 RİSK / STOP\n"
+                f"{risk_seviyesi:.2f} TL\n\n"
 
                 f"🔎 GEREKÇELER\n"
             )
