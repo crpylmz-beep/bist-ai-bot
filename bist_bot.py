@@ -4,6 +4,7 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, ContextTypes, CallbackQueryHandler, MessageHandler, filters
 
 TOKEN = os.getenv("BOT_TOKEN")
+print("TOKEN DURUMU:", bool(TOKEN), "UZUNLUK:", len(TOKEN) if TOKEN else 0)
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
