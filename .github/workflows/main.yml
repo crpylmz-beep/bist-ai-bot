@@ -27,7 +27,7 @@ jobs:
         run: npm install -g netlify-cli
 
       - name: Netlify'ye gönder
-        run: netlify deploy --dir=webapp --prod --site-id "$NETLIFY_SITE_ID" --auth "$NETLIFY_AUTH_TOKEN"
-        env:
+        run: netlify deploy --dir=webapp --prod --site "$NETLIFY_SITE_ID" --auth "$NETLIFY_AUTH_TOKEN"
+        env: 
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
