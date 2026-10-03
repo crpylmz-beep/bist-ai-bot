@@ -1184,7 +1184,7 @@ def bist_tara():
 
     aday_semboller = [
         a["sembol"]
-        for a in hizli_adaylar[:60]
+        for a in hizli_adaylar
     ]
 
     sonuclar = []
