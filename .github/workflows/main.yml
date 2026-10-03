@@ -1,0 +1,33 @@
+name: BIST AI Güncelle
+
+on:
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Kodları indir
+        uses: actions/checkout@v4
+
+      - name: Python kur
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Gerekli paketleri kur
+        run: pip install -r requirements.txt
+
+      - name: BIST verisini oluştur
+        run: |
+          python -c "import bist_bot; s,t=bist_bot.bist_tara(); bist_bot.web_verisi_kaydet(s); print('WEB VERISI GUNCELLENDI')"
+
+      - name: Netlify CLI kur
+        run: npm install -g netlify-cli
+
+      - name: Netlify'ye gönder
+        run: netlify deploy --dir=webapp --prod --site-id "$NETLIFY_SITE_ID" --auth "$NETLIFY_AUTH_TOKEN"
+        env:
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
