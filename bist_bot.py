@@ -172,7 +172,7 @@ def hisse_analiz_hesapla(
         if veri is None or veri.empty:
             return None
 
-        if len(veri) < 20:
+        if len(veri) < 2:
             return None
 
         close = veri["Close"]
