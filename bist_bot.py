@@ -1178,14 +1178,7 @@ def bist_tara():
 
     toplam = len(semboller)
 
-    hizli_adaylar = hizli_agresif_tarama(
-        semboller
-    )
-
-    aday_semboller = [
-        a["sembol"]
-        for a in hizli_adaylar
-    ]
+    aday_semboller = semboller
 
     sonuclar = []
 
