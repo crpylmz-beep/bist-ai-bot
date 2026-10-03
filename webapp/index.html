@@ -1,0 +1,2613 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <meta name="apple-mobile-web-app-capable"
+          content="yes">
+
+    <meta name="apple-mobile-web-app-status-bar-style"
+          content="default">
+
+    <meta name="apple-mobile-web-app-title"
+          content="BIST Asistanı">
+
+    <title>BIST Asistanı</title>
+
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+
+        body {
+
+            margin: 0;
+            padding: 0;
+
+            font-family: Arial, sans-serif;
+
+            background: #f3f5f7;
+
+            color: #222;
+
+            padding-bottom: 90px;
+
+        }
+
+
+        .header {
+
+            background: #111827;
+
+            color: white;
+
+            padding: 22px 18px;
+
+        }
+
+
+        .header h1 {
+
+            margin: 0;
+
+            font-size: 24px;
+
+        }
+
+
+        .header p {
+
+            margin: 6px 0 0;
+
+            opacity: 0.75;
+
+            font-size: 14px;
+
+        }
+
+
+        .section {
+
+            padding: 16px;
+
+        }
+
+
+        .section-title {
+
+            font-size: 19px;
+
+            font-weight: bold;
+
+            margin-bottom: 12px;
+
+        }
+
+
+        .market-card {
+
+            background: white;
+
+            border-radius: 18px;
+
+            padding: 18px;
+
+            margin-bottom: 16px;
+
+            box-shadow:
+                0 3px 12px rgba(0,0,0,0.06);
+
+        }
+
+
+        .market-title {
+
+            font-size: 14px;
+
+            color: #777;
+
+        }
+
+
+        .market-value {
+
+            font-size: 28px;
+
+            font-weight: bold;
+
+            margin-top: 6px;
+
+        }
+
+
+        .market-change {
+
+            color: #16a34a;
+
+            font-weight: bold;
+
+            margin-top: 4px;
+
+        }
+
+
+        .signals {
+
+            display: grid;
+
+            grid-template-columns: 1fr 1fr;
+
+            gap: 12px;
+
+        }
+
+
+        .signal-card {
+
+            background: white;
+
+            border-radius: 16px;
+
+            padding: 16px;
+
+            min-height: 105px;
+
+            box-shadow:
+                0 3px 12px rgba(0,0,0,0.06);
+
+            cursor: pointer;
+
+            transition:
+                transform 0.12s ease;
+
+        }
+
+
+        .signal-card:active {
+
+            transform: scale(0.97);
+
+        }
+
+
+        .signal-title {
+
+            font-size: 15px;
+
+            font-weight: bold;
+
+            margin-bottom: 8px;
+
+        }
+
+
+        .signal-text {
+
+            font-size: 12px;
+
+            color: #777;
+
+        }
+
+
+        .signal-count {
+
+            font-size: 12px;
+
+            color: #555;
+
+            margin-top: 8px;
+
+            font-weight: bold;
+
+        }
+
+
+        .green {
+
+            border-left: 5px solid #16a34a;
+
+        }
+
+
+        .red {
+
+            border-left: 5px solid #dc2626;
+
+        }
+
+
+        .orange {
+
+            border-left: 5px solid #f59e0b;
+
+        }
+
+
+        .blue {
+
+            border-left: 5px solid #2563eb;
+
+        }
+
+
+        .top10 {
+
+            display: flex;
+
+            flex-direction: column;
+
+            gap: 10px;
+
+        }
+
+
+        .stock {
+
+            background: white;
+
+            border-radius: 15px;
+
+            padding: 14px;
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 12px;
+
+            box-shadow:
+                0 3px 12px rgba(0,0,0,0.05);
+
+            cursor: pointer;
+
+            transition:
+                transform 0.12s ease;
+
+        }
+
+
+        .stock:active {
+
+            transform: scale(0.98);
+
+        }
+
+
+        .rank {
+
+            width: 32px;
+
+            height: 32px;
+
+            border-radius: 10px;
+
+            background: #111827;
+
+            color: white;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            font-weight: bold;
+
+            flex-shrink: 0;
+
+        }
+
+
+        .stock-name {
+
+            flex: 1;
+
+            font-weight: bold;
+
+            font-size: 16px;
+
+        }
+
+
+        .stock-info {
+
+            font-size: 11px;
+
+            color: #888;
+
+            margin-top: 4px;
+
+        }
+
+
+        .stock-price {
+
+            text-align: right;
+
+        }
+
+
+        .stock-price small {
+
+            display: block;
+
+            font-size: 13px;
+
+            font-weight: bold;
+
+        }
+
+
+        .stock-price span {
+
+            display: block;
+
+            margin-top: 4px;
+
+            font-weight: bold;
+
+        }
+
+
+        .up {
+
+            color: #16a34a;
+
+        }
+
+
+        .down {
+
+            color: #dc2626;
+
+        }
+
+
+        .loading {
+
+            text-align: center;
+
+            padding: 20px;
+
+            color: #777;
+
+        }
+
+
+        .error {
+
+            background: #fee2e2;
+
+            color: #991b1b;
+
+            padding: 14px;
+
+            border-radius: 12px;
+
+            font-size: 13px;
+
+        }
+
+
+        /* -----------------------------
+           SİNYAL SAYFASI
+        ----------------------------- */
+
+
+        #signalPage {
+
+            display: none;
+
+        }
+
+
+        .page-header {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 12px;
+
+            margin-bottom: 16px;
+
+        }
+
+
+        .back-button {
+
+            width: 40px;
+
+            height: 40px;
+
+            border: none;
+
+            border-radius: 12px;
+
+            background: #111827;
+
+            color: white;
+
+            font-size: 24px;
+
+            cursor: pointer;
+
+        }
+
+
+        .page-title {
+
+            font-size: 21px;
+
+            font-weight: bold;
+
+        }
+
+
+        .signal-list {
+
+            display: flex;
+
+            flex-direction: column;
+
+            gap: 10px;
+
+        }
+
+
+        /* -----------------------------
+           HİSSE DETAY SAYFASI
+        ----------------------------- */
+
+
+        #stockPage {
+
+            display: none;
+
+        }
+
+
+        .detail-card {
+
+            background: white;
+
+            border-radius: 18px;
+
+            padding: 18px;
+
+            margin-bottom: 14px;
+
+            box-shadow:
+                0 3px 12px rgba(0,0,0,0.06);
+
+        }
+
+
+        .detail-symbol {
+
+            font-size: 26px;
+
+            font-weight: bold;
+
+        }
+
+
+        .detail-price {
+
+            font-size: 25px;
+
+            font-weight: bold;
+
+            margin-top: 6px;
+
+        }
+
+
+        .detail-change {
+
+            font-size: 15px;
+
+            font-weight: bold;
+
+            margin-top: 5px;
+
+        }
+
+
+        .detail-signal {
+
+            margin-top: 12px;
+
+            padding: 10px;
+
+            border-radius: 10px;
+
+            background: #f3f5f7;
+
+            font-size: 13px;
+
+            font-weight: bold;
+
+        }
+
+
+        .detail-grid {
+
+    display: grid;
+
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    gap: 10px;
+
+}
+
+
+.detail-box {
+
+    background: #ffffff;
+
+    border: 1px solid #e5e7eb;
+
+    border-radius: 12px;
+
+    padding: 12px;
+
+    min-height: 62px;
+
+    box-shadow:
+        0 2px 8px rgba(0,0,0,0.04);
+
+    display: flex;
+
+    flex-direction: column;
+
+    justify-content: center;
+
+}
+
+
+.detail-label {
+
+    font-size: 11px;
+
+    color: #7b8490;
+
+    margin-bottom: 5px;
+
+    font-weight: 500;
+
+}
+
+
+.detail-value {
+
+    font-size: 15px;
+
+    font-weight: 700;
+
+    color: #18212f;
+
+    line-height: 1.2;
+
+}
+
+
+/* Hisse detayındaki bölüm başlıkları */
+
+.detail-section {
+
+    margin-top: 14px;
+
+}
+
+
+.detail-section-title {
+
+    font-size: 14px;
+
+    font-weight: 800;
+
+    color: #1f2937;
+
+    margin-bottom: 9px;
+
+    padding-left: 2px;
+
+}
+
+
+/* İşlem planı kartlarını daha belirgin göster */
+
+.detail-section:first-of-type .detail-box {
+
+    background: #f8fafc;
+
+}
+
+
+/* AI nedenleri */
+
+.reason-list {
+
+    display: grid;
+
+    grid-template-columns: 1fr;
+
+    gap: 7px;
+
+}
+
+
+.reason-item {
+
+    background: #ffffff;
+
+    border: 1px solid #e5e7eb;
+
+    border-radius: 10px;
+
+    padding: 10px 12px;
+
+    font-size: 13px;
+
+    color: #374151;
+
+    box-shadow:
+        0 2px 6px rgba(0,0,0,0.03);
+
+}
+
+
+/* Telefon ekranında daha sıkı görünüm */
+
+@media (min-width: 600px) {
+
+    .detail-grid {
+
+        grid-template-columns:
+            repeat(3, minmax(0, 1fr));
+
+    }
+
+}
+
+
+@media (max-width: 380px) {
+
+    .detail-grid {
+
+        gap: 8px;
+
+    }
+
+    .detail-box {
+
+        padding: 10px;
+
+        min-height: 58px;
+
+    }
+
+    .detail-value {
+
+        font-size: 14px;
+
+    }
+
+}
+
+
+        /* -----------------------------
+           ALT MENÜ
+        ----------------------------- */
+
+
+        .bottom-nav {
+
+            position: fixed;
+
+            left: 0;
+
+            right: 0;
+
+            bottom: 0;
+
+            height: 72px;
+
+            background: white;
+
+            border-top: 1px solid #ddd;
+
+            display: flex;
+
+            justify-content: space-around;
+
+            align-items: center;
+
+            z-index: 1000;
+
+        }
+
+
+        .nav-item {
+
+            text-align: center;
+
+            font-size: 11px;
+
+            color: #777;
+
+            cursor: pointer;
+
+        }
+
+
+        .nav-icon {
+
+            display: block;
+
+            font-size: 22px;
+
+            margin-bottom: 3px;
+
+        }
+
+
+        .nav-active {
+
+            color: #111827;
+
+            font-weight: bold;
+
+        }
+
+
+        .update-time {
+
+            font-size: 11px;
+
+            color: #888;
+
+            margin-top: 8px;
+
+        }
+
+
+        @media (max-width: 380px) {
+
+            .signals {
+
+                gap: 8px;
+
+            }
+
+
+            .signal-card {
+
+                padding: 12px;
+
+            }
+
+
+            .signal-title {
+
+                font-size: 13px;
+
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<!-- =========================================
+     ANA SAYFA
+========================================= -->
+
+
+<div id="homePage">
+
+
+    <div class="header">
+
+        <h1>📊 BIST Asistanı</h1>
+
+        <p>
+            Yapay Zekâ Destekli BIST Analiz
+        </p>
+
+    </div>
+
+
+    <div class="section">
+
+
+        <div class="market-card">
+
+            <div class="market-title">
+                BIST 100
+            </div>
+
+            <div class="market-value"
+                 id="bist100Value">
+
+                ---
+
+            </div>
+
+            <div class="market-change"
+                 id="bist100Change">
+
+                Veri bekleniyor...
+
+            </div>
+
+        </div>
+
+
+        <div class="section-title">
+            📡 Sinyaller
+        </div>
+
+
+        <div class="signals">
+
+
+            <div class="signal-card green"
+                 onclick="signalPage('AGRESIF_ALIS')">
+
+                <div class="signal-title">
+                    🟢 Agresif Alış
+                </div>
+
+                <div class="signal-text">
+                    Güçlü alış sinyalleri
+                </div>
+
+                <div class="signal-count"
+                     id="agresifAlisCount">
+
+                    -- hisse
+
+                </div>
+
+            </div>
+
+
+            <div class="signal-card red"
+                 onclick="signalPage('AGRESIF_SATIS')">
+
+                <div class="signal-title">
+                    🔴 Agresif Satış
+                </div>
+
+                <div class="signal-text">
+                    Güçlü satış sinyalleri
+                </div>
+
+                <div class="signal-count"
+                     id="agresifSatisCount">
+
+                    -- hisse
+
+                </div>
+
+            </div>
+
+
+            <div class="signal-card orange"
+                 onclick="signalPage('ASIRI_SATIM')">
+
+                <div class="signal-title">
+                    🟠 Aşırı Satım
+                </div>
+
+                <div class="signal-text">
+                    Tepki ihtimali
+                </div>
+
+                <div class="signal-count"
+                     id="asiriSatimCount">
+
+                    -- hisse
+
+                </div>
+
+            </div>
+
+
+            <div class="signal-card blue"
+                 onclick="signalPage('ASIRI_ALIM')">
+
+                <div class="signal-title">
+                    🔵 Aşırı Alım
+                </div>
+
+                <div class="signal-text">
+                    Yüksek RSI bölgesi
+                </div>
+
+                <div class="signal-count"
+                     id="asiriAlimCount">
+
+                    -- hisse
+
+                </div>
+
+            </div>
+
+
+        </div>
+
+    </div>
+
+
+    <div class="section">
+
+
+        <div class="section-title">
+            🏆 Yarın İçin TOP 10
+        </div>
+
+
+        <div class="top10"
+             id="top10List">
+
+            <div class="loading">
+                BIST verileri yükleniyor...
+            </div>
+
+        </div>
+
+
+        <div class="update-time"
+             id="updateTime">
+
+        </div>
+
+
+    </div>
+
+</div>
+
+
+
+<!-- =========================================
+     SİNYAL SAYFASI
+========================================= -->
+
+
+<div id="signalPage">
+
+
+    <div class="header">
+
+        <h1>📊 BIST Asistanı</h1>
+
+        <p>
+            Sinyal Listesi
+        </p>
+
+    </div>
+
+
+    <div class="section">
+
+
+        <div class="page-header">
+
+            <button class="back-button"
+                    onclick="goHome()">
+
+                ‹
+
+            </button>
+
+
+            <div class="page-title"
+                 id="signalPageTitle">
+
+                Sinyaller
+
+            </div>
+
+        </div>
+
+
+        <div class="signal-list"
+             id="signalList">
+
+        </div>
+
+
+    </div>
+
+</div>
+
+
+
+<!-- =========================================
+     HİSSE DETAY SAYFASI
+========================================= -->
+
+
+<div id="stockPage">
+
+
+    <div class="header">
+
+        <h1>📊 BIST Asistanı</h1>
+
+        <p>
+            Hisse Analizi
+        </p>
+
+    </div>
+
+
+    <div class="section">
+
+
+        <div class="page-header">
+
+            <button class="back-button"
+                    onclick="stockBack()">
+
+                ‹
+
+            </button>
+
+
+            <div class="page-title">
+                Hisse Detayı
+            </div>
+
+        </div>
+
+
+        <div id="stockDetail">
+
+        </div>
+
+
+    </div>
+
+</div>
+
+
+
+<!-- =========================================
+     ALT MENÜ
+========================================= -->
+
+
+<div class="bottom-nav">
+
+
+    <div class="nav-item nav-active"
+         onclick="goHome()">
+
+        <span class="nav-icon">
+            🏠
+        </span>
+
+        Ana Sayfa
+
+    </div>
+
+
+    <div class="nav-item"
+         onclick="goScanner()">
+
+        <span class="nav-icon">
+            🔎
+        </span>
+
+        Tarama
+
+    </div>
+
+
+    <div class="nav-item"
+         onclick="goFavorites()">
+
+        <span class="nav-icon">
+            ⭐
+        </span>
+
+        Favoriler
+
+    </div>
+
+
+    <div class="nav-item"
+         onclick="goPortfolio()">
+
+        <span class="nav-icon">
+            💼
+        </span>
+
+        Portföy
+
+    </div>
+
+
+    <div class="nav-item"
+         onclick="goAI()">
+
+        <span class="nav-icon">
+            🤖
+        </span>
+
+        AI
+
+    </div>
+
+
+</div>
+
+
+
+<script>
+
+
+/* =========================================
+   GLOBAL VERİ
+========================================= */
+
+
+let bistVerisi = {
+
+    hisseler: [],
+
+    guncelleme: null
+
+};
+
+
+let oncekiSayfa = "home";
+
+
+
+/* =========================================
+   SAYISAL VERİ
+========================================= */
+
+
+function sayi(deger) {
+
+    const sonuc =
+        Number(deger);
+
+    if (
+        Number.isFinite(sonuc)
+    ) {
+
+        return sonuc;
+
+    }
+
+    return 0;
+
+}
+
+
+
+/* =========================================
+   FİYAT
+========================================= */
+
+
+function fiyatFormat(deger) {
+
+    const fiyat =
+        sayi(deger);
+
+    return fiyat.toLocaleString(
+        "tr-TR",
+        {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }
+    );
+
+}
+
+
+
+/* =========================================
+   DEĞİŞİM
+========================================= */
+
+
+function degisimFormat(deger) {
+
+    const degisim =
+        sayi(deger);
+
+    return (
+        degisim >= 0
+            ? "+"
+            : ""
+    )
+    +
+    degisim.toFixed(2)
+    +
+    "%";
+
+}
+
+
+
+/* =========================================
+   DEĞİŞİM RENGİ
+========================================= */
+
+
+function degisimRenk(deger) {
+
+    return sayi(deger) >= 0
+        ? "up"
+        : "down";
+
+}
+
+
+
+/* =========================================
+   SİNYALİ STANDARDİZE ET
+========================================= */
+
+
+function sinyalTemizle(sinyal) {
+
+    return String(
+        sinyal || ""
+    )
+    .toUpperCase()
+    .replaceAll("İ", "I")
+    .replaceAll("Ş", "S")
+    .replaceAll("Ğ", "G")
+    .replaceAll("Ü", "U")
+    .replaceAll("Ö", "O")
+    .replaceAll("Ç", "C")
+    .replaceAll(" ", "_")
+    .replaceAll("/", "_")
+    .trim();
+
+}
+
+
+
+/* =========================================
+   HİSSE SİNYALİNİ AL
+========================================= */
+
+
+function hisseSinyal(hisse) {
+
+    return sinyalTemizle(
+
+        hisse.sinyal
+        ??
+        hisse.sinyal_sinifi
+        ??
+        hisse.signal
+        ??
+        ""
+
+    );
+
+}
+
+
+
+/* =========================================
+   GERÇEK VERİYİ YÜKLE
+========================================= */
+
+
+async function gercekVeriyiYukle() {
+
+
+    try {
+
+
+        const cevap =
+            await fetch(
+                "data/bist_data.json?t="
+                +
+                Date.now()
+            );
+
+
+        if (!cevap.ok) {
+
+            throw new Error(
+                "Veri dosyası okunamadı."
+            );
+
+        }
+
+
+        const veri =
+            await cevap.json();
+
+
+        bistVerisi =
+            veri || {};
+
+
+        bistVerisi.hisseler =
+            Array.isArray(
+                veri.hisseler
+            )
+                ? veri.hisseler
+                : [];
+
+
+        console.log(
+            "GERÇEK BIST VERİSİ:",
+            bistVerisi
+        );
+
+
+        anaSayfayiDoldur();
+
+
+    }
+    catch (hata) {
+
+
+        console.error(
+            "BIST VERİ OKUMA HATASI:",
+            hata
+        );
+
+
+        document.getElementById(
+            "top10List"
+        ).innerHTML = `
+
+            <div class="error">
+
+                BIST verileri okunamadı.
+
+            </div>
+
+        `;
+
+
+    }
+
+}
+
+
+
+/* =========================================
+   ANA SAYFAYI DOLDUR
+========================================= */
+
+function anaSayfayiDoldur() {
+
+
+    const hisseler =
+        bistVerisi.hisseler || [];
+
+
+    /* =========================================
+       BIST 100
+    ========================================= */
+
+    const bist100 =
+        bistVerisi.bist100 || null;
+
+
+    const bist100Value =
+        document.getElementById(
+            "bist100Value"
+        );
+
+
+    const bist100Change =
+        document.getElementById(
+            "bist100Change"
+        );
+
+
+    if (
+        bist100 &&
+        bist100.fiyat !== null &&
+        bist100.fiyat !== undefined
+    ) {
+
+
+        bist100Value.textContent =
+            Number(
+                bist100.fiyat
+            ).toLocaleString(
+                "tr-TR",
+                {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                }
+            );
+
+
+        const degisim =
+            Number(
+                bist100.degisim || 0
+            );
+
+
+        bist100Change.textContent =
+            (degisim >= 0 ? "+" : "")
+            +
+            degisim.toFixed(2)
+            +
+            "%";
+
+
+        bist100Change.style.color =
+            degisim >= 0
+                ? "#16a34a"
+                : "#dc2626";
+
+
+    } else {
+
+
+        bist100Value.textContent =
+            "---";
+
+
+        bist100Change.textContent =
+            "Veri bekleniyor...";
+
+    }
+
+
+
+    /* =========================================
+       SİNYALLER
+    ========================================= */
+
+    let agresifAlis = 0;
+
+    let agresifSatis = 0;
+
+    let asiriSatim = 0;
+
+    let asiriAlim = 0;
+
+
+
+    hisseler.forEach(
+        function(hisse) {
+
+
+            const sinyal =
+                hisseSinyal(hisse);
+
+
+            if (
+                sinyal ===
+                "AGRESIF_ALIS"
+            ) {
+
+                agresifAlis++;
+
+            }
+
+
+            if (
+                sinyal ===
+                "AGRESIF_SATIS"
+            ) {
+
+                agresifSatis++;
+
+            }
+
+
+            if (
+                sinyal ===
+                "ASIRI_SATIM"
+                ||
+                sinyal ===
+                "ASIRI_SATIM_TEPKI"
+            ) {
+
+                asiriSatim++;
+
+            }
+
+
+            if (
+                sinyal ===
+                "ASIRI_ALIM"
+            ) {
+
+                asiriAlim++;
+
+            }
+
+        }
+    );
+
+
+
+    document.getElementById(
+        "agresifAlisCount"
+    ).textContent =
+        agresifAlis
+        +
+        " hisse";
+
+
+
+    document.getElementById(
+        "agresifSatisCount"
+    ).textContent =
+        agresifSatis
+        +
+        " hisse";
+
+
+
+    document.getElementById(
+        "asiriSatimCount"
+    ).textContent =
+        asiriSatim
+        +
+        " hisse";
+
+
+
+    document.getElementById(
+        "asiriAlimCount"
+    ).textContent =
+        asiriAlim
+        +
+        " hisse";
+
+
+
+    /* =========================================
+       TOP 10
+    ========================================= */
+
+    top10Goster(
+        hisseler
+    );
+
+
+
+    /* =========================================
+       SON GÜNCELLEME
+    ========================================= */
+
+    if (
+        bistVerisi.guncelleme
+    ) {
+
+        document.getElementById(
+            "updateTime"
+        ).textContent =
+            "Son güncelleme: "
+            +
+            bistVerisi.guncelleme;
+
+    }
+
+}
+
+
+
+
+/* =========================================
+   TOP 10
+========================================= */
+
+
+function top10Goster(
+    hisseler
+) {
+
+
+    const liste =
+        document.getElementById(
+            "top10List"
+        );
+
+
+    if (
+        !hisseler.length
+    ) {
+
+        liste.innerHTML = `
+
+            <div class="loading">
+
+                Henüz hisse verisi bulunamadı.
+
+            </div>
+
+        `;
+
+        return;
+
+    }
+
+
+
+    const sirali =
+        [...hisseler]
+        .sort(
+            function(a, b) {
+
+                return (
+                    sayi(b.puan)
+                    -
+                    sayi(a.puan)
+                );
+
+            }
+        )
+        .slice(
+            0,
+            10
+        );
+
+
+
+    liste.innerHTML = "";
+
+
+
+    sirali.forEach(
+        function(
+            hisse,
+            index
+        ) {
+
+
+            const fiyat =
+                sayi(
+                    hisse.fiyat
+                );
+
+
+            const degisim =
+                sayi(
+                    hisse.degisim
+                );
+
+
+            const puan =
+                sayi(
+                    hisse.puan
+                );
+
+
+            const kart =
+                document.createElement(
+                    "div"
+                );
+
+
+            kart.className =
+                "stock";
+
+
+            kart.onclick =
+                function() {
+
+                    hisseDetay(
+                        hisse
+                    );
+
+                };
+
+
+
+            kart.innerHTML = `
+
+                <div class="rank">
+
+                    ${index + 1}
+
+                </div>
+
+
+                <div style="flex:1;">
+
+                    <div class="stock-name">
+
+                        ${hisse.sembol || "---"}
+
+                    </div>
+
+
+                    <div class="stock-info">
+
+                        Puan:
+                        ${puan}/100
+
+                    </div>
+
+                </div>
+
+
+                <div class="stock-price">
+
+                    <small>
+
+                        ${fiyatFormat(fiyat)}
+                        TL
+
+                    </small>
+
+
+                    <span class="${degisimRenk(degisim)}">
+
+                        ${degisimFormat(degisim)}
+
+                    </span>
+
+                </div>
+
+            `;
+
+
+            liste.appendChild(
+                kart
+            );
+
+
+        }
+    );
+
+}
+
+
+
+/* =========================================
+   SİNYAL SAYFASI
+========================================= */
+
+
+function signalPage(
+    tip
+) {
+
+
+    oncekiSayfa =
+        "home";
+
+
+    document.getElementById(
+        "homePage"
+    ).style.display =
+        "none";
+
+
+    document.getElementById(
+        "stockPage"
+    ).style.display =
+        "none";
+
+
+    document.getElementById(
+        "signalPage"
+    ).style.display =
+        "block";
+
+
+
+    let baslik =
+        "Sinyaller";
+
+
+    if (
+        tip ===
+        "AGRESIF_ALIS"
+    ) {
+
+        baslik =
+            "🟢 Agresif Alış";
+
+    }
+
+
+    if (
+        tip ===
+        "AGRESIF_SATIS"
+    ) {
+
+        baslik =
+            "🔴 Agresif Satış";
+
+    }
+
+
+    if (
+        tip ===
+        "ASIRI_SATIM"
+    ) {
+
+        baslik =
+            "🟠 Aşırı Satım / Tepki";
+
+    }
+
+
+    if (
+        tip ===
+        "ASIRI_ALIM"
+    ) {
+
+        baslik =
+            "🔵 Aşırı Alım";
+
+    }
+
+
+
+    document.getElementById(
+        "signalPageTitle"
+    ).textContent =
+        baslik;
+
+
+
+    const liste =
+        document.getElementById(
+            "signalList"
+        );
+
+
+    const hisseler =
+        (
+            bistVerisi.hisseler
+            ||
+            []
+        )
+        .filter(
+            function(hisse) {
+
+
+                const sinyal =
+                    hisseSinyal(
+                        hisse
+                    );
+
+
+                if (
+                    tip ===
+                    "ASIRI_SATIM"
+                    &&
+                    sinyal ===
+                    "ASIRI_SATIM_TEPKI"
+                ) {
+
+                    return true;
+
+                }
+
+
+                return (
+                    sinyal ===
+                    tip
+                );
+
+            }
+        )
+        .sort(
+            function(a, b) {
+
+                return (
+                    sayi(b.puan)
+                    -
+                    sayi(a.puan)
+                );
+
+            }
+        );
+
+
+
+    if (
+        !hisseler.length
+    ) {
+
+        liste.innerHTML = `
+
+            <div class="loading">
+
+                Bu kategoride
+                şu anda hisse bulunamadı.
+
+            </div>
+
+        `;
+
+        return;
+
+    }
+
+
+
+    liste.innerHTML = "";
+
+
+
+    hisseler.forEach(
+        function(hisse) {
+
+
+            const fiyat =
+                sayi(
+                    hisse.fiyat
+                );
+
+
+            const degisim =
+                sayi(
+                    hisse.degisim
+                );
+
+
+            const puan =
+                sayi(
+                    hisse.puan
+                );
+
+
+            const rsi =
+                sayi(
+                    hisse.rsi
+                );
+
+
+            const kart =
+                document.createElement(
+                    "div"
+                );
+
+
+            kart.className =
+                "stock";
+
+
+            kart.onclick =
+                function() {
+
+                    hisseDetay(
+                        hisse
+                    );
+
+                };
+
+
+
+            kart.innerHTML = `
+
+                <div class="rank">
+
+                    ${(
+                        hisse.sembol
+                        ||
+                        "?"
+                    ).substring(0,1)}
+
+                </div>
+
+
+                <div style="flex:1;">
+
+                    <div class="stock-name">
+
+                        ${hisse.sembol || "---"}
+
+                    </div>
+
+
+                    <div class="stock-info">
+
+                        RSI:
+                        ${rsi.toFixed(2)}
+
+                        &nbsp; | &nbsp;
+
+                        Puan:
+                        ${puan}/100
+
+                    </div>
+
+                </div>
+
+
+                <div class="stock-price">
+
+                    <small>
+
+                        ${fiyatFormat(fiyat)}
+                        TL
+
+                    </small>
+
+
+                    <span class="${degisimRenk(degisim)}">
+
+                        ${degisimFormat(degisim)}
+
+                    </span>
+
+                </div>
+
+            `;
+
+
+            liste.appendChild(
+                kart
+            );
+
+
+        }
+    );
+
+}
+
+
+
+/* =========================================
+   HİSSE DETAY
+========================================= */
+
+
+function hisseDetay(
+    hisse
+) {
+
+    oncekiSayfa =
+        document.getElementById(
+            "signalPage"
+        ).style.display ===
+        "block"
+            ? "signal"
+            : "home";
+
+    document.getElementById(
+        "homePage"
+    ).style.display =
+        "none";
+
+    document.getElementById(
+        "signalPage"
+    ).style.display =
+        "none";
+
+    document.getElementById(
+        "stockPage"
+    ).style.display =
+        "block";
+
+    const fiyat =
+        sayi(
+            hisse.fiyat
+        );
+
+    const degisim =
+        sayi(
+            hisse.degisim
+        );
+
+    const puan =
+        sayi(
+            hisse.puan
+        );
+
+    const rsi =
+        sayi(
+            hisse.rsi
+        );
+
+    const sma20 =
+        sayi(
+            hisse.sma20
+        );
+
+    const sma50 =
+        sayi(
+            hisse.sma50
+        );
+
+    const macd =
+        sayi(
+            hisse.macd
+        );
+
+    const macdSignal =
+        sayi(
+            hisse.signal
+            ??
+            hisse.macd_signal
+        );
+
+    const hacimOrani =
+        sayi(
+            hisse.hacim_orani
+            ??
+            hisse.hacim_20_oran
+        );
+
+    const hedef1 =
+        sayi(
+            hisse.hedef1
+            ??
+            hisse.hedef_1
+        );
+
+    const hedef2 =
+        sayi(
+            hisse.hedef2
+            ??
+            hisse.hedef_2
+        );
+
+    const stop =
+        sayi(
+            hisse.stop
+            ??
+            hisse.stop_loss
+        );
+
+    const destek =
+        sayi(
+            hisse.destek
+        );
+
+    const direnc =
+        sayi(
+            hisse.direnc
+        );
+
+    const girisAlt =
+        sayi(
+            hisse.giris_alt
+        );
+
+    const girisUst =
+        sayi(
+            hisse.giris_ust
+        );
+
+    const riskGetiri =
+        sayi(
+            hisse.risk_getiri
+        );
+
+    const nedenler =
+        Array.isArray(
+            hisse.nedenler
+        )
+            ? hisse.nedenler
+            : [];
+
+    const sinyal =
+        hisseSinyal(
+            hisse
+        );
+
+    let alimBolgesi =
+        "---";
+
+    if (
+        Number.isFinite(girisAlt) &&
+        Number.isFinite(girisUst) &&
+        girisAlt > 0 &&
+        girisUst > 0
+    ) {
+
+        alimBolgesi =
+            fiyatFormat(girisAlt)
+            + " - "
+            + fiyatFormat(girisUst)
+            + " TL";
+
+    }
+
+    let nedenlerHTML =
+        "";
+
+    if (
+        nedenler.length
+    ) {
+
+        nedenlerHTML = `
+            <div class="detail-section">
+
+                <div class="detail-section-title">
+                    🤖 AI Sinyal Nedenleri
+                </div>
+
+                <div class="reason-list">
+
+                    ${nedenler.map(
+                        function(neden) {
+
+                            return `
+                                <div class="reason-item">
+                                    • ${neden}
+                                </div>
+                            `;
+
+                        }
+                    ).join("")}
+
+                </div>
+
+            </div>
+        `;
+
+    } else {
+
+        nedenlerHTML = `
+            <div class="detail-section">
+
+                <div class="detail-section-title">
+                    🤖 AI Sinyal Nedenleri
+                </div>
+
+                <div class="reason-item">
+                    Bu hisse için açıklama verisi bulunamadı.
+                </div>
+
+            </div>
+        `;
+
+    }
+
+    document.getElementById(
+        "stockDetail"
+    ).innerHTML = `
+
+        <div class="detail-card">
+
+            <div class="detail-symbol">
+                ${hisse.sembol || "---"}
+            </div>
+
+            <div class="detail-price">
+                ${fiyatFormat(fiyat)}
+                TL
+            </div>
+
+            <div class="detail-change ${degisimRenk(degisim)}">
+                ${degisimFormat(degisim)}
+            </div>
+
+            <div class="detail-signal">
+                Sinyal:
+                ${sinyal || "NÖTR"}
+            </div>
+
+        </div>
+
+
+        <div class="detail-section">
+
+            <div class="detail-section-title">
+                🎯 İşlem Planı
+            </div>
+
+            <div class="detail-grid">
+
+                ${detayKutu(
+                    "Alım Bölgesi",
+                    alimBolgesi
+                )}
+
+                ${detayKutu(
+                    "Hedef 1",
+                    hedef1
+                    ? fiyatFormat(hedef1)
+                    + " TL"
+                    : "---"
+                )}
+
+                ${detayKutu(
+                    "Hedef 2",
+                    hedef2
+                    ? fiyatFormat(hedef2)
+                    + " TL"
+                    : "---"
+                )}
+
+                ${detayKutu(
+                    "Stop",
+                    stop
+                    ? fiyatFormat(stop)
+                    + " TL"
+                    : "---"
+                )}
+
+                ${detayKutu(
+                    "Risk / Getiri",
+                    Number.isFinite(riskGetiri)
+                    ? riskGetiri.toFixed(2)
+                    : "---"
+                )}
+
+            </div>
+
+        </div>
+
+
+        <div class="detail-section">
+
+            <div class="detail-section-title">
+                📊 Teknik Göstergeler
+            </div>
+
+            <div class="detail-grid">
+
+                ${detayKutu(
+                    "AI Puanı",
+                    puan
+                    + "/100"
+                )}
+
+                ${detayKutu(
+                    "RSI",
+                    rsi
+                    ? rsi.toFixed(2)
+                    : "---"
+                )}
+
+                ${detayKutu(
+                    "SMA 20",
+                    sma20
+                    ? fiyatFormat(sma20)
+                    + " TL"
+                    : "---"
+                )}
+
+                ${detayKutu(
+                    "SMA 50",
+                    sma50
+                    ? fiyatFormat(sma50)
+                    + " TL"
+                    : "---"
+                )}
+
+                ${detayKutu(
+                    "MACD",
+                    macd
+                    ? macd.toFixed(4)
+                    : "---"
+                )}
+
+                ${detayKutu(
+                    "MACD Signal",
+                    macdSignal
+                    ? macdSignal.toFixed(4)
+                    : "---"
+                )}
+
+                ${detayKutu(
+                    "Hacim",
+                    hacimOrani
+                    ? "%"
+                    + hacimOrani.toFixed(1)
+                    : "---"
+                )}
+
+                ${detayKutu(
+                    "Destek",
+                    destek
+                    ? fiyatFormat(destek)
+                    + " TL"
+                    : "---"
+                )}
+
+                ${detayKutu(
+                    "Direnç",
+                    direnc
+                    ? fiyatFormat(direnc)
+                    + " TL"
+                    : "---"
+                )}
+
+            </div>
+
+        </div>
+
+
+        ${nedenlerHTML}
+
+    `;
+
+}
+
+
+
+/* =========================================
+   DETAY KUTUSU
+========================================= */
+
+
+function detayKutu(
+    baslik,
+    deger
+) {
+
+    return `
+
+        <div class="detail-box">
+
+            <div class="detail-label">
+
+                ${baslik}
+
+            </div>
+
+
+            <div class="detail-value">
+
+                ${deger}
+
+            </div>
+
+        </div>
+
+    `;
+
+}
+
+
+
+/* =========================================
+   GERİ DÖN
+========================================= */
+
+
+function goHome() {
+
+
+    document.getElementById(
+        "homePage"
+    ).style.display =
+        "block";
+
+
+    document.getElementById(
+        "signalPage"
+    ).style.display =
+        "none";
+
+
+    document.getElementById(
+        "stockPage"
+    ).style.display =
+        "none";
+
+}
+
+
+
+/* =========================================
+   HİSSE DETAYDAN GERİ DÖN
+========================================= */
+
+
+function stockBack() {
+
+
+    if (
+        oncekiSayfa ===
+        "signal"
+    ) {
+
+        document.getElementById(
+            "homePage"
+        ).style.display =
+            "none";
+
+
+        document.getElementById(
+            "signalPage"
+        ).style.display =
+            "block";
+
+
+        document.getElementById(
+            "stockPage"
+        ).style.display =
+            "none";
+
+    }
+    else {
+
+        goHome();
+
+    }
+
+}
+
+
+
+/* =========================================
+   ALT MENÜ
+========================================= */
+
+
+function goScanner() {
+
+    alert(
+        "🔎 Tarama ekranını bir sonraki aşamada gerçek verilerle bağlayacağız."
+    );
+
+}
+
+
+
+function goFavorites() {
+
+    alert(
+        "⭐ Favoriler ekranını bir sonraki aşamada oluşturacağız."
+    );
+
+}
+
+
+
+function goPortfolio() {
+
+    alert(
+        "💼 Portföy ekranını bir sonraki aşamada oluşturacağız."
+    );
+
+}
+
+
+
+function goAI() {
+
+    alert(
+        "🤖 AI ekranını bir sonraki aşamada gerçek verilerle bağlayacağız."
+    );
+
+}
+
+
+
+/* =========================================
+   BAŞLAT
+========================================= */
+
+
+gercekVeriyiYukle();
+
+
+</script>
+
+
+</body>
+
+</html>

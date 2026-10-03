@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BIST Asistanı</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            color: #222;
+        }
+
+        .header {
+            background: #111827;
+            color: white;
+            padding: 22px 18px;
+            text-align: center;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 26px;
+        }
+
+        .header p {
+            margin: 6px 0 0;
+            color: #cbd5e1;
+            font-size: 14px;
+        }
+
+        .container {
+            padding: 18px;
+            max-width: 600px;
+            margin: auto;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 18px 0 12px;
+        }
+
+        .menu {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 18px 12px;
+            text-align: center;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+            font-weight: bold;
+            min-height: 85px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .top10 {
+            background: white;
+            border-radius: 16px;
+            padding: 18px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+        }
+
+        .stock {
+            display: flex;
+            justify-content: space-between;
+            padding: 13px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .stock:last-child {
+            border-bottom: none;
+        }
+
+        .green {
+            color: #16a34a;
+            font-weight: bold;
+        }
+
+        .red {
+            color: #dc2626;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header">
+        <h1>📊 BIST Asistanı</h1>
+        <p>Yapay Zekâ Destekli BIST Analiz</p>
+    </div>
+
+    <div class="container">
+
+        <div class="section-title">📡 Sinyaller</div>
+
+        <div class="menu">
+            <div class="card">🟢<br>Agresif Alış</div>
+            <div class="card">🔴<br>Agresif Satış</div>
+            <div class="card">🟠<br>Aşırı Satım / Tepki</div>
+            <div class="card">🔵<br>Aşırı Alım</div>
+        </div>
+
+        <div class="section-title">🏆 Yarın İçin TOP 10</div>
+
+        <div class="top10">
+
+            <div class="stock">
+                <strong>1. LOGO</strong>
+                <span class="green">+7.21%</span>
+            </div>
+
+            <div class="stock">
+                <strong>2. HTTBT</strong>
+                <span class="green">+7.72%</span>
+            </div>
+
+            <div class="stock">
+                <strong>3. FONET</strong>
+                <span class="green">+9.83%</span>
+            </div>
+
+            <div class="stock">
+                <strong>4. ZGYO</strong>
+                <span class="green">+4.87%</span>
+            </div>
+
+        </div>
+
+    </div>
+
+</body>
+</html>
