@@ -1,2254 +1,1342 @@
 <!DOCTYPE html>
 <html lang="tr">
-
 <head>
-    <meta charset="UTF-8">
-
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
-
-    <meta name="apple-mobile-web-app-capable"
-          content="yes">
-
-    <meta name="apple-mobile-web-app-status-bar-style"
-          content="default">
-
-    <meta name="apple-mobile-web-app-title"
-          content="BIST Asistanı">
-
-    <title>BIST Asistanı</title>
-
-    <style>
-
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: Arial, sans-serif;
-            background: #f3f5f7;
-            color: #222;
-            padding-bottom: 90px;
-        }
-
-        .header {
-            background: #111827;
-            color: white;
-            padding: 22px 18px;
-        }
-
-        .header h1 {
-            margin: 0;
-            font-size: 24px;
-        }
-
-        .header p {
-            margin: 6px 0 0;
-            opacity: 0.75;
-            font-size: 14px;
-        }
-
-        .section {
-            padding: 16px;
-        }
-
-        .section-title {
-            font-size: 19px;
-            font-weight: bold;
-            margin-bottom: 12px;
-        }
-
-        .market-card {
-            background: white;
-            border-radius: 18px;
-            padding: 18px;
-            margin-bottom: 16px;
-            box-shadow: 0 3px 12px rgba(0,0,0,0.06);
-        }
-
-        .market-title {
-            font-size: 14px;
-            color: #777;
-        }
-
-        .market-value {
-            font-size: 28px;
-            font-weight: bold;
-            margin-top: 6px;
-        }
-
-        .market-change {
-            color: #16a34a;
-            font-weight: bold;
-            margin-top: 4px;
-        }
-
-        .signals {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-
-        .signal-card {
-            background: white;
-            border-radius: 16px;
-            padding: 16px;
-            min-height: 105px;
-            box-shadow: 0 3px 12px rgba(0,0,0,0.06);
-            cursor: pointer;
-            transition: transform 0.12s ease;
-        }
-
-        .signal-card:active {
-            transform: scale(0.97);
-        }
-
-        .signal-title {
-            font-size: 15px;
-            font-weight: bold;
-            margin-bottom: 8px;
-        }
-
-        .signal-text {
-            font-size: 12px;
-            color: #777;
-        }
-
-        .signal-count {
-            font-size: 12px;
-            color: #555;
-            margin-top: 8px;
-            font-weight: bold;
-        }
-
-        .green {
-            border-left: 5px solid #16a34a;
-        }
-
-        .red {
-            border-left: 5px solid #dc2626;
-        }
-
-        .orange {
-            border-left: 5px solid #f59e0b;
-        }
-
-        .blue {
-            border-left: 5px solid #2563eb;
-        }
-
-        /* ANA EKRAN BUTONLARI */
-
-        .main-actions {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            margin-top: 18px;
-        }
-
-        .main-action {
-            background: white;
-            border-radius: 17px;
-            padding: 17px;
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            box-shadow: 0 3px 12px rgba(0,0,0,0.06);
-            cursor: pointer;
-            transition: transform 0.12s ease;
-        }
-
-        .main-action:active {
-            transform: scale(0.98);
-        }
-
-        .action-icon {
-            width: 46px;
-            height: 46px;
-            border-radius: 14px;
-            background: #111827;
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 23px;
-            flex-shrink: 0;
-        }
-
-        .action-title {
-            font-size: 16px;
-            font-weight: bold;
-        }
-
-        .action-text {
-            font-size: 12px;
-            color: #777;
-            margin-top: 4px;
-        }
-
-        .action-arrow {
-            margin-left: auto;
-            font-size: 24px;
-            color: #999;
-        }
-
-        /* LİSTELER */
-
-        .top10 {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .stock {
-            background: white;
-            border-radius: 15px;
-            padding: 14px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            box-shadow: 0 3px 12px rgba(0,0,0,0.05);
-            cursor: pointer;
-            transition: transform 0.12s ease;
-        }
-
-        .stock:active {
-            transform: scale(0.98);
-        }
-
-        .rank {
-            width: 32px;
-            height: 32px;
-            border-radius: 10px;
-            background: #111827;
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            flex-shrink: 0;
-        }
-
-        .stock-name {
-            flex: 1;
-            font-weight: bold;
-            font-size: 16px;
-        }
-
-        .stock-info {
-            font-size: 11px;
-            color: #888;
-            margin-top: 4px;
-        }
-
-        .stock-price {
-            text-align: right;
-        }
-
-        .stock-price small {
-            display: block;
-            font-size: 13px;
-            font-weight: bold;
-        }
-
-        .stock-price span {
-            display: block;
-            margin-top: 4px;
-            font-weight: bold;
-        }
-
-        .up {
-            color: #16a34a;
-        }
-
-        .down {
-            color: #dc2626;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 20px;
-            color: #777;
-        }
-
-        .error {
-            background: #fee2e2;
-            color: #991b1b;
-            padding: 14px;
-            border-radius: 12px;
-            font-size: 13px;
-        }
-
-        /* SAYFA */
-
-        #signalPage,
-        #stockPage,
-        #top10Page,
-        #searchPage {
-            display: none;
-        }
-
-        .page-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 16px;
-        }
-
-        .back-button {
-            width: 40px;
-            height: 40px;
-            border: none;
-            border-radius: 12px;
-            background: #111827;
-            color: white;
-            font-size: 24px;
-            cursor: pointer;
-        }
-
-        .page-title {
-            font-size: 21px;
-            font-weight: bold;
-        }
-
-        .signal-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        /* ARAMA */
-
-        .search-box {
-            width: 100%;
-            border: none;
-            background: white;
-            border-radius: 15px;
-            padding: 15px;
-            font-size: 16px;
-            outline: none;
-            box-shadow: 0 3px 12px rgba(0,0,0,0.05);
-            margin-bottom: 14px;
-        }
-
-        /* DETAY */
-
-        .detail-card {
-            background: white;
-            border-radius: 18px;
-            padding: 18px;
-            margin-bottom: 14px;
-            box-shadow: 0 3px 12px rgba(0,0,0,0.06);
-        }
-
-        .detail-symbol {
-            font-size: 26px;
-            font-weight: bold;
-        }
-
-        .detail-price {
-            font-size: 25px;
-            font-weight: bold;
-            margin-top: 6px;
-        }
-
-        .detail-change {
-            font-size: 15px;
-            font-weight: bold;
-            margin-top: 5px;
-        }
-
-        .detail-signal {
-            margin-top: 12px;
-            padding: 10px;
-            border-radius: 10px;
-            background: #f3f5f7;
-            font-size: 13px;
-            font-weight: bold;
-        }
-
-        .detail-grid {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 10px;
-        }
-
-        .detail-box {
-            background: #ffffff;
-            border: 1px solid #e5e7eb;
-            border-radius: 12px;
-            padding: 12px;
-            min-height: 62px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-
-        .detail-label {
-            font-size: 11px;
-            color: #7b8490;
-            margin-bottom: 5px;
-            font-weight: 500;
-        }
-
-        .detail-value {
-            font-size: 15px;
-            font-weight: 700;
-            color: #18212f;
-            line-height: 1.2;
-        }
-
-        .detail-section {
-            margin-top: 14px;
-        }
-
-        .detail-section-title {
-            font-size: 14px;
-            font-weight: 800;
-            color: #1f2937;
-            margin-bottom: 9px;
-            padding-left: 2px;
-        }
-
-        .reason-list {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 7px;
-        }
-
-        .reason-item {
-            background: #ffffff;
-            border: 1px solid #e5e7eb;
-            border-radius: 10px;
-            padding: 10px 12px;
-            font-size: 13px;
-            color: #374151;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.03);
-        }
-
-        /* ALT MENÜ */
-
-        .bottom-nav {
-            position: fixed;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            height: 72px;
-            background: white;
-            border-top: 1px solid #ddd;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            z-index: 1000;
-        }
-
-        .nav-item {
-            text-align: center;
-            font-size: 11px;
-            color: #777;
-            cursor: pointer;
-        }
-
-        .nav-icon {
-            display: block;
-            font-size: 22px;
-            margin-bottom: 3px;
-        }
-
-        .nav-active {
-            color: #111827;
-            font-weight: bold;
-        }
-
-        .update-time {
-            font-size: 11px;
-            color: #888;
-            margin-top: 18px;
-            text-align: center;
-        }
-
-        @media (max-width: 380px) {
-
-            .signals {
-                gap: 8px;
-            }
-
-            .signal-card {
-                padding: 12px;
-            }
-
-            .signal-title {
-                font-size: 13px;
-            }
-
-            .detail-grid {
-                gap: 8px;
-            }
-
-            .detail-box {
-                padding: 10px;
-                min-height: 58px;
-            }
-
-            .detail-value {
-                font-size: 14px;
-            }
-        }
-
-        @media (min-width: 600px) {
-
-            .detail-grid {
-                grid-template-columns:
-                    repeat(3, minmax(0, 1fr));
-            }
-
-        }
-
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>BIST AI</title>
+
+<style>
+*{
+    box-sizing:border-box;
+    -webkit-tap-highlight-color:transparent;
+}
+
+body{
+    margin:0;
+    background:#f4f6f8;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+    color:#17212b;
+}
+
+.page{
+    min-height:100vh;
+    padding-bottom:85px;
+}
+
+.header{
+    background:#111827;
+    color:white;
+    padding:22px 18px 20px;
+    border-radius:0 0 22px 22px;
+}
+
+.header h1{
+    margin:0;
+    font-size:25px;
+}
+
+.header p{
+    margin:5px 0 0;
+    color:#aab4c3;
+    font-size:13px;
+}
+
+.market-card{
+    margin:15px;
+    padding:18px;
+    background:white;
+    border-radius:18px;
+    box-shadow:0 4px 15px rgba(0,0,0,.06);
+}
+
+.market-title{
+    font-size:13px;
+    color:#687386;
+}
+
+.market-price{
+    font-size:30px;
+    font-weight:800;
+    margin-top:4px;
+}
+
+.market-change{
+    font-size:16px;
+    font-weight:700;
+    margin-top:3px;
+}
+
+.up{color:#16a34a;}
+.down{color:#dc2626;}
+
+.section{
+    padding:0 15px;
+}
+
+.section-title{
+    font-size:18px;
+    font-weight:800;
+    margin:20px 0 12px;
+}
+
+.signal-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+}
+
+.signal-card{
+    background:white;
+    border-radius:18px;
+    padding:17px 14px;
+    min-height:120px;
+    box-shadow:0 4px 15px rgba(0,0,0,.06);
+    cursor:pointer;
+}
+
+.signal-icon{
+    font-size:26px;
+}
+
+.signal-name{
+    margin-top:8px;
+    font-size:14px;
+    font-weight:800;
+}
+
+.signal-count{
+    font-size:27px;
+    font-weight:900;
+    margin-top:4px;
+}
+
+.green{border-left:5px solid #16a34a;}
+.red{border-left:5px solid #dc2626;}
+.orange{border-left:5px solid #f59e0b;}
+.blue{border-left:5px solid #2563eb;}
+
+.main-actions{
+    padding:15px;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+}
+
+.action-btn{
+    border:0;
+    background:#111827;
+    color:white;
+    border-radius:17px;
+    padding:20px 10px;
+    font-size:15px;
+    font-weight:800;
+    cursor:pointer;
+}
+
+.action-btn:first-child{
+    background:#7c3aed;
+}
+
+.page-header{
+    background:#111827;
+    color:white;
+    padding:18px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+}
+
+.back-btn{
+    border:0;
+    background:#273244;
+    color:white;
+    width:40px;
+    height:40px;
+    border-radius:12px;
+    font-size:25px;
+    cursor:pointer;
+}
+
+.page-title{
+    font-size:21px;
+    font-weight:800;
+}
+
+.page-subtitle{
+    color:#9ca3af;
+    font-size:12px;
+    margin-top:3px;
+}
+
+.list{
+    padding:12px 15px 30px;
+}
+
+.stock-row{
+    background:white;
+    border-radius:17px;
+    margin-bottom:10px;
+    padding:15px;
+    box-shadow:0 3px 12px rgba(0,0,0,.05);
+    cursor:pointer;
+}
+
+.stock-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+.stock-symbol{
+    font-size:18px;
+    font-weight:900;
+}
+
+.stock-price{
+    font-weight:800;
+}
+
+.stock-bottom{
+    display:flex;
+    justify-content:space-between;
+    margin-top:8px;
+    font-size:13px;
+    color:#697386;
+}
+
+.score{
+    font-weight:900;
+}
+
+.search-box{
+    margin:15px;
+}
+
+.search-box input{
+    width:100%;
+    padding:16px;
+    border:0;
+    border-radius:15px;
+    background:white;
+    box-shadow:0 3px 12px rgba(0,0,0,.06);
+    font-size:16px;
+    outline:none;
+}
+
+.detail{
+    padding:15px;
+}
+
+.detail-card{
+    background:white;
+    border-radius:18px;
+    padding:18px;
+    margin-bottom:12px;
+    box-shadow:0 4px 15px rgba(0,0,0,.06);
+}
+
+.detail-symbol{
+    font-size:30px;
+    font-weight:900;
+}
+
+.detail-price{
+    font-size:26px;
+    font-weight:900;
+    margin-top:5px;
+}
+
+.detail-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+}
+
+.detail-item{
+    background:#f4f6f8;
+    padding:12px;
+    border-radius:12px;
+}
+
+.detail-label{
+    font-size:11px;
+    color:#737d8c;
+}
+
+.detail-value{
+    font-size:15px;
+    font-weight:800;
+    margin-top:3px;
+}
+
+.reason{
+    padding:8px 0;
+    border-bottom:1px solid #eee;
+    font-size:13px;
+}
+
+.scanner-grid{
+    padding:15px;
+    display:grid;
+    gap:13px;
+}
+
+.scanner-card{
+    background:white;
+    border-radius:20px;
+    padding:20px;
+    box-shadow:0 4px 15px rgba(0,0,0,.06);
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:15px;
+}
+
+.scanner-icon{
+    width:55px;
+    height:55px;
+    border-radius:16px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:28px;
+    background:#f3f4f6;
+}
+
+.scanner-info{
+    flex:1;
+}
+
+.scanner-name{
+    font-size:17px;
+    font-weight:900;
+}
+
+.scanner-desc{
+    font-size:12px;
+    color:#727b89;
+    margin-top:4px;
+}
+
+.scanner-arrow{
+    font-size:24px;
+    color:#9ca3af;
+}
+
+.bottom-nav{
+    position:fixed;
+    left:0;
+    right:0;
+    bottom:0;
+    height:72px;
+    background:white;
+    border-top:1px solid #e5e7eb;
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    z-index:100;
+}
+
+.nav-btn{
+    border:0;
+    background:white;
+    font-size:11px;
+    color:#697386;
+    cursor:pointer;
+}
+
+.nav-icon{
+    display:block;
+    font-size:22px;
+    margin-bottom:3px;
+}
+
+.nav-btn.active{
+    color:#111827;
+    font-weight:800;
+}
+
+.empty{
+    padding:35px 20px;
+    text-align:center;
+    color:#7b8492;
+}
+
+.update-time{
+    text-align:center;
+    color:#8992a0;
+    font-size:11px;
+    padding:10px;
+}
+
+@media(min-width:700px){
+    .page{
+        max-width:650px;
+        margin:auto;
+    }
+
+    .bottom-nav{
+        max-width:650px;
+        left:50%;
+        transform:translateX(-50%);
+    }
+}
+</style>
 </head>
-
 
 <body>
 
-
-<!-- =========================
-     ANA SAYFA
-========================= -->
-
-<div id="homePage">
+<!-- ANA SAYFA -->
+<div id="homePage" class="page">
 
     <div class="header">
-
-        <h1>📊 BIST Asistanı</h1>
-
-        <p>
-            Yapay Zekâ Destekli BIST Analiz
-        </p>
-
+        <h1>🤖 BIST AI Asistanı</h1>
+        <p>Yapay zekâ destekli BIST tarama terminali</p>
     </div>
 
+    <div class="market-card">
+        <div class="market-title">BIST 100</div>
+        <div id="bistPrice" class="market-price">--</div>
+        <div id="bistChange" class="market-change">--</div>
+    </div>
 
     <div class="section">
+        <div class="section-title">📡 Sinyaller</div>
 
-        <div class="market-card">
-
-            <div class="market-title">
-                BIST 100
-            </div>
-
-            <div class="market-value"
-                 id="bist100Value">
-                ---
-            </div>
-
-            <div class="market-change"
-                 id="bist100Change">
-                Veri bekleniyor...
-            </div>
-
-        </div>
-
-
-        <div class="section-title">
-            📡 Sinyaller
-        </div>
-
-
-        <div class="signals">
+        <div class="signal-grid">
 
             <div class="signal-card green"
-                 onclick="signalPage('AGRESIF_ALIS')">
-
-                <div class="signal-title">
-                    🟢 Agresif Alış
-                </div>
-
-                <div class="signal-text">
-                    Güçlü alış sinyalleri
-                </div>
-
-                <div class="signal-count"
-                     id="agresifAlisCount">
-                    -- hisse
-                </div>
-
+                 onclick="signalPage('AGRESIF_ALIS','home')">
+                <div class="signal-icon">🟢</div>
+                <div class="signal-name">Agresif Alış</div>
+                <div id="countAlis" class="signal-count">0</div>
             </div>
-
 
             <div class="signal-card red"
-                 onclick="signalPage('AGRESIF_SATIS')">
-
-                <div class="signal-title">
-                    🔴 Agresif Satış
-                </div>
-
-                <div class="signal-text">
-                    Güçlü satış sinyalleri
-                </div>
-
-                <div class="signal-count"
-                     id="agresifSatisCount">
-                    -- hisse
-                </div>
-
+                 onclick="signalPage('AGRESIF_SATIS','home')">
+                <div class="signal-icon">🔴</div>
+                <div class="signal-name">Agresif Satış</div>
+                <div id="countSatis" class="signal-count">0</div>
             </div>
-
 
             <div class="signal-card orange"
-                 onclick="signalPage('ASIRI_SATIM')">
-
-                <div class="signal-title">
-                    🟠 Aşırı Satım
-                </div>
-
-                <div class="signal-text">
-                    Tepki ihtimali
-                </div>
-
-                <div class="signal-count"
-                     id="asiriSatimCount">
-                    -- hisse
-                </div>
-
+                 onclick="signalPage('ASIRI_SATIM','home')">
+                <div class="signal-icon">🟠</div>
+                <div class="signal-name">Aşırı Satım</div>
+                <div id="countSatim" class="signal-count">0</div>
             </div>
-
 
             <div class="signal-card blue"
-                 onclick="signalPage('ASIRI_ALIM')">
-
-                <div class="signal-title">
-                    🔵 Aşırı Alım
-                </div>
-
-                <div class="signal-text">
-                    Yüksek RSI bölgesi
-                </div>
-
-                <div class="signal-count"
-                     id="asiriAlimCount">
-                    -- hisse
-                </div>
-
+                 onclick="signalPage('ASIRI_ALIM','home')">
+                <div class="signal-icon">🔵</div>
+                <div class="signal-name">Aşırı Alım</div>
+                <div id="countAlim" class="signal-count">0</div>
             </div>
 
         </div>
+    </div>
+
+    <div class="main-actions">
+
+        <button class="action-btn" onclick="showTop10()">
+            🏆<br>
+            Yarın İçin TOP 10
+        </button>
+
+        <button class="action-btn" onclick="showSearch()">
+            🔎<br>
+            Hisse Ara
+        </button>
+
+    </div>
+
+    <div id="updateTime" class="update-time">
+        Veri yükleniyor...
+    </div>
+</div>
 
 
-        <!-- ANA EKRAN KISA YOLLARI -->
+<!-- TARAMA -->
+<div id="scannerPage" class="page" style="display:none">
 
-        <div class="main-actions">
+    <div class="page-header">
+        <button class="back-btn" onclick="goHome()">‹</button>
 
-            <div class="main-action"
-                 onclick="showTop10()">
+        <div>
+            <div class="page-title">🔎 Hisse Tarama</div>
+            <div class="page-subtitle">
+                Sinyalleri birbirinden ayrı görüntüle
+            </div>
+        </div>
+    </div>
 
-                <div class="action-icon">
-                    🏆
+    <div class="scanner-grid">
+
+        <div class="scanner-card"
+             onclick="signalPage('AGRESIF_ALIS','scanner')">
+
+            <div class="scanner-icon">🟢</div>
+
+            <div class="scanner-info">
+                <div class="scanner-name">Agresif Alış</div>
+                <div class="scanner-desc">
+                    Güçlü yükseliş teknik sinyalleri
                 </div>
-
-                <div>
-
-                    <div class="action-title">
-                        Yarın İçin TOP 10
-                    </div>
-
-                    <div class="action-text">
-                        Yapay zekâ puanına göre en yüksek 10 hisse
-                    </div>
-
-                </div>
-
-                <div class="action-arrow">
-                    ›
-                </div>
-
             </div>
 
-
-            <div class="main-action"
-                 onclick="showSearch()">
-
-                <div class="action-icon">
-                    🔎
-                </div>
-
-                <div>
-
-                    <div class="action-title">
-                        Hisse Ara
-                    </div>
-
-                    <div class="action-text">
-                        BIST hisseleri arasında ara ve analizini aç
-                    </div>
-
-                </div>
-
-                <div class="action-arrow">
-                    ›
-                </div>
-
-            </div>
-
+            <div class="scanner-arrow">›</div>
         </div>
 
 
-        <div class="update-time"
-             id="updateTime">
+        <div class="scanner-card"
+             onclick="signalPage('AGRESIF_SATIS','scanner')">
+
+            <div class="scanner-icon">🔴</div>
+
+            <div class="scanner-info">
+                <div class="scanner-name">Agresif Satış</div>
+                <div class="scanner-desc">
+                    Güçlü düşüş teknik sinyalleri
+                </div>
+            </div>
+
+            <div class="scanner-arrow">›</div>
+        </div>
+
+
+        <div class="scanner-card"
+             onclick="signalPage('ASIRI_SATIM','scanner')">
+
+            <div class="scanner-icon">🟠</div>
+
+            <div class="scanner-info">
+                <div class="scanner-name">Aşırı Satım / Tepki</div>
+                <div class="scanner-desc">
+                    RSI aşırı satım bölgesindeki hisseler
+                </div>
+            </div>
+
+            <div class="scanner-arrow">›</div>
+        </div>
+
+
+        <div class="scanner-card"
+             onclick="signalPage('ASIRI_ALIM','scanner')">
+
+            <div class="scanner-icon">🔵</div>
+
+            <div class="scanner-info">
+                <div class="scanner-name">Aşırı Alım</div>
+                <div class="scanner-desc">
+                    RSI aşırı alım bölgesindeki hisseler
+                </div>
+            </div>
+
+            <div class="scanner-arrow">›</div>
         </div>
 
     </div>
+</div>
+
+
+<!-- TOP 10 -->
+<div id="top10Page" class="page" style="display:none">
+
+    <div class="page-header">
+        <button class="back-btn" onclick="goHome()">‹</button>
+
+        <div>
+            <div class="page-title">🏆 Yarın İçin TOP 10</div>
+            <div class="page-subtitle">AI puanına göre sıralama</div>
+        </div>
+    </div>
+
+    <div id="top10List" class="list"></div>
 
 </div>
 
 
-<!-- =========================
-     TOP 10 SAYFASI
-========================= -->
+<!-- HİSSE ARA -->
+<div id="searchPage" class="page" style="display:none">
 
-<div id="top10Page">
+    <div class="page-header">
+        <button class="back-btn" onclick="goHome()">‹</button>
 
-    <div class="header">
-
-        <h1>🏆 Yarın İçin TOP 10</h1>
-
-        <p>
-            Yapay zekâ puanına göre sıralama
-        </p>
-
+        <div>
+            <div class="page-title">🔎 Hisse Ara</div>
+            <div class="page-subtitle">Kod veya isim ile ara</div>
+        </div>
     </div>
 
-    <div class="section">
-
-        <div class="page-header">
-
-            <button class="back-button"
-                    onclick="goHome()">
-                ‹
-            </button>
-
-            <div class="page-title">
-                TOP 10 Hisseler
-            </div>
-
-        </div>
-
-        <div class="top10"
-             id="top10List">
-
-            <div class="loading">
-                BIST verileri yükleniyor...
-            </div>
-
-        </div>
-
-    </div>
-
-</div>
-
-
-<!-- =========================
-     HİSSE ARAMA
-========================= -->
-
-<div id="searchPage">
-
-    <div class="header">
-
-        <h1>🔎 Hisse Ara</h1>
-
-        <p>
-            BIST hisselerinde hızlı arama
-        </p>
-
-    </div>
-
-    <div class="section">
-
-        <div class="page-header">
-
-            <button class="back-button"
-                    onclick="goHome()">
-                ‹
-            </button>
-
-            <div class="page-title">
-                Hisse Ara
-            </div>
-
-        </div>
-
+    <div class="search-box">
         <input
             id="searchInput"
-            class="search-box"
             type="text"
-            placeholder="Örn: THYAO, ASELS, TUPRS..."
-            oninput="aramaYap()"
-        >
-
-        <div id="searchResults"></div>
-
+            placeholder="Örn: THYAO"
+            oninput="aramaYap()">
     </div>
+
+    <div id="searchResults" class="list"></div>
 
 </div>
 
 
-<!-- =========================
-     SİNYAL SAYFASI
-========================= -->
+<!-- SİNYAL LİSTESİ -->
+<div id="signalPage" class="page" style="display:none">
 
-<div id="signalPage">
+    <div class="page-header">
 
-    <div class="header">
+        <button class="back-btn" onclick="signalBack()">‹</button>
 
-        <h1>📡 BIST Asistanı</h1>
-
-        <p>
-            Sinyal Listesi
-        </p>
-
-    </div>
-
-    <div class="section">
-
-        <div class="page-header">
-
-            <button class="back-button"
-                    onclick="goHome()">
-                ‹
-            </button>
-
-            <div class="page-title"
-                 id="signalPageTitle">
+        <div>
+            <div id="signalPageTitle" class="page-title">
                 Sinyaller
             </div>
 
-        </div>
-
-        <div class="signal-list"
-             id="signalList">
+            <div class="page-subtitle">
+                AI puanına göre sıralanmıştır
+            </div>
         </div>
 
     </div>
+
+    <div id="signalList" class="list"></div>
 
 </div>
 
 
-<!-- =========================
-     HİSSE DETAY
-========================= -->
+<!-- HİSSE DETAY -->
+<div id="stockPage" class="page" style="display:none">
 
-<div id="stockPage">
+    <div class="page-header">
 
-    <div class="header">
+        <button class="back-btn" onclick="stockBack()">‹</button>
 
-        <h1>📊 BIST Asistanı</h1>
-
-        <p>
-            Hisse Analizi
-        </p>
-
-    </div>
-
-    <div class="section">
-
-        <div class="page-header">
-
-            <button class="back-button"
-                    onclick="stockBack()">
-                ‹
-            </button>
-
-            <div class="page-title">
+        <div>
+            <div id="detailTitle" class="page-title">
                 Hisse Detayı
             </div>
-
-        </div>
-
-        <div id="stockDetail">
         </div>
 
     </div>
+
+    <div id="stockDetail" class="detail"></div>
 
 </div>
 
 
-<!-- =========================
-     ALT MENÜ
-========================= -->
-
+<!-- ALT MENÜ -->
 <div class="bottom-nav">
 
-    <div class="nav-item nav-active"
-         onclick="goHome()">
-
-        <span class="nav-icon">
-            🏠
-        </span>
-
+    <button id="navHome"
+            class="nav-btn active"
+            onclick="goHome()">
+        <span class="nav-icon">🏠</span>
         Ana Sayfa
+    </button>
 
-    </div>
-
-
-    <div class="nav-item"
-         onclick="goScanner()">
-
-        <span class="nav-icon">
-            🔎
-        </span>
-
+    <button id="navScanner"
+            class="nav-btn"
+            onclick="goScanner()">
+        <span class="nav-icon">🔎</span>
         Tarama
+    </button>
 
-    </div>
-
-
-    <div class="nav-item"
-         onclick="goFavorites()">
-
-        <span class="nav-icon">
-            ⭐
-        </span>
-
+    <button class="nav-btn"
+            onclick="goFavorites()">
+        <span class="nav-icon">⭐</span>
         Favoriler
+    </button>
 
-    </div>
-
-
-    <div class="nav-item"
-         onclick="goPortfolio()">
-
-        <span class="nav-icon">
-            💼
-        </span>
-
+    <button class="nav-btn"
+            onclick="goPortfolio()">
+        <span class="nav-icon">💼</span>
         Portföy
+    </button>
 
-    </div>
-
-
-    <div class="nav-item"
-         onclick="goAI()">
-
-        <span class="nav-icon">
-            🤖
-        </span>
-
+    <button class="nav-btn"
+            onclick="goAI()">
+        <span class="nav-icon">🤖</span>
         AI
-
-    </div>
+    </button>
 
 </div>
 
 
 <script>
 
-
-/* =========================
-   GLOBAL VERİ
-========================= */
-
-let bistVerisi = {
-    hisseler: [],
-    guncelleme: null
-};
-
+let tumVeriler = [];
 let oncekiSayfa = "home";
 
 
-/* =========================
-   SAYI
-========================= */
+/* VERİYİ YÜKLE */
 
-function sayi(deger) {
+async function gercekVeriyiYukle(){
 
-    const sonuc = Number(deger);
-
-    return Number.isFinite(sonuc)
-        ? sonuc
-        : 0;
-}
-
-
-/* =========================
-   FİYAT
-========================= */
-
-function fiyatFormat(deger) {
-
-    return sayi(deger).toLocaleString(
-        "tr-TR",
-        {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        }
-    );
-
-}
-
-
-/* =========================
-   DEĞİŞİM
-========================= */
-
-function degisimFormat(deger) {
-
-    const degisim = sayi(deger);
-
-    return (
-        degisim >= 0 ? "+" : ""
-    )
-    +
-    degisim.toFixed(2)
-    +
-    "%";
-
-}
-
-
-/* =========================
-   RENK
-========================= */
-
-function degisimRenk(deger) {
-
-    return sayi(deger) >= 0
-        ? "up"
-        : "down";
-
-}
-
-
-/* =========================
-   SİNYAL TEMİZLE
-========================= */
-
-function sinyalTemizle(sinyal) {
-
-    return String(sinyal || "")
-        .toUpperCase()
-        .replaceAll("İ", "I")
-        .replaceAll("Ş", "S")
-        .replaceAll("Ğ", "G")
-        .replaceAll("Ü", "U")
-        .replaceAll("Ö", "O")
-        .replaceAll("Ç", "C")
-        .replaceAll(" ", "_")
-        .replaceAll("/", "_")
-        .trim();
-
-}
-
-
-/* =========================
-   HİSSE SİNYALİ
-========================= */
-
-function hisseSinyal(hisse) {
-
-    return sinyalTemizle(
-        hisse.sinyal
-        ??
-        hisse.sinyal_sinifi
-        ??
-        hisse.signal
-        ??
-        ""
-    );
-
-}
-
-
-/* =========================
-   VERİYİ YÜKLE
-========================= */
-
-async function gercekVeriyiYukle() {
-
-    try {
+    try{
 
         const cevap = await fetch(
             "data/bist_data.json?t=" + Date.now()
         );
 
-        if (!cevap.ok) {
-            throw new Error(
-                "Veri dosyası okunamadı."
-            );
-        }
-
         const veri = await cevap.json();
 
-        bistVerisi = veri || {};
-
-        bistVerisi.hisseler =
-            Array.isArray(veri.hisseler)
-                ? veri.hisseler
-                : [];
-
-        console.log(
-            "GERÇEK BIST VERİSİ:",
-            bistVerisi
-        );
+        if(Array.isArray(veri)){
+            tumVeriler = veri;
+        }
+        else if(Array.isArray(veri.hisseler)){
+            tumVeriler = veri.hisseler;
+        }
+        else if(Array.isArray(veri.data)){
+            tumVeriler = veri.data;
+        }
+        else{
+            tumVeriler = [];
+        }
 
         anaSayfayiDoldur();
 
     }
-    catch (hata) {
+    catch(hata){
 
-        console.error(
-            "BIST VERİ OKUMA HATASI:",
-            hata
-        );
+        console.error(hata);
 
-        document.getElementById(
-            "updateTime"
-        ).textContent =
-            "BIST verileri okunamadı.";
-
+        document.getElementById("updateTime").innerText =
+            "Veri yüklenemedi";
     }
-
 }
 
 
-/* =========================
-   ANA SAYFA
-========================= */
+/* ANA SAYFA */
 
-function anaSayfayiDoldur() {
+function anaSayfayiDoldur(){
 
-    const hisseler =
-        bistVerisi.hisseler || [];
+    if(!tumVeriler.length) return;
 
+    const bist = tumVeriler.find(x =>
+        String(x.sembol || x.symbol || "").toUpperCase() === "BIST100"
+    );
 
-    /* BIST 100 */
+    if(bist){
 
-    const bist100 =
-        bistVerisi.bist100 || null;
-
-    const bist100Value =
-        document.getElementById(
-            "bist100Value"
-        );
-
-    const bist100Change =
-        document.getElementById(
-            "bist100Change"
-        );
-
-
-    if (
-        bist100 &&
-        bist100.fiyat !== null &&
-        bist100.fiyat !== undefined
-    ) {
-
-        bist100Value.textContent =
-            Number(
-                bist100.fiyat
-            ).toLocaleString(
-                "tr-TR",
-                {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2
-                }
-            );
+        const fiyat =
+            bist.fiyat ??
+            bist.price ??
+            bist.deger ??
+            bist.value;
 
         const degisim =
-            Number(
-                bist100.degisim || 0
-            );
+            bist.degisim ??
+            bist.change ??
+            bist.yuzde ??
+            bist.change_percent;
 
-        bist100Change.textContent =
-            (degisim >= 0 ? "+" : "")
-            +
-            degisim.toFixed(2)
-            +
-            "%";
+        document.getElementById("bistPrice").innerText =
+            fiyat != null ? Number(fiyat).toFixed(2) : "--";
 
-        bist100Change.style.color =
-            degisim >= 0
-                ? "#16a34a"
-                : "#dc2626";
+        document.getElementById("bistChange").innerText =
+            degisim != null
+                ? "%" + Number(degisim).toFixed(2)
+                : "--";
 
+        document.getElementById("bistChange").className =
+            "market-change " +
+            (Number(degisim) >= 0 ? "up" : "down");
     }
 
+    sayilariGuncelle();
 
-    /* SİNYALLER */
-
-    let agresifAlis = 0;
-    let agresifSatis = 0;
-    let asiriSatim = 0;
-    let asiriAlim = 0;
-
-
-    hisseler.forEach(
-        function(hisse) {
-
-            const sinyal =
-                hisseSinyal(hisse);
-
-            if (
-                sinyal === "AGRESIF_ALIS"
-            ) {
-                agresifAlis++;
-            }
-
-            if (
-                sinyal === "AGRESIF_SATIS"
-            ) {
-                agresifSatis++;
-            }
-
-            if (
-                sinyal === "ASIRI_SATIM"
-                ||
-                sinyal === "ASIRI_SATIM_TEPKI"
-            ) {
-                asiriSatim++;
-            }
-
-            if (
-                sinyal === "ASIRI_ALIM"
-            ) {
-                asiriAlim++;
-            }
-
-        }
-    );
-
-
-    document.getElementById(
-        "agresifAlisCount"
-    ).textContent =
-        agresifAlis + " hisse";
-
-
-    document.getElementById(
-        "agresifSatisCount"
-    ).textContent =
-        agresifSatis + " hisse";
-
-
-    document.getElementById(
-        "asiriSatimCount"
-    ).textContent =
-        asiriSatim + " hisse";
-
-
-    document.getElementById(
-        "asiriAlimCount"
-    ).textContent =
-        asiriAlim + " hisse";
-
-
-    /* SON GÜNCELLEME */
-
-    if (
-        bistVerisi.guncelleme
-    ) {
-
-        document.getElementById(
-            "updateTime"
-        ).textContent =
-            "Son güncelleme: "
-            +
-            bistVerisi.guncelleme;
-
-    }
-
+    document.getElementById("updateTime").innerText =
+        "Son güncelleme: " +
+        new Date().toLocaleString("tr-TR");
 }
 
 
-/* =========================
-   TOP 10 SAYFASINI AÇ
-========================= */
+/* SAYILAR */
 
-function showTop10() {
+function sinyalTip(hisse){
+
+    return String(
+        hisse.sinyal ??
+        hisse.sinyal_sinifi ??
+        hisse.signal ??
+        ""
+    ).toUpperCase();
+}
+
+
+function sayilariGuncelle(){
+
+    let alis = 0;
+    let satis = 0;
+    let satim = 0;
+    let alim = 0;
+
+    tumVeriler.forEach(hisse => {
+
+        const tip = sinyalTip(hisse);
+
+        if(tip === "AGRESIF_ALIS")
+            alis++;
+
+        if(tip === "AGRESIF_SATIS")
+            satis++;
+
+        if(tip === "ASIRI_SATIM")
+            satim++;
+
+        if(tip === "ASIRI_ALIM")
+            alim++;
+
+    });
+
+    document.getElementById("countAlis").innerText = alis;
+    document.getElementById("countSatis").innerText = satis;
+    document.getElementById("countSatim").innerText = satim;
+    document.getElementById("countAlim").innerText = alim;
+}
+
+
+/* SAYFA GİZLE */
+
+function tumSayfalariGizle(){
+
+    document.getElementById("homePage").style.display = "none";
+    document.getElementById("scannerPage").style.display = "none";
+    document.getElementById("top10Page").style.display = "none";
+    document.getElementById("searchPage").style.display = "none";
+    document.getElementById("signalPage").style.display = "none";
+    document.getElementById("stockPage").style.display = "none";
+}
+
+
+/* ANA SAYFA */
+
+function goHome(){
+
+    tumSayfalariGizle();
+
+    document.getElementById("homePage").style.display = "block";
 
     oncekiSayfa = "home";
 
-    document.getElementById(
-        "homePage"
-    ).style.display = "none";
-
-    document.getElementById(
-        "signalPage"
-    ).style.display = "none";
-
-    document.getElementById(
-        "stockPage"
-    ).style.display = "none";
-
-    document.getElementById(
-        "searchPage"
-    ).style.display = "none";
-
-    document.getElementById(
-        "top10Page"
-    ).style.display = "block";
-
-    top10Goster(
-        bistVerisi.hisseler || []
-    );
-
+    navAktif("navHome");
 }
 
 
-/* =========================
-   TOP 10
-========================= */
+/* TARAMA */
 
-function top10Goster(hisseler) {
+function goScanner(){
 
-    const liste =
-        document.getElementById(
-            "top10List"
-        );
+    tumSayfalariGizle();
 
-    if (!hisseler.length) {
+    document.getElementById("scannerPage").style.display = "block";
 
-        liste.innerHTML = `
-            <div class="loading">
-                Henüz hisse verisi bulunamadı.
-            </div>
-        `;
+    oncekiSayfa = "scanner";
 
-        return;
-    }
-
-
-    const sirali =
-        [...hisseler]
-        .sort(
-            function(a, b) {
-
-                return (
-                    sayi(b.puan)
-                    -
-                    sayi(a.puan)
-                );
-
-            }
-        )
-        .slice(0, 10);
-
-
-    liste.innerHTML = "";
-
-
-    sirali.forEach(
-        function(hisse, index) {
-
-            const fiyat =
-                sayi(hisse.fiyat);
-
-            const degisim =
-                sayi(hisse.degisim);
-
-            const puan =
-                sayi(hisse.puan);
-
-
-            const kart =
-                document.createElement(
-                    "div"
-                );
-
-            kart.className = "stock";
-
-            kart.onclick =
-                function() {
-
-                    hisseDetay(
-                        hisse
-                    );
-
-                };
-
-
-            kart.innerHTML = `
-
-                <div class="rank">
-                    ${index + 1}
-                </div>
-
-                <div style="flex:1;">
-
-                    <div class="stock-name">
-                        ${hisse.sembol || "---"}
-                    </div>
-
-                    <div class="stock-info">
-                        AI Puanı: ${puan}/100
-                    </div>
-
-                </div>
-
-                <div class="stock-price">
-
-                    <small>
-                        ${fiyatFormat(fiyat)} TL
-                    </small>
-
-                    <span class="${degisimRenk(degisim)}">
-                        ${degisimFormat(degisim)}
-                    </span>
-
-                </div>
-            `;
-
-
-            liste.appendChild(
-                kart
-            );
-
-        }
-    );
-
+    navAktif("navScanner");
 }
 
 
-/* =========================
-   HİSSE ARAMA SAYFASI
-========================= */
+/* SİNYAL SAYFASI */
 
-function showSearch() {
+function signalPage(tip, donus){
 
-    oncekiSayfa = "home";
+    oncekiSayfa = donus || "home";
 
-    document.getElementById(
-        "homePage"
-    ).style.display = "none";
+    tumSayfalariGizle();
 
-    document.getElementById(
-        "signalPage"
-    ).style.display = "none";
+    document.getElementById("signalPage").style.display = "block";
 
-    document.getElementById(
-        "stockPage"
-    ).style.display = "none";
+    let baslik = "";
 
-    document.getElementById(
-        "top10Page"
-    ).style.display = "none";
-
-    document.getElementById(
-        "searchPage"
-    ).style.display = "block";
-
-    document.getElementById(
-        "searchInput"
-    ).value = "";
-
-    document.getElementById(
-        "searchResults"
-    ).innerHTML = "";
-
-    setTimeout(
-        function() {
-
-            document.getElementById(
-                "searchInput"
-            ).focus();
-
-        },
-        100
-    );
-
-}
-
-
-/* =========================
-   ARAMA
-========================= */
-
-function aramaYap() {
-
-    const aranan =
-        document.getElementById(
-            "searchInput"
-        ).value
-        .toUpperCase()
-        .trim();
-
-
-    const sonuc =
-        document.getElementById(
-            "searchResults"
-        );
-
-
-    if (!aranan) {
-
-        sonuc.innerHTML = "";
-
-        return;
-
-    }
-
-
-    const hisseler =
-        (bistVerisi.hisseler || [])
-        .filter(
-            function(hisse) {
-
-                return String(
-                    hisse.sembol || ""
-                )
-                .toUpperCase()
-                .includes(aranan);
-
-            }
-        )
-        .slice(0, 20);
-
-
-    if (!hisseler.length) {
-
-        sonuc.innerHTML = `
-            <div class="loading">
-                Hisse bulunamadı.
-            </div>
-        `;
-
-        return;
-
-    }
-
-
-    sonuc.innerHTML = "";
-
-
-    hisseler.forEach(
-        function(hisse) {
-
-            const kart =
-                document.createElement(
-                    "div"
-                );
-
-            kart.className =
-                "stock";
-
-            kart.onclick =
-                function() {
-
-                    hisseDetay(
-                        hisse
-                    );
-
-                };
-
-
-            const fiyat =
-                sayi(hisse.fiyat);
-
-            const degisim =
-                sayi(hisse.degisim);
-
-
-            kart.innerHTML = `
-
-                <div class="rank">
-                    ${(
-                        hisse.sembol || "?"
-                    ).substring(0,1)}
-                </div>
-
-                <div style="flex:1;">
-
-                    <div class="stock-name">
-                        ${hisse.sembol || "---"}
-                    </div>
-
-                    <div class="stock-info">
-                        ${hisseSinyal(hisse) || "NÖTR"}
-                    </div>
-
-                </div>
-
-                <div class="stock-price">
-
-                    <small>
-                        ${fiyatFormat(fiyat)} TL
-                    </small>
-
-                    <span class="${degisimRenk(degisim)}">
-                        ${degisimFormat(degisim)}
-                    </span>
-
-                </div>
-            `;
-
-
-            sonuc.appendChild(
-                kart
-            );
-
-        }
-    );
-
-}
-
-
-/* =========================
-   SİNYAL SAYFASI
-========================= */
-
-function signalPage(tip) {
-
-    oncekiSayfa = "home";
-
-    document.getElementById(
-        "homePage"
-    ).style.display = "none";
-
-    document.getElementById(
-        "stockPage"
-    ).style.display = "none";
-
-    document.getElementById(
-        "top10Page"
-    ).style.display = "none";
-
-    document.getElementById(
-        "searchPage"
-    ).style.display = "none";
-
-    document.getElementById(
-        "signalPage"
-    ).style.display = "block";
-
-
-    let baslik = "Sinyaller";
-
-
-    if (
-        tip === "AGRESIF_ALIS"
-    ) {
+    if(tip === "AGRESIF_ALIS")
         baslik = "🟢 Agresif Alış";
-    }
 
-
-    if (
-        tip === "AGRESIF_SATIS"
-    ) {
+    if(tip === "AGRESIF_SATIS")
         baslik = "🔴 Agresif Satış";
-    }
 
-
-    if (
-        tip === "ASIRI_SATIM"
-    ) {
+    if(tip === "ASIRI_SATIM")
         baslik = "🟠 Aşırı Satım / Tepki";
-    }
 
-
-    if (
-        tip === "ASIRI_ALIM"
-    ) {
+    if(tip === "ASIRI_ALIM")
         baslik = "🔵 Aşırı Alım";
-    }
 
+    document.getElementById("signalPageTitle").innerText =
+        baslik;
 
-    document.getElementById(
-        "signalPageTitle"
-    ).textContent = baslik;
+    const liste = tumVeriler
+        .filter(x => sinyalTip(x) === tip)
+        .sort((a,b) => puanGetir(b) - puanGetir(a));
 
+    const alan = document.getElementById("signalList");
 
-    const liste =
-        document.getElementById(
-            "signalList"
-        );
+    if(!liste.length){
 
-
-    const hisseler =
-        (bistVerisi.hisseler || [])
-        .filter(
-            function(hisse) {
-
-                const sinyal =
-                    hisseSinyal(hisse);
-
-                if (
-                    tip === "ASIRI_SATIM"
-                    &&
-                    sinyal === "ASIRI_SATIM_TEPKI"
-                ) {
-                    return true;
-                }
-
-                return sinyal === tip;
-
-            }
-        )
-        .sort(
-            function(a, b) {
-
-                return (
-                    sayi(b.puan)
-                    -
-                    sayi(a.puan)
-                );
-
-            }
-        );
-
-
-    if (!hisseler.length) {
-
-        liste.innerHTML = `
-            <div class="loading">
-                Bu kategoride şu anda hisse bulunamadı.
-            </div>
-        `;
+        alan.innerHTML =
+            '<div class="empty">Bu kategoride hisse bulunamadı.</div>';
 
         return;
-
     }
 
-
-    liste.innerHTML = "";
-
-
-    hisseler.forEach(
-        function(hisse) {
-
-            const fiyat =
-                sayi(hisse.fiyat);
-
-            const degisim =
-                sayi(hisse.degisim);
-
-            const puan =
-                sayi(hisse.puan);
-
-            const rsi =
-                sayi(hisse.rsi);
-
-
-            const kart =
-                document.createElement(
-                    "div"
-                );
-
-            kart.className =
-                "stock";
-
-            kart.onclick =
-                function() {
-
-                    hisseDetay(
-                        hisse
-                    );
-
-                };
-
-
-            kart.innerHTML = `
-
-                <div class="rank">
-                    ${(
-                        hisse.sembol || "?"
-                    ).substring(0,1)}
-                </div>
-
-                <div style="flex:1;">
-
-                    <div class="stock-name">
-                        ${hisse.sembol || "---"}
-                    </div>
-
-                    <div class="stock-info">
-                        RSI: ${rsi.toFixed(2)}
-                        &nbsp; | &nbsp;
-                        Puan: ${puan}/100
-                    </div>
-
-                </div>
-
-                <div class="stock-price">
-
-                    <small>
-                        ${fiyatFormat(fiyat)} TL
-                    </small>
-
-                    <span class="${degisimRenk(degisim)}">
-                        ${degisimFormat(degisim)}
-                    </span>
-
-                </div>
-            `;
-
-
-            liste.appendChild(
-                kart
-            );
-
-        }
-    );
-
+    alan.innerHTML = liste.map((hisse, index) =>
+        hisseSatiri(hisse, index + 1)
+    ).join("");
 }
 
 
-/* =========================
-   HİSSE DETAY
-========================= */
+/* SİNYALDEN GERİ */
 
-function hisseDetay(hisse) {
+function signalBack(){
 
-    oncekiSayfa =
-        document.getElementById(
-            "signalPage"
-        ).style.display === "block"
-        ? "signal"
-        : "home";
+    if(oncekiSayfa === "scanner"){
+        goScanner();
+    }
+    else{
+        goHome();
+    }
+}
 
 
-    document.getElementById(
-        "homePage"
-    ).style.display = "none";
+/* TOP 10 */
 
-    document.getElementById(
-        "signalPage"
-    ).style.display = "none";
+function showTop10(){
 
-    document.getElementById(
-        "top10Page"
-    ).style.display = "none";
+    oncekiSayfa = "top10";
 
-    document.getElementById(
-        "searchPage"
-    ).style.display = "none";
+    tumSayfalariGizle();
 
-    document.getElementById(
-        "stockPage"
-    ).style.display = "block";
+    document.getElementById("top10Page").style.display = "block";
 
+    const liste = [...tumVeriler]
+        .filter(x => sinyalTip(x) !== "")
+        .sort((a,b) => puanGetir(b) - puanGetir(a))
+        .slice(0,10);
+
+    const alan = document.getElementById("top10List");
+
+    if(!liste.length){
+
+        alan.innerHTML =
+            '<div class="empty">TOP 10 verisi bulunamadı.</div>';
+
+        return;
+    }
+
+    alan.innerHTML = liste.map((hisse,index) =>
+        hisseSatiri(hisse,index + 1)
+    ).join("");
+}
+
+
+/* HİSSE SATIRI */
+
+function hisseSatiri(hisse, sira){
+
+    const sembol =
+        hisse.sembol ??
+        hisse.symbol ??
+        hisse.kod ??
+        "-";
 
     const fiyat =
-        sayi(hisse.fiyat);
+        hisse.fiyat ??
+        hisse.price ??
+        "-";
 
     const degisim =
-        sayi(hisse.degisim);
+        hisse.degisim ??
+        hisse.change ??
+        hisse.yuzde ??
+        0;
 
-    const puan =
-        sayi(hisse.puan);
+    const puan = puanGetir(hisse);
 
-    const rsi =
-        sayi(hisse.rsi);
+    const tip = sinyalTip(hisse);
 
-    const sma20 =
-        sayi(hisse.sma20);
+    let renk = "score";
 
-    const sma50 =
-        sayi(hisse.sma50);
+    if(tip === "AGRESIF_ALIS")
+        renk += " up";
 
-    const macd =
-        sayi(hisse.macd);
+    if(tip === "AGRESIF_SATIS")
+        renk += " down";
 
-    const macdSignal =
-        sayi(
-            hisse.signal
-            ??
-            hisse.macd_signal
-        );
+    return `
+        <div class="stock-row"
+             onclick='hisseDetay(${JSON.stringify(hisse)})'>
 
-    const hacimOrani =
-        sayi(
-            hisse.hacim_orani
-            ??
-            hisse.hacim_20_oran
-        );
+            <div class="stock-top">
 
-    const hedef1 =
-        sayi(
-            hisse.hedef1
-            ??
-            hisse.hedef_1
-        );
-
-    const hedef2 =
-        sayi(
-            hisse.hedef2
-            ??
-            hisse.hedef_2
-        );
-
-    const stop =
-        sayi(
-            hisse.stop
-            ??
-            hisse.stop_loss
-        );
-
-    const destek =
-        sayi(hisse.destek);
-
-    const direnc =
-        sayi(hisse.direnc);
-
-    const girisAlt =
-        sayi(hisse.giris_alt);
-
-    const girisUst =
-        sayi(hisse.giris_ust);
-
-    const riskGetiri =
-        sayi(hisse.risk_getiri);
-
-    const nedenler =
-        Array.isArray(hisse.nedenler)
-        ? hisse.nedenler
-        : [];
-
-    const sinyal =
-        hisseSinyal(hisse);
-
-
-    let alimBolgesi = "---";
-
-
-    if (
-        girisAlt > 0 &&
-        girisUst > 0
-    ) {
-
-        alimBolgesi =
-            fiyatFormat(girisAlt)
-            +
-            " - "
-            +
-            fiyatFormat(girisUst)
-            +
-            " TL";
-
-    }
-
-
-    let nedenlerHTML = "";
-
-
-    if (nedenler.length) {
-
-        nedenlerHTML = `
-
-            <div class="detail-section">
-
-                <div class="detail-section-title">
-                    🤖 AI Sinyal Nedenleri
+                <div class="stock-symbol">
+                    ${sira}. ${sembol}
                 </div>
 
-                <div class="reason-list">
-
-                    ${
-                        nedenler.map(
-                            function(neden) {
-
-                                return `
-                                    <div class="reason-item">
-                                        • ${neden}
-                                    </div>
-                                `;
-
-                            }
-                        ).join("")
-                    }
-
+                <div class="stock-price">
+                    ${fiyat} TL
                 </div>
 
             </div>
 
-        `;
+            <div class="stock-bottom">
 
+                <span class="${Number(degisim) >= 0 ? "up" : "down"}">
+                    ${Number(degisim) >= 0 ? "+" : ""}
+                    ${Number(degisim).toFixed(2)}%
+                </span>
+
+                <span class="${renk}">
+                    AI ${puan}/100
+                </span>
+
+            </div>
+
+        </div>
+    `;
+}
+
+
+/* PUAN */
+
+function puanGetir(hisse){
+
+    const p =
+        hisse.puan ??
+        hisse.score ??
+        hisse.ai_puan ??
+        hisse.ai_score ??
+        0;
+
+    const sayi = Number(p);
+
+    return Number.isFinite(sayi) ? sayi : 0;
+}
+
+
+/* HİSSE ARA */
+
+function showSearch(){
+
+    oncekiSayfa = "search";
+
+    tumSayfalariGizle();
+
+    document.getElementById("searchPage").style.display = "block";
+
+    document.getElementById("searchInput").focus();
+
+    aramaYap();
+}
+
+
+function aramaYap(){
+
+    const arama =
+        document.getElementById("searchInput")
+        .value
+        .trim()
+        .toUpperCase();
+
+    const alan =
+        document.getElementById("searchResults");
+
+    if(!arama){
+
+        alan.innerHTML =
+            '<div class="empty">Hisse kodunu yazın.</div>';
+
+        return;
     }
 
+    const sonuc = tumVeriler
+        .filter(hisse => {
 
-    document.getElementById(
-        "stockDetail"
-    ).innerHTML = `
+            const sembol = String(
+                hisse.sembol ??
+                hisse.symbol ??
+                hisse.kod ??
+                ""
+            ).toUpperCase();
+
+            const isim = String(
+                hisse.ad ??
+                hisse.isim ??
+                hisse.name ??
+                ""
+            ).toUpperCase();
+
+            return sembol.includes(arama) ||
+                   isim.includes(arama);
+        })
+        .slice(0,30);
+
+    if(!sonuc.length){
+
+        alan.innerHTML =
+            '<div class="empty">Hisse bulunamadı.</div>';
+
+        return;
+    }
+
+    alan.innerHTML = sonuc.map((hisse,index) =>
+        hisseSatiri(hisse,index + 1)
+    ).join("");
+}
+
+
+/* HİSSE DETAY */
+
+function hisseDetay(hisse){
+
+    tumSayfalariGizle();
+
+    document.getElementById("stockPage").style.display = "block";
+
+    document.getElementById("detailTitle").innerText =
+        hisse.sembol ??
+        hisse.symbol ??
+        hisse.kod ??
+        "Hisse";
+
+    const fiyat =
+        hisse.fiyat ??
+        hisse.price ??
+        "-";
+
+    const degisim =
+        hisse.degisim ??
+        hisse.change ??
+        0;
+
+    const rsi =
+        hisse.rsi ?? "-";
+
+    const sma20 =
+        hisse.sma20 ?? "-";
+
+    const sma50 =
+        hisse.sma50 ?? "-";
+
+    const macd =
+        hisse.macd ?? "-";
+
+    const signal =
+        hisse.signal ??
+        hisse.macd_signal ??
+        hisse.macdSignal ??
+        "-";
+
+    const hacim =
+        hisse.hacim_orani ??
+        hisse.hacim_20_oran ??
+        "-";
+
+    const hedef1 =
+        hisse.hedef1 ??
+        hisse.hedef_1 ??
+        "-";
+
+    const hedef2 =
+        hisse.hedef2 ??
+        hisse.hedef_2 ??
+        "-";
+
+    const stop =
+        hisse.stop ??
+        hisse.stop_loss ??
+        "-";
+
+    const destek =
+        hisse.destek ??
+        "-";
+
+    const direnc =
+        hisse.direnc ??
+        "-";
+
+    const girisAlt =
+        hisse.giris_alt ??
+        "-";
+
+    const girisUst =
+        hisse.giris_ust ??
+        "-";
+
+    const riskGetiri =
+        hisse.risk_getiri ??
+        "-";
+
+    const tip =
+        hisse.sinyal ??
+        hisse.sinyal_sinifi ??
+        hisse.signal ??
+        "NÖTR";
+
+    let nedenler = hisse.nedenler ?? [];
+
+    if(!Array.isArray(nedenler))
+        nedenler = [nedenler];
+
+    document.getElementById("stockDetail").innerHTML = `
 
         <div class="detail-card">
 
             <div class="detail-symbol">
-                ${hisse.sembol || "---"}
+                ${hisse.sembol ?? hisse.symbol ?? "-"}
             </div>
 
             <div class="detail-price">
-                ${fiyatFormat(fiyat)} TL
+                ${fiyat} TL
             </div>
 
-            <div class="detail-change ${degisimRenk(degisim)}">
-                ${degisimFormat(degisim)}
+            <div class="${Number(degisim) >= 0 ? "up" : "down"}">
+                ${Number(degisim) >= 0 ? "+" : ""}
+                ${Number(degisim).toFixed(2)}%
             </div>
 
-            <div class="detail-signal">
-                Sinyal:
-                ${sinyal || "NÖTR"}
-            </div>
+            <br>
+
+            <b>${tip}</b>
 
         </div>
 
 
-        <div class="detail-section">
-
-            <div class="detail-section-title">
-                🎯 İşlem Planı
-            </div>
+        <div class="detail-card">
 
             <div class="detail-grid">
 
-                ${detayKutu(
-                    "Alım Bölgesi",
-                    alimBolgesi
-                )}
+                ${detayKutu("AI Puanı", puanGetir(hisse) + "/100")}
 
-                ${detayKutu(
-                    "Hedef 1",
-                    hedef1
-                    ? fiyatFormat(hedef1) + " TL"
-                    : "---"
-                )}
+                ${detayKutu("RSI", rsi)}
 
-                ${detayKutu(
-                    "Hedef 2",
-                    hedef2
-                    ? fiyatFormat(hedef2) + " TL"
-                    : "---"
-                )}
+                ${detayKutu("SMA20", sma20)}
 
-                ${detayKutu(
-                    "Stop",
-                    stop
-                    ? fiyatFormat(stop) + " TL"
-                    : "---"
-                )}
+                ${detayKutu("SMA50", sma50)}
 
-                ${detayKutu(
-                    "Risk / Getiri",
-                    riskGetiri
-                    ? riskGetiri.toFixed(2)
-                    : "---"
-                )}
+                ${detayKutu("MACD", macd)}
+
+                ${detayKutu("Signal", signal)}
+
+                ${detayKutu("Hacim", hacim)}
+
+                ${detayKutu("Risk/Getiri", riskGetiri)}
 
             </div>
 
         </div>
 
 
-        <div class="detail-section">
+        <div class="detail-card">
 
-            <div class="detail-section-title">
-                📊 Teknik Göstergeler
-            </div>
+            <b>🎯 İşlem Bölgeleri</b>
 
-            <div class="detail-grid">
+            <div class="detail-grid" style="margin-top:12px">
 
-                ${detayKutu(
-                    "AI Puanı",
-                    puan + "/100"
-                )}
+                ${detayKutu("Giriş Alt", girisAlt)}
 
-                ${detayKutu(
-                    "RSI",
-                    rsi
-                    ? rsi.toFixed(2)
-                    : "---"
-                )}
+                ${detayKutu("Giriş Üst", girisUst)}
 
-                ${detayKutu(
-                    "SMA 20",
-                    sma20
-                    ? fiyatFormat(sma20) + " TL"
-                    : "---"
-                )}
+                ${detayKutu("Hedef 1", hedef1)}
 
-                ${detayKutu(
-                    "SMA 50",
-                    sma50
-                    ? fiyatFormat(sma50) + " TL"
-                    : "---"
-                )}
+                ${detayKutu("Hedef 2", hedef2)}
 
-                ${detayKutu(
-                    "MACD",
-                    macd
-                    ? macd.toFixed(4)
-                    : "---"
-                )}
+                ${detayKutu("Stop", stop)}
 
-                ${detayKutu(
-                    "MACD Signal",
-                    macdSignal
-                    ? macdSignal.toFixed(4)
-                    : "---"
-                )}
+                ${detayKutu("Destek", destek)}
 
-                ${detayKutu(
-                    "Hacim",
-                    hacimOrani
-                    ? "%" + hacimOrani.toFixed(1)
-                    : "---"
-                )}
-
-                ${detayKutu(
-                    "Destek",
-                    destek
-                    ? fiyatFormat(destek) + " TL"
-                    : "---"
-                )}
-
-                ${detayKutu(
-                    "Direnç",
-                    direnc
-                    ? fiyatFormat(direnc) + " TL"
-                    : "---"
-                )}
+                ${detayKutu("Direnç", direnc)}
 
             </div>
 
         </div>
 
 
-        ${nedenlerHTML}
+        <div class="detail-card">
 
+            <b>🧠 AI Analizi</b>
+
+            <div style="margin-top:10px">
+
+                ${
+                    nedenler.length
+                    ? nedenler.map(x =>
+                        `<div class="reason">• ${x}</div>`
+                      ).join("")
+                    : '<div class="reason">Analiz nedeni bulunamadı.</div>'
+                }
+
+            </div>
+
+        </div>
     `;
-
 }
 
 
-/* =========================
-   DETAY KUTUSU
-========================= */
-
-function detayKutu(baslik, deger) {
+function detayKutu(label,value){
 
     return `
-
-        <div class="detail-box">
-
-            <div class="detail-label">
-                ${baslik}
-            </div>
-
-            <div class="detail-value">
-                ${deger}
-            </div>
-
+        <div class="detail-item">
+            <div class="detail-label">${label}</div>
+            <div class="detail-value">${value}</div>
         </div>
-
     `;
-
 }
 
 
-/* =========================
-   ANA SAYFA
-========================= */
+/* HİSSE GERİ */
 
-function goHome() {
+function stockBack(){
 
-    document.getElementById(
-        "homePage"
-    ).style.display = "block";
-
-    document.getElementById(
-        "signalPage"
-    ).style.display = "none";
-
-    document.getElementById(
-        "stockPage"
-    ).style.display = "none";
-
-    document.getElementById(
-        "top10Page"
-    ).style.display = "none";
-
-    document.getElementById(
-        "searchPage"
-    ).style.display = "none";
-
-}
-
-
-/* =========================
-   DETAYDAN GERİ
-========================= */
-
-function stockBack() {
-
-    if (
-        oncekiSayfa === "signal"
-    ) {
-
-        document.getElementById(
-            "homePage"
-        ).style.display = "none";
-
-        document.getElementById(
-            "signalPage"
-        ).style.display = "block";
-
-        document.getElementById(
-            "stockPage"
-        ).style.display = "none";
-
+    if(oncekiSayfa === "top10"){
+        showTop10();
     }
-    else {
-
+    else if(oncekiSayfa === "search"){
+        showSearch();
+    }
+    else if(oncekiSayfa === "signal"){
+        signalPage("AGRESIF_ALIS","home");
+    }
+    else if(oncekiSayfa === "scanner"){
+        goScanner();
+    }
+    else{
         goHome();
-
     }
-
 }
 
 
-/* =========================
-   ALT MENÜ
-========================= */
+/* ALT MENÜ */
 
-function goScanner() {
+function navAktif(id){
 
-    alert(
-        "🔎 Tarama ekranını bir sonraki aşamada gerçek verilerle bağlayacağız."
-    );
+    document.querySelectorAll(".nav-btn")
+        .forEach(x => x.classList.remove("active"));
 
+    const el = document.getElementById(id);
+
+    if(el)
+        el.classList.add("active");
 }
 
 
-function goFavorites() {
+function goFavorites(){
 
-    alert(
-        "⭐ Favoriler ekranını bir sonraki aşamada oluşturacağız."
-    );
-
+    alert("⭐ Favoriler bölümü bir sonraki aşamada aktif olacak.");
 }
 
 
-function goPortfolio() {
+function goPortfolio(){
 
-    alert(
-        "💼 Portföy ekranını bir sonraki aşamada oluşturacağız."
-    );
-
+    alert("💼 Portföy bölümü bir sonraki aşamada aktif olacak.");
 }
 
 
-function goAI() {
+function goAI(){
 
-    alert(
-        "🤖 AI ekranını bir sonraki aşamada gerçek verilerle bağlayacağız."
-    );
-
+    alert("🤖 AI bölümü bir sonraki aşamada aktif olacak.");
 }
 
 
-/* =========================
-   BAŞLAT
-========================= */
+/* BAŞLAT */
 
 gercekVeriyiYukle();
 
