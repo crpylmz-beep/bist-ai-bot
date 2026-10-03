@@ -1178,26 +1178,59 @@ def bist_tara():
 
     toplam = len(semboller)
 
-    aday_semboller = semboller
-
     sonuclar = []
 
-    for sembol in aday_semboller:
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
+    def analiz_et(sembol):
 
         try:
 
-            analiz = hisse_analiz_hesapla(
+            return hisse_analiz_hesapla(
                 sembol,
                 period="6mo"
             )
 
-            if analiz:
-                sonuclar.append(
-                    analiz
-                )
-
         except Exception:
-            pass
+
+            return None
+
+    tamamlanan = 0
+
+    max_workers = 8
+
+    with ThreadPoolExecutor(
+        max_workers=max_workers
+    ) as executor:
+
+        futures = {
+            executor.submit(
+                analiz_et,
+                sembol
+            ): sembol
+            for sembol in semboller
+        }
+
+        for future in as_completed(futures):
+
+            tamamlanan += 1
+
+            try:
+
+                analiz = future.result()
+
+                if analiz:
+                    sonuclar.append(
+                        analiz
+                    )
+
+            except Exception:
+                pass
+
+            if tamamlanan % 25 == 0:
+                print(
+                    f"ANALİZ: {tamamlanan}/{toplam}"
+                )
 
     web_verisi_kaydet(
         sonuclar
