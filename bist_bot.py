@@ -679,172 +679,153 @@ def sinyal_sinifi(a):
     hist_onceki = guvenli_float(a.get("hist_onceki"))
     degisim = guvenli_float(a.get("degisim"))
     fiyat = guvenli_float(a.get("fiyat"))
-    acilis = guvenli_float(a.get("acilis"))
-    yuksek = guvenli_float(a.get("yuksek"))
-    dusuk = guvenli_float(a.get("dusuk"))
     sma20 = guvenli_float(a.get("sma20"))
     sma50 = guvenli_float(a.get("sma50"))
+    yukari_kesisim = bool(a.get("yukari_kesisim"))
+    asagi_kesisim = bool(a.get("asagi_kesisim"))
+    pozitif_mum = bool(a.get("pozitif_mum"))
+    negatif_mum = bool(a.get("negatif_mum"))
+    kapanis_pozisyonu = guvenli_float(a.get("kapanis_pozisyonu"))
 
-    yukari_kesisim = bool(
-        a.get("yukari_kesisim")
-    )
-
-    asagi_kesisim = bool(
-        a.get("asagi_kesisim")
-    )
-
-    pozitif_mum = bool(
-        a.get("pozitif_mum")
-    )
-
-    negatif_mum = bool(
-        a.get("negatif_mum")
-    )
-
-    kapanis_pozisyonu = guvenli_float(
-        a.get("kapanis_pozisyonu")
-    )
-
-    # =====================================================
-    # 1. AŞIRI ALIM
-    # =====================================================
+    if degisim >= 8 or degisim <= -8:
+        return "NÖTR"
 
     if rsi >= 70:
         return "ASIRI_ALIM"
 
-    # =====================================================
-    # 2. AŞIRI SATIM / TEPKİ
-    # =====================================================
+    if 0 < rsi < 30:
+        rsi_toparlaniyor = (rsi - rsi_onceki) >= 0.5
+        hist_toparlaniyor = hist > hist_onceki
+        temel_tepki = (-7 < degisim < 5 and pozitif_mum and kapanis_pozisyonu >= 35 and hacim >= 70)
 
-    if rsi < 30:
-
-        tepki_puan = 0
-
-        if pozitif_mum:
-            tepki_puan += 1
-
-        if kapanis_pozisyonu >= 35:
-            tepki_puan += 1
-
-        if hacim >= 120:
-            tepki_puan += 1
-
-        if hist > hist_onceki:
-            tepki_puan += 1
-
-        if rsi > rsi_onceki:
-            tepki_puan += 1
-
-        if degisim <= -7:
-            tepki_puan -= 1
-
-        if tepki_puan >= 2:
-            return "ASIRI_SATIM"
-
+        if temel_tepki:
+            if degisim >= 0 and (rsi_toparlaniyor or hist_toparlaniyor):
+                return "ASIRI_SATIM"
+            if degisim < 0 and rsi_toparlaniyor and hist_toparlaniyor:
+                return "ASIRI_SATIM"
         return "NÖTR"
 
-    # =====================================================
-    # 3. AŞIRI GÜNLÜK HAREKETLERİ FİLTRELE
-    # =====================================================
-
-    if degisim >= 8:
+    if rsi <= 0:
         return "NÖTR"
-
-    if degisim <= -8:
-        return "NÖTR"
-
-    # =====================================================
-    # 4. AGRESİF ALIŞ
-    # =====================================================
 
     alis_puan = 0
-
-    # Agresif alış için günlük değişim POZİTİF olmalı.
-    # Böylece çok düşmüş hisseler sadece teknik puanı
-    # yüksek diye agresif alış olarak işaretlenmez.
-
     if degisim > 0 and 35 <= rsi < 68:
-
         if macd > signal:
             alis_puan += 2
-
         if hist > 0:
             alis_puan += 2
-
         if yukari_kesisim:
             alis_puan += 3
-
         if fiyat > sma20:
             alis_puan += 2
-
         if sma50 > 0 and sma20 > sma50:
             alis_puan += 2
-
         if hacim >= 150:
             alis_puan += 2
-
         elif hacim >= 120:
             alis_puan += 1
-
         if 0 < degisim < 8:
             alis_puan += 1
-
         if pozitif_mum:
             alis_puan += 1
-
-    # Günlük yükseliş çok sertse puanı azalt
     if degisim >= 6:
         alis_puan -= 2
-
     if alis_puan >= 9:
         return "AGRESIF_ALIS"
 
-    # =====================================================
-    # 5. AGRESİF SATIŞ
-    # =====================================================
-
     satis_puan = 0
-
-    # Agresif satış için günlük değişim NEGATİF olmalı.
-    # Böylece alış ve satış sinyalleri birbirine karışmaz.
-
     if degisim < 0 and 32 <= rsi < 68:
-
         if macd < signal:
             satis_puan += 2
-
         if hist < 0:
             satis_puan += 2
-
         if asagi_kesisim:
             satis_puan += 3
-
         if fiyat < sma20:
             satis_puan += 2
-
         if sma50 > 0 and sma20 < sma50:
             satis_puan += 2
-
         if hacim >= 150:
             satis_puan += 2
-
         elif hacim >= 120:
             satis_puan += 1
-
         if -8 < degisim < 0:
             satis_puan += 1
-
         if negatif_mum:
             satis_puan += 1
-
-    # Çok sert düşüşte satış puanını azalt
     if degisim <= -6:
         satis_puan -= 2
-
     if satis_puan >= 9:
         return "AGRESIF_SATIS"
 
     return "NÖTR"
+
+
+def guclu_tepki_mi(a):
+    if not a or sinyal_sinifi(a) != "ASIRI_SATIM":
+        return False
+
+    rsi = guvenli_float(a.get("rsi"))
+    rsi_onceki = guvenli_float(a.get("rsi_onceki"))
+    hist = guvenli_float(a.get("hist"))
+    hist_onceki = guvenli_float(a.get("hist_onceki"))
+    hacim = guvenli_float(a.get("hacim_orani"))
+    kapanis = guvenli_float(a.get("kapanis_pozisyonu"))
+
+    return (
+        (rsi - rsi_onceki) >= 0.5
+        and hist > hist_onceki
+        and hacim >= 90
+        and kapanis >= 50
+    )
+
+
+def tepki_puani(a):
+    if not guclu_tepki_mi(a):
+        return -999.0
+
+    rsi_fark = guvenli_float(a.get("rsi")) - guvenli_float(a.get("rsi_onceki"))
+    hist_fark = guvenli_float(a.get("hist")) - guvenli_float(a.get("hist_onceki"))
+    hacim = guvenli_float(a.get("hacim_orani"))
+    kapanis = guvenli_float(a.get("kapanis_pozisyonu"))
+    degisim = guvenli_float(a.get("degisim"))
+    risk_getiri = guvenli_float(a.get("risk_getiri"))
+
+    puan = 0.0
+    puan += min(25, max(0, rsi_fark * 4))
+    puan += min(20, max(0, hist_fark * 20))
+    puan += min(20, max(0, hacim / 10))
+    puan += min(20, max(0, kapanis / 5))
+
+    if 0 <= degisim <= 2:
+        puan += 15
+    elif 2 < degisim <= 3:
+        puan += 10
+    elif 3 < degisim <= 4:
+        puan += 0
+    elif degisim > 4:
+        puan -= 10
+    else:
+        puan += 3
+
+    # Risk/getiri destekleyici kriterdir; uzak dirençler aşırı puan üretmesin.
+    if risk_getiri >= 2:
+        puan += min(5, risk_getiri)
+
+    return round(puan, 1)
+
+
+def tepki_top10(sonuclar):
+    adaylar = [a for a in sonuclar if guclu_tepki_mi(a)]
+    adaylar.sort(
+        key=lambda a: (
+            tepki_puani(a),
+            guvenli_float(a.get("hacim_orani")),
+            guvenli_float(a.get("kapanis_pozisyonu")),
+        ),
+        reverse=True,
+    )
+    return adaylar[:10]
 
 
 def agresif_mi(a):
@@ -1101,6 +1082,8 @@ def web_verisi_kaydet(sonuclar):
 
             # Sinyal sınıfını web uygulaması için kaydet
             veri["sinyal"] = sinyal_sinifi(veri)
+            veri["guclu_tepki"] = guclu_tepki_mi(veri)
+            veri["tepki_puani"] = tepki_puani(veri) if veri["guclu_tepki"] else 0
 
             web_hisseler.append(veri)
 
