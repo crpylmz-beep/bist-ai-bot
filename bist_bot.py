@@ -3,6 +3,7 @@ import math
 import time
 import asyncio
 import json
+from datetime import datetime
 import borsapy as bp
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
@@ -24,6 +25,13 @@ DATA_FILE = os.path.join(
     "bist_data.json"
 )
 
+TAHMIN_GECMISI_FILE = os.path.join(
+    os.path.dirname(__file__),
+    "webapp",
+    "data",
+    "tahmin_gecmisi.json"
+)
+
 
 # =========================================================
 # YARDIMCI FONKSİYONLAR
@@ -43,6 +51,43 @@ def guvenli_float(x, varsayilan=0.0):
 
     except Exception:
         return varsayilan
+
+
+def tahmin_gecmisi_oku():
+    try:
+        if not os.path.exists(TAHMIN_GECMISI_FILE):
+            return {"surum": 1, "tahminler": [], "ogrenme_gecmisi": []}
+
+        with open(TAHMIN_GECMISI_FILE, "r", encoding="utf-8") as f:
+            veri = json.load(f)
+
+        if not isinstance(veri, dict):
+            raise ValueError("Tahmin geçmişi geçersiz formatta")
+
+        veri.setdefault("surum", 1)
+        veri.setdefault("tahminler", [])
+        veri.setdefault("ogrenme_gecmisi", [])
+        return veri
+
+    except Exception as e:
+        print("TAHMIN GECMISI OKUMA HATASI:", e)
+        return {"surum": 1, "tahminler": [], "ogrenme_gecmisi": []}
+
+
+def tahmin_gecmisi_yaz(veri):
+    try:
+        os.makedirs(os.path.dirname(TAHMIN_GECMISI_FILE), exist_ok=True)
+        gecici = TAHMIN_GECMISI_FILE + ".tmp"
+
+        with open(gecici, "w", encoding="utf-8") as f:
+            json.dump(veri, f, ensure_ascii=False, indent=2)
+
+        os.replace(gecici, TAHMIN_GECMISI_FILE)
+        return True
+
+    except Exception as e:
+        print("TAHMIN GECMISI YAZMA HATASI:", e)
+        return False
 
 
 def rsi_hesapla(close, periyot=14):
@@ -415,6 +460,96 @@ def hisse_analiz_hesapla(
         )
 
         # -------------------------------------------------
+        # YARIN ICIN KISA VADE ISLEM PLANI
+        # -------------------------------------------------
+
+        # YARIN ICIN YAKIN DIRENC / HACIMLI KIRILIM
+        #
+        # Eski sert tepelerin yarinlik kirilim seviyesini
+        # gereksiz yere cok yukariya tasimasini engelliyoruz.
+        # Son 3 tamamlanmis gunun yuksekleri incelenir.
+        if len(veri) >= 4:
+            onceki3 = veri.iloc[-4:-1]
+        else:
+            onceki3 = veri.iloc[:-1]
+
+        yakin_tavan = fiyat + atr14 * 0.80
+
+        yakin_direncler = []
+
+        if len(onceki3) > 0:
+            for seviye in onceki3["High"]:
+                seviye = guvenli_float(seviye)
+                if fiyat < seviye <= yakin_tavan:
+                    yakin_direncler.append(seviye)
+
+        # Fiyata yakin gercek bir onceki tepe varsa onu kullan.
+        # Yoksa ATR tabanli dinamik kirilim seviyesi olustur.
+        if yakin_direncler:
+            yarin_kirilim = min(yakin_direncler)
+        else:
+            yarin_kirilim = fiyat + atr14 * 0.50
+
+        # Yarin icin daha kontrollu dinamik alim bolgesi.
+        # ATR kullanilir ancak cok oynak hisselerde bolgenin
+        # gereksiz yere genislemesi sinirlandirilir.
+        alim_alt_mesafe = min(
+            atr14 * 0.23,
+            fiyat * 0.022
+        )
+
+        alim_ust_mesafe = min(
+            atr14 * 0.03,
+            fiyat * 0.004
+        )
+
+        yarin_alim_alt = max(
+            0.01,
+            fiyat - alim_alt_mesafe
+        )
+
+        yarin_alim_ust = max(
+            yarin_alim_alt,
+            fiyat + alim_ust_mesafe
+        )
+
+        # Ilk kisa vadeli kar alma seviyesi kirilimdan bagimsizdir.
+        yarin_kar_al = fiyat + atr14 * 0.50
+
+        # Kisa vadeli stop.
+        # ATR ile hesaplanir fakat asiri genis stop engellenir.
+        stop_mesafe = min(
+            atr14 * 0.50,
+            fiyat * 0.046
+        )
+
+        yarin_stop = max(
+            0.01,
+            fiyat - stop_mesafe
+        )
+
+        # Kirilim sonrasi ilk teknik hedef
+        yarin_kirilim_hedef = yarin_kirilim + atr14 * 0.60
+
+        # HACIMLI KIRILIM DURUMU
+        #
+        # Yuksek hacim tek basina olumlu kirilim degildir.
+        # Fiyat kirilim seviyesinin uzerinde olmali ve
+        # gunluk mum da pozitif olmali.
+        if (
+            fiyat > yarin_kirilim
+            and hacim_orani >= 120
+            and pozitif_mum
+        ):
+            hacimli_kirilim_durum = "GERCEKLESTI"
+
+        elif fiyat > yarin_kirilim:
+            hacimli_kirilim_durum = "HACIM_ZAYIF"
+
+        else:
+            hacimli_kirilim_durum = "BEKLENIYOR"
+
+        # -------------------------------------------------
         # TEKNİK PUAN
         # -------------------------------------------------
 
@@ -653,6 +788,14 @@ def hisse_analiz_hesapla(
             "hedef2": hedef2,
             "stop": stop,
             "risk_getiri": risk_getiri,
+            "atr14": atr14,
+            "yarin_alim_alt": yarin_alim_alt,
+            "yarin_alim_ust": yarin_alim_ust,
+            "yarin_kar_al": yarin_kar_al,
+            "yarin_stop": yarin_stop,
+            "yarin_kirilim": yarin_kirilim,
+            "yarin_kirilim_hedef": yarin_kirilim_hedef,
+            "hacimli_kirilim_durum": hacimli_kirilim_durum,
             "puan": puan,
             "nedenler": nedenler,
         }
@@ -1155,7 +1298,279 @@ def web_verisi_kaydet(sonuclar):
             "WEB VERİ KAYIT HATASI:",
             e
         )
+def tahmin_sonrasi_fiyatlarini_bul(sembol, tahmin_tarihi, veri_cache=None):
+    try:
+        if veri_cache is not None and sembol in veri_cache:
+            veri = veri_cache[sembol]
+        else:
+            hisse = bp.Ticker(sembol)
+            veri = hisse.history(period="6mo")
+            if veri_cache is not None:
+                veri_cache[sembol] = veri
+
+        if veri is None or veri.empty:
+            return None
+
+        if "Close" not in veri.columns:
+            return None
+
+        veri = veri.dropna(subset=["Close"]).copy()
+
+        hedef_tarih = datetime.strptime(
+            tahmin_tarihi[:10],
+            "%Y-%m-%d"
+        ).date()
+
+        tarihler = []
+        for tarih in veri.index:
+            try:
+                if hasattr(tarih, "date"):
+                    gun = tarih.date()
+                else:
+                    gun = datetime.strptime(
+                        str(tarih)[:10],
+                        "%Y-%m-%d"
+                    ).date()
+                tarihler.append((gun, tarih))
+            except Exception:
+                continue
+
+        tarihler.sort(key=lambda x: x[0])
+
+        baslangic = None
+        for i, (gun, _) in enumerate(tarihler):
+            if gun >= hedef_tarih:
+                baslangic = i
+                break
+
+        if baslangic is None:
+            return None
+
+        sonuc = {}
+        vadeler = {
+            "1g": 1,
+            "3g": 3,
+            "5g": 5,
+            "10g": 10,
+            "20g": 20,
+            "60g": 60
+        }
+
+        baslangic_fiyat = guvenli_float(
+            veri.loc[tarihler[baslangic][1], "Close"]
+        )
+
+        if baslangic_fiyat <= 0:
+            return None
+
+        for alan, adim in vadeler.items():
+            hedef_index = baslangic + adim
+
+            if hedef_index >= len(tarihler):
+                sonuc[alan] = None
+                continue
+
+            hedef_kayit = tarihler[hedef_index][1]
+            hedef_fiyat = guvenli_float(
+                veri.loc[hedef_kayit, "Close"]
+            )
+
+            sonuc[alan] = {
+                "tarih": tarihler[hedef_index][0].isoformat(),
+                "fiyat": hedef_fiyat,
+                "getiri_yuzde": (
+                    ((hedef_fiyat - baslangic_fiyat) / baslangic_fiyat) * 100
+                    if hedef_fiyat > 0 else None
+                )
+            }
+
+        sonuc["baslangic_tarihi"] = tarihler[baslangic][0].isoformat()
+        sonuc["baslangic_fiyati"] = baslangic_fiyat
+        return sonuc
+
+    except Exception as e:
+        print(f"TAHMIN SONUCU VERI HATASI {sembol}:", e)
+        return None
+
+
+def tahmin_sonuclarini_guncelle():
+    try:
+        veri = tahmin_gecmisi_oku()
+        tahminler = veri.get("tahminler", [])
+
+        if not tahminler:
+            print("TAHMIN SONUCLARI: Guncellenecek kayit yok")
+            return True
+
+        guncellenen = 0
+        veri_cache = {}
+
+        for kayit in tahminler:
+            if not kayit.get("sembol") or not kayit.get("tarih"):
+                continue
+
+            sonuclar = tahmin_sonrasi_fiyatlarini_bul(
+                kayit["sembol"],
+                kayit["tarih"],
+                veri_cache
+            )
+
+            if not sonuclar:
+                continue
+
+            degisti = False
+
+            for vade in ["1g", "3g", "5g", "10g", "20g", "60g"]:
+                alan = "sonuc_" + vade
+                yeni_sonuc = sonuclar.get(vade)
+
+                if yeni_sonuc is not None and kayit.get(alan) != yeni_sonuc:
+                    kayit[alan] = yeni_sonuc
+                    degisti = True
+
+            if degisti:
+                guncellenen += 1
+
+        veri["son_guncelleme"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        tahmin_gecmisi_yaz(veri)
+
+        print(f"TAHMIN SONUCLARI: {guncellenen} kayit guncellendi")
+        return True
+
+    except Exception as e:
+        print("TAHMIN SONUCLARI GUNCELLEME HATASI:", e)
+        return False
+
+
+def yarin_top10_listesi(sonuclar):
+    sirali = []
+    for a in sonuclar:
+        skor = yarin_potansiyel_hesapla(a)
+        if skor >= 55:
+            sirali.append((skor, a))
+    sirali.sort(
+        key=lambda x: (
+            x[0],
+            guvenli_float(x[1].get("hacim_orani")),
+            guvenli_float(x[1].get("risk_getiri"))
+        ),
+        reverse=True
+    )
+    return sirali[:10]
+
+
+def tahminleri_kaydet(sonuclar, toplam_hisse):
+    try:
+        veri = tahmin_gecmisi_oku()
+        simdi = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        tahminler = veri.setdefault("tahminler", [])
+
+        yarin_top10 = yarin_top10_listesi(sonuclar)
+        yarin_top10_map = {
+            a.get("sembol"): {"sira": i + 1, "puan": skor}
+            for i, (skor, a) in enumerate(yarin_top10)
+        }
+
+        tepki_top10_liste = tepki_top10(sonuclar)
+        tepki_top10_map = {
+            a.get("sembol"): {"sira": i + 1, "puan": tepki_puani(a)}
+            for i, a in enumerate(tepki_top10_liste)
+        }
+
+        eklenen = 0
+
+        for a in sonuclar:
+            if not a or not a.get("sembol"):
+                continue
+
+            sinyal = sinyal_sinifi(a)
+            guclu_tepki = guclu_tepki_mi(a)
+
+            sembol = a.get("sembol")
+            yarin_top10_bilgi = yarin_top10_map.get(sembol)
+            tepki_top10_bilgi = tepki_top10_map.get(sembol)
+
+            if sinyal == "NÖTR" and not guclu_tepki and not yarin_top10_bilgi and not tepki_top10_bilgi:
+                continue
+
+            bugun = simdi[:10]
+            tekrar_var = any(
+                str(k.get("tarih", ""))[:10] == bugun
+                and k.get("sembol") == a.get("sembol")
+                and k.get("sinyal") == sinyal
+                and bool(k.get("guclu_tepki", False)) == guclu_tepki
+                for k in tahminler
+            )
+
+            if tekrar_var:
+                continue
+
+            kayit = {
+                "id": f"{simdi}_{a.get('sembol')}",
+                "tarih": simdi,
+                "sembol": a.get("sembol"),
+                "sinyal": sinyal,
+                "guclu_tepki": guclu_tepki,
+                "tepki_puani": tepki_puani(a) if guclu_tepki else 0,
+                "yarin_top10": bool(yarin_top10_bilgi),
+                "yarin_top10_sira": yarin_top10_bilgi.get("sira") if yarin_top10_bilgi else None,
+                "yarin_top10_puani": yarin_top10_bilgi.get("puan") if yarin_top10_bilgi else None,
+                "tepki_top10": bool(tepki_top10_bilgi),
+                "tepki_top10_sira": tepki_top10_bilgi.get("sira") if tepki_top10_bilgi else None,
+                "tepki_top10_puani": tepki_top10_bilgi.get("puan") if tepki_top10_bilgi else None,
+                "puan": guvenli_float(a.get("puan")),
+                "fiyat": guvenli_float(a.get("fiyat")),
+                "degisim": guvenli_float(a.get("degisim")),
+                "rsi": guvenli_float(a.get("rsi")),
+                "rsi_onceki": guvenli_float(a.get("rsi_onceki")),
+                "macd": guvenli_float(a.get("macd")),
+                "signal": guvenli_float(a.get("signal")),
+                "hist": guvenli_float(a.get("hist")),
+                "hist_onceki": guvenli_float(a.get("hist_onceki")),
+                "hacim_orani": guvenli_float(a.get("hacim_orani")),
+                "sma20": guvenli_float(a.get("sma20")),
+                "sma50": guvenli_float(a.get("sma50")),
+                "yukari_kesisim": bool(a.get("yukari_kesisim")),
+                "asagi_kesisim": bool(a.get("asagi_kesisim")),
+                "pozitif_mum": bool(a.get("pozitif_mum")),
+                "negatif_mum": bool(a.get("negatif_mum")),
+                "kapanis_pozisyonu": guvenli_float(a.get("kapanis_pozisyonu")),
+                "destek": guvenli_float(a.get("destek")),
+                "direnc": guvenli_float(a.get("direnc")),
+                "hedef1": guvenli_float(a.get("hedef1")),
+                "hedef2": guvenli_float(a.get("hedef2")),
+                "stop": guvenli_float(a.get("stop")),
+                "risk_getiri": guvenli_float(a.get("risk_getiri")),
+                "nedenler": list(a.get("nedenler", [])),
+                "toplam_hisse": toplam_hisse,
+                "sonuc_1g": None,
+                "sonuc_3g": None,
+                "sonuc_5g": None,
+                "sonuc_10g": None,
+                "sonuc_20g": None,
+                "sonuc_60g": None,
+                "degerlendirme": None
+            }
+
+            tahminler.append(kayit)
+            eklenen += 1
+
+        veri["son_guncelleme"] = simdi
+        tahmin_gecmisi_yaz(veri)
+        print(f"TAHMIN HAFIZASI: {eklenen} anlamli sinyal kaydi eklendi")
+        return True
+
+    except Exception as e:
+        print("TAHMIN KAYIT HATASI:", e)
+        return False
+
+
 def bist_tara():
+
+    try:
+        tahmin_sonuclarini_guncelle()
+    except Exception as e:
+        print("TAHMIN SONUCLARI OTOMATIK GUNCELLEME HATASI:", e)
 
     semboller = bist_hisseleri_getir()
 
@@ -1217,6 +1632,11 @@ def bist_tara():
 
     web_verisi_kaydet(
         sonuclar
+    )
+
+    tahminleri_kaydet(
+        sonuclar,
+        toplam
     )
 
     return (
