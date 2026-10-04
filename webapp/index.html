@@ -624,7 +624,7 @@ body{
                 Sinyaller
             </div>
 
-            <div class="page-subtitle">
+            <div id="signalPageSubtitle" class="page-subtitle">
                 AI puanına göre sıralanmıştır
             </div>
         </div>
@@ -901,6 +901,11 @@ function signalPage(tip, donus){
 
     document.getElementById("signalPageTitle").innerText =
         baslik;
+
+    document.getElementById("signalPageSubtitle").innerText =
+        (tip === "GUCLU_TEPKI" || tip === "TEPKI_TOP10")
+            ? "Tepki gücüne göre sıralanmıştır"
+            : "AI puanına göre sıralanmıştır";
 
     let liste;
 
