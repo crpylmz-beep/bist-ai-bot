@@ -520,6 +520,38 @@ body{
 
 
         <div class="scanner-card"
+             onclick="signalPage('GUCLU_TEPKI','scanner')">
+
+            <div class="scanner-icon">⭐</div>
+
+            <div class="scanner-info">
+                <div class="scanner-name">Güçlü Tepki</div>
+                <div class="scanner-desc">
+                    Tepki sinyali güçlü şekilde doğrulanan hisseler
+                </div>
+            </div>
+
+            <div class="scanner-arrow">›</div>
+        </div>
+
+
+        <div class="scanner-card"
+             onclick="signalPage('TEPKI_TOP10','scanner')">
+
+            <div class="scanner-icon">🏆</div>
+
+            <div class="scanner-info">
+                <div class="scanner-name">Tepki TOP 10</div>
+                <div class="scanner-desc">
+                    En güçlü 10 tepki adayı
+                </div>
+            </div>
+
+            <div class="scanner-arrow">›</div>
+        </div>
+
+
+        <div class="scanner-card"
              onclick="signalPage('ASIRI_ALIM','scanner')">
 
             <div class="scanner-icon">🔵</div>
@@ -861,12 +893,31 @@ function signalPage(tip, donus){
     if(tip === "ASIRI_ALIM")
         baslik = "🔵 Aşırı Alım";
 
+    if(tip === "GUCLU_TEPKI")
+        baslik = "⭐ Güçlü Tepki";
+
+    if(tip === "TEPKI_TOP10")
+        baslik = "🏆 Tepki TOP 10";
+
     document.getElementById("signalPageTitle").innerText =
         baslik;
 
-    const liste = tumVeriler
-        .filter(x => sinyalTip(x) === tip)
-        .sort((a,b) => puanGetir(b) - puanGetir(a));
+    let liste;
+
+    if(tip === "GUCLU_TEPKI"){
+        liste = tumVeriler
+            .filter(x => x.guclu_tepki === true)
+            .sort((a,b) => Number(b.tepki_puani || 0) - Number(a.tepki_puani || 0));
+    } else if(tip === "TEPKI_TOP10"){
+        liste = tumVeriler
+            .filter(x => x.guclu_tepki === true)
+            .sort((a,b) => Number(b.tepki_puani || 0) - Number(a.tepki_puani || 0))
+            .slice(0,10);
+    } else {
+        liste = tumVeriler
+            .filter(x => sinyalTip(x) === tip)
+            .sort((a,b) => puanGetir(b) - puanGetir(a));
+    }
 
     const alan = document.getElementById("signalList");
 
