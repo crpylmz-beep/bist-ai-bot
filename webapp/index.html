@@ -930,7 +930,7 @@ function signalPage(tip, donus){
     }
 
     alan.innerHTML = liste.map((hisse, index) =>
-        hisseSatiri(hisse, index + 1)
+        hisseSatiri(hisse, index + 1, tip)
     ).join("");
 }
 
@@ -981,7 +981,7 @@ function showTop10(){
 
 /* HİSSE SATIRI */
 
-function hisseSatiri(hisse, sira){
+function hisseSatiri(hisse, sira, sayfaTipi = ""){
 
     const sembol =
         hisse.sembol ??
@@ -1000,7 +1000,9 @@ function hisseSatiri(hisse, sira){
         hisse.yuzde ??
         0;
 
-    const puan = puanGetir(hisse);
+    const tepkiSayfasi = sayfaTipi === "GUCLU_TEPKI" || sayfaTipi === "TEPKI_TOP10";
+    const puan = tepkiSayfasi ? Number(hisse.tepki_puani || 0) : puanGetir(hisse);
+    const puanEtiketi = tepkiSayfasi ? "Tepki" : "AI";
 
     const tip = sinyalTip(hisse);
 
@@ -1036,7 +1038,7 @@ function hisseSatiri(hisse, sira){
                 </span>
 
                 <span class="${renk}">
-                    AI ${puan}/100
+                    ${puanEtiketi} ${puan}/100
                 </span>
 
             </div>
