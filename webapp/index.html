@@ -1030,7 +1030,7 @@ function hisseSatiri(hisse, sira, sayfaTipi = ""){
                 </div>
 
                 <div class="stock-price">
-                    ${fiyat} TL
+                    ${Number.isFinite(Number(fiyat)) ? Number(fiyat).toFixed(2) : "-"} TL
                 </div>
 
             </div>
@@ -1223,6 +1223,28 @@ function hisseDetay(hisse){
         hisse.risk_getiri ??
         "-";
 
+    const yarinAlimAlt = hisse.yarin_alim_alt ?? "-";
+    const yarinAlimUst = hisse.yarin_alim_ust ?? "-";
+    const yarinKarAl = hisse.yarin_kar_al ?? "-";
+    const yarinStop = hisse.yarin_stop ?? "-";
+    const yarinKirilim = hisse.yarin_kirilim ?? "-";
+    const yarinKirilimHedef = hisse.yarin_kirilim_hedef ?? "-";
+    const kirilimDurum = hisse.hacimli_kirilim_durum ?? "BEKLENIYOR";
+
+    const fiyatYaz = (deger) => {
+        const n = Number(deger);
+        return Number.isFinite(n) ? n.toFixed(2) + " TL" : "-";
+    };
+
+    let kirilimYazi = "⚪ HACİMLİ KIRILIM BEKLENİYOR";
+
+    if(kirilimDurum === "GERCEKLESTI"){
+        kirilimYazi = "🟢 HACİMLİ KIRILIM GERÇEKLEŞTİ";
+    }
+    else if(kirilimDurum === "HACIM_ZAYIF"){
+        kirilimYazi = "🟡 FİYAT KIRDI — HACİM TEYİDİ ZAYIF";
+    }
+
     const tip =
         hisse.sinyal ??
         hisse.sinyal_sinifi ??
@@ -1264,19 +1286,19 @@ function hisseDetay(hisse){
 
                 ${detayKutu("AI Puanı", puanGetir(hisse) + "/100")}
 
-                ${detayKutu("RSI", rsi)}
+                ${detayKutu("RSI", Number.isFinite(Number(rsi)) ? Number(rsi).toFixed(1) : "-")}
 
-                ${detayKutu("SMA20", sma20)}
+                ${detayKutu("SMA20", Number.isFinite(Number(sma20)) ? Number(sma20).toFixed(2) : "-")}
 
-                ${detayKutu("SMA50", sma50)}
+                ${detayKutu("SMA50", Number.isFinite(Number(sma50)) ? Number(sma50).toFixed(2) : "-")}
 
-                ${detayKutu("MACD", macd)}
+                ${detayKutu("MACD", Number.isFinite(Number(macd)) ? Number(macd).toFixed(4) : "-")}
 
-                ${detayKutu("Signal", signal)}
+                ${detayKutu("Signal", Number.isFinite(Number(signal)) ? Number(signal).toFixed(4) : "-")}
 
-                ${detayKutu("Hacim", hacim)}
+                ${detayKutu("Hacim", Number.isFinite(Number(hacim)) ? "%" + Number(hacim).toFixed(1) : "-")}
 
-                ${detayKutu("Risk/Getiri", riskGetiri)}
+                ${detayKutu("Risk/Getiri", Number.isFinite(Number(riskGetiri)) ? Number(riskGetiri).toFixed(2) : "-")}
 
             </div>
 
@@ -1285,23 +1307,66 @@ function hisseDetay(hisse){
 
         <div class="detail-card">
 
-            <b>🎯 İşlem Bölgeleri</b>
+            <b>📅 YARIN İÇİN</b>
 
             <div class="detail-grid" style="margin-top:12px">
 
-                ${detayKutu("Giriş Alt", girisAlt)}
+                ${detayKutu(
+                    "🟢 Alım Bölgesi",
+                    fiyatYaz(yarinAlimAlt) + " - " + fiyatYaz(yarinAlimUst)
+                )}
 
-                ${detayKutu("Giriş Üst", girisUst)}
+                ${detayKutu(
+                    "🎯 Kısa Vade Kâr Al",
+                    fiyatYaz(yarinKarAl)
+                )}
 
-                ${detayKutu("Hedef 1", hedef1)}
+                ${detayKutu(
+                    "🛑 Kısa Vade Stop",
+                    fiyatYaz(yarinStop)
+                )}
 
-                ${detayKutu("Hedef 2", hedef2)}
+                ${detayKutu(
+                    "🚀 Hacimli Kırılım",
+                    fiyatYaz(yarinKirilim)
+                )}
 
-                ${detayKutu("Stop", stop)}
+                ${detayKutu(
+                    "🎯 Kırılım Sonrası Hedef",
+                    fiyatYaz(yarinKirilimHedef)
+                )}
 
-                ${detayKutu("Destek", destek)}
+                ${detayKutu(
+                    "📊 Kırılım Durumu",
+                    kirilimYazi
+                )}
 
-                ${detayKutu("Direnç", direnc)}
+            </div>
+
+        </div>
+
+        <div class="detail-card">
+
+            <b>📈 ORTA / UZUN VADE</b>
+
+            <div class="detail-grid" style="margin-top:12px">
+
+                ${detayKutu(
+                    "🟢 Alım Bölgesi",
+                    fiyatYaz(girisAlt) + " - " + fiyatYaz(girisUst)
+                )}
+
+                ${detayKutu("🎯 Hedef 1", fiyatYaz(hedef1))}
+
+                ${detayKutu("🎯 Hedef 2", fiyatYaz(hedef2))}
+
+                ${detayKutu("🛑 Stop-Loss", fiyatYaz(stop))}
+
+                ${detayKutu("🟡 Destek", fiyatYaz(destek))}
+
+                ${detayKutu("🔴 Direnç", fiyatYaz(direnc))}
+
+                ${detayKutu("⚖️ Risk/Getiri", riskGetiri)}
 
             </div>
 
