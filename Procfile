@@ -1,1 +1,1 @@
-worker: python bist_bot.py
+web: python web_server.py
