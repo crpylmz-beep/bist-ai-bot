@@ -33,6 +33,13 @@ TAHMIN_GECMISI_FILE = os.path.join(
     "tahmin_gecmisi.json"
 )
 
+YARIN_TOP10_FILE = os.path.join(
+    os.path.dirname(__file__),
+    "webapp",
+    "data",
+    "yarin_top10.json"
+)
+
 GUN_ICI_GECERSIZ_FILE = os.path.join(
     os.path.dirname(__file__),
     "webapp",
@@ -548,6 +555,21 @@ def hisse_analiz_hesapla(
         # Ilk kisa vadeli kar alma seviyesi kirilimdan bagimsizdir.
         yarin_kar_al = fiyat + atr14 * 0.50
 
+        # Yarin icin dinamik satim bolgesi.
+        # ATR ve yakin teknik direnc birlikte dikkate alinir.
+        yarin_satim_alt = max(
+            yarin_kar_al,
+            fiyat + atr14 * 0.40
+        )
+
+        yarin_satim_ust = max(
+            yarin_satim_alt,
+            min(
+                yarin_kirilim,
+                fiyat + atr14 * 0.80
+            )
+        )
+
         # Kisa vadeli stop.
         # ATR ile hesaplanir fakat asiri genis stop engellenir.
         stop_mesafe = min(
@@ -824,6 +846,8 @@ def hisse_analiz_hesapla(
             "yarin_alim_alt": yarin_alim_alt,
             "yarin_alim_ust": yarin_alim_ust,
             "yarin_kar_al": yarin_kar_al,
+            "yarin_satim_alt": yarin_satim_alt,
+            "yarin_satim_ust": yarin_satim_ust,
             "yarin_stop": yarin_stop,
             "yarin_kirilim": yarin_kirilim,
             "yarin_kirilim_hedef": yarin_kirilim_hedef,
@@ -1491,6 +1515,87 @@ def yarin_top10_listesi(sonuclar):
     return sirali[:10]
 
 
+
+def yarin_top10_kilitli_oku():
+    try:
+        if not os.path.exists(YARIN_TOP10_FILE):
+            return None
+
+        with open(YARIN_TOP10_FILE, "r", encoding="utf-8") as f:
+            veri = json.load(f)
+
+        if not isinstance(veri, dict):
+            return None
+
+        return veri
+
+    except Exception as e:
+        print("YARIN TOP10 OKUMA HATASI:", e)
+        return None
+
+
+def yarin_top10_kilitli_kaydet(sonuclar, toplam_hisse):
+    try:
+        top10 = yarin_top10_listesi(sonuclar)
+
+        kayitlar = []
+
+        for sira, (skor, a) in enumerate(top10, 1):
+            hisse = dict(a)
+
+            hisse["yarin_top10_sira"] = sira
+            hisse["yarin_top10_puani"] = skor
+
+            # Kilitlenen ilk listede henuz ilk hacimli kirilim
+            # saati bilinmiyor. Gun ici takip sistemi daha sonra
+            # bu alani ilk gerceklesme aninda dolduracak.
+            hisse["ilk_hacimli_kirilim_saati"] = None
+
+            kayitlar.append(hisse)
+
+        simdi = datetime.now()
+
+        veri = {
+            "olusturma_zamani": simdi.strftime("%Y-%m-%d %H:%M:%S"),
+            "analiz_tarihi": simdi.strftime("%Y-%m-%d"),
+            "kilitli": True,
+            "toplam_hisse": toplam_hisse,
+            "teknik_aday": len([
+                a for a in sonuclar
+                if yarin_potansiyel_hesapla(a) >= 55
+            ]),
+            "top10": kayitlar
+        }
+
+        os.makedirs(
+            os.path.dirname(YARIN_TOP10_FILE),
+            exist_ok=True
+        )
+
+        with open(
+            YARIN_TOP10_FILE,
+            "w",
+            encoding="utf-8"
+        ) as f:
+            json.dump(
+                veri,
+                f,
+                ensure_ascii=False,
+                indent=2,
+                default=str
+            )
+
+        print(
+            f"YARIN TOP10 KILITLENDI: "
+            f"{len(kayitlar)} hisse"
+        )
+
+        return veri
+
+    except Exception as e:
+        print("YARIN TOP10 KILITLEME HATASI:", e)
+        return None
+
 def tahminleri_kaydet(sonuclar, toplam_hisse):
     try:
         veri = tahmin_gecmisi_oku()
@@ -1670,6 +1775,32 @@ def bist_tara():
         sonuclar,
         toplam
     )
+
+    # YARIN TOP10 KAPANIS KILIDI
+    # 18:15'ten onceki taramalar kilitli listeyi degistirmez.
+    # Ayni gun liste bir kez olusturulduysa tekrar yazilmaz.
+    simdi_dt = datetime.now()
+
+    if (
+        simdi_dt.weekday() < 5
+        and (simdi_dt.hour, simdi_dt.minute) >= (18, 15)
+    ):
+        mevcut_kilit = yarin_top10_kilitli_oku()
+        bugun = simdi_dt.strftime("%Y-%m-%d")
+
+        if (
+            not mevcut_kilit
+            or mevcut_kilit.get("analiz_tarihi") != bugun
+        ):
+            yarin_top10_kilitli_kaydet(
+                sonuclar,
+                toplam
+            )
+        else:
+            print(
+                "YARIN TOP10 ZATEN BUGUN KILITLENDI - "
+                "LISTE DEGISTIRILMEDI"
+            )
 
     return (
         sonuclar,
@@ -2108,6 +2239,110 @@ def gun_ici_stream_verileri_getir(semboller, paket_boyutu=100, bekleme=10):
     basarisiz = list(dict.fromkeys(basarisiz))
     print(f"STREAM SONUCU | BASARILI: {len(veri_map)} | BASARISIZ: {len(basarisiz)}")
     return veri_map, basarisiz
+
+
+
+def ilk_hacimli_kirilim_bul(veri, kirilim_seviyesi):
+    """
+    5 dakikalik mumlari sirayla kontrol eder.
+    Ilk kez kirilim seviyesinin uzerinde kapanan ve
+    hacmi onceki 20 adet 5 dk mum ortalamasinin
+    en az %130'u olan mumun saatini dondurur.
+    """
+
+    try:
+        if veri is None or veri.empty:
+            return None, "BEKLENIYOR"
+
+        seviye = guvenli_float(kirilim_seviyesi)
+
+        if seviye <= 0:
+            return None, "BEKLENIYOR"
+
+        veri = veri.dropna(
+            subset=["Open", "High", "Low", "Close", "Volume"]
+        ).copy()
+
+        if veri.empty:
+            return None, "BEKLENIYOR"
+
+        # Yalnizca son islem gununun mumlari.
+        son_tarih = veri.index[-1].date()
+
+        bugun = veri[
+            veri.index.date == son_tarih
+        ].copy()
+
+        if len(bugun) < 2:
+            return None, "BEKLENIYOR"
+
+        fiyat_kirdi = False
+
+        for i in range(1, len(bugun)):
+
+            onceki_kapanis = guvenli_float(
+                bugun["Close"].iloc[i - 1]
+            )
+
+            kapanis = guvenli_float(
+                bugun["Close"].iloc[i]
+            )
+
+            # Kapanis bazli gercek yukari gecis.
+            yeni_kirilim = (
+                onceki_kapanis <= seviye
+                and kapanis > seviye
+            )
+
+            if not yeni_kirilim:
+                continue
+
+            fiyat_kirdi = True
+
+            # Mumun kendisini ortalamaya katmiyoruz.
+            onceki_hacimler = bugun["Volume"].iloc[
+                max(0, i - 20):i
+            ].astype(float)
+
+            # Saglikli hacim teyidi icin en az 3 onceki mum.
+            if len(onceki_hacimler) < 3:
+                continue
+
+            ort_hacim = guvenli_float(
+                onceki_hacimler.mean()
+            )
+
+            mum_hacmi = guvenli_float(
+                bugun["Volume"].iloc[i]
+            )
+
+            if ort_hacim <= 0:
+                continue
+
+            hacim_orani = (
+                mum_hacmi / ort_hacim
+            ) * 100
+
+            if hacim_orani >= 130:
+
+                saat = bugun.index[i].strftime(
+                    "%H:%M"
+                )
+
+                return saat, "GERCEKLESTI"
+
+        if fiyat_kirdi:
+            return None, "HACIM_ZAYIF"
+
+        return None, "BEKLENIYOR"
+
+    except Exception as e:
+        print(
+            "ILK HACIMLI KIRILIM HATASI:",
+            e
+        )
+        return None, "BEKLENIYOR"
+
 
 
 def gun_ici_analiz_hesapla(sembol, veri=None):
@@ -2741,6 +2976,96 @@ def gun_ici_top10_tara():
     except Exception as e:
         print("GUN ICI WEB KAYIT HATASI:", e)
 
+    # -------------------------------------------------
+    # KILITLI YARIN TOP10 HACIMLI KIRILIM TAKIBI
+    # -------------------------------------------------
+    # Burasi sadece kilitli listedeki canli kirilim durumunu
+    # ve ilk gerceklesme saatini gunceller.
+    # Sira, puan ve islem seviyeleri DEGISTIRILMEZ.
+    try:
+        kilitli_yarin = yarin_top10_kilitli_oku()
+
+        if kilitli_yarin and isinstance(
+            kilitli_yarin.get("top10"),
+            list
+        ):
+            degisiklik_var = False
+
+            for hisse in kilitli_yarin["top10"]:
+                sembol = hisse.get("sembol")
+
+                if not sembol:
+                    continue
+
+                mum_verisi = veri_map.get(sembol)
+
+                if mum_verisi is None or mum_verisi.empty:
+                    continue
+
+                kirilim_seviyesi = guvenli_float(
+                    hisse.get("yarin_kirilim")
+                )
+
+                ilk_saat, yeni_durum = ilk_hacimli_kirilim_bul(
+                    mum_verisi,
+                    kirilim_seviyesi
+                )
+
+                eski_saat = hisse.get(
+                    "ilk_hacimli_kirilim_saati"
+                )
+
+                eski_durum = hisse.get(
+                    "hacimli_kirilim_durum",
+                    "BEKLENIYOR"
+                )
+
+                # Ilk gerceklesme saati bir kez bulunduysa
+                # daha sonraki taramalarda ASLA degistirilmez.
+                if eski_saat:
+                    if eski_durum != "GERCEKLESTI":
+                        hisse["hacimli_kirilim_durum"] = "GERCEKLESTI"
+                        degisiklik_var = True
+                    continue
+
+                if ilk_saat:
+                    hisse["ilk_hacimli_kirilim_saati"] = ilk_saat
+                    hisse["hacimli_kirilim_durum"] = "GERCEKLESTI"
+                    degisiklik_var = True
+
+                elif yeni_durum != eski_durum:
+                    hisse["hacimli_kirilim_durum"] = yeni_durum
+                    degisiklik_var = True
+
+            if degisiklik_var:
+                with open(
+                    YARIN_TOP10_FILE,
+                    "w",
+                    encoding="utf-8"
+                ) as f:
+                    json.dump(
+                        kilitli_yarin,
+                        f,
+                        ensure_ascii=False,
+                        indent=2,
+                        default=str
+                    )
+
+                print(
+                    "YARIN TOP10 KIRILIM TAKIBI GUNCELLENDI"
+                )
+            else:
+                print(
+                    "YARIN TOP10 KIRILIM TAKIBI: "
+                    "YENI DEGISIKLIK YOK"
+                )
+
+    except Exception as e:
+        print(
+            "YARIN TOP10 KIRILIM TAKIP HATASI:",
+            e
+        )
+
     return top10, sonuclar, toplam
 
 
@@ -2976,91 +3301,64 @@ def yarin_potansiyel_hesapla(a):
 # YARIN TOP 10
 # =========================================================
 
-def yarin_top10_mesaji(
-    sonuclar,
-    toplam
-):
+def yarin_top10_mesaji(sonuclar=None, toplam=None):
 
-    sirali = []
+    kilitli = yarin_top10_kilitli_oku()
 
-    for a in sonuclar:
-
-        skor = yarin_potansiyel_hesapla(
-            a
+    if not kilitli:
+        return (
+            "🏆 YARIN İÇİN TOP 10\n"
+            "━━━━━━━━━━━━━━\n\n"
+            "❌ Kilitli Yarın TOP10 listesi henüz oluşturulmadı.\n\n"
+            "📌 Liste piyasa kapanışı sonrası oluşturulup "
+            "ertesi işlem seansı için sabitlenir."
         )
 
-        if skor >= 55:
-
-            sirali.append(
-                (skor, a)
-            )
-
-    sirali.sort(
-        key=lambda x: (
-            x[0],
-            x[1].get("hacim_orani", 0),
-            x[1].get("risk_getiri", 0)
-        ),
-        reverse=True
-    )
-
-    top10 = sirali[:10]
+    top10 = kilitli.get("top10", [])
+    toplam_hisse = kilitli.get("toplam_hisse", 0)
+    teknik_aday = kilitli.get("teknik_aday", 0)
+    olusturma = kilitli.get("olusturma_zamani", "-")
 
     mesaj = (
         "🏆 YARIN İÇİN TOP 10\n"
         "━━━━━━━━━━━━━━\n\n"
-
-        f"🔎 Taranan hisse: {toplam}\n"
-        f"📊 Teknik aday: {len(sirali)}\n\n"
-
-        "TOP 10 seçiminde aşırı günlük hareketler, "
-        "aşırı satım ve aşırı alım bölgeleri ayrıca filtrelenir.\n\n"
+        f"🔒 Kilitli liste: {olusturma}\n"
+        f"🔎 Taranan hisse: {toplam_hisse}\n"
+        f"📊 Teknik aday: {teknik_aday}\n\n"
     )
 
     if not top10:
-
-        mesaj += (
-            "❌ Yeterli teknik aday bulunamadı."
-        )
-
+        mesaj += "❌ Yeterli teknik aday bulunamadı."
         return mesaj
 
-    for i, (skor, a) in enumerate(
-        top10,
-        1
-    ):
+    for i, a in enumerate(top10, 1):
+
+        skor = int(
+            guvenli_float(
+                a.get("yarin_top10_puani")
+            )
+        )
 
         mesaj += (
-            f"🏅 {i}. {a['sembol']} — {skor}/100\n"
-
-            f"   💰 {a['fiyat']:.2f} TL "
-            f"({a['degisim']:+.2f}%)\n"
-
-            f"   RSI {a['rsi']:.1f} | "
-            f"Hacim %{a['hacim_orani']:.0f}\n"
-
+            f"🏅 {i}. {a.get('sembol', '-')} — {skor}/100\n"
+            f"   💰 {guvenli_float(a.get('fiyat')):.2f} TL "
+            f"({guvenli_float(a.get('degisim')):+.2f}%)\n"
+            f"   RSI {guvenli_float(a.get('rsi')):.1f} | "
+            f"Hacim %{guvenli_float(a.get('hacim_orani')):.0f}\n"
             f"   MACD: "
-            f"{'Pozitif' if a['macd'] > a['signal'] else 'Negatif'}\n"
-
-            f"   Destek {a['destek']:.2f} | "
-            f"Direnç {a['direnc']:.2f}\n"
-
-            f"   Hedef1 {a['hedef1']:.2f} | "
-            f"Stop {a['stop']:.2f}\n\n"
+            f"{'Pozitif' if guvenli_float(a.get('macd')) > guvenli_float(a.get('signal')) else 'Negatif'}\n"
+            f"   Destek {guvenli_float(a.get('destek')):.2f} | "
+            f"Direnç {guvenli_float(a.get('direnc')):.2f}\n"
+            f"   Hedef1 {guvenli_float(a.get('hedef1')):.2f} | "
+            f"Stop {guvenli_float(a.get('stop')):.2f}\n\n"
         )
 
     mesaj += (
         "━━━━━━━━━━━━━━\n"
-
-        "📌 Sinyal grupları birbirinden ayrı değerlendirilir:\n\n"
-
-        "🟢 Agresif Alış\n"
-        "🔴 Agresif Satış\n"
-        "🟠 Aşırı Satım / Tepki\n"
-        "🔵 Aşırı Alım\n\n"
-
-        "⚠️ Bu sıralama algoritmik teknik potansiyeldir; "
-        "ertesi gün yükseliş garantisi veya yatırım tavsiyesi değildir."
+        "🔒 Bu liste oluşturulduğu seans kapanışındaki "
+        "verilerle sabitlenmiştir.\n\n"
+        "⚠️ Algoritmik teknik potansiyeldir; "
+        "yükseliş garantisi veya yatırım tavsiyesi değildir."
     )
 
     return mesaj
@@ -3310,22 +3608,9 @@ async def buton(
 
     elif query.data == "top10":
 
-        await query.message.reply_text(
-            "🏆 YARIN İÇİN BIST TARANIYOR...\n\n"
-            "Tüm BIST hisseleri teknik olarak "
-            "değerlendiriliyor."
-        )
-
         try:
 
-            sonuclar, toplam = await asyncio.to_thread(
-                bist_tara
-            )
-
-            mesaj = yarin_top10_mesaji(
-                sonuclar,
-                toplam
-            )
+            mesaj = yarin_top10_mesaji()
 
             parcalar = mesaj_parcala_gonder(
                 update,
@@ -3341,7 +3626,7 @@ async def buton(
         except Exception as e:
 
             await query.message.reply_text(
-                f"❌ TOP 10 tarama hatası:\n{e}"
+                f"❌ TOP 10 liste hatası:\n{e}"
             )
 
 
