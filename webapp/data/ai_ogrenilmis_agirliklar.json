@@ -1,0 +1,10 @@
+{
+  "guncelleme": "2026-10-06 01:35:05",
+  "durum": "VERI_TOPLANIYOR",
+  "tamamlanan_sinyal": 0,
+  "minimum_gerekli": 30,
+  "kalan": 30,
+  "aktif": false,
+  "gostergeler": {},
+  "not": "Minimum gercek tamamlanmis AL/SAT ornegi olusmadan ogrenilmis agirliklar karar motoruna uygulanmaz."
+}

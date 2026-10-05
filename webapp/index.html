@@ -444,6 +444,11 @@ body{
 
         <button class="action-btn" onclick="showGunIciTop10()">⚡<br>Gün İçi TOP 10</button>
 
+        <button class="action-btn" onclick="showAiLearning()">
+            &#129504;<br>
+            AI &#214;&#287;renme
+        </button>
+
         <button class="action-btn" onclick="showSearch()">
             🔎<br>
             Hisse Ara
@@ -598,6 +603,27 @@ body{
     <div id="gunIciTop10List" class="list"></div>
 </div>
 
+
+<!-- AI OGRENME -->
+<div id="aiLearningPage" class="page" style="display:none">
+
+    <div class="page-header">
+        <button class="back-btn" onclick="goHome()">&#8249; Geri</button>
+
+        <div>
+            <div class="page-title">&#129504; AI &#214;&#287;renme</div>
+            <div class="page-subtitle">
+                Algoritman&#305;n ger&#231;ek sinyallerden &#246;&#287;renme merkezi
+            </div>
+        </div>
+    </div>
+
+    <div id="aiLearningContent" class="list">
+        <div class="empty">AI verileri y&#252;kleniyor...</div>
+    </div>
+
+</div>
+
 <!-- HİSSE ARA -->
 <div id="searchPage" class="page" style="display:none">
 
@@ -726,6 +752,12 @@ async function gercekVeriyiYukle(){
         if(Array.isArray(veri)){
             tumVeriler = veri;
         }
+        else if(
+            veri &&
+            Array.isArray(veri.hisseler)
+        ){
+            tumVeriler = veri.hisseler;
+        }
         else if(Array.isArray(veri.hisseler)){
             tumVeriler = veri.hisseler;
         }
@@ -734,6 +766,58 @@ async function gercekVeriyiYukle(){
         }
         else{
             tumVeriler = [];
+        }
+
+        // Gun ici 5 dakikalik analizleri yukle ve ana hisse verisiyle birlestir.
+        try{
+            const gunIciCevap = await fetch(
+                "data/gun_ici_tum.json?t=" + Date.now(),
+                {cache:"no-store"}
+            );
+
+            if(gunIciCevap.ok){
+                const gunIciVeri = await gunIciCevap.json();
+
+                const gunIciListe =
+                    gunIciVeri && Array.isArray(gunIciVeri.hisseler)
+                    ? gunIciVeri.hisseler
+                    : [];
+
+                const gunIciMap = new Map();
+
+                gunIciListe.forEach(x => {
+                    const kod = String(
+                        x.sembol ?? x.symbol ?? ""
+                    ).toUpperCase();
+
+                    if(kod){
+                        gunIciMap.set(kod, x);
+                    }
+                });
+
+                tumVeriler = tumVeriler.map(hisse => {
+                    const kod = String(
+                        hisse.sembol ?? hisse.symbol ?? ""
+                    ).toUpperCase();
+
+                    const gunIci = gunIciMap.get(kod);
+
+                    return gunIci
+                        ? {...hisse, ...gunIci}
+                        : hisse;
+                });
+
+                console.log(
+                    "Gun ici veri birlestirildi:",
+                    gunIciListe.length
+                );
+            }
+        }
+        catch(gunIciHata){
+            console.warn(
+                "Gun ici veri henuz mevcut degil:",
+                gunIciHata
+            );
         }
 
         anaSayfayiDoldur();
@@ -847,6 +931,7 @@ function tumSayfalariGizle(){
     document.getElementById("scannerPage").style.display = "none";
     document.getElementById("top10Page").style.display = "none";
     document.getElementById("gunIciTop10Page").style.display = "none";
+    document.getElementById("aiLearningPage").style.display = "none";
     document.getElementById("searchPage").style.display = "none";
     document.getElementById("signalPage").style.display = "none";
     document.getElementById("stockPage").style.display = "none";
@@ -864,6 +949,229 @@ function goHome(){
     oncekiSayfa = "home";
 
     navAktif("navHome");
+}
+
+
+
+/* AI OGRENME */
+
+async function showAiLearning(){
+
+    tumSayfalariGizle();
+
+    document.getElementById("aiLearningPage").style.display = "block";
+
+    oncekiSayfa = "ai_learning";
+
+    const alan = document.getElementById("aiLearningContent");
+
+    alan.innerHTML =
+        '<div class="empty">AI verileri y&#252;kleniyor...</div>';
+
+    try{
+
+        const ts = Date.now();
+
+        const [ozetCevap, agirlikCevap] = await Promise.all([
+            fetch("data/ai_ogrenme_ozeti.json?t=" + ts, {
+                cache: "no-store"
+            }),
+            fetch("data/ai_ogrenilmis_agirliklar.json?t=" + ts, {
+                cache: "no-store"
+            })
+        ]);
+
+        if(!ozetCevap.ok){
+            throw new Error("AI ozet verisi bulunamadi");
+        }
+
+        const ozet = await ozetCevap.json();
+
+        let agirlik = {
+            durum: "VERI_TOPLANIYOR",
+            aktif: false,
+            tamamlanan_sinyal: 0,
+            minimum_gerekli: 30,
+            kalan: 30,
+            gostergeler: {}
+        };
+
+        if(agirlikCevap.ok){
+            agirlik = await agirlikCevap.json();
+        }
+
+        const toplam = Number(ozet.toplam_ornek || 0);
+        const tamamlanan = Number(agirlik.tamamlanan_sinyal || 0);
+        const minimum = Number(agirlik.minimum_gerekli || 30);
+        const kalan = Math.max(0, minimum - tamamlanan);
+        const basari = Number(
+            agirlik.genel_basari_yuzde ??
+            ozet.basari_yuzde ??
+            0
+        );
+
+        const referans = Math.max(
+            0,
+            toplam -
+            Number(ozet.tamamlanan_ornek || 0) -
+            Number(ozet.bekleyen_ornek || 0)
+        );
+
+        const yuzde = Math.min(
+            100,
+            Math.round((tamamlanan / Math.max(1, minimum)) * 100)
+        );
+
+        const durumYazi = agirlik.aktif
+            ? "AKT?F ??RENME"
+            : "VER? TOPLANIYOR";
+
+        const durumRenk = agirlik.aktif
+            ? "#22c55e"
+            : "#f59e0b";
+
+        const kararlar = ozet.kararlar || {};
+
+        alan.innerHTML = `
+            <div class="detail-card">
+
+                <div class="detail-title">
+                    &#129504; AI ??renme Durumu
+                </div>
+
+                <div style="
+                    font-size:22px;
+                    font-weight:800;
+                    margin:10px 0;
+                    color:${durumRenk};
+                ">
+                    ${durumYazi}
+                </div>
+
+                <div style="margin:12px 0;">
+                    <div style="
+                        height:10px;
+                        background:rgba(255,255,255,.10);
+                        border-radius:10px;
+                        overflow:hidden;
+                    ">
+                        <div style="
+                            width:${yuzde}%;
+                            height:100%;
+                            background:${durumRenk};
+                        "></div>
+                    </div>
+
+                    <div style="
+                        margin-top:7px;
+                        font-size:13px;
+                        opacity:.75;
+                    ">
+                        Ger?ek tamamlanm?? sinyal:
+                        ${tamamlanan} / ${minimum}
+                    </div>
+                </div>
+
+                <div class="detail-row">
+                    <span>Ham Veri</span>
+                    <strong>${toplam}</strong>
+                </div>
+
+                <div class="detail-row">
+                    <span>Referans Veri</span>
+                    <strong>${referans}</strong>
+                </div>
+
+                <div class="detail-row">
+                    <span>Ger?ek E?itim Sonucu</span>
+                    <strong>${tamamlanan}</strong>
+                </div>
+
+                <div class="detail-row">
+                    <span>Kalan Minimum ?rnek</span>
+                    <strong>${kalan}</strong>
+                </div>
+
+                <div class="detail-row">
+                    <span>Ba?ar? Oran?</span>
+                    <strong>
+                        ${tamamlanan > 0 ? basari.toFixed(1) + "%" : "-"}
+                    </strong>
+                </div>
+
+                <div class="detail-row">
+                    <span>AI A??rl?klar?</span>
+                    <strong>
+                        ${agirlik.aktif ? "AKT?F" : "PAS?F"}
+                    </strong>
+                </div>
+
+            </div>
+
+            <div class="detail-card">
+
+                <div class="detail-title">
+                    G?n ??i Veri Havuzu
+                </div>
+
+                <div class="detail-row">
+                    <span>AL</span>
+                    <strong>${Number(kararlar.AL || 0)}</strong>
+                </div>
+
+                <div class="detail-row">
+                    <span>SAT</span>
+                    <strong>${Number(kararlar.SAT || 0)}</strong>
+                </div>
+
+                <div class="detail-row">
+                    <span>?ZLE</span>
+                    <strong>${Number(kararlar.IZLE || 0)}</strong>
+                </div>
+
+            </div>
+
+            <div class="detail-card">
+
+                <div class="detail-title">
+                    ??renilen G?stergeler
+                </div>
+
+                <div style="
+                    line-height:1.7;
+                    font-size:14px;
+                    opacity:.85;
+                ">
+                    VWAP<br>
+                    EMA 9 / EMA 21<br>
+                    OBV<br>
+                    RSI<br>
+                    Hacim<br>
+                    15 / 30 dk Momentum<br>
+                    Hacimli K?r?l?m<br>
+                    Risk / Getiri
+                </div>
+
+                <div style="
+                    margin-top:14px;
+                    font-size:13px;
+                    opacity:.70;
+                ">
+                    En az 30 ger?ek tamamlanm?? sinyal olu?madan
+                    ??renilmi? a??rl?klar teknik karar motoruna
+                    uygulanmaz.
+                </div>
+
+            </div>
+        `;
+
+    }catch(e){
+
+        console.error("AI OGRENME HATASI:", e);
+
+        alan.innerHTML =
+            '<div class="empty">AI ??renme verileri y?klenemedi.</div>';
+    }
 }
 
 
@@ -1215,14 +1523,6 @@ function aramaYap(){
     const alan =
         document.getElementById("searchResults");
 
-    if(!arama){
-
-        alan.innerHTML =
-            '<div class="empty">Hisse kodunu yazın.</div>';
-
-        return;
-    }
-
     const sonuc = tumVeriler
         .filter(hisse => {
 
@@ -1240,15 +1540,30 @@ function aramaYap(){
                 ""
             ).toUpperCase();
 
+            if(!arama){
+                return true;
+            }
+
             return sembol.includes(arama) ||
                    isim.includes(arama);
         })
-        .slice(0,30);
+        .sort((a,b) => {
+
+            const sa = String(
+                a.sembol ?? a.symbol ?? a.kod ?? ""
+            ).toUpperCase();
+
+            const sb = String(
+                b.sembol ?? b.symbol ?? b.kod ?? ""
+            ).toUpperCase();
+
+            return sa.localeCompare(sb);
+        });
 
     if(!sonuc.length){
 
         alan.innerHTML =
-            '<div class="empty">Hisse bulunamadı.</div>';
+            '<div class="empty">Hisse bulunamad\u0131.</div>';
 
         return;
     }
@@ -1341,6 +1656,19 @@ function hisseDetay(hisse){
         hisse.risk_getiri ??
         "-";
 
+    const algoritmaKarar = hisse.karar ?? "IZLE";
+    const guvenSkoru = hisse.guven_skoru ?? 0;
+    const alPuani = hisse.al_puani ?? 0;
+    const satPuani = hisse.sat_puani ?? 0;
+
+    const kararGirisAlt = hisse.karar_giris_alt ?? "-";
+    const kararGirisUst = hisse.karar_giris_ust ?? "-";
+    const kararHedef = hisse.karar_hedef ?? "-";
+    const kararStop = hisse.karar_stop ?? "-";
+    const kararRisk = hisse.karar_risk ?? 0;
+    const kararGetiri = hisse.karar_getiri ?? 0;
+    const kararRR = hisse.karar_rr ?? 0;
+
     const yarinAlimAlt = hisse.yarin_alim_alt ?? "-";
     const yarinAlimUst = hisse.yarin_alim_ust ?? "-";
     const yarinSatimAlt = hisse.yarin_satim_alt ?? "-";
@@ -1356,7 +1684,54 @@ function hisseDetay(hisse){
     const yarinTop10Detayi =
         oncekiSayfa === "top10";
 
-    const gunIciMi = oncekiSayfa === "gunici_top10";
+    const gunIciMi =
+        oncekiSayfa === "gunici_top10" ||
+        hisse.gun_ici_puan != null;
+
+    const gunIciKarar =
+        hisse.gun_ici_karar ?? "IZLE";
+
+    const gunIciGuven =
+        hisse.gun_ici_guven ?? 0;
+
+    const gunIciAlPuani =
+        hisse.gun_ici_al_puani ?? 0;
+
+    const gunIciSatPuani =
+        hisse.gun_ici_sat_puani ?? 0;
+
+    const gunIciRR =
+        hisse.gun_ici_rr ?? 0;
+
+    const gunIciRisk =
+        hisse.gun_ici_risk ?? 0;
+
+    const gunIciGetiri =
+        hisse.gun_ici_getiri ?? 0;
+
+    const seansVwap =
+        hisse.seans_vwap ?? "-";
+
+    const seansVwapUzaklik =
+        hisse.seans_vwap_uzaklik ?? 0;
+
+    const gunIciAnaNeden =
+        hisse.gun_ici_ana_neden ?? "-";
+
+    const gunIciAnaRisk =
+        hisse.gun_ici_ana_risk ?? "-";
+
+    const gunIciRsi =
+        hisse.rsi5 ?? "-";
+
+    const gunIciHacim =
+        hisse.hacim3_orani ?? "-";
+
+    const gunIciMomentum15 =
+        hisse.momentum15 ?? "-";
+
+    const gunIciMomentum30 =
+        hisse.momentum30 ?? "-";
 
     const gunIciAlimAlt =
         hisse.gun_ici_alim_alt ?? "-";
@@ -1472,42 +1847,122 @@ function hisseDetay(hisse){
         ${
             gunIciMi
             ? `
+        
         <div class="detail-card">
 
-            <b>⚡ GÜN İÇİ</b>
+            <b>&#9889; G&#220;N &#304;&#199;&#304;</b>
 
             <div class="detail-grid" style="margin-top:12px">
 
                 ${detayKutu(
-                    "🟢 Alım Bölgesi",
+                    "Karar",
+                    gunIciKarar === "AL"
+                        ? "AL"
+                        : gunIciKarar === "SAT"
+                        ? "SAT"
+                        : "IZLE"
+                )}
+
+                ${detayKutu(
+                    "G&#252;ven",
+                    Number(gunIciGuven).toFixed(0) + "/100"
+                )}
+
+                ${detayKutu(
+                    "AL Puan&#305;",
+                    Number(gunIciAlPuani).toFixed(0) + "/100"
+                )}
+
+                ${detayKutu(
+                    "SAT Puan&#305;",
+                    Number(gunIciSatPuani).toFixed(0) + "/100"
+                )}
+
+                ${detayKutu(
+                    "Seans VWAP",
+                    fiyatYaz(seansVwap)
+                )}
+
+                ${detayKutu(
+                    "VWAP Uzakl&#305;k",
+                    Number(seansVwapUzaklik).toFixed(2) + "%"
+                )}
+
+                ${detayKutu(
+                    "Al&#305;m B&#246;lgesi",
                     fiyatYaz(gunIciAlimAlt) +
                     " - " +
                     fiyatYaz(gunIciAlimUst)
                 )}
 
                 ${detayKutu(
-                    "🎯 Kısa Vade Kâr Al",
+                    "K&#226;r Al",
                     fiyatYaz(gunIciKarAl)
                 )}
 
                 ${detayKutu(
-                    "🛑 Kısa Vade Stop",
+                    "Stop",
                     fiyatYaz(gunIciStop)
                 )}
 
                 ${detayKutu(
-                    "🚀 Hacimli Kırılım",
+                    "Beklenen Getiri",
+                    Number(gunIciGetiri).toFixed(2) + "%"
+                )}
+
+                ${detayKutu(
+                    "Risk",
+                    Number(gunIciRisk).toFixed(2) + "%"
+                )}
+
+                ${detayKutu(
+                    "R/R",
+                    Number(gunIciRR).toFixed(2)
+                )}
+
+                ${detayKutu(
+                    "5dk RSI",
+                    Number(gunIciRsi).toFixed(1)
+                )}
+
+                ${detayKutu(
+                    "Hacim",
+                    Number(gunIciHacim).toFixed(0) + "%"
+                )}
+
+                ${detayKutu(
+                    "15dk Momentum",
+                    Number(gunIciMomentum15).toFixed(2) + "%"
+                )}
+
+                ${detayKutu(
+                    "30dk Momentum",
+                    Number(gunIciMomentum30).toFixed(2) + "%"
+                )}
+
+                ${detayKutu(
+                    "Hacimli K&#305;r&#305;l&#305;m",
                     fiyatYaz(gunIciKirilim)
                 )}
 
                 ${detayKutu(
-                    "🎯 Kırılım Sonrası Hedef",
+                    "K&#305;r&#305;l&#305;m Hedefi",
                     fiyatYaz(gunIciKirilimHedef)
                 )}
 
                 ${detayKutu(
-                    "📊 Kırılım Durumu",
+                    "K&#305;r&#305;l&#305;m Durumu",
                     gunIciKirilimYazi
+                )}
+
+                ${detayKutu(
+                    "Ana Neden",
+                    gunIciAnaNeden
+                )}
+
+                ${detayKutu(
+                    "Ana Risk",
+                    gunIciAnaRisk
                 )}
 
             </div>
@@ -1522,7 +1977,7 @@ function hisseDetay(hisse){
             ${
                 yarinTop10Detayi
                 ? ""
-                : "<b>📅 YARIN İÇİN</b>"
+                : "<b>&#128197; SONRAK&#304; SEANS</b>"
             }
 
             <div class="detail-grid" style="margin-top:12px">
