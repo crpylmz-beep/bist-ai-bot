@@ -1307,6 +1307,30 @@ function hisseDetay(hisse){
     const yarinKirilimHedef = hisse.yarin_kirilim_hedef ?? "-";
     const kirilimDurum = hisse.hacimli_kirilim_durum ?? "BEKLENIYOR";
 
+    const gunIciMi = oncekiSayfa === "gunici_top10";
+
+    const gunIciAlimAlt =
+        hisse.gun_ici_alim_alt ?? "-";
+
+    const gunIciAlimUst =
+        hisse.gun_ici_alim_ust ?? "-";
+
+    const gunIciKarAl =
+        hisse.gun_ici_kar_al ?? "-";
+
+    const gunIciStop =
+        hisse.gun_ici_stop ?? "-";
+
+    const gunIciKirilim =
+        hisse.gun_ici_hacimli_kirilim ?? "-";
+
+    const gunIciKirilimHedef =
+        hisse.gun_ici_kirilim_hedef ?? "-";
+
+    const gunIciKirilimDurumu =
+        hisse.gun_ici_kirilim_durumu ??
+        "HACIMLI KIRILIM BEKLENIYOR";
+
     const fiyatYaz = (deger) => {
         const n = Number(deger);
         return Number.isFinite(n) ? n.toFixed(2) + " TL" : "-";
@@ -1319,6 +1343,21 @@ function hisseDetay(hisse){
     }
     else if(kirilimDurum === "HACIM_ZAYIF"){
         kirilimYazi = "🟡 FİYAT KIRDI — HACİM TEYİDİ ZAYIF";
+    }
+
+    let gunIciKirilimYazi =
+        "⚪ HACİMLİ KIRILIM BEKLENİYOR";
+
+    if(gunIciKirilimDurumu === "HACIMLI KIRILIM VAR"){
+        gunIciKirilimYazi =
+            "🟢 HACİMLİ KIRILIM GERÇEKLEŞTİ";
+    }
+    else if(
+        gunIciKirilimDurumu ===
+        "DIRENC KIRILDI - HACIM TEYIDI BEKLENIYOR"
+    ){
+        gunIciKirilimYazi =
+            "🟡 DİRENÇ KIRILDI — HACİM TEYİDİ BEKLENİYOR";
     }
 
     const tip =
@@ -1380,6 +1419,54 @@ function hisseDetay(hisse){
 
         </div>
 
+
+        ${
+            gunIciMi
+            ? `
+        <div class="detail-card">
+
+            <b>⚡ GÜN İÇİ</b>
+
+            <div class="detail-grid" style="margin-top:12px">
+
+                ${detayKutu(
+                    "🟢 Alım Bölgesi",
+                    fiyatYaz(gunIciAlimAlt) +
+                    " - " +
+                    fiyatYaz(gunIciAlimUst)
+                )}
+
+                ${detayKutu(
+                    "🎯 Kısa Vade Kâr Al",
+                    fiyatYaz(gunIciKarAl)
+                )}
+
+                ${detayKutu(
+                    "🛑 Kısa Vade Stop",
+                    fiyatYaz(gunIciStop)
+                )}
+
+                ${detayKutu(
+                    "🚀 Hacimli Kırılım",
+                    fiyatYaz(gunIciKirilim)
+                )}
+
+                ${detayKutu(
+                    "🎯 Kırılım Sonrası Hedef",
+                    fiyatYaz(gunIciKirilimHedef)
+                )}
+
+                ${detayKutu(
+                    "📊 Kırılım Durumu",
+                    gunIciKirilimYazi
+                )}
+
+            </div>
+
+        </div>
+            `
+            : ""
+        }
 
         <div class="detail-card">
 
