@@ -442,6 +442,8 @@ body{
             Yarın İçin TOP 10
         </button>
 
+        <button class="action-btn" onclick="showGunIciTop10()">⚡<br>Gün İçi TOP 10</button>
+
         <button class="action-btn" onclick="showSearch()">
             🔎<br>
             Hisse Ara
@@ -586,6 +588,15 @@ body{
 
 </div>
 
+
+<!-- GUN ICI TOP 10 -->
+<div id="gunIciTop10Page" class="page" style="display:none">
+    <div class="page-header">
+        <button class="back-btn" onclick="goHome()">‹ Geri</button>
+        <div class="page-title">⚡ Gün İçi TOP 10</div>
+    </div>
+    <div id="gunIciTop10List" class="list"></div>
+</div>
 
 <!-- HİSSE ARA -->
 <div id="searchPage" class="page" style="display:none">
@@ -835,6 +846,7 @@ function tumSayfalariGizle(){
     document.getElementById("homePage").style.display = "none";
     document.getElementById("scannerPage").style.display = "none";
     document.getElementById("top10Page").style.display = "none";
+    document.getElementById("gunIciTop10Page").style.display = "none";
     document.getElementById("searchPage").style.display = "none";
     document.getElementById("signalPage").style.display = "none";
     document.getElementById("stockPage").style.display = "none";
@@ -1071,6 +1083,70 @@ function puanGetir(hisse){
 
 
 /* HİSSE ARA */
+
+async function showGunIciTop10(){
+
+    oncekiSayfa = "gunici_top10";
+
+    tumSayfalariGizle();
+
+    document.getElementById("gunIciTop10Page").style.display = "block";
+
+    const alan = document.getElementById("gunIciTop10List");
+
+    alan.innerHTML =
+        '<div class="empty">Gün İçi TOP 10 yükleniyor...</div>';
+
+    try{
+
+        const cevap = await fetch(
+            "data/gun_ici_top10.json?t=" + Date.now(),
+            {cache:"no-store"}
+        );
+
+        if(!cevap.ok){
+            throw new Error("Gün İçi veri dosyası okunamadı");
+        }
+
+        const veri = await cevap.json();
+
+        const liste = Array.isArray(veri.top10)
+            ? veri.top10
+            : [];
+
+        if(!liste.length){
+
+            alan.innerHTML =
+                '<div class="empty">Gün İçi TOP 10 verisi bulunamadı.</div>';
+
+            return;
+        }
+
+        alan.innerHTML = liste.map((hisse,index) => {
+
+            const kopya = {
+                ...hisse,
+                puan: Number(hisse.gun_ici_puan || 0),
+                degisim: Number(hisse.acilisa_gore_degisim || 0)
+            };
+
+            return hisseSatiri(
+                kopya,
+                index + 1
+            );
+
+        }).join("");
+
+    }
+    catch(hata){
+
+        console.error(hata);
+
+        alan.innerHTML =
+            '<div class="empty">Gün İçi TOP 10 verisi yüklenemedi.</div>';
+    }
+}
+
 
 function showSearch(){
 
