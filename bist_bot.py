@@ -5,6 +5,7 @@ import asyncio
 import json
 from datetime import datetime
 import borsapy as bp
+import pandas as pd
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
@@ -32,10 +33,41 @@ TAHMIN_GECMISI_FILE = os.path.join(
     "tahmin_gecmisi.json"
 )
 
+GUN_ICI_GECERSIZ_FILE = os.path.join(
+    os.path.dirname(__file__),
+    "webapp",
+    "data",
+    "gun_ici_gecersiz_semboller.json"
+)
+
 
 # =========================================================
 # YARDIMCI FONKSİYONLAR
 # =========================================================
+def gun_ici_gecersiz_oku():
+    try:
+        if not os.path.exists(GUN_ICI_GECERSIZ_FILE):
+            return set()
+        with open(GUN_ICI_GECERSIZ_FILE, "r", encoding="utf-8") as f:
+            veri = json.load(f)
+        return set(veri.get("gecersiz_semboller", []))
+    except Exception:
+        return set()
+
+
+def gun_ici_gecersiz_yaz(semboller):
+    try:
+        os.makedirs(os.path.dirname(GUN_ICI_GECERSIZ_FILE), exist_ok=True)
+        veri = {
+            "guncelleme": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "gecersiz_semboller": sorted(set(semboller))
+        }
+        with open(GUN_ICI_GECERSIZ_FILE, "w", encoding="utf-8") as f:
+            json.dump(veri, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        print("Gecersiz sembol onbellegi yazilamadi:", e)
+
+
 
 def guvenli_float(x, varsayilan=0.0):
     try:
@@ -1932,6 +1964,750 @@ def agresif_mesaji(
     )
 
     return mesaj
+
+
+
+# =========================================================
+# GUN ICI TOP 10
+# =========================================================
+
+class GunIciMultiSessionStream(bp.TradingViewStream):
+    """Tek WebSocket uzerinde her hisse icin ayri chart session acar."""
+
+    def __init__(self):
+        super().__init__()
+        self._gun_ici_sessions = {}
+
+    def subscribe_multi(self, symbol, interval="5m", exchange="BIST"):
+        tv_interval = {
+            "1m": "1", "5m": "5", "15m": "15",
+            "30m": "30", "1h": "60", "1d": "1D"
+        }.get(interval, interval)
+
+        session_id = self._generate_session_id("cs")
+        self._gun_ici_sessions[session_id] = (symbol, interval)
+
+        if symbol not in self._chart_data:
+            self._chart_data[symbol] = {}
+        self._chart_data[symbol][interval] = []
+
+        self._send(self._create_message("chart_create_session", [session_id]))
+
+        resolve_id = "ser_1"
+        price_id = "$prices"
+        series_index = "s1"
+        symbol_config = json.dumps({
+            "symbol": f"{exchange}:{symbol}",
+            "adjustment": "splits",
+            "session": "regular",
+        })
+
+        self._send(self._create_message(
+            "resolve_symbol", [session_id, resolve_id, f"={symbol_config}"]
+        ))
+        self._send(self._create_message(
+            "create_series",
+            [session_id, price_id, series_index, resolve_id, tv_interval, 300]
+        ))
+
+    def _handle_chart_data(self, params):
+        if len(params) < 2:
+            return
+
+        session_id = params[0]
+        data = params[1]
+        if session_id not in self._gun_ici_sessions or not isinstance(data, dict):
+            return
+
+        symbol, interval = self._gun_ici_sessions[session_id]
+        candles = []
+
+        for series_data in data.values():
+            if not isinstance(series_data, dict):
+                continue
+            bars = series_data.get("s", series_data.get("st", []))
+            if not isinstance(bars, list):
+                continue
+
+            for bar in bars:
+                if isinstance(bar, dict) and "v" in bar:
+                    v = bar["v"]
+                    if len(v) >= 5:
+                        candles.append({
+                            "time": int(v[0]),
+                            "open": float(v[1]),
+                            "high": float(v[2]),
+                            "low": float(v[3]),
+                            "close": float(v[4]),
+                            "volume": float(v[5]) if len(v) >= 6 and v[5] else 0,
+                        })
+
+        if candles:
+            self._update_chart_data(symbol, interval, candles)
+
+
+def gun_ici_mumlari_dataframe(mumlar):
+    if not mumlar:
+        return pd.DataFrame()
+
+    veri = pd.DataFrame(mumlar)
+    gerekli = {"time", "open", "high", "low", "close", "volume"}
+    if not gerekli.issubset(veri.columns):
+        return pd.DataFrame()
+
+    # TradingView epoch zamanini Istanbul saatine ceviriyoruz.
+    zaman = pd.to_datetime(veri["time"], unit="s", utc=True)
+    veri.index = zaman.dt.tz_convert("Europe/Istanbul")
+
+    veri = veri.rename(columns={
+        "open": "Open", "high": "High", "low": "Low",
+        "close": "Close", "volume": "Volume"
+    })
+    return veri[["Open", "High", "Low", "Close", "Volume"]].sort_index()
+
+
+def gun_ici_stream_verileri_getir(semboller, paket_boyutu=100, bekleme=10):
+    """5 dk verilerini 100'erli paketlerle toplar."""
+    veri_map = {}
+    basarisiz = []
+    toplam_paket = (len(semboller) + paket_boyutu - 1) // paket_boyutu
+
+    for bas in range(0, len(semboller), paket_boyutu):
+        paket = semboller[bas:bas + paket_boyutu]
+        paket_no = bas // paket_boyutu + 1
+        print(f"STREAM PAKET {paket_no}/{toplam_paket}: {len(paket)} hisse")
+
+        stream = GunIciMultiSessionStream()
+        try:
+            stream.connect()
+            for sembol in paket:
+                stream.subscribe_multi(sembol, "5m", "BIST")
+
+            time.sleep(bekleme)
+
+            for sembol in paket:
+                mumlar = stream._chart_data.get(sembol, {}).get("5m", [])
+                df = gun_ici_mumlari_dataframe(mumlar)
+                if df is not None and not df.empty:
+                    veri_map[sembol] = df
+                else:
+                    basarisiz.append(sembol)
+        except Exception as e:
+            print(f"STREAM PAKET HATASI {paket_no}: {e}")
+            basarisiz.extend([s for s in paket if s not in veri_map])
+        finally:
+            try:
+                stream.disconnect()
+            except Exception:
+                pass
+
+        if bas + paket_boyutu < len(semboller):
+            time.sleep(1)
+
+    # Tekrarlari temizle, sirayi koru.
+    basarisiz = list(dict.fromkeys(basarisiz))
+    print(f"STREAM SONUCU | BASARILI: {len(veri_map)} | BASARISIZ: {len(basarisiz)}")
+    return veri_map, basarisiz
+
+
+def gun_ici_analiz_hesapla(sembol, veri=None):
+    """
+    5 dakikalik mumlarla gun ici guc analizi.
+    Yarin TOP 10 algoritmasindan tamamen ayridir.
+    """
+
+    try:
+        # Stream taramasinda veri disaridan gelir.
+        # Geriye donuk uyumluluk icin veri verilmezse eski Ticker yolu calisir.
+        if veri is None:
+            hisse = bp.Ticker(sembol)
+            veri = hisse.history(
+                period="1d",
+                interval="5m"
+            )
+
+        if veri is None or veri.empty:
+            return None
+
+        if len(veri) < 30:
+            return None
+
+        veri = veri.dropna(
+            subset=["Open", "High", "Low", "Close", "Volume"]
+        )
+
+        if len(veri) < 30:
+            return None
+
+        # Son mumun ait oldugu islem gunu.
+        son_tarih = veri.index[-1].date()
+
+        bugun = veri[
+            veri.index.date == son_tarih
+        ].copy()
+
+        if bugun.empty or len(bugun) < 3:
+            return {
+                "_durum": "YETERSIZ_GUNICI_VERI",
+                "sembol": sembol,
+                "_mum_sayisi": len(bugun),
+                "_son_veri_tarihi": str(veri.index[-1])
+            }
+
+        close = veri["Close"].astype(float)
+        volume = veri["Volume"].astype(float)
+
+        son = bugun.iloc[-1]
+
+        fiyat = guvenli_float(
+            son["Close"]
+        )
+
+        gun_acilis = guvenli_float(
+            bugun.iloc[0]["Open"]
+        )
+
+        gun_yuksek = guvenli_float(
+            bugun["High"].max()
+        )
+
+        gun_dusuk = guvenli_float(
+            bugun["Low"].min()
+        )
+
+        if fiyat <= 0 or gun_acilis <= 0:
+            return None
+
+        # Gunluk degisim: gunun ilk 5 dk acilisina gore.
+        acilisa_gore_degisim = (
+            (fiyat - gun_acilis)
+            / gun_acilis
+        ) * 100
+
+        # Gun ici dipten toparlanma.
+        if gun_dusuk > 0:
+            dipten_toparlanma = (
+                (fiyat - gun_dusuk)
+                / gun_dusuk
+            ) * 100
+        else:
+            dipten_toparlanma = 0
+
+        # Gun ici zirveye uzaklik.
+        if gun_yuksek > 0:
+            zirveye_uzaklik = (
+                (gun_yuksek - fiyat)
+                / gun_yuksek
+            ) * 100
+        else:
+            zirveye_uzaklik = 0
+
+        # -------------------------------------------------
+        # RSI 14 - 5 DAKIKA
+        # -------------------------------------------------
+
+        delta = close.diff()
+
+        kazanc = delta.clip(
+            lower=0
+        )
+
+        kayip = -delta.clip(
+            upper=0
+        )
+
+        ort_kazanc = kazanc.rolling(14).mean()
+        ort_kayip = kayip.rolling(14).mean()
+
+        son_kazanc = guvenli_float(
+            ort_kazanc.iloc[-1]
+        )
+
+        son_kayip = guvenli_float(
+            ort_kayip.iloc[-1]
+        )
+
+        if son_kayip == 0:
+            rsi5 = 100 if son_kazanc > 0 else 50
+        else:
+            rs = son_kazanc / son_kayip
+            rsi5 = 100 - (100 / (1 + rs))
+
+        # -------------------------------------------------
+        # MACD - 5 DAKIKA
+        # -------------------------------------------------
+
+        ema12 = close.ewm(
+            span=12,
+            adjust=False
+        ).mean()
+
+        ema26 = close.ewm(
+            span=26,
+            adjust=False
+        ).mean()
+
+        macd_seri = ema12 - ema26
+
+        signal_seri = macd_seri.ewm(
+            span=9,
+            adjust=False
+        ).mean()
+
+        hist_seri = macd_seri - signal_seri
+
+        macd5 = guvenli_float(
+            macd_seri.iloc[-1]
+        )
+
+        signal5 = guvenli_float(
+            signal_seri.iloc[-1]
+        )
+
+        hist5 = guvenli_float(
+            hist_seri.iloc[-1]
+        )
+
+        hist_onceki = guvenli_float(
+            hist_seri.iloc[-2]
+        )
+
+        # -------------------------------------------------
+        # HACIM HIZLANMASI
+        # -------------------------------------------------
+
+        son_hacim = guvenli_float(
+            volume.iloc[-1]
+        )
+
+        onceki_hacimler = volume.iloc[-21:-1]
+
+        ort_hacim20_5dk = guvenli_float(
+            onceki_hacimler.mean()
+        )
+
+        if ort_hacim20_5dk > 0:
+            hacim_hizlanma = (
+                son_hacim
+                / ort_hacim20_5dk
+            ) * 100
+        else:
+            hacim_hizlanma = 0
+
+        # Son 3 mum hacmi / onceki 20 mum ortalamasi.
+        son3_hacim = guvenli_float(
+            volume.iloc[-3:].mean()
+        )
+
+        if ort_hacim20_5dk > 0:
+            hacim3_orani = (
+                son3_hacim
+                / ort_hacim20_5dk
+            ) * 100
+        else:
+            hacim3_orani = 0
+
+        # -------------------------------------------------
+        # KISA VADE MOMENTUM
+        # -------------------------------------------------
+
+        if len(close) >= 4:
+            fiyat_15dk_once = guvenli_float(
+                close.iloc[-4]
+            )
+
+            if fiyat_15dk_once > 0:
+                momentum15 = (
+                    (fiyat - fiyat_15dk_once)
+                    / fiyat_15dk_once
+                ) * 100
+            else:
+                momentum15 = 0
+        else:
+            momentum15 = 0
+
+        if len(close) >= 7:
+            fiyat_30dk_once = guvenli_float(
+                close.iloc[-7]
+            )
+
+            if fiyat_30dk_once > 0:
+                momentum30 = (
+                    (fiyat - fiyat_30dk_once)
+                    / fiyat_30dk_once
+                ) * 100
+            else:
+                momentum30 = 0
+        else:
+            momentum30 = 0
+
+        # -------------------------------------------------
+        # YAKIN KIRILIM
+        # Son tamamlanmis 12 mumun tepesini referans al.
+        # Son mumu direncten cikar.
+        # -------------------------------------------------
+
+        onceki_mumlar = veri.iloc[-13:-1]
+
+        if not onceki_mumlar.empty:
+            yakin_direnc = guvenli_float(
+                onceki_mumlar["High"].max()
+            )
+        else:
+            yakin_direnc = gun_yuksek
+
+        kirilim = (
+            yakin_direnc > 0
+            and fiyat > yakin_direnc
+        )
+
+        hacimli_kirilim = (
+            kirilim
+            and hacim3_orani >= 130
+        )
+
+        # -------------------------------------------------
+        # PUANLAMA
+        # -------------------------------------------------
+
+        puan = 0
+        nedenler = []
+
+        # Sert risk filtresi:
+        # cok sert eksi veya tavan benzeri hareketi kovalamiyoruz.
+        if acilisa_gore_degisim <= -7:
+            return {
+                "_durum": "FILTRE_DISI",
+                "sembol": sembol,
+                "_neden": "SERT_EKSI",
+                "fiyat": fiyat,
+                "acilisa_gore_degisim": acilisa_gore_degisim
+            }
+
+        if acilisa_gore_degisim >= 9.5:
+            return {
+                "_durum": "FILTRE_DISI",
+                "sembol": sembol,
+                "_neden": "SERT_ARTI",
+                "fiyat": fiyat,
+                "acilisa_gore_degisim": acilisa_gore_degisim
+            }
+
+        # Acilisa gore guc.
+        if 0.5 <= acilisa_gore_degisim <= 3:
+            puan += 12
+            nedenler.append("Acilisa gore guclu")
+
+        elif 3 < acilisa_gore_degisim <= 5:
+            puan += 9
+            nedenler.append("Pozitif gun ici momentum")
+
+        elif 5 < acilisa_gore_degisim < 8:
+            puan += 4
+
+        elif -1 <= acilisa_gore_degisim < 0.5:
+            puan += 2
+
+        # Dipten toparlanma.
+        if 1 <= dipten_toparlanma <= 4:
+            puan += 10
+            nedenler.append("Dipten toparlanma")
+
+        elif 4 < dipten_toparlanma <= 7:
+            puan += 7
+
+        elif dipten_toparlanma > 7:
+            puan += 3
+
+        # Zirveye yakinlik.
+        if zirveye_uzaklik <= 0.5:
+            puan += 10
+            nedenler.append("Gun ici zirveye yakin")
+
+        elif zirveye_uzaklik <= 1.5:
+            puan += 7
+
+        elif zirveye_uzaklik <= 3:
+            puan += 3
+
+        # RSI.
+        if 50 <= rsi5 <= 68:
+            puan += 12
+            nedenler.append("5dk RSI guclu")
+
+        elif 45 <= rsi5 < 50:
+            puan += 6
+
+        elif 68 < rsi5 < 75:
+            puan += 4
+
+        elif rsi5 >= 80:
+            puan -= 8
+
+        elif rsi5 < 30:
+            puan -= 8
+
+        # MACD.
+        if macd5 > signal5:
+            puan += 9
+            nedenler.append("5dk MACD pozitif")
+
+        if hist5 > 0:
+            puan += 5
+
+        if hist5 > hist_onceki:
+            puan += 5
+            nedenler.append("Momentum artiyor")
+
+        # Hacim.
+        if hacim3_orani >= 200:
+            puan += 15
+            nedenler.append("Cok guclu hacim")
+
+        elif hacim3_orani >= 150:
+            puan += 12
+            nedenler.append("Guclu hacim")
+
+        elif hacim3_orani >= 120:
+            puan += 8
+
+        elif hacim3_orani < 60:
+            puan -= 5
+
+        # Son 15 / 30 dakika momentum.
+        if 0.2 <= momentum15 <= 1.5:
+            puan += 6
+
+        elif momentum15 > 1.5:
+            puan += 3
+
+        elif momentum15 <= -1:
+            puan -= 5
+
+        if 0.3 <= momentum30 <= 2.5:
+            puan += 6
+
+        elif momentum30 <= -1.5:
+            puan -= 5
+
+        # Kirilim.
+        if hacimli_kirilim:
+            puan += 15
+            nedenler.append("Hacimli kirilim")
+
+        elif kirilim:
+            puan += 6
+            nedenler.append("Direnc kirilimi")
+
+        puan = max(
+            0,
+            min(100, puan)
+        )
+
+        return {
+            "sembol": sembol,
+            "fiyat": fiyat,
+            "gun_ici_puan": puan,
+            "acilisa_gore_degisim": acilisa_gore_degisim,
+            "dipten_toparlanma": dipten_toparlanma,
+            "zirveye_uzaklik": zirveye_uzaklik,
+            "rsi5": rsi5,
+            "macd5": macd5,
+            "signal5": signal5,
+            "hist5": hist5,
+            "hist_onceki": hist_onceki,
+            "hacim_hizlanma": hacim_hizlanma,
+            "hacim3_orani": hacim3_orani,
+            "momentum15": momentum15,
+            "momentum30": momentum30,
+            "gun_yuksek": gun_yuksek,
+            "gun_dusuk": gun_dusuk,
+            "yakin_direnc": yakin_direnc,
+            "kirilim": bool(kirilim),
+            "hacimli_kirilim": bool(hacimli_kirilim),
+            "nedenler": nedenler,
+            "veri_tarihi": str(veri.index[-1])
+        }
+
+    except Exception as e:
+        hata = str(e).lower()
+
+        if "invalid symbol" in hata:
+            return {
+                "_durum": "GECERSIZ_SEMBOL",
+                "sembol": sembol
+            }
+
+        return {
+            "_durum": "GECICI_HATA",
+            "sembol": sembol,
+            "_hata": str(e)
+        }
+
+
+def gun_ici_top10_tara():
+    """Tum BIST hisselerini hizli Stream mimarisiyle 5 dk veride tarar."""
+    tum_semboller = bist_hisseleri_getir()
+    toplam = len(tum_semboller)
+
+    bilinen_gecersiz = gun_ici_gecersiz_oku()
+    semboller = [s for s in tum_semboller if s not in bilinen_gecersiz]
+
+    print(f"ONBELLEK: {len(bilinen_gecersiz)} gecersiz sembol atlandi")
+    print(f"GUN ICI STREAM TARAMA BASLADI: {toplam} hisse | TARANACAK: {len(semboller)}")
+
+    normal_map = {}
+    filtre_disi_map = {}
+    gecersiz_map = {}
+    gecici_hata_map = {}
+
+    veri_map, stream_basarisiz = gun_ici_stream_verileri_getir(
+        semboller,
+        paket_boyutu=100,
+        bekleme=10
+    )
+
+    # Stream ile gelen verilerin analizi artik tamamen yerel ve cok hizlidir.
+    for i, sembol in enumerate(semboller, start=1):
+        if sembol not in veri_map:
+            continue
+
+        analiz = gun_ici_analiz_hesapla(sembol, veri_map[sembol])
+        if analiz is None:
+            gecici_hata_map[sembol] = {
+                "_durum": "GECICI_HATA", "sembol": sembol, "_hata": "BOS_SONUC"
+            }
+            continue
+
+        durum = analiz.get("_durum", "NORMAL")
+        if durum in ("FILTRE_DISI", "YETERSIZ_GUNICI_VERI"):
+            filtre_disi_map[sembol] = analiz
+        elif durum == "GECERSIZ_SEMBOL":
+            gecersiz_map[sembol] = analiz
+        elif durum == "GECICI_HATA":
+            gecici_hata_map[sembol] = analiz
+        else:
+            normal_map[sembol] = analiz
+
+        if i % 100 == 0:
+            print(f"YEREL ANALIZ: {i}/{len(semboller)}")
+
+    # Stream'de veri gelmeyen az sayida hisse olursa eski guvenilir yol ile tamamla.
+    if stream_basarisiz:
+        print(f"STREAM YEDEK TARAMA: {len(stream_basarisiz)} hisse")
+        for sembol in stream_basarisiz:
+            analiz = gun_ici_analiz_hesapla(sembol)
+            if analiz is None:
+                gecici_hata_map[sembol] = {
+                    "_durum": "GECICI_HATA", "sembol": sembol, "_hata": "BOS_SONUC"
+                }
+                continue
+
+            durum = analiz.get("_durum", "NORMAL")
+            if durum in ("FILTRE_DISI", "YETERSIZ_GUNICI_VERI"):
+                filtre_disi_map[sembol] = analiz
+            elif durum == "GECERSIZ_SEMBOL":
+                gecersiz_map[sembol] = analiz
+            elif durum == "GECICI_HATA":
+                gecici_hata_map[sembol] = analiz
+            else:
+                normal_map[sembol] = analiz
+                gecici_hata_map.pop(sembol, None)
+
+    sonuclar = list(normal_map.values())
+    sonuclar.sort(
+        key=lambda a: (
+            guvenli_float(a.get("gun_ici_puan")),
+            guvenli_float(a.get("hacim3_orani")),
+            guvenli_float(a.get("momentum15"))
+        ),
+        reverse=True
+    )
+
+    top10 = [
+        a for a in sonuclar
+        if guvenli_float(a.get("gun_ici_puan")) >= 45
+    ][:10]
+
+    print(
+        "GUN ICI OZET | "
+        f"TOPLAM: {toplam} | ANALIZ: {len(normal_map)} | "
+        f"FILTRE DISI: {len(filtre_disi_map)} | "
+        f"GECERSIZ: {len(gecersiz_map)} | HATA: {len(gecici_hata_map)}"
+    )
+
+    if gecici_hata_map:
+        print("KALAN HATALAR:", ", ".join(list(gecici_hata_map.keys())[:30]))
+
+    yeni_gecersizler = bilinen_gecersiz.union(gecersiz_map.keys())
+    gun_ici_gecersiz_yaz(yeni_gecersizler)
+    print(f"ONBELLEK KAYDEDILDI: {len(yeni_gecersizler)} gecersiz sembol")
+
+    return top10, sonuclar, toplam
+
+
+def gun_ici_top10_mesaji():
+    """
+    Terminal / Telegram icin okunabilir Gun Ici TOP 10.
+    """
+
+    top10, sonuclar, toplam = gun_ici_top10_tara()
+
+    if not top10:
+        return (
+            "⚡ GÜN İÇİ TOP 10\n"
+            "━━━━━━━━━━━━━━\n\n"
+            f"🔎 Taranan hisse: {toplam}\n"
+            "Uygun gün içi aday bulunamadı."
+        )
+
+    satirlar = [
+        "⚡ GÜN İÇİ TOP 10",
+        "━━━━━━━━━━━━━━",
+        "",
+        f"🔎 Taranan hisse: {toplam}",
+        f"📊 Teknik aday: {len(sonuclar)}",
+        ""
+    ]
+
+    for sira, a in enumerate(
+        top10,
+        start=1
+    ):
+
+        satirlar.extend([
+            (
+                f"{sira}. {a['sembol']} — "
+                f"{a['gun_ici_puan']:.0f}/100"
+            ),
+            (
+                f"   💰 {a['fiyat']:.2f} TL | "
+                f"Açılışa göre "
+                f"{a['acilisa_gore_degisim']:+.2f}%"
+            ),
+            (
+                f"   RSI(5dk) {a['rsi5']:.1f} | "
+                f"Hacim %{a['hacim3_orani']:.0f}"
+            ),
+            (
+                f"   15dk {a['momentum15']:+.2f}% | "
+                f"30dk {a['momentum30']:+.2f}%"
+            ),
+            (
+                "   🚀 Hacimli kırılım"
+                if a.get("hacimli_kirilim")
+                else (
+                    "   🟡 Direnç kırılımı"
+                    if a.get("kirilim")
+                    else "   ⚪ Kırılım bekleniyor"
+                )
+            ),
+            ""
+        ])
+
+    return "\n".join(satirlar)
+
+
 
 
 # =========================================================
