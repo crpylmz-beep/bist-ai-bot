@@ -9,7 +9,6 @@ from pathlib import Path
 
 from bs4 import BeautifulSoup
 import haber_zeka
-import canli_motor
 
 
 KAP_URL = (
@@ -246,23 +245,6 @@ def kap_bildirim_isle(kayit):
             analiz,
             alarm
         )
-
-    # =====================================================
-    # MADDE 48 - KAP GELEN HISSEYI ANINDA YENIDEN ANALIZ ET
-    # Alarm cikmasa bile haber ilgili hissenin AI skorunu
-    # ve AL / SAT / STOP seviyelerini etkileyebilir.
-    # =====================================================
-    if sembol:
-        try:
-            canli_motor.oncelikli_hisse_guncelle(
-                sembol,
-                gun_ici_yenile=True
-            )
-        except Exception as e:
-            print(
-                "KAP AI HISSE TETIK HATASI:",
-                e
-            )
 
 
 def kap_kontrol():

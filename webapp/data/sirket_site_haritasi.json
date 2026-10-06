@@ -1,0 +1,6613 @@
+{
+  "guncelleme": "2026-10-06 15:00:39",
+  "toplam_hisse": 805,
+  "site_bulunan_hisse": 545,
+  "hisseler": {
+    "AFYON": {
+      "sembol": "AFYON",
+      "website_ham": "www.afyoncimento.com",
+      "siteler": [
+        "https://www.afyoncimento.com"
+      ],
+      "site_adedi": 1
+    },
+    "ADGYO": {
+      "sembol": "ADGYO",
+      "website_ham": "www.adragyo.com.tr",
+      "siteler": [
+        "https://www.adragyo.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "ACSEL": {
+      "sembol": "ACSEL",
+      "website_ham": "www.aciselsan.com.tr",
+      "siteler": [
+        "https://www.aciselsan.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "ADESE": {
+      "sembol": "ADESE",
+      "website_ham": "www.adese.com.tr",
+      "siteler": [
+        "https://www.adese.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "ADEL": {
+      "sembol": "ADEL",
+      "website_ham": "www.adel.com.tr",
+      "siteler": [
+        "https://www.adel.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "ADLVY": {
+      "sembol": "ADLVY",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:ADLVY"
+    },
+    "AGHOL": {
+      "sembol": "AGHOL",
+      "website_ham": "www.anadolugrubu.com.tr",
+      "siteler": [
+        "https://www.anadolugrubu.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "AGROT": {
+      "sembol": "AGROT",
+      "website_ham": "www.agrotech.com.tr",
+      "siteler": [
+        "https://www.agrotech.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "AGESA": {
+      "sembol": "AGESA",
+      "website_ham": "www.agesa.com.tr",
+      "siteler": [
+        "https://www.agesa.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "AAGYO": {
+      "sembol": "AAGYO",
+      "website_ham": "www.agaoglugyo.com.tr",
+      "siteler": [
+        "https://www.agaoglugyo.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "AHSGY": {
+      "sembol": "AHSGY",
+      "website_ham": "https://ahesgyo.com/",
+      "siteler": [
+        "https://ahesgyo.com/"
+      ],
+      "site_adedi": 1
+    },
+    "AHGAZ": {
+      "sembol": "AHGAZ",
+      "website_ham": "www.ahlatcidogalgaz.com.tr",
+      "siteler": [
+        "https://www.ahlatcidogalgaz.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "AKBNK": {
+      "sembol": "AKBNK",
+      "website_ham": "www.akbank.com",
+      "siteler": [
+        "https://www.akbank.com"
+      ],
+      "site_adedi": 1
+    },
+    "AKSFA": {
+      "sembol": "AKSFA",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:AKSFA"
+    },
+    "AKFK": {
+      "sembol": "AKFK",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:AKFK"
+    },
+    "AKM": {
+      "sembol": "AKM",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:AKM"
+    },
+    "AKCNS": {
+      "sembol": "AKCNS",
+      "website_ham": "www.akcansa.com.tr",
+      "siteler": [
+        "https://www.akcansa.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "AKMEN": {
+      "sembol": "AKMEN",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:AKMEN"
+    },
+    "AKCVR": {
+      "sembol": "AKCVR",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:AKCVR"
+    },
+    "AKYHO": {
+      "sembol": "AKYHO",
+      "website_ham": "www.akdenizyh.com",
+      "siteler": [
+        "https://www.akdenizyh.com"
+      ],
+      "site_adedi": 1
+    },
+    "AKENR": {
+      "sembol": "AKENR",
+      "website_ham": "www.akenerji.com.tr",
+      "siteler": [
+        "https://www.akenerji.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "AKFIS": {
+      "sembol": "AKFIS",
+      "website_ham": "www.akfeninsaat.com.tr",
+      "siteler": [
+        "https://www.akfeninsaat.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "AKFGY": {
+      "sembol": "AKFGY",
+      "website_ham": "www.akfengyo.com.tr",
+      "siteler": [
+        "https://www.akfengyo.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "AKDFA": {
+      "sembol": "AKDFA",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:AKDFA"
+    },
+    "AKFYE": {
+      "sembol": "AKFYE",
+      "website_ham": "www.akfenren.com.tr",
+      "siteler": [
+        "https://www.akfenren.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "AKHAN": {
+      "sembol": "AKHAN",
+      "website_ham": "www.akhanun.com.tr",
+      "siteler": [
+        "https://www.akhanun.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "ATEKS": {
+      "sembol": "ATEKS",
+      "website_ham": "www.akintekstil.com.tr",
+      "siteler": [
+        "https://www.akintekstil.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "AKSGY": {
+      "sembol": "AKSGY",
+      "website_ham": "www.akisgyo.com",
+      "siteler": [
+        "https://www.akisgyo.com"
+      ],
+      "site_adedi": 1
+    },
+    "AKMGY": {
+      "sembol": "AKMGY",
+      "website_ham": "http://www.akmgyo.com/",
+      "siteler": [
+        "http://www.akmgyo.com/"
+      ],
+      "site_adedi": 1
+    },
+    "AKSA": {
+      "sembol": "AKSA",
+      "website_ham": "www.aksa.com",
+      "siteler": [
+        "https://www.aksa.com"
+      ],
+      "site_adedi": 1
+    },
+    "AKSEN": {
+      "sembol": "AKSEN",
+      "website_ham": "www.aksaenerji.com.tr",
+      "siteler": [
+        "https://www.aksaenerji.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "AKGRT": {
+      "sembol": "AKGRT",
+      "website_ham": "www.aksigorta.com.tr",
+      "siteler": [
+        "https://www.aksigorta.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "AKSUE": {
+      "sembol": "AKSUE",
+      "website_ham": "www.aksuenerji.com.tr",
+      "siteler": [
+        "https://www.aksuenerji.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "ALCAR": {
+      "sembol": "ALCAR",
+      "website_ham": "www.alarko-carrier.com.tr",
+      "siteler": [
+        "https://www.alarko-carrier.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "ALGYO": {
+      "sembol": "ALGYO",
+      "website_ham": "www.alarkogyo.com.tr",
+      "siteler": [
+        "https://www.alarkogyo.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "ALARK": {
+      "sembol": "ALARK",
+      "website_ham": "www.alarko.com.tr",
+      "siteler": [
+        "https://www.alarko.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "AKTVK": {
+      "sembol": "AKTVK",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:AKTVK"
+    },
+    "AFB": {
+      "sembol": "AFB",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:AFB"
+    },
+    "AKTIF": {
+      "sembol": "AKTIF",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:AKTIF"
+    },
+    "ALBRK": {
+      "sembol": "ALBRK",
+      "website_ham": "www.albaraka.com.tr",
+      "siteler": [
+        "https://www.albaraka.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "ALBTN": {
+      "sembol": "ALBTN",
+      "website_ham": "www.albayrakbeton.com.tr",
+      "siteler": [
+        "https://www.albayrakbeton.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "ALCTL": {
+      "sembol": "ALCTL",
+      "website_ham": "www.alcatel-lucent.com.tr",
+      "siteler": [
+        "https://www.alcatel-lucent.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "ALFAS": {
+      "sembol": "ALFAS",
+      "website_ham": "www.alfasolarenerji.com",
+      "siteler": [
+        "https://www.alfasolarenerji.com"
+      ],
+      "site_adedi": 1
+    },
+    "ALKIM": {
+      "sembol": "ALKIM",
+      "website_ham": "www.alkim.com",
+      "siteler": [
+        "https://www.alkim.com"
+      ],
+      "site_adedi": 1
+    },
+    "ALKA": {
+      "sembol": "ALKA",
+      "website_ham": "www.alkimkagit.com.tr",
+      "siteler": [
+        "https://www.alkimkagit.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "ALK": {
+      "sembol": "ALK",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:ALK"
+    },
+    "ALJF": {
+      "sembol": "ALJF",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:ALJF"
+    },
+    "AYCES": {
+      "sembol": "AYCES",
+      "website_ham": "www.altinyunus.com.tr",
+      "siteler": [
+        "https://www.altinyunus.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "ALTNY": {
+      "sembol": "ALTNY",
+      "website_ham": "www.altinaysavunma.com",
+      "siteler": [
+        "https://www.altinaysavunma.com"
+      ],
+      "site_adedi": 1
+    },
+    "ALKLC": {
+      "sembol": "ALKLC",
+      "website_ham": "www.altinkilic.com",
+      "siteler": [
+        "https://www.altinkilic.com"
+      ],
+      "site_adedi": 1
+    },
+    "ALNUS": {
+      "sembol": "ALNUS",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:ALNUS"
+    },
+    "ANC": {
+      "sembol": "ANC",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:ANC"
+    },
+    "ALVES": {
+      "sembol": "ALVES",
+      "website_ham": "www.alveskablo.com.tr",
+      "siteler": [
+        "https://www.alveskablo.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "ANSGR": {
+      "sembol": "ANSGR",
+      "website_ham": "www.anadolusigorta.com.tr",
+      "siteler": [
+        "https://www.anadolusigorta.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "ANHYT": {
+      "sembol": "ANHYT",
+      "website_ham": "www.anadoluhayat.com.tr",
+      "siteler": [
+        "https://www.anadoluhayat.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "AEFES": {
+      "sembol": "AEFES",
+      "website_ham": "www.anadoluefes.com",
+      "siteler": [
+        "https://www.anadoluefes.com"
+      ],
+      "site_adedi": 1
+    },
+    "ASUZU": {
+      "sembol": "ASUZU",
+      "website_ham": "anadoluisuzu.com.tr",
+      "siteler": [
+        "https://anadoluisuzu.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "ANGEN": {
+      "sembol": "ANGEN",
+      "website_ham": "www.anatoliageneworks.com/tr",
+      "siteler": [
+        "https://www.anatoliageneworks.com/tr"
+      ],
+      "site_adedi": 1
+    },
+    "ANELE": {
+      "sembol": "ANELE",
+      "website_ham": "www.anelgroup.com",
+      "siteler": [
+        "https://www.anelgroup.com"
+      ],
+      "site_adedi": 1
+    },
+    "ARCLK": {
+      "sembol": "ARCLK",
+      "website_ham": "www.arcelikglobal.com",
+      "siteler": [
+        "https://www.arcelikglobal.com"
+      ],
+      "site_adedi": 1
+    },
+    "ARDYZ": {
+      "sembol": "ARDYZ",
+      "website_ham": "www.ardbilisim.com.tr",
+      "siteler": [
+        "https://www.ardbilisim.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "ADB": {
+      "sembol": "ADB",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:ADB"
+    },
+    "ADBNK": {
+      "sembol": "ADBNK",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:ADBNK"
+    },
+    "ARENA": {
+      "sembol": "ARENA",
+      "website_ham": "www.arena.com.tr",
+      "siteler": [
+        "https://www.arena.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "ARFYE": {
+      "sembol": "ARFYE",
+      "website_ham": "https://www.arfbio.com/",
+      "siteler": [
+        "https://www.arfbio.com/"
+      ],
+      "site_adedi": 1
+    },
+    "ARMGD": {
+      "sembol": "ARMGD",
+      "website_ham": "www.armadafoods.com",
+      "siteler": [
+        "https://www.armadafoods.com"
+      ],
+      "site_adedi": 1
+    },
+    "ARSAN": {
+      "sembol": "ARSAN",
+      "website_ham": "www.arsanholding.com.tr",
+      "siteler": [
+        "https://www.arsanholding.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "ARTMS": {
+      "sembol": "ARTMS",
+      "website_ham": "https://www.artemishali.com.tr",
+      "siteler": [
+        "https://www.artemishali.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "ARZUM": {
+      "sembol": "ARZUM",
+      "website_ham": "www.arzum.com.tr",
+      "siteler": [
+        "https://www.arzum.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "ASGYO": {
+      "sembol": "ASGYO",
+      "website_ham": "www.ascegyo.com",
+      "siteler": [
+        "https://www.ascegyo.com"
+      ],
+      "site_adedi": 1
+    },
+    "ARSNF": {
+      "sembol": "ARSNF",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:ARSNF"
+    },
+    "ASTOR": {
+      "sembol": "ASTOR",
+      "website_ham": "www.astoras.com.tr",
+      "siteler": [
+        "https://www.astoras.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "ASELS": {
+      "sembol": "ASELS",
+      "website_ham": "www.aselsan.com",
+      "siteler": [
+        "https://www.aselsan.com"
+      ],
+      "site_adedi": 1
+    },
+    "ATAGY": {
+      "sembol": "ATAGY",
+      "website_ham": "www.atagyo.com.tr",
+      "siteler": [
+        "https://www.atagyo.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "ARSVY": {
+      "sembol": "ARSVY",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:ARSVY"
+    },
+    "ATATR": {
+      "sembol": "ATATR",
+      "website_ham": "https://www.ataturizm.com.tr/",
+      "siteler": [
+        "https://www.ataturizm.com.tr/"
+      ],
+      "site_adedi": 1
+    },
+    "ATAKP": {
+      "sembol": "ATAKP",
+      "website_ham": "https://atakey.com.tr/",
+      "siteler": [
+        "https://atakey.com.tr/"
+      ],
+      "site_adedi": 1
+    },
+    "AGYO": {
+      "sembol": "AGYO",
+      "website_ham": "www.atakulegyo.com.tr",
+      "siteler": [
+        "https://www.atakulegyo.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "ATAVK": {
+      "sembol": "ATAVK",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:ATAVK"
+    },
+    "ATA": {
+      "sembol": "ATA",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:ATA"
+    },
+    "ATSYH": {
+      "sembol": "ATSYH",
+      "website_ham": "www.atlantisholding.com.tr",
+      "siteler": [
+        "https://www.atlantisholding.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "ATAYM": {
+      "sembol": "ATAYM",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:ATAYM"
+    },
+    "ATLFA": {
+      "sembol": "ATLFA",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:ATLFA"
+    },
+    "ATLAS": {
+      "sembol": "ATLAS",
+      "website_ham": "www.atlasyo.com.tr",
+      "siteler": [
+        "https://www.atlasyo.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "ATATP": {
+      "sembol": "ATATP",
+      "website_ham": "www.atptech.com",
+      "siteler": [
+        "https://www.atptech.com"
+      ],
+      "site_adedi": 1
+    },
+    "AVGYO": {
+      "sembol": "AVGYO",
+      "website_ham": "www.avrasyagyo.com.tr",
+      "siteler": [
+        "https://www.avrasyagyo.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "AVTUR": {
+      "sembol": "AVTUR",
+      "website_ham": "www.avtur.com.tr",
+      "siteler": [
+        "https://www.avtur.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "AVOD": {
+      "sembol": "AVOD",
+      "website_ham": "www.avod.com.tr",
+      "siteler": [
+        "https://www.avod.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "AVHOL": {
+      "sembol": "AVHOL",
+      "website_ham": "http://avrupayatirim.com.tr/",
+      "siteler": [
+        "http://avrupayatirim.com.tr/"
+      ],
+      "site_adedi": 1
+    },
+    "AVPGY": {
+      "sembol": "AVPGY",
+      "website_ham": "www.avrupakentgyo.com",
+      "siteler": [
+        "https://www.avrupakentgyo.com"
+      ],
+      "site_adedi": 1
+    },
+    "AYDEM": {
+      "sembol": "AYDEM",
+      "website_ham": "www.aydemyenilenebilir.com.tr ; https://yatirimciiliskileri.aydemyenilenebilir.com.tr/",
+      "siteler": [
+        "https://www.aydemyenilenebilir.com.tr",
+        "https://yatirimciiliskileri.aydemyenilenebilir.com.tr/"
+      ],
+      "site_adedi": 2
+    },
+    "AYEN": {
+      "sembol": "AYEN",
+      "website_ham": "www.ayen.com.tr",
+      "siteler": [
+        "https://www.ayen.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "AYES": {
+      "sembol": "AYES",
+      "website_ham": "www.ayescelik.com",
+      "siteler": [
+        "https://www.ayescelik.com"
+      ],
+      "site_adedi": 1
+    },
+    "AYGAZ": {
+      "sembol": "AYGAZ",
+      "website_ham": "www.aygaz.com.tr",
+      "siteler": [
+        "https://www.aygaz.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "AZTEK": {
+      "sembol": "AZTEK",
+      "website_ham": "www.aztekteknoloji.com",
+      "siteler": [
+        "https://www.aztekteknoloji.com"
+      ],
+      "site_adedi": 1
+    },
+    "A1CAP": {
+      "sembol": "A1CAP",
+      "website_ham": "www.a1capital.com.tr",
+      "siteler": [
+        "https://www.a1capital.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "AYTEM": {
+      "sembol": "AYTEM",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:AYTEM"
+    },
+    "A1YEN": {
+      "sembol": "A1YEN",
+      "website_ham": "www.a1yen.com.tr",
+      "siteler": [
+        "https://www.a1yen.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "YYA": {
+      "sembol": "YYA",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:YYA"
+    },
+    "BAGFS": {
+      "sembol": "BAGFS",
+      "website_ham": "www.bagfas.com.tr",
+      "siteler": [
+        "https://www.bagfas.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "BAHKM": {
+      "sembol": "BAHKM",
+      "website_ham": "www.bahadirkimya.com.tr",
+      "siteler": [
+        "https://www.bahadirkimya.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "ACP": {
+      "sembol": "ACP",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:ACP"
+    },
+    "BAKAB": {
+      "sembol": "BAKAB",
+      "website_ham": "www.bakambalaj.com.tr",
+      "siteler": [
+        "https://www.bakambalaj.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "BKRGY": {
+      "sembol": "BKRGY",
+      "website_ham": "www.bakircigyo.com.tr",
+      "siteler": [
+        "https://www.bakircigyo.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "BALAT": {
+      "sembol": "BALAT",
+      "website_ham": "www.balatacilar.com",
+      "siteler": [
+        "https://www.balatacilar.com"
+      ],
+      "site_adedi": 1
+    },
+    "BALSU": {
+      "sembol": "BALSU",
+      "website_ham": "www.balsugida.com",
+      "siteler": [
+        "https://www.balsugida.com"
+      ],
+      "site_adedi": 1
+    },
+    "BNTAS": {
+      "sembol": "BNTAS",
+      "website_ham": "www.bantas.com.tr",
+      "siteler": [
+        "https://www.bantas.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "BANVT": {
+      "sembol": "BANVT",
+      "website_ham": "www.banvit.com",
+      "siteler": [
+        "https://www.banvit.com"
+      ],
+      "site_adedi": 1
+    },
+    "BARMA": {
+      "sembol": "BARMA",
+      "website_ham": "www.baremambalaj.com",
+      "siteler": [
+        "https://www.baremambalaj.com"
+      ],
+      "site_adedi": 1
+    },
+    "BASGZ": {
+      "sembol": "BASGZ",
+      "website_ham": "www.baskentdogalgaz.com.tr",
+      "siteler": [
+        "https://www.baskentdogalgaz.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "BASCM": {
+      "sembol": "BASCM",
+      "website_ham": "www.bastas.com.tr",
+      "siteler": [
+        "https://www.bastas.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "BEGYO": {
+      "sembol": "BEGYO",
+      "website_ham": "www.batiegegyo.com.tr",
+      "siteler": [
+        "https://www.batiegegyo.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "BTCIM": {
+      "sembol": "BTCIM",
+      "website_ham": "www.baticim.com.tr",
+      "siteler": [
+        "https://www.baticim.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "BSOKE": {
+      "sembol": "BSOKE",
+      "website_ham": "www.batisoke.com.tr",
+      "siteler": [
+        "https://www.batisoke.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "BAYRK": {
+      "sembol": "BAYRK",
+      "website_ham": "www.bayrakebt.com.tr",
+      "siteler": [
+        "https://www.bayrakebt.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "BYDNR": {
+      "sembol": "BYDNR",
+      "website_ham": "www.baydoner.com",
+      "siteler": [
+        "https://www.baydoner.com"
+      ],
+      "site_adedi": 1
+    },
+    "BERA": {
+      "sembol": "BERA",
+      "website_ham": "www.beraholding.com.tr",
+      "siteler": [
+        "https://www.beraholding.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "BRKSN": {
+      "sembol": "BRKSN",
+      "website_ham": "www.berkosan.com",
+      "siteler": [
+        "https://www.berkosan.com"
+      ],
+      "site_adedi": 1
+    },
+    "BESTE": {
+      "sembol": "BESTE",
+      "website_ham": "www.bestbrandsenerji.com",
+      "siteler": [
+        "https://www.bestbrandsenerji.com"
+      ],
+      "site_adedi": 1
+    },
+    "BRKT": {
+      "sembol": "BRKT",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:BRKT"
+    },
+    "BJKAS": {
+      "sembol": "BJKAS",
+      "website_ham": "www.bjk.com.tr",
+      "siteler": [
+        "https://www.bjk.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "BESLR": {
+      "sembol": "BESLR",
+      "website_ham": "www.besler.com.tr",
+      "siteler": [
+        "https://www.besler.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "BETAE": {
+      "sembol": "BETAE",
+      "website_ham": "www.betaenerji.com",
+      "siteler": [
+        "https://www.betaenerji.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "BEYAZ": {
+      "sembol": "BEYAZ",
+      "website_ham": "www.beyazfilo.com",
+      "siteler": [
+        "https://www.beyazfilo.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "BIENY": {
+      "sembol": "BIENY",
+      "website_ham": "www.bienseramik.com.tr",
+      "siteler": [
+        "https://www.bienseramik.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "BIGTK": {
+      "sembol": "BIGTK",
+      "website_ham": "www.bigmedia.com.tr",
+      "siteler": [
+        "https://www.bigmedia.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "BIMAS": {
+      "sembol": "BIMAS",
+      "website_ham": "www.bim.com.tr",
+      "siteler": [
+        "https://www.bim.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "BLCYT": {
+      "sembol": "BLCYT",
+      "website_ham": "www.biliciyatirim.com",
+      "siteler": [
+        "https://www.biliciyatirim.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "BINBN": {
+      "sembol": "BINBN",
+      "website_ham": "www.binbin.tech",
+      "siteler": [
+        "https://www.binbin.tech"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "BIOEN": {
+      "sembol": "BIOEN",
+      "website_ham": "www.biotrendenerji.com.tr",
+      "siteler": [
+        "https://www.biotrendenerji.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "BLKOM": {
+      "sembol": "BLKOM",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:BLKOM"
+    },
+    "BRKVY": {
+      "sembol": "BRKVY",
+      "website_ham": "www.birikimvarlik.com.tr",
+      "siteler": [
+        "https://www.birikimvarlik.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "BRKO": {
+      "sembol": "BRKO",
+      "website_ham": "www.birko.com.tr  - www.koyunlu.com.tr",
+      "siteler": [
+        "https://www.birko.com.tr",
+        "https://www.koyunlu.com.tr"
+      ],
+      "site_adedi": 2,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "BRLSM": {
+      "sembol": "BRLSM",
+      "website_ham": "www.birlesim.com",
+      "siteler": [
+        "https://www.birlesim.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "BIGEN": {
+      "sembol": "BIGEN",
+      "website_ham": "www.birlesimgrupenerji.com",
+      "siteler": [
+        "https://www.birlesimgrupenerji.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "BIZIM": {
+      "sembol": "BIZIM",
+      "website_ham": "www.bizimtoptan.com.tr",
+      "siteler": [
+        "https://www.bizimtoptan.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "BRMEN": {
+      "sembol": "BRMEN",
+      "website_ham": "www.birlikmensucat.com.tr",
+      "siteler": [
+        "https://www.birlikmensucat.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "BLUME": {
+      "sembol": "BLUME",
+      "website_ham": "www.blumemks.com",
+      "siteler": [
+        "https://www.blumemks.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "BMSTL": {
+      "sembol": "BMSTL",
+      "website_ham": "www.bmstel.com.tr",
+      "siteler": [
+        "https://www.bmstel.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "BMSCH": {
+      "sembol": "BMSCH",
+      "website_ham": "www.bmsch.com.tr",
+      "siteler": [
+        "https://www.bmsch.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "BOBET": {
+      "sembol": "BOBET",
+      "website_ham": "www.bogazicibeton.com",
+      "siteler": [
+        "https://www.bogazicibeton.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "BORSK": {
+      "sembol": "BORSK",
+      "website_ham": "https://borseker.com",
+      "siteler": [
+        "https://borseker.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "BORLS": {
+      "sembol": "BORLS",
+      "website_ham": "www.borlease.com.tr",
+      "siteler": [
+        "https://www.borlease.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "BRSAN": {
+      "sembol": "BRSAN",
+      "website_ham": "www.borusanboru.com",
+      "siteler": [
+        "https://www.borusanboru.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "BNPPI": {
+      "sembol": "BNPPI",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:BNPPI"
+    },
+    "BRYAT": {
+      "sembol": "BRYAT",
+      "website_ham": "www.borusanyatirim.com",
+      "siteler": [
+        "https://www.borusanyatirim.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "BFREN": {
+      "sembol": "BFREN",
+      "website_ham": "www.boschfren.com.tr",
+      "siteler": [
+        "https://www.boschfren.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "BULGS": {
+      "sembol": "BULGS",
+      "website_ham": "https://bullsgirisim.com",
+      "siteler": [
+        "https://bullsgirisim.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "BRISA": {
+      "sembol": "BRISA",
+      "website_ham": "www.brisa.com.tr",
+      "siteler": [
+        "https://www.brisa.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "BOSSA": {
+      "sembol": "BOSSA",
+      "website_ham": "www.bossa.com.tr",
+      "siteler": [
+        "https://www.bossa.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "BURCE": {
+      "sembol": "BURCE",
+      "website_ham": "www.burcelik.com.tr",
+      "siteler": [
+        "https://www.burcelik.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "BURVA": {
+      "sembol": "BURVA",
+      "website_ham": "www.burcelikvana.com",
+      "siteler": [
+        "https://www.burcelikvana.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "BLS": {
+      "sembol": "BLS",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:BLS"
+    },
+    "BLSMD": {
+      "sembol": "BLSMD",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:BLSMD"
+    },
+    "BUCIM": {
+      "sembol": "BUCIM",
+      "website_ham": "www.bursacimento.com.tr",
+      "siteler": [
+        "https://www.bursacimento.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "BIGCH": {
+      "sembol": "BIGCH",
+      "website_ham": "www.bigchefs.com.tr",
+      "siteler": [
+        "https://www.bigchefs.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "BVSAN": {
+      "sembol": "BVSAN",
+      "website_ham": "www.bvs.com.tr",
+      "siteler": [
+        "https://www.bvs.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "BRGAN": {
+      "sembol": "BRGAN",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:BRGAN"
+    },
+    "BUR": {
+      "sembol": "BUR",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:BUR"
+    },
+    "BRGFK": {
+      "sembol": "BRGFK",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:BRGFK"
+    },
+    "CASA": {
+      "sembol": "CASA",
+      "website_ham": "www.casaemtia.com.tr",
+      "siteler": [
+        "https://www.casaemtia.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "CEMZY": {
+      "sembol": "CEMZY",
+      "website_ham": "https://www.cemzeytin.com.tr",
+      "siteler": [
+        "https://www.cemzeytin.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "CEOEM": {
+      "sembol": "CEOEM",
+      "website_ham": "www.ceoevent.com.tr",
+      "siteler": [
+        "https://www.ceoevent.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "CRFSA": {
+      "sembol": "CRFSA",
+      "website_ham": "www.carrefoursa.com",
+      "siteler": [
+        "https://www.carrefoursa.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "CCOLA": {
+      "sembol": "CCOLA",
+      "website_ham": "www.cci.com.tr",
+      "siteler": [
+        "https://www.cci.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "CONSE": {
+      "sembol": "CONSE",
+      "website_ham": "www.consusenerji.com.tr",
+      "siteler": [
+        "https://www.consusenerji.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "COSMO": {
+      "sembol": "COSMO",
+      "website_ham": "www.cosmosholding.com",
+      "siteler": [
+        "https://www.cosmosholding.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "CRDFA": {
+      "sembol": "CRDFA",
+      "website_ham": "www.creditwest.com.tr",
+      "siteler": [
+        "https://www.creditwest.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "CVKMD": {
+      "sembol": "CVKMD",
+      "website_ham": "www.cvkmadencilik.com",
+      "siteler": [
+        "https://www.cvkmadencilik.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "CWENE": {
+      "sembol": "CWENE",
+      "website_ham": "www.cw-enerji.com",
+      "siteler": [
+        "https://www.cw-enerji.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "CGCAM": {
+      "sembol": "CGCAM",
+      "website_ham": "www.cagdascam.com",
+      "siteler": [
+        "https://www.cagdascam.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "CANTE": {
+      "sembol": "CANTE",
+      "website_ham": "www.can2termik.com.tr",
+      "siteler": [
+        "https://www.can2termik.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "CATES": {
+      "sembol": "CATES",
+      "website_ham": "www.cates.com.tr",
+      "siteler": [
+        "https://www.cates.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "CLEBI": {
+      "sembol": "CLEBI",
+      "website_ham": "www.celebihandling.com",
+      "siteler": [
+        "https://www.celebihandling.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "CELHA": {
+      "sembol": "CELHA",
+      "website_ham": "www.celikhalat.com.tr",
+      "siteler": [
+        "https://www.celikhalat.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "CAGFA": {
+      "sembol": "CAGFA",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:CAGFA"
+    },
+    "CMSAN": {
+      "sembol": "CMSAN",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:CMSAN"
+    },
+    "CEMAS": {
+      "sembol": "CEMAS",
+      "website_ham": "www.cemas.com.tr",
+      "siteler": [
+        "https://www.cemas.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "CMBTN": {
+      "sembol": "CMBTN",
+      "website_ham": "www.cimbeton.com.tr",
+      "siteler": [
+        "https://www.cimbeton.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "CEMTS": {
+      "sembol": "CEMTS",
+      "website_ham": "http://www.cemtas.com.tr/",
+      "siteler": [
+        "http://www.cemtas.com.tr/"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "CMENT": {
+      "sembol": "CMENT",
+      "website_ham": "www.cimentas.com.tr",
+      "siteler": [
+        "https://www.cimentas.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "CIMSA": {
+      "sembol": "CIMSA",
+      "website_ham": "www.cimsa.com.tr",
+      "siteler": [
+        "https://www.cimsa.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "CITAS": {
+      "sembol": "CITAS",
+      "website_ham": "www.citlekci.com.tr",
+      "siteler": [
+        "https://www.citlekci.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "CLKMT": {
+      "sembol": "CLKMT",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:CLKMT"
+    },
+    "CUSAN": {
+      "sembol": "CUSAN",
+      "website_ham": "www.cuhadaroglu.com",
+      "siteler": [
+        "https://www.cuhadaroglu.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "DAGI": {
+      "sembol": "DAGI",
+      "website_ham": "www.dagi.com.tr",
+      "siteler": [
+        "https://www.dagi.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "DAPGM": {
+      "sembol": "DAPGM",
+      "website_ham": "www.dapgayrimenkulgelistirme.com.tr",
+      "siteler": [
+        "https://www.dapgayrimenkulgelistirme.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "DGATE": {
+      "sembol": "DGATE",
+      "website_ham": "www.datagate.com.tr",
+      "siteler": [
+        "https://www.datagate.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "DVRLK": {
+      "sembol": "DVRLK",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:DVRLK"
+    },
+    "DCTTR": {
+      "sembol": "DCTTR",
+      "website_ham": "https://www.dcttrading.com.tr/tr/",
+      "siteler": [
+        "https://www.dcttrading.com.tr/tr/"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "DYBNK": {
+      "sembol": "DYBNK",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:DYBNK"
+    },
+    "DMSAS": {
+      "sembol": "DMSAS",
+      "website_ham": "www.demisas.com.tr",
+      "siteler": [
+        "https://www.demisas.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "DENGE": {
+      "sembol": "DENGE",
+      "website_ham": "www.dengeholding.com.tr",
+      "siteler": [
+        "https://www.dengeholding.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "DGRVK": {
+      "sembol": "DGRVK",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:DGRVK"
+    },
+    "DENVA": {
+      "sembol": "DENVA",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:DENVA"
+    },
+    "DZGYO": {
+      "sembol": "DZGYO",
+      "website_ham": "www.denizgyo.com.tr",
+      "siteler": [
+        "https://www.denizgyo.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "DNZEN": {
+      "sembol": "DNZEN",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:DNZEN"
+    },
+    "DENFA": {
+      "sembol": "DENFA",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:DENFA"
+    },
+    "DERIM": {
+      "sembol": "DERIM",
+      "website_ham": "www.derimod.com.tr",
+      "siteler": [
+        "https://www.derimod.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "DERHL": {
+      "sembol": "DERHL",
+      "website_ham": "www.derluks.com.tr",
+      "siteler": [
+        "https://www.derluks.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "DNFIN": {
+      "sembol": "DNFIN",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:DNFIN"
+    },
+    "DESA": {
+      "sembol": "DESA",
+      "website_ham": "www.desa.com.tr",
+      "siteler": [
+        "https://www.desa.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "DESPC": {
+      "sembol": "DESPC",
+      "website_ham": "www.despec.com.tr",
+      "siteler": [
+        "https://www.despec.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "DEVA": {
+      "sembol": "DEVA",
+      "website_ham": "www.deva.com.tr",
+      "siteler": [
+        "https://www.deva.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "DNISI": {
+      "sembol": "DNISI",
+      "website_ham": "www.dinamik-izmir.com",
+      "siteler": [
+        "https://www.dinamik-izmir.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "DITAS": {
+      "sembol": "DITAS",
+      "website_ham": "www.ditas.com.tr",
+      "siteler": [
+        "https://www.ditas.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "DIMES": {
+      "sembol": "DIMES",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:DIMES"
+    },
+    "DARDL": {
+      "sembol": "DARDL",
+      "website_ham": "www.dardanel.com.tr",
+      "siteler": [
+        "https://www.dardanel.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "DMRGD": {
+      "sembol": "DMRGD",
+      "website_ham": "www.dmrbakery.com",
+      "siteler": [
+        "https://www.dmrbakery.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "DKVRL": {
+      "sembol": "DKVRL",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:DKVRL"
+    },
+    "DOCO": {
+      "sembol": "DOCO",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": ""
+    },
+    "DKYVK": {
+      "sembol": "DKYVK",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:DKYVK"
+    },
+    "DOFER": {
+      "sembol": "DOFER",
+      "website_ham": "www.dofer.com.tr",
+      "siteler": [
+        "https://www.dofer.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "DOHOL": {
+      "sembol": "DOHOL",
+      "website_ham": "www.doganholding.com.tr",
+      "siteler": [
+        "https://www.doganholding.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "DGNMO": {
+      "sembol": "DGNMO",
+      "website_ham": "www.doganlarmobilyagrubu.com",
+      "siteler": [
+        "https://www.doganlarmobilyagrubu.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "ARASE": {
+      "sembol": "ARASE",
+      "website_ham": "www.doguaras.com",
+      "siteler": [
+        "https://www.doguaras.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "DTRND": {
+      "sembol": "DTRND",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:DTRND"
+    },
+    "DOGVY": {
+      "sembol": "DOGVY",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:DOGVY"
+    },
+    "DGGYO": {
+      "sembol": "DGGYO",
+      "website_ham": "www.dogusgyo.com.tr",
+      "siteler": [
+        "https://www.dogusgyo.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "DOFRB": {
+      "sembol": "DOFRB",
+      "website_ham": "https://dofrobotics.com/tr/",
+      "siteler": [
+        "https://dofrobotics.com/tr/"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "DSTKF": {
+      "sembol": "DSTKF",
+      "website_ham": "www.destekfaktoring.com.tr",
+      "siteler": [
+        "https://www.destekfaktoring.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "DOAS": {
+      "sembol": "DOAS",
+      "website_ham": "www.dogusotomotiv.com.tr",
+      "siteler": [
+        "https://www.dogusotomotiv.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "DIRIT": {
+      "sembol": "DIRIT",
+      "website_ham": "www.diriteks.com",
+      "siteler": [
+        "https://www.diriteks.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "DOKTA": {
+      "sembol": "DOKTA",
+      "website_ham": "www.doktas.com",
+      "siteler": [
+        "https://www.doktas.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "DURDO": {
+      "sembol": "DURDO",
+      "website_ham": "www.durandogan.com",
+      "siteler": [
+        "https://www.durandogan.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "DURKN": {
+      "sembol": "DURKN",
+      "website_ham": "www.durukan.com.tr",
+      "siteler": [
+        "https://www.durukan.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "DFKTR": {
+      "sembol": "DFKTR",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:DFKTR"
+    },
+    "DYOBY": {
+      "sembol": "DYOBY",
+      "website_ham": "www.dyo.com.tr",
+      "siteler": [
+        "https://www.dyo.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "EBEBK": {
+      "sembol": "EBEBK",
+      "website_ham": "https://www.ebebek.com/",
+      "siteler": [
+        "https://www.ebebek.com/"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "EDATA": {
+      "sembol": "EDATA",
+      "website_ham": "www.e-data.com.tr",
+      "siteler": [
+        "https://www.e-data.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "DNYVA": {
+      "sembol": "DNYVA",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:DNYVA"
+    },
+    "EDIP": {
+      "sembol": "EDIP",
+      "website_ham": "www.edip.com",
+      "siteler": [
+        "https://www.edip.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "EFOR": {
+      "sembol": "EFOR",
+      "website_ham": "https://www.eforcay.com",
+      "siteler": [
+        "https://www.eforcay.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "DOGUB": {
+      "sembol": "DOGUB",
+      "website_ham": "www.seraper.com.tr",
+      "siteler": [
+        "https://www.seraper.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "EGPRO": {
+      "sembol": "EGPRO",
+      "website_ham": "www.egeprofil.com.tr",
+      "siteler": [
+        "https://www.egeprofil.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "DUNYH": {
+      "sembol": "DUNYH",
+      "website_ham": "https://dunyaholding.com.tr/",
+      "siteler": [
+        "https://dunyaholding.com.tr/"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "EPLAS": {
+      "sembol": "EPLAS",
+      "website_ham": "https://egeplast.com.tr/",
+      "siteler": [
+        "https://egeplast.com.tr/"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "ECOGR": {
+      "sembol": "ECOGR",
+      "website_ham": "https://ecogreenenerji.com/",
+      "siteler": [
+        "https://ecogreenenerji.com/"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "ECZYT": {
+      "sembol": "ECZYT",
+      "website_ham": "www.eyh.eczacibasi.com.tr, www.eczacibasi.com.tr",
+      "siteler": [
+        "https://www.eyh.eczacibasi.com.tr",
+        "https://www.eczacibasi.com.tr"
+      ],
+      "site_adedi": 2,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "ECILC": {
+      "sembol": "ECILC",
+      "website_ham": "www.eis.com.tr / www.eczacibasi.com.tr",
+      "siteler": [
+        "https://www.eis.com.tr",
+        "https://www.eczacibasi.com.tr"
+      ],
+      "site_adedi": 2,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "EGEEN": {
+      "sembol": "EGEEN",
+      "website_ham": "www.egeendustri.com.tr",
+      "siteler": [
+        "https://www.egeendustri.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "EGGUB": {
+      "sembol": "EGGUB",
+      "website_ham": "www.egegubre.com.tr",
+      "siteler": [
+        "https://www.egegubre.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "ECZIP": {
+      "sembol": "ECZIP",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:ECZIP"
+    },
+    "EKER": {
+      "sembol": "EKER",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:EKER"
+    },
+    "EGEGY": {
+      "sembol": "EGEGY",
+      "website_ham": "www.egeyapigyo.com",
+      "siteler": [
+        "https://www.egeyapigyo.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "EKOS": {
+      "sembol": "EKOS",
+      "website_ham": "www.ekoselectric.com",
+      "siteler": [
+        "https://www.ekoselectric.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "EGSER": {
+      "sembol": "EGSER",
+      "website_ham": "www.egeseramik.com",
+      "siteler": [
+        "https://www.egeseramik.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "EKSUN": {
+      "sembol": "EKSUN",
+      "website_ham": "www.eksun.com.tr",
+      "siteler": [
+        "https://www.eksun.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "EKOFA": {
+      "sembol": "EKOFA",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:EKOFA"
+    },
+    "ELITE": {
+      "sembol": "ELITE",
+      "website_ham": "https://www.elitenaturel.com",
+      "siteler": [
+        "https://www.elitenaturel.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "EMKEL": {
+      "sembol": "EMKEL",
+      "website_ham": "www.emek.com.tr",
+      "siteler": [
+        "https://www.emek.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "EMIRV": {
+      "sembol": "EMIRV",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:EMIRV"
+    },
+    "EKTVK": {
+      "sembol": "EKTVK",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:EKTVK"
+    },
+    "EKGYO": {
+      "sembol": "EKGYO",
+      "website_ham": "www.emlakkonut.com.tr",
+      "siteler": [
+        "https://www.emlakkonut.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "DMLKT": {
+      "sembol": "DMLKT",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": ""
+    },
+    "EKIM": {
+      "sembol": "EKIM",
+      "website_ham": "www.intercityfilo.com",
+      "siteler": [
+        "https://www.intercityfilo.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "EKDMR": {
+      "sembol": "EKDMR",
+      "website_ham": "www.ekinciler.com",
+      "siteler": [
+        "https://www.ekinciler.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "EMPAE": {
+      "sembol": "EMPAE",
+      "website_ham": "www.empa.com",
+      "siteler": [
+        "https://www.empa.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "EKIZ": {
+      "sembol": "EKIZ",
+      "website_ham": "www.ekizkimya.com",
+      "siteler": [
+        "https://www.ekizkimya.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "ENDAE": {
+      "sembol": "ENDAE",
+      "website_ham": "www.endaenerji.com.tr",
+      "siteler": [
+        "https://www.endaenerji.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "ENERY": {
+      "sembol": "ENERY",
+      "website_ham": "www.enerya.com.tr",
+      "siteler": [
+        "https://www.enerya.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "ENJSA": {
+      "sembol": "ENJSA",
+      "website_ham": "www.enerjisa.com.tr",
+      "siteler": [
+        "https://www.enerjisa.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "EMVAR": {
+      "sembol": "EMVAR",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:EMVAR"
+    },
+    "ENKAI": {
+      "sembol": "ENKAI",
+      "website_ham": "www.enka.com",
+      "siteler": [
+        "https://www.enka.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "ENSRI": {
+      "sembol": "ENSRI",
+      "website_ham": "www.ensariyatirimlar.com",
+      "siteler": [
+        "https://www.ensariyatirimlar.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "ERBOS": {
+      "sembol": "ERBOS",
+      "website_ham": "www.erbosan.com.tr",
+      "siteler": [
+        "https://www.erbosan.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "ERCB": {
+      "sembol": "ERCB",
+      "website_ham": "https://erciyasboru.com",
+      "siteler": [
+        "https://erciyasboru.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "EREGL": {
+      "sembol": "EREGL",
+      "website_ham": "OYAK MADEN METALÜRJİ www.oyakmadenmetalurji.com.tr / EREĞLİ DEMİR VE ÇELİK FABRİKALARI T.A.Ş. www.erdemir.com.tr / İSKENDERUN DEMİR VE ÇELİK A.Ş. www.isdemir.com.tr / ERDEMİR MADENCİLİK SAN. VE TİC. A.Ş. www.erdemirmaden.com.tr / ERDEMİR MÜHENDİSLİK, YÖNETİM VE DANIŞMANLIK HİZMETLERİ A.Ş. www.muhendislikerdemir.com.tr / ERDEMİR ÇELİK SERVİS MERKEZİ SAN. VE TİC. A.Ş. www.ersem.com.tr / ERDEMİR - ROMANIA S.R.L. www.erdemir.ro / ERDEMİR ENERJİ ÜRETİM A.Ş. www.erdemirenerji.com.tr / KÜMAŞ MANYEZİT A.Ş. www.kumasref.com",
+      "siteler": [
+        "https://www.oyakmadenmetalurji.com.tr",
+        "https://www.erdemir.com.tr",
+        "https://www.isdemir.com.tr",
+        "https://www.erdemirmaden.com.tr",
+        "https://www.muhendislikerdemir.com.tr",
+        "https://www.ersem.com.tr",
+        "https://www.erdemir.ro",
+        "https://www.erdemirenerji.com.tr",
+        "https://www.kumasref.com"
+      ],
+      "site_adedi": 9,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "KIMMR": {
+      "sembol": "KIMMR",
+      "website_ham": "www.kimmarket.com.tr",
+      "siteler": [
+        "https://www.kimmarket.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "ESCAR": {
+      "sembol": "ESCAR",
+      "website_ham": "www.escar.com.tr",
+      "siteler": [
+        "https://www.escar.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "EMNIS": {
+      "sembol": "EMNIS",
+      "website_ham": "www.eminis.com.tr",
+      "siteler": [
+        "https://www.eminis.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "ESCOM": {
+      "sembol": "ESCOM",
+      "website_ham": "www.escort.com.tr",
+      "siteler": [
+        "https://www.escort.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "ERGLI": {
+      "sembol": "ERGLI",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:ERGLI"
+    },
+    "ETILR": {
+      "sembol": "ETILR",
+      "website_ham": "www.etilermarmaris.com.tr - www.etilermarmariskuruyemis.com",
+      "siteler": [
+        "https://www.etilermarmaris.com.tr",
+        "https://www.etilermarmariskuruyemis.com"
+      ],
+      "site_adedi": 2,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "ETYAT": {
+      "sembol": "ETYAT",
+      "website_ham": "www.eurotrendyo.com",
+      "siteler": [
+        "https://www.eurotrendyo.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "ENPRA": {
+      "sembol": "ENPRA",
+      "website_ham": "www.enpara.com",
+      "siteler": [
+        "https://www.enpara.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "TEZOL": {
+      "sembol": "TEZOL",
+      "website_ham": "https://www.tezol.com.tr/",
+      "siteler": [
+        "https://www.tezol.com.tr/"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "ERSU": {
+      "sembol": "ERSU",
+      "website_ham": "www.ersu.com.tr",
+      "siteler": [
+        "https://www.ersu.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "EUREN": {
+      "sembol": "EUREN",
+      "website_ham": "https://www.europen.com.tr/",
+      "siteler": [
+        "https://www.europen.com.tr/"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "EUPWR": {
+      "sembol": "EUPWR",
+      "website_ham": "www.europowerenerji.com.tr",
+      "siteler": [
+        "https://www.europowerenerji.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "EYGYO": {
+      "sembol": "EYGYO",
+      "website_ham": "www.eyggyo.com.tr",
+      "siteler": [
+        "https://www.eyggyo.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "ESEN": {
+      "sembol": "ESEN",
+      "website_ham": "www.esenbogaelektrik.com.tr",
+      "siteler": [
+        "https://www.esenbogaelektrik.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "EUKYO": {
+      "sembol": "EUKYO",
+      "website_ham": "www.eurokapitalyo.com",
+      "siteler": [
+        "https://www.eurokapitalyo.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "FADE": {
+      "sembol": "FADE",
+      "website_ham": "www.fadefood.com / www.fadegida.com.tr",
+      "siteler": [
+        "https://www.fadefood.com",
+        "https://www.fadegida.com.tr"
+      ],
+      "site_adedi": 2,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "EUYO": {
+      "sembol": "EUYO",
+      "website_ham": "www.euroyatirimortakligi.com",
+      "siteler": [
+        "https://www.euroyatirimortakligi.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "FMIZP": {
+      "sembol": "FMIZP",
+      "website_ham": "www.fmizp.com",
+      "siteler": [
+        "https://www.fmizp.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "FENER": {
+      "sembol": "FENER",
+      "website_ham": "http://www.fenerbahce.org/fbfutbol/",
+      "siteler": [
+        "http://www.fenerbahce.org/fbfutbol/"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "EUHOL": {
+      "sembol": "EUHOL",
+      "website_ham": "www.euroyatirim.com.tr",
+      "siteler": [
+        "https://www.euroyatirim.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "FAIRF": {
+      "sembol": "FAIRF",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:FAIRF"
+    },
+    "FLAP": {
+      "sembol": "FLAP",
+      "website_ham": "www.flaptour.com.tr",
+      "siteler": [
+        "https://www.flaptour.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "FBB": {
+      "sembol": "FBB",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:FBB"
+    },
+    "FBBNK": {
+      "sembol": "FBBNK",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:FBBNK"
+    },
+    "FIGOF": {
+      "sembol": "FIGOF",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:FIGOF"
+    },
+    "FKPET": {
+      "sembol": "FKPET",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:FKPET"
+    },
+    "FORTE": {
+      "sembol": "FORTE",
+      "website_ham": "www.forte.com.tr",
+      "siteler": [
+        "https://www.forte.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "FRIGO": {
+      "sembol": "FRIGO",
+      "website_ham": "www.frigo-pak.com.tr - www.sunpride.com.tr",
+      "siteler": [
+        "https://www.frigo-pak.com.tr",
+        "https://www.sunpride.com.tr"
+      ],
+      "site_adedi": 2,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "FRMPL": {
+      "sembol": "FRMPL",
+      "website_ham": "https://www.formul.com.tr",
+      "siteler": [
+        "https://www.formul.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "FZLGY": {
+      "sembol": "FZLGY",
+      "website_ham": "www.fuzulgyo.com.tr",
+      "siteler": [
+        "https://www.fuzulgyo.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "GWIND": {
+      "sembol": "GWIND",
+      "website_ham": "www.galatawindenerji.com",
+      "siteler": [
+        "https://www.galatawindenerji.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "GARFA": {
+      "sembol": "GARFA",
+      "website_ham": "www.garantibbvafactoring.com",
+      "siteler": [
+        "https://www.garantibbvafactoring.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "GARFL": {
+      "sembol": "GARFL",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:GARFL"
+    },
+    "GRM": {
+      "sembol": "GRM",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:GRM"
+    },
+    "GRNYO": {
+      "sembol": "GRNYO",
+      "website_ham": "www.gyo.com.tr",
+      "siteler": [
+        "https://www.gyo.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "GRYAT": {
+      "sembol": "GRYAT",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:GRYAT"
+    },
+    "GATEG": {
+      "sembol": "GATEG",
+      "website_ham": "www.gategroup.com.tr",
+      "siteler": [
+        "https://www.gategroup.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "FONET": {
+      "sembol": "FONET",
+      "website_ham": "http://www.fonetbt.com",
+      "siteler": [
+        "http://www.fonetbt.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "GEDIK": {
+      "sembol": "GEDIK",
+      "website_ham": "www.gedik.com",
+      "siteler": [
+        "https://www.gedik.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "GEDZA": {
+      "sembol": "GEDZA",
+      "website_ham": "www.gedizambalaj.com",
+      "siteler": [
+        "https://www.gedizambalaj.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "FROTO": {
+      "sembol": "FROTO",
+      "website_ham": "www.fordotosan.com.tr",
+      "siteler": [
+        "https://www.fordotosan.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "FORMT": {
+      "sembol": "FORMT",
+      "website_ham": "www.formetcelikkapi.com.tr",
+      "siteler": [
+        "https://www.formetcelikkapi.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "GLCVY": {
+      "sembol": "GLCVY",
+      "website_ham": "www.gelecekvarlik.com.tr",
+      "siteler": [
+        "https://www.gelecekvarlik.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "GENIL": {
+      "sembol": "GENIL",
+      "website_ham": "www.genilac.com.tr",
+      "siteler": [
+        "https://www.genilac.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "GENTS": {
+      "sembol": "GENTS",
+      "website_ham": "www.gentas.com.tr",
+      "siteler": [
+        "https://www.gentas.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "GENKM": {
+      "sembol": "GENKM",
+      "website_ham": "https://www.gentaskimya.com/",
+      "siteler": [
+        "https://www.gentaskimya.com/"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "GZNMI": {
+      "sembol": "GZNMI",
+      "website_ham": "https://www.gezinomi.com/",
+      "siteler": [
+        "https://www.gezinomi.com/"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "GIPTA": {
+      "sembol": "GIPTA",
+      "website_ham": "www.gipta.com.tr",
+      "siteler": [
+        "https://www.gipta.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "GMTAS": {
+      "sembol": "GMTAS",
+      "website_ham": "www.gimatgross.net",
+      "siteler": [
+        "https://www.gimatgross.net"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "GESAN": {
+      "sembol": "GESAN",
+      "website_ham": "https://www.girisimelk.com.tr",
+      "siteler": [
+        "https://www.girisimelk.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "GSRAY": {
+      "sembol": "GSRAY",
+      "website_ham": "sportif.galatasaray.org",
+      "siteler": [
+        "https://sportif.galatasaray.org"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "GLYHO": {
+      "sembol": "GLYHO",
+      "website_ham": "www.globalyatirim.com.tr",
+      "siteler": [
+        "https://www.globalyatirim.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "GOLDA": {
+      "sembol": "GOLDA",
+      "website_ham": "https://golda.com.tr",
+      "siteler": [
+        "https://golda.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "GOODY": {
+      "sembol": "GOODY",
+      "website_ham": "www.goodyear.com.tr",
+      "siteler": [
+        "https://www.goodyear.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "GLB": {
+      "sembol": "GLB",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:GLB"
+    },
+    "GOKNR": {
+      "sembol": "GOKNR",
+      "website_ham": "www.goknur.com.tr",
+      "siteler": [
+        "https://www.goknur.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "GOLTS": {
+      "sembol": "GOLTS",
+      "website_ham": "www.goltas.com.tr",
+      "siteler": [
+        "https://www.goltas.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "GGBVK": {
+      "sembol": "GGBVK",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:GGBVK"
+    },
+    "GSIPD": {
+      "sembol": "GSIPD",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:GSIPD"
+    },
+    "GSDDE": {
+      "sembol": "GSDDE",
+      "website_ham": "www.gsdmarin.com.tr",
+      "siteler": [
+        "https://www.gsdmarin.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "GSDHO": {
+      "sembol": "GSDHO",
+      "website_ham": "www.gsd.com.tr  www.gsdholding.com.tr  www.gsdholding.com",
+      "siteler": [
+        "https://www.gsd.com.tr",
+        "https://www.gsdholding.com.tr",
+        "https://www.gsdholding.com"
+      ],
+      "site_adedi": 3,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "GUBRF": {
+      "sembol": "GUBRF",
+      "website_ham": "www.gubretas.com.tr",
+      "siteler": [
+        "https://www.gubretas.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "GLRMK": {
+      "sembol": "GLRMK",
+      "website_ham": "www.gulermak.com.tr",
+      "siteler": [
+        "https://www.gulermak.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "GUNDG": {
+      "sembol": "GUNDG",
+      "website_ham": "www.gundogdugida.com",
+      "siteler": [
+        "https://www.gundogdugida.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "GEREL": {
+      "sembol": "GEREL",
+      "website_ham": "http://www.gersan.com.tr",
+      "siteler": [
+        "http://www.gersan.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "GRSEL": {
+      "sembol": "GRSEL",
+      "website_ham": "www.gurseltur.com.tr",
+      "siteler": [
+        "https://www.gurseltur.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "GLBMD": {
+      "sembol": "GLBMD",
+      "website_ham": "www.global.com.tr",
+      "siteler": [
+        "https://www.global.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "GYVAR": {
+      "sembol": "GYVAR",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:GYVAR"
+    },
+    "GOZDE": {
+      "sembol": "GOZDE",
+      "website_ham": "www.gozdegirisim.com.tr",
+      "siteler": [
+        "https://www.gozdegirisim.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "GRTHO": {
+      "sembol": "GRTHO",
+      "website_ham": "www.grainturk.com",
+      "siteler": [
+        "https://www.grainturk.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "SAHOL": {
+      "sembol": "SAHOL",
+      "website_ham": "www.sabanci.com",
+      "siteler": [
+        "https://www.sabanci.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "GLRYH": {
+      "sembol": "GLRYH",
+      "website_ham": "www.gulerholding.com.tr",
+      "siteler": [
+        "https://www.gulerholding.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "HALKF": {
+      "sembol": "HALKF",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:HALKF"
+    },
+    "HLGYO": {
+      "sembol": "HLGYO",
+      "website_ham": "www.halkgyo.com.tr",
+      "siteler": [
+        "https://www.halkgyo.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "HRKET": {
+      "sembol": "HRKET",
+      "website_ham": "www.hareket.com",
+      "siteler": [
+        "https://www.hareket.com"
+      ],
+      "site_adedi": 1
+    },
+    "HATEK": {
+      "sembol": "HATEK",
+      "website_ham": "www.hateks.com.tr",
+      "siteler": [
+        "https://www.hateks.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "HATSN": {
+      "sembol": "HATSN",
+      "website_ham": "www.hat-san.com.tr",
+      "siteler": [
+        "https://www.hat-san.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "HLVKS": {
+      "sembol": "HLVKS",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:HLVKS"
+    },
+    "HALKI": {
+      "sembol": "HALKI",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:HALKI"
+    },
+    "HLY": {
+      "sembol": "HLY",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:HLY"
+    },
+    "HDFGS": {
+      "sembol": "HDFGS",
+      "website_ham": "www.hedefgirisim.com.tr",
+      "siteler": [
+        "https://www.hedefgirisim.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "HEDEF": {
+      "sembol": "HEDEF",
+      "website_ham": "www.hedefholding.com",
+      "siteler": [
+        "https://www.hedefholding.com"
+      ],
+      "site_adedi": 1
+    },
+    "HAYVK": {
+      "sembol": "HAYVK",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:HAYVK"
+    },
+    "HDFFL": {
+      "sembol": "HDFFL",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:HDFFL"
+    },
+    "HEKTS": {
+      "sembol": "HEKTS",
+      "website_ham": "www.hektas.com.tr",
+      "siteler": [
+        "https://www.hektas.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "HDFVK": {
+      "sembol": "HDFVK",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:HDFVK"
+    },
+    "HKTM": {
+      "sembol": "HKTM",
+      "website_ham": "www.hktm.com.tr",
+      "siteler": [
+        "https://www.hktm.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "HDFYB": {
+      "sembol": "HDFYB",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:HDFYB"
+    },
+    "HYB": {
+      "sembol": "HYB",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:HYB"
+    },
+    "HTTBT": {
+      "sembol": "HTTBT",
+      "website_ham": "https://hitit.com/",
+      "siteler": [
+        "https://hitit.com/"
+      ],
+      "site_adedi": 1
+    },
+    "HOROZ": {
+      "sembol": "HOROZ",
+      "website_ham": "www.horoz.com.tr",
+      "siteler": [
+        "https://www.horoz.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "HUBVC": {
+      "sembol": "HUBVC",
+      "website_ham": "http://www.hubgsyo.com",
+      "siteler": [
+        "http://www.hubgsyo.com"
+      ],
+      "site_adedi": 1
+    },
+    "HUNER": {
+      "sembol": "HUNER",
+      "website_ham": "www.hunyenilenebilirenerji.com",
+      "siteler": [
+        "https://www.hunyenilenebilirenerji.com"
+      ],
+      "site_adedi": 1
+    },
+    "HURGZ": {
+      "sembol": "HURGZ",
+      "website_ham": "www.hurriyetkurumsal.com",
+      "siteler": [
+        "https://www.hurriyetkurumsal.com"
+      ],
+      "site_adedi": 1
+    },
+    "ENTRA": {
+      "sembol": "ENTRA",
+      "website_ham": "www.icenterra.com.tr",
+      "siteler": [
+        "https://www.icenterra.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "HUZFA": {
+      "sembol": "HUZFA",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:HUZFA"
+    },
+    "ICBCT": {
+      "sembol": "ICBCT",
+      "website_ham": "www.icbc.com.tr",
+      "siteler": [
+        "https://www.icbc.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "INGRM": {
+      "sembol": "INGRM",
+      "website_ham": "tr.ingrammicro.eu",
+      "siteler": [
+        "https://tr.ingrammicro.eu"
+      ],
+      "site_adedi": 1
+    },
+    "ICB": {
+      "sembol": "ICB",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:ICB"
+    },
+    "INVEO": {
+      "sembol": "INVEO",
+      "website_ham": "www.inveo.com.tr",
+      "siteler": [
+        "https://www.inveo.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "ICUGS": {
+      "sembol": "ICUGS",
+      "website_ham": "www.icugirisim.com.tr",
+      "siteler": [
+        "https://www.icugirisim.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "INVES": {
+      "sembol": "INVES",
+      "website_ham": "www.investco.com.tr",
+      "siteler": [
+        "https://www.investco.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "ISKPL": {
+      "sembol": "ISKPL",
+      "website_ham": "https://www.isikplastik.com",
+      "siteler": [
+        "https://www.isikplastik.com"
+      ],
+      "site_adedi": 1
+    },
+    "IEYHO": {
+      "sembol": "IEYHO",
+      "website_ham": "www.isiklarenerjiyapiholding.com.tr",
+      "siteler": [
+        "https://www.isiklarenerjiyapiholding.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "IAZ": {
+      "sembol": "IAZ",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:IAZ"
+    },
+    "INVAZ": {
+      "sembol": "INVAZ",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:INVAZ"
+    },
+    "IDGYO": {
+      "sembol": "IDGYO",
+      "website_ham": "www.idealistgyo.com &amp; www.idealistgyo.com.tr",
+      "siteler": [
+        "https://www.idealistgyo.com",
+        "https://www.idealistgyo.com.tr"
+      ],
+      "site_adedi": 2
+    },
+    "IHEVA": {
+      "sembol": "IHEVA",
+      "website_ham": "www.iea.com.tr",
+      "siteler": [
+        "https://www.iea.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "IHLGM": {
+      "sembol": "IHLGM",
+      "website_ham": "www.ihlasgayrimenkul.com",
+      "siteler": [
+        "https://www.ihlasgayrimenkul.com"
+      ],
+      "site_adedi": 1
+    },
+    "IHGZT": {
+      "sembol": "IHGZT",
+      "website_ham": "www.ihlasgazetecilik.com.tr",
+      "siteler": [
+        "https://www.ihlasgazetecilik.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "IHAAS": {
+      "sembol": "IHAAS",
+      "website_ham": "www.ihlashaberajansi.com.tr",
+      "siteler": [
+        "https://www.ihlashaberajansi.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "IHLAS": {
+      "sembol": "IHLAS",
+      "website_ham": "www.ihlas.com.tr",
+      "siteler": [
+        "https://www.ihlas.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "IHYAY": {
+      "sembol": "IHYAY",
+      "website_ham": "www.ihlasyayinholding.com.tr",
+      "siteler": [
+        "https://www.ihlasyayinholding.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "IMASM": {
+      "sembol": "IMASM",
+      "website_ham": "www.imas.com.tr",
+      "siteler": [
+        "https://www.imas.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "INFO": {
+      "sembol": "INFO",
+      "website_ham": "www.infoyatirim.com",
+      "siteler": [
+        "https://www.infoyatirim.com"
+      ],
+      "site_adedi": 1
+    },
+    "INDES": {
+      "sembol": "INDES",
+      "website_ham": "www.index.com.tr",
+      "siteler": [
+        "https://www.index.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "INTEM": {
+      "sembol": "INTEM",
+      "website_ham": "www.intema.com.tr / www.eczacibasi.com.tr",
+      "siteler": [
+        "https://www.intema.com.tr",
+        "https://www.eczacibasi.com.tr"
+      ],
+      "site_adedi": 2
+    },
+    "INTEK": {
+      "sembol": "INTEK",
+      "website_ham": "www.innosateknoloji.com.tr",
+      "siteler": [
+        "https://www.innosateknoloji.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "INALR": {
+      "sembol": "INALR",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:INALR"
+    },
+    "INTET": {
+      "sembol": "INTET",
+      "website_ham": "www.intetra.com.tr",
+      "siteler": [
+        "https://www.intetra.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "ISDMR": {
+      "sembol": "ISDMR",
+      "website_ham": "İSKENDERUN DEMİR VE ÇELİK A.Ş. www.isdemir.com.tr /  OYAK MADEN METALÜRJİ GRUBU www.oyakmadenmetalurji.com.tr",
+      "siteler": [
+        "https://www.isdemir.com.tr",
+        "https://www.oyakmadenmetalurji.com.tr"
+      ],
+      "site_adedi": 2
+    },
+    "IYF": {
+      "sembol": "IYF",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:IYF"
+    },
+    "ISVEA": {
+      "sembol": "ISVEA",
+      "website_ham": "www.isvea.com.tr",
+      "siteler": [
+        "https://www.isvea.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "ISFIN": {
+      "sembol": "ISFIN",
+      "website_ham": "www.isleasing.com.tr",
+      "siteler": [
+        "https://www.isleasing.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "ISGYO": {
+      "sembol": "ISGYO",
+      "website_ham": "www.isgyo.com.tr",
+      "siteler": [
+        "https://www.isgyo.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "ISTFK": {
+      "sembol": "ISTFK",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:ISTFK"
+    },
+    "ISTVY": {
+      "sembol": "ISTVY",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:ISTVY"
+    },
+    "ISGSY": {
+      "sembol": "ISGSY",
+      "website_ham": "www.isgirisim.com.tr",
+      "siteler": [
+        "https://www.isgirisim.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "ISFAK": {
+      "sembol": "ISFAK",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:ISFAK"
+    },
+    "ISMEN": {
+      "sembol": "ISMEN",
+      "website_ham": "www.isyatirim.com.tr / www.isinvestment.com",
+      "siteler": [
+        "https://www.isyatirim.com.tr",
+        "https://www.isinvestment.com"
+      ],
+      "site_adedi": 2
+    },
+    "ISYAT": {
+      "sembol": "ISYAT",
+      "website_ham": "www.isyatort.com.tr",
+      "siteler": [
+        "https://www.isyatort.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "ISBIR": {
+      "sembol": "ISBIR",
+      "website_ham": "www.isbir.com.tr",
+      "siteler": [
+        "https://www.isbir.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "ISSEN": {
+      "sembol": "ISSEN",
+      "website_ham": "www.isbirsentetik.com",
+      "siteler": [
+        "https://www.isbirsentetik.com"
+      ],
+      "site_adedi": 1
+    },
+    "IZINV": {
+      "sembol": "IZINV",
+      "website_ham": "www.izyatirimholding.com",
+      "siteler": [
+        "https://www.izyatirimholding.com"
+      ],
+      "site_adedi": 1
+    },
+    "IZENR": {
+      "sembol": "IZENR",
+      "website_ham": "www.izdemirenerji.com",
+      "siteler": [
+        "https://www.izdemirenerji.com"
+      ],
+      "site_adedi": 1
+    },
+    "IYM": {
+      "sembol": "IYM",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:IYM"
+    },
+    "IZMDC": {
+      "sembol": "IZMDC",
+      "website_ham": "www.izdemir.com.tr",
+      "siteler": [
+        "https://www.izdemir.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "IZFAS": {
+      "sembol": "IZFAS",
+      "website_ham": "www.izmirfirca.com.tr",
+      "siteler": [
+        "https://www.izmirfirca.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "JANTS": {
+      "sembol": "JANTS",
+      "website_ham": "www.jantsa.com",
+      "siteler": [
+        "https://www.jantsa.com"
+      ],
+      "site_adedi": 1
+    },
+    "KFEIN": {
+      "sembol": "KFEIN",
+      "website_ham": "www.kafein.com.tr",
+      "siteler": [
+        "https://www.kafein.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "KLKIM": {
+      "sembol": "KLKIM",
+      "website_ham": "www.kalekim.com.tr",
+      "siteler": [
+        "https://www.kalekim.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "KLSER": {
+      "sembol": "KLSER",
+      "website_ham": "www.kale.com.tr",
+      "siteler": [
+        "https://www.kale.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "KLYPV": {
+      "sembol": "KLYPV",
+      "website_ham": "www.kalyonpv.com",
+      "siteler": [
+        "https://www.kalyonpv.com"
+      ],
+      "site_adedi": 1
+    },
+    "KPEKS": {
+      "sembol": "KPEKS",
+      "website_ham": "www.kapeks.com.tr",
+      "siteler": [
+        "https://www.kapeks.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "KLVKS": {
+      "sembol": "KLVKS",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:KLVKS"
+    },
+    "KAPLM": {
+      "sembol": "KAPLM",
+      "website_ham": "www.kaplaminambalaj.com.tr",
+      "siteler": [
+        "https://www.kaplaminambalaj.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "KARCL": {
+      "sembol": "KARCL",
+      "website_ham": "www.kar-demir.com.tr",
+      "siteler": [
+        "https://www.kar-demir.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "KTEST": {
+      "sembol": "KTEST",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:KTEST"
+    },
+    "KRDMA": {
+      "sembol": "KRDMA",
+      "website_ham": "www.kardemir.com",
+      "siteler": [
+        "https://www.kardemir.com"
+      ],
+      "site_adedi": 1
+    },
+    "KPTGY": {
+      "sembol": "KPTGY",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:KPTGY"
+    },
+    "KRDMB": {
+      "sembol": "KRDMB",
+      "website_ham": "www.kardemir.com",
+      "siteler": [
+        "https://www.kardemir.com"
+      ],
+      "site_adedi": 1
+    },
+    "KRDMD": {
+      "sembol": "KRDMD",
+      "website_ham": "www.kardemir.com",
+      "siteler": [
+        "https://www.kardemir.com"
+      ],
+      "site_adedi": 1
+    },
+    "KAREL": {
+      "sembol": "KAREL",
+      "website_ham": "www.karel.com.tr",
+      "siteler": [
+        "https://www.karel.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "KARSN": {
+      "sembol": "KARSN",
+      "website_ham": "www.karsan.com.tr",
+      "siteler": [
+        "https://www.karsan.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "KARTN": {
+      "sembol": "KARTN",
+      "website_ham": "www.Kartonsan.com.tr",
+      "siteler": [
+        "https://www.Kartonsan.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "KRTEK": {
+      "sembol": "KRTEK",
+      "website_ham": "www.karsu.com.tr",
+      "siteler": [
+        "https://www.karsu.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "KTLEV": {
+      "sembol": "KTLEV",
+      "website_ham": "www.katilimevim.com.tr",
+      "siteler": [
+        "https://www.katilimevim.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "KATMR": {
+      "sembol": "KATMR",
+      "website_ham": "www.katmerciler.com.tr",
+      "siteler": [
+        "https://www.katmerciler.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "KAYSE": {
+      "sembol": "KAYSE",
+      "website_ham": "https://www.kayseriseker.com.tr/",
+      "siteler": [
+        "https://www.kayseriseker.com.tr/"
+      ],
+      "site_adedi": 1
+    },
+    "KATVK": {
+      "sembol": "KATVK",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:KATVK"
+    },
+    "KENT": {
+      "sembol": "KENT",
+      "website_ham": "www.kentgida.net",
+      "siteler": [
+        "https://www.kentgida.net"
+      ],
+      "site_adedi": 1
+    },
+    "KRVGD": {
+      "sembol": "KRVGD",
+      "website_ham": "www.kervangida.com",
+      "siteler": [
+        "https://www.kervangida.com"
+      ],
+      "site_adedi": 1
+    },
+    "KFILO": {
+      "sembol": "KFILO",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:KFILO"
+    },
+    "KERVN": {
+      "sembol": "KERVN",
+      "website_ham": "www.kervansarayholding.com.tr",
+      "siteler": [
+        "https://www.kervansarayholding.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "KZBGY": {
+      "sembol": "KZBGY",
+      "website_ham": "www.kizilbukgyo.com",
+      "siteler": [
+        "https://www.kizilbukgyo.com"
+      ],
+      "site_adedi": 1
+    },
+    "KNTFA": {
+      "sembol": "KNTFA",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:KNTFA"
+    },
+    "KLGYO": {
+      "sembol": "KLGYO",
+      "website_ham": "www.kilergyo.com",
+      "siteler": [
+        "https://www.kilergyo.com"
+      ],
+      "site_adedi": 1
+    },
+    "TCKRC": {
+      "sembol": "TCKRC",
+      "website_ham": "www.tck.com.tr",
+      "siteler": [
+        "https://www.tck.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "KLRHO": {
+      "sembol": "KLRHO",
+      "website_ham": "www.kilerholding.com.tr",
+      "siteler": [
+        "https://www.kilerholding.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "KMPUR": {
+      "sembol": "KMPUR",
+      "website_ham": "www.kimpur.com.",
+      "siteler": [
+        "https://www.kimpur.com"
+      ],
+      "site_adedi": 1
+    },
+    "KLMSN": {
+      "sembol": "KLMSN",
+      "website_ham": "www.klimasan.com.tr",
+      "siteler": [
+        "https://www.klimasan.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "KCAER": {
+      "sembol": "KCAER",
+      "website_ham": "www.kocaercelik.com  www.kocaersteel.com",
+      "siteler": [
+        "https://www.kocaercelik.com",
+        "https://www.kocaersteel.com"
+      ],
+      "site_adedi": 2
+    },
+    "KCHOL": {
+      "sembol": "KCHOL",
+      "website_ham": "www.koc.com.tr",
+      "siteler": [
+        "https://www.koc.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "KOCMT": {
+      "sembol": "KOCMT",
+      "website_ham": "www.kocmetalurji.com.tr",
+      "siteler": [
+        "https://www.kocmetalurji.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "KNFRT": {
+      "sembol": "KNFRT",
+      "website_ham": "www.konfrut.com.tr",
+      "siteler": [
+        "https://www.konfrut.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "KLSYN": {
+      "sembol": "KLSYN",
+      "website_ham": "www.koleksiyondesign.com",
+      "siteler": [
+        "https://www.koleksiyondesign.com"
+      ],
+      "site_adedi": 1
+    },
+    "KOCFN": {
+      "sembol": "KOCFN",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:KOCFN"
+    },
+    "KONTR": {
+      "sembol": "KONTR",
+      "website_ham": "www.kontrolmatik.com",
+      "siteler": [
+        "https://www.kontrolmatik.com"
+      ],
+      "site_adedi": 1
+    },
+    "KSFIN": {
+      "sembol": "KSFIN",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:KSFIN"
+    },
+    "KONKA": {
+      "sembol": "KONKA",
+      "website_ham": "www.konyakagit.com.tr",
+      "siteler": [
+        "https://www.konyakagit.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "KONYA": {
+      "sembol": "KONYA",
+      "website_ham": "www.konyacimento.com.tr",
+      "siteler": [
+        "https://www.konyacimento.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "KGYO": {
+      "sembol": "KGYO",
+      "website_ham": "www.koraygyo.com",
+      "siteler": [
+        "https://www.koraygyo.com"
+      ],
+      "site_adedi": 1
+    },
+    "KORDS": {
+      "sembol": "KORDS",
+      "website_ham": "https://kordsa.com",
+      "siteler": [
+        "https://kordsa.com"
+      ],
+      "site_adedi": 1
+    },
+    "KRPLS": {
+      "sembol": "KRPLS",
+      "website_ham": "www.koroplast.com",
+      "siteler": [
+        "https://www.koroplast.com"
+      ],
+      "site_adedi": 1
+    },
+    "KOTON": {
+      "sembol": "KOTON",
+      "website_ham": "www.koton.com",
+      "siteler": [
+        "https://www.koton.com"
+      ],
+      "site_adedi": 1
+    },
+    "KOPOL": {
+      "sembol": "KOPOL",
+      "website_ham": "www.kozapolyester.com.tr",
+      "siteler": [
+        "https://www.kozapolyester.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "KRGYO": {
+      "sembol": "KRGYO",
+      "website_ham": "www.korfezgyo.com.tr",
+      "siteler": [
+        "https://www.korfezgyo.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "KRSTL": {
+      "sembol": "KRSTL",
+      "website_ham": "www.kristalkola.com.tr",
+      "siteler": [
+        "https://www.kristalkola.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "KRONT": {
+      "sembol": "KRONT",
+      "website_ham": "www.kron.com.tr , www.krontech.com",
+      "siteler": [
+        "https://www.kron.com.tr",
+        "https://www.krontech.com"
+      ],
+      "site_adedi": 2
+    },
+    "KORTS": {
+      "sembol": "KORTS",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:KORTS"
+    },
+    "KUVVA": {
+      "sembol": "KUVVA",
+      "website_ham": "www.serve.com.tr",
+      "siteler": [
+        "https://www.serve.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "KUYAS": {
+      "sembol": "KUYAS",
+      "website_ham": "www.kuyas.com.tr",
+      "siteler": [
+        "https://www.kuyas.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "KSTUR": {
+      "sembol": "KSTUR",
+      "website_ham": "www.kusturclub.com",
+      "siteler": [
+        "https://www.kusturclub.com"
+      ],
+      "site_adedi": 1
+    },
+    "KBORU": {
+      "sembol": "KBORU",
+      "website_ham": "www.kuzeyboru.com.tr ; https://kuzeyboruyatirimciiliskileri.com/",
+      "siteler": [
+        "https://www.kuzeyboru.com.tr",
+        "https://kuzeyboruyatirimciiliskileri.com/"
+      ],
+      "site_adedi": 2
+    },
+    "KTKVK": {
+      "sembol": "KTKVK",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:KTKVK"
+    },
+    "KTSVK": {
+      "sembol": "KTSVK",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:KTSVK"
+    },
+    "KZGYO": {
+      "sembol": "KZGYO",
+      "website_ham": "www.kzgyo.com",
+      "siteler": [
+        "https://www.kzgyo.com"
+      ],
+      "site_adedi": 1
+    },
+    "KUTPO": {
+      "sembol": "KUTPO",
+      "website_ham": "www.kutahyaporselen.com.tr",
+      "siteler": [
+        "https://www.kutahyaporselen.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "KTSKR": {
+      "sembol": "KTSKR",
+      "website_ham": "www.kutahyaseker.com.tr",
+      "siteler": [
+        "https://www.kutahyaseker.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "LIDER": {
+      "sembol": "LIDER",
+      "website_ham": "www.liderfilo.com.tr",
+      "siteler": [
+        "https://www.liderfilo.com.tr"
+      ],
+      "site_adedi": 1
+    },
+    "LILAK": {
+      "sembol": "LILAK",
+      "website_ham": "www.lilakagit.com",
+      "siteler": [
+        "https://www.lilakagit.com"
+      ],
+      "site_adedi": 1
+    },
+    "LMKDC": {
+      "sembol": "LMKDC",
+      "website_ham": "www.limakdoguanadolucimento.com",
+      "siteler": [
+        "https://www.limakdoguanadolucimento.com"
+      ],
+      "site_adedi": 1
+    },
+    "LINK": {
+      "sembol": "LINK",
+      "website_ham": "www.link.com.tr",
+      "siteler": [
+        "https://www.link.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "LOGO": {
+      "sembol": "LOGO",
+      "website_ham": "www.logo.com.tr",
+      "siteler": [
+        "https://www.logo.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "LKMNH": {
+      "sembol": "LKMNH",
+      "website_ham": "www.lokmanhekim.com.tr ve www.ir.lokmanhekim.com.tr",
+      "siteler": [
+        "https://www.lokmanhekim.com.tr",
+        "https://www.ir.lokmanhekim.com.tr"
+      ],
+      "site_adedi": 2,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "LXGYO": {
+      "sembol": "LXGYO",
+      "website_ham": "www.luxera.com.tr",
+      "siteler": [
+        "https://www.luxera.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "LRSHO": {
+      "sembol": "LRSHO",
+      "website_ham": "www.lorasholding.com",
+      "siteler": [
+        "https://www.lorasholding.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "LUKSK": {
+      "sembol": "LUKSK",
+      "website_ham": "www.lukskadife.com.tr",
+      "siteler": [
+        "https://www.lukskadife.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "LYDHO": {
+      "sembol": "LYDHO",
+      "website_ham": "www.lydiaholding.com",
+      "siteler": [
+        "https://www.lydiaholding.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "LYDYE": {
+      "sembol": "LYDYE",
+      "website_ham": "www.lydiayesilenerji.com",
+      "siteler": [
+        "https://www.lydiayesilenerji.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "MAKIM": {
+      "sembol": "MAKIM",
+      "website_ham": "https://www.makim.com.tr",
+      "siteler": [
+        "https://www.makim.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "MACKO": {
+      "sembol": "MACKO",
+      "website_ham": "www.mackolik.com",
+      "siteler": [
+        "https://www.mackolik.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "MAKTK": {
+      "sembol": "MAKTK",
+      "website_ham": "www.makinatakim.com.tr",
+      "siteler": [
+        "https://www.makinatakim.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "MANAS": {
+      "sembol": "MANAS",
+      "website_ham": "www.manas.com.tr",
+      "siteler": [
+        "https://www.manas.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "MAGEN": {
+      "sembol": "MAGEN",
+      "website_ham": "www.margunenerji.com.tr",
+      "siteler": [
+        "https://www.margunenerji.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "MARMR": {
+      "sembol": "MARMR",
+      "website_ham": "www.marmaraholding.net",
+      "siteler": [
+        "https://www.marmaraholding.net"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "MRBAS": {
+      "sembol": "MRBAS",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:MRBAS"
+    },
+    "MAALT": {
+      "sembol": "MAALT",
+      "website_ham": "www.mares.com.tr",
+      "siteler": [
+        "https://www.mares.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "MRS": {
+      "sembol": "MRS",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:MRS"
+    },
+    "MRSHL": {
+      "sembol": "MRSHL",
+      "website_ham": "www.marshallboya.com",
+      "siteler": [
+        "https://www.marshallboya.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "MARTI": {
+      "sembol": "MARTI",
+      "website_ham": "www.marti.com.tr",
+      "siteler": [
+        "https://www.marti.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "MAVI": {
+      "sembol": "MAVI",
+      "website_ham": "www.mavi.com www.maviyatirimciliskileri.com www.mavicompany.com",
+      "siteler": [
+        "https://www.mavi.com",
+        "https://www.maviyatirimciliskileri.com",
+        "https://www.mavicompany.com"
+      ],
+      "site_adedi": 3,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "MTRKS": {
+      "sembol": "MTRKS",
+      "website_ham": "https://www.matriksdata.com/website/",
+      "siteler": [
+        "https://www.matriksdata.com/website/"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "MZHLD": {
+      "sembol": "MZHLD",
+      "website_ham": "www.mazharzorlu.com",
+      "siteler": [
+        "https://www.mazharzorlu.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "MEDTR": {
+      "sembol": "MEDTR",
+      "website_ham": "www.meditera.com.tr",
+      "siteler": [
+        "https://www.meditera.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "LIDFA": {
+      "sembol": "LIDFA",
+      "website_ham": "www.liderfaktoring.com.tr",
+      "siteler": [
+        "https://www.liderfaktoring.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "MEGMT": {
+      "sembol": "MEGMT",
+      "website_ham": "www.megametal.com.tr",
+      "siteler": [
+        "https://www.megametal.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "MEGAP": {
+      "sembol": "MEGAP",
+      "website_ham": "http://www.mega-pol.com.tr/ &amp; http://www.megaorme.com",
+      "siteler": [
+        "http://www.mega-pol.com.tr/",
+        "http://www.megaorme.com"
+      ],
+      "site_adedi": 2,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "MEKAG": {
+      "sembol": "MEKAG",
+      "website_ham": "www.mekaglobal.com/tr",
+      "siteler": [
+        "https://www.mekaglobal.com/tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "MDIAZ": {
+      "sembol": "MDIAZ",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:MDIAZ"
+    },
+    "MNDRS": {
+      "sembol": "MNDRS",
+      "website_ham": "menderes.com",
+      "siteler": [
+        "https://menderes.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "MERCN": {
+      "sembol": "MERCN",
+      "website_ham": "www.mercankimya.com.tr",
+      "siteler": [
+        "https://www.mercankimya.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "MEKMD": {
+      "sembol": "MEKMD",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:MEKMD"
+    },
+    "MSA": {
+      "sembol": "MSA",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:MSA"
+    },
+    "MRBKF": {
+      "sembol": "MRBKF",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:MRBKF"
+    },
+    "MBFTR": {
+      "sembol": "MBFTR",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:MBFTR"
+    },
+    "MRGYO": {
+      "sembol": "MRGYO",
+      "website_ham": "www.martigyo.com",
+      "siteler": [
+        "https://www.martigyo.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "MERKO": {
+      "sembol": "MERKO",
+      "website_ham": "www.merko.com.tr",
+      "siteler": [
+        "https://www.merko.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "METEN": {
+      "sembol": "METEN",
+      "website_ham": "https://metgunenerji.com.tr/",
+      "siteler": [
+        "https://metgunenerji.com.tr/"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "METRO": {
+      "sembol": "METRO",
+      "website_ham": "http://www.metroholding.com.tr/",
+      "siteler": [
+        "http://www.metroholding.com.tr/"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "MASFN": {
+      "sembol": "MASFN",
+      "website_ham": "www.masfen.com.tr",
+      "siteler": [
+        "https://www.masfen.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "MTRYO": {
+      "sembol": "MTRYO",
+      "website_ham": "www.metroyo.com",
+      "siteler": [
+        "https://www.metroyo.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "MCARD": {
+      "sembol": "MCARD",
+      "website_ham": "www.metropolcard.com",
+      "siteler": [
+        "https://www.metropolcard.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "MEYSU": {
+      "sembol": "MEYSU",
+      "website_ham": "www.meysu.com.tr",
+      "siteler": [
+        "https://www.meysu.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "MHRGY": {
+      "sembol": "MHRGY",
+      "website_ham": "www.mhrgyo.com.tr",
+      "siteler": [
+        "https://www.mhrgyo.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "MIATK": {
+      "sembol": "MIATK",
+      "website_ham": "www.miateknoloji.com",
+      "siteler": [
+        "https://www.miateknoloji.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "MDASM": {
+      "sembol": "MDASM",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:MDASM"
+    },
+    "MDS": {
+      "sembol": "MDS",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:MDS"
+    },
+    "MILKS": {
+      "sembol": "MILKS",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:MILKS"
+    },
+    "MSGYO": {
+      "sembol": "MSGYO",
+      "website_ham": "www.mistralgyo.com.tr",
+      "siteler": [
+        "https://www.mistralgyo.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "MINTF": {
+      "sembol": "MINTF",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:MINTF"
+    },
+    "MPARK": {
+      "sembol": "MPARK",
+      "website_ham": "http://www.mlpcare.com  http://investor.mlpcare.com",
+      "siteler": [
+        "http://www.mlpcare.com",
+        "http://investor.mlpcare.com"
+      ],
+      "site_adedi": 2,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "MSY": {
+      "sembol": "MSY",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:MSY"
+    },
+    "MSYBN": {
+      "sembol": "MSYBN",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:MSYBN"
+    },
+    "MEPET": {
+      "sembol": "MEPET",
+      "website_ham": "www.metropetrol.com.tr",
+      "siteler": [
+        "https://www.metropetrol.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "MMCAS": {
+      "sembol": "MMCAS",
+      "website_ham": "www.mmcyatirim.com",
+      "siteler": [
+        "https://www.mmcyatirim.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "MOBTL": {
+      "sembol": "MOBTL",
+      "website_ham": "www.mobiltel.com.tr",
+      "siteler": [
+        "https://www.mobiltel.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "MOGAN": {
+      "sembol": "MOGAN",
+      "website_ham": "www.mogan.com.tr",
+      "siteler": [
+        "https://www.mogan.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "MNDTR": {
+      "sembol": "MNDTR",
+      "website_ham": "www.mondigroup.com.tr",
+      "siteler": [
+        "https://www.mondigroup.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "MOPAS": {
+      "sembol": "MOPAS",
+      "website_ham": "www.mopas.com.tr",
+      "siteler": [
+        "https://www.mopas.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "MERIT": {
+      "sembol": "MERIT",
+      "website_ham": "www.meritturizm.com www.merithotels.com",
+      "siteler": [
+        "https://www.meritturizm.com",
+        "https://www.merithotels.com"
+      ],
+      "site_adedi": 2,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "MNGFA": {
+      "sembol": "MNGFA",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:MNGFA"
+    },
+    "NATEN": {
+      "sembol": "NATEN",
+      "website_ham": "www.naturelenerji.com.tr",
+      "siteler": [
+        "https://www.naturelenerji.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "NTGAZ": {
+      "sembol": "NTGAZ",
+      "website_ham": "www.naturelgaz.com",
+      "siteler": [
+        "https://www.naturelgaz.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "NETGL": {
+      "sembol": "NETGL",
+      "website_ham": "www.netglolbaley.com",
+      "siteler": [
+        "https://www.netglolbaley.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "NETCD": {
+      "sembol": "NETCD",
+      "website_ham": "www.netcad.com.tr",
+      "siteler": [
+        "https://www.netcad.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "NETAS": {
+      "sembol": "NETAS",
+      "website_ham": "www.netas.com.tr",
+      "siteler": [
+        "https://www.netas.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "NIBAS": {
+      "sembol": "NIBAS",
+      "website_ham": "www.nigbas.com.tr",
+      "siteler": [
+        "https://www.nigbas.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "NUHCM": {
+      "sembol": "NUHCM",
+      "website_ham": "www.nuhcimento.com.tr",
+      "siteler": [
+        "https://www.nuhcimento.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "NURVK": {
+      "sembol": "NURVK",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:NURVK"
+    },
+    "MGROS": {
+      "sembol": "MGROS",
+      "website_ham": "www.migroskurumsal.com",
+      "siteler": [
+        "https://www.migroskurumsal.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "NRBNK": {
+      "sembol": "NRBNK",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:NRBNK"
+    },
+    "OBASE": {
+      "sembol": "OBASE",
+      "website_ham": "https://obase.com/tr",
+      "siteler": [
+        "https://obase.com/tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "ODAS": {
+      "sembol": "ODAS",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:ODAS"
+    },
+    "NYB": {
+      "sembol": "NYB",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:NYB"
+    },
+    "ODINE": {
+      "sembol": "ODINE",
+      "website_ham": "www.odine.com",
+      "siteler": [
+        "https://www.odine.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "OFSYM": {
+      "sembol": "OFSYM",
+      "website_ham": "www.ofisyem.com.tr",
+      "siteler": [
+        "https://www.ofisyem.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "ONCSM": {
+      "sembol": "ONCSM",
+      "website_ham": "www.oncosem.com",
+      "siteler": [
+        "https://www.oncosem.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "ONRYT": {
+      "sembol": "ONRYT",
+      "website_ham": "www.onur.net",
+      "siteler": [
+        "https://www.onur.net"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "NUGYO": {
+      "sembol": "NUGYO",
+      "website_ham": "www.nurolgyo.com.tr",
+      "siteler": [
+        "https://www.nurolgyo.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "OPET": {
+      "sembol": "OPET",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:OPET"
+    },
+    "EGEPO": {
+      "sembol": "EGEPO",
+      "website_ham": "www.egepolhastanesi.com",
+      "siteler": [
+        "https://www.egepolhastanesi.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "ORGE": {
+      "sembol": "ORGE",
+      "website_ham": "www.orge.com.tr",
+      "siteler": [
+        "https://www.orge.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "ORMA": {
+      "sembol": "ORMA",
+      "website_ham": "www.orma.com.tr",
+      "siteler": [
+        "https://www.orma.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "ORFIN": {
+      "sembol": "ORFIN",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:ORFIN"
+    },
+    "NTHOL": {
+      "sembol": "NTHOL",
+      "website_ham": "www.netholding.com",
+      "siteler": [
+        "https://www.netholding.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "OBAMS": {
+      "sembol": "OBAMS",
+      "website_ham": "https://www.obamakarna.com.tr/",
+      "siteler": [
+        "https://www.obamakarna.com.tr/"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "OSMEN": {
+      "sembol": "OSMEN",
+      "website_ham": "www.osmanlimenkul.com.tr",
+      "siteler": [
+        "https://www.osmanlimenkul.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "ORZAX": {
+      "sembol": "ORZAX",
+      "website_ham": "https://www.orzax.com.tr/",
+      "siteler": [
+        "https://www.orzax.com.tr/"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "ORCAY": {
+      "sembol": "ORCAY",
+      "website_ham": "www.orcay.com.tr",
+      "siteler": [
+        "https://www.orcay.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "OSTIM": {
+      "sembol": "OSTIM",
+      "website_ham": "www.ostimyatirim.com.tr",
+      "siteler": [
+        "https://www.ostimyatirim.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "OTKAR": {
+      "sembol": "OTKAR",
+      "website_ham": "www.otokar.com.tr",
+      "siteler": [
+        "https://www.otokar.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "OSVKS": {
+      "sembol": "OSVKS",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:OSVKS"
+    },
+    "OTTO": {
+      "sembol": "OTTO",
+      "website_ham": "www.ottoholding.com.tr",
+      "siteler": [
+        "https://www.ottoholding.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "OMD": {
+      "sembol": "OMD",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:OMD"
+    },
+    "OYAKC": {
+      "sembol": "OYAKC",
+      "website_ham": "www.oyakcimento.com.tr",
+      "siteler": [
+        "https://www.oyakcimento.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "OYAYO": {
+      "sembol": "OYAYO",
+      "website_ham": "www.oyakyatirimortakligi.com.tr",
+      "siteler": [
+        "https://www.oyakyatirimortakligi.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "OYYAT": {
+      "sembol": "OYYAT",
+      "website_ham": "www.oyakyatirim.com.tr",
+      "siteler": [
+        "https://www.oyakyatirim.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "OYLUM": {
+      "sembol": "OYLUM",
+      "website_ham": "www.oylum.com",
+      "siteler": [
+        "https://www.oylum.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "OTOSR": {
+      "sembol": "OTOSR",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:OTOSR"
+    },
+    "OZKGY": {
+      "sembol": "OZKGY",
+      "website_ham": "www.ozakgyo.com",
+      "siteler": [
+        "https://www.ozakgyo.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "OZATD": {
+      "sembol": "OZATD",
+      "website_ham": "https://www.ozatadenizcilik.com",
+      "siteler": [
+        "https://www.ozatadenizcilik.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "OYA": {
+      "sembol": "OYA",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:OYA"
+    },
+    "OZGYO": {
+      "sembol": "OZGYO",
+      "website_ham": "www.ozdericigyo.com.tr",
+      "siteler": [
+        "https://www.ozdericigyo.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "OZRDN": {
+      "sembol": "OZRDN",
+      "website_ham": "www.ozerden.com",
+      "siteler": [
+        "https://www.ozerden.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "OZSUB": {
+      "sembol": "OZSUB",
+      "website_ham": "https://www.ozsubalik.com.tr/",
+      "siteler": [
+        "https://www.ozsubalik.com.tr/"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "OZYSR": {
+      "sembol": "OZYSR",
+      "website_ham": "www.ozyasar.com.tr",
+      "siteler": [
+        "https://www.ozyasar.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "PAMEL": {
+      "sembol": "PAMEL",
+      "website_ham": "www.pamel.com.tr",
+      "siteler": [
+        "https://www.pamel.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "PNLSN": {
+      "sembol": "PNLSN",
+      "website_ham": "www.panelsan.com",
+      "siteler": [
+        "https://www.panelsan.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "PAGYO": {
+      "sembol": "PAGYO",
+      "website_ham": "www.panoragyo.com",
+      "siteler": [
+        "https://www.panoragyo.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "PAPIL": {
+      "sembol": "PAPIL",
+      "website_ham": "invest.papilon.com.tr",
+      "siteler": [
+        "https://invest.papilon.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "PRDGS": {
+      "sembol": "PRDGS",
+      "website_ham": "www.pardusgirisim.com",
+      "siteler": [
+        "https://www.pardusgirisim.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "PRKME": {
+      "sembol": "PRKME",
+      "website_ham": "www.parkelektrik.com.tr",
+      "siteler": [
+        "https://www.parkelektrik.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "PARSN": {
+      "sembol": "PARSN",
+      "website_ham": "www.parsan.com",
+      "siteler": [
+        "https://www.parsan.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "PRFFK": {
+      "sembol": "PRFFK",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:PRFFK"
+    },
+    "PASEU": {
+      "sembol": "PASEU",
+      "website_ham": "www.pasifikeurasia.com.tr",
+      "siteler": [
+        "https://www.pasifikeurasia.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "PSGYO": {
+      "sembol": "PSGYO",
+      "website_ham": "https://www.pasifikgyo.com.tr/",
+      "siteler": [
+        "https://www.pasifikgyo.com.tr/"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "PAHOL": {
+      "sembol": "PAHOL",
+      "website_ham": "www.pasifik.com",
+      "siteler": [
+        "https://www.pasifik.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "PBT": {
+      "sembol": "PBT",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:PBT"
+    },
+    "PATEK": {
+      "sembol": "PATEK",
+      "website_ham": "www.pasifikteknoloji.com",
+      "siteler": [
+        "https://www.pasifikteknoloji.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "PCILT": {
+      "sembol": "PCILT",
+      "website_ham": "https://www.pciletisimmedya.com/",
+      "siteler": [
+        "https://www.pciletisimmedya.com/"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "PBTR": {
+      "sembol": "PBTR",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:PBTR"
+    },
+    "PGSUS": {
+      "sembol": "PGSUS",
+      "website_ham": "Kurumsal İnternet Sitesi: www.flypgs.com / Yatırımcı İlişkileri İnternet Sitesi: http://www.pegasusyatirimciiliskileri.com/tr/default.aspx",
+      "siteler": [
+        "https://www.flypgs.com",
+        "http://www.pegasusyatirimciiliskileri.com/tr/default.aspx"
+      ],
+      "site_adedi": 2,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "PEKGY": {
+      "sembol": "PEKGY",
+      "website_ham": "www.pekergyo.com",
+      "siteler": [
+        "https://www.pekergyo.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "PENGD": {
+      "sembol": "PENGD",
+      "website_ham": "www.penguen.com.tr",
+      "siteler": [
+        "https://www.penguen.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "PENTA": {
+      "sembol": "PENTA",
+      "website_ham": "www.penta.com.tr",
+      "siteler": [
+        "https://www.penta.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "PETKM": {
+      "sembol": "PETKM",
+      "website_ham": "www.petkim.com.tr",
+      "siteler": [
+        "https://www.petkim.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "PKENT": {
+      "sembol": "PKENT",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": ""
+    },
+    "PSDTC": {
+      "sembol": "PSDTC",
+      "website_ham": "www.psdisticaret.com.tr",
+      "siteler": [
+        "https://www.psdisticaret.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "PETUN": {
+      "sembol": "PETUN",
+      "website_ham": "www.pinar.com.tr",
+      "siteler": [
+        "https://www.pinar.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "PINSU": {
+      "sembol": "PINSU",
+      "website_ham": "www.pinarsu.com.tr",
+      "siteler": [
+        "https://www.pinarsu.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "PNSUT": {
+      "sembol": "PNSUT",
+      "website_ham": "www.pinar.com.tr",
+      "siteler": [
+        "https://www.pinar.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "PKART": {
+      "sembol": "PKART",
+      "website_ham": "www.plastkart.com.tr",
+      "siteler": [
+        "https://www.plastkart.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "PLTUR": {
+      "sembol": "PLTUR",
+      "website_ham": "www.platformturizm.com",
+      "siteler": [
+        "https://www.platformturizm.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "POLHO": {
+      "sembol": "POLHO",
+      "website_ham": "www.polisanholding.com.tr",
+      "siteler": [
+        "https://www.polisanholding.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "POLTK": {
+      "sembol": "POLTK",
+      "website_ham": "www.pm.com.tr",
+      "siteler": [
+        "https://www.pm.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "PRZMA": {
+      "sembol": "PRZMA",
+      "website_ham": "www.prizmapress.com.tr",
+      "siteler": [
+        "https://www.prizmapress.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "QNBTR": {
+      "sembol": "QNBTR",
+      "website_ham": "www.qnb.com.tr",
+      "siteler": [
+        "https://www.qnb.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "QYATB": {
+      "sembol": "QYATB",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:QYATB"
+    },
+    "YBQ": {
+      "sembol": "YBQ",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:YBQ"
+    },
+    "QYHOL": {
+      "sembol": "QYHOL",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:QYHOL"
+    },
+    "FIN": {
+      "sembol": "FIN",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:FIN"
+    },
+    "QNBFK": {
+      "sembol": "QNBFK",
+      "website_ham": "www.qnbleasing.com.tr",
+      "siteler": [
+        "https://www.qnbleasing.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "QUAGR": {
+      "sembol": "QUAGR",
+      "website_ham": "www.qua.com.tr",
+      "siteler": [
+        "https://www.qua.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "QNBFF": {
+      "sembol": "QNBFF",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:QNBFF"
+    },
+    "QUICK": {
+      "sembol": "QUICK",
+      "website_ham": "www.quicksigorta.com",
+      "siteler": [
+        "https://www.quicksigorta.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "RNPOL": {
+      "sembol": "RNPOL",
+      "website_ham": "http://www.rainbowpc.com.tr",
+      "siteler": [
+        "http://www.rainbowpc.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "RALYH": {
+      "sembol": "RALYH",
+      "website_ham": "www.ralyatirim.com",
+      "siteler": [
+        "https://www.ralyatirim.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "RAYSG": {
+      "sembol": "RAYSG",
+      "website_ham": "www.raysigorta.com.tr",
+      "siteler": [
+        "https://www.raysigorta.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "QNBVK": {
+      "sembol": "QNBVK",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:QNBVK"
+    },
+    "REEDR": {
+      "sembol": "REEDR",
+      "website_ham": "www.reeder.com.tr",
+      "siteler": [
+        "https://www.reeder.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "QUFIN": {
+      "sembol": "QUFIN",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:QUFIN"
+    },
+    "RODRG": {
+      "sembol": "RODRG",
+      "website_ham": "www.rodrigo.com.tr",
+      "siteler": [
+        "https://www.rodrigo.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "RYGYO": {
+      "sembol": "RYGYO",
+      "website_ham": "www.reysasgyo.com.tr",
+      "siteler": [
+        "https://www.reysasgyo.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "RYSAS": {
+      "sembol": "RYSAS",
+      "website_ham": "www.reysas.com",
+      "siteler": [
+        "https://www.reysas.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "RGYAS": {
+      "sembol": "RGYAS",
+      "website_ham": "www.rgy.com.tr",
+      "siteler": [
+        "https://www.rgy.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "RUBNS": {
+      "sembol": "RUBNS",
+      "website_ham": "https://www.rubenis.com",
+      "siteler": [
+        "https://www.rubenis.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "RTALB": {
+      "sembol": "RTALB",
+      "website_ham": "www.rtalabs.com.tr",
+      "siteler": [
+        "https://www.rtalabs.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "SAFKR": {
+      "sembol": "SAFKR",
+      "website_ham": "http://www.safkar.com/",
+      "siteler": [
+        "http://www.safkar.com/"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "SSAAT": {
+      "sembol": "SSAAT",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": ""
+    },
+    "RUZYE": {
+      "sembol": "RUZYE",
+      "website_ham": "www.ruzymadencilik.com.tr",
+      "siteler": [
+        "https://www.ruzymadencilik.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "SANEL": {
+      "sembol": "SANEL",
+      "website_ham": "www.san-el.com",
+      "siteler": [
+        "https://www.san-el.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "SNICA": {
+      "sembol": "SNICA",
+      "website_ham": "https://www.sanicaisi.com.tr/",
+      "siteler": [
+        "https://www.sanicaisi.com.tr/"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "SANFM": {
+      "sembol": "SANFM",
+      "website_ham": "www.sanifoam.com.tr",
+      "siteler": [
+        "https://www.sanifoam.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "SANKO": {
+      "sembol": "SANKO",
+      "website_ham": "www.sankopazarlama.com.tr",
+      "siteler": [
+        "https://www.sankopazarlama.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "SAMAT": {
+      "sembol": "SAMAT",
+      "website_ham": "www.saraymatbaa.com.tr",
+      "siteler": [
+        "https://www.saraymatbaa.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "SARKY": {
+      "sembol": "SARKY",
+      "website_ham": "www.sarkuysan.com",
+      "siteler": [
+        "https://www.sarkuysan.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "SASA": {
+      "sembol": "SASA",
+      "website_ham": "www.sasa.com.tr",
+      "siteler": [
+        "https://www.sasa.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "SVGYO": {
+      "sembol": "SVGYO",
+      "website_ham": "www.savurgyo.com.tr",
+      "siteler": [
+        "https://www.savurgyo.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "SAYAS": {
+      "sembol": "SAYAS",
+      "website_ham": "www.sayas-re.com; www.sayreklam.com; www.sayyatirimciiliskileri.com",
+      "siteler": [
+        "https://www.sayas-re.com",
+        "https://www.sayreklam.com",
+        "https://www.sayyatirimciiliskileri.com"
+      ],
+      "site_adedi": 3,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "SDTTR": {
+      "sembol": "SDTTR",
+      "website_ham": "www.sdt.com.tr",
+      "siteler": [
+        "https://www.sdt.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "SARTN": {
+      "sembol": "SARTN",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:SARTN"
+    },
+    "SEGMN": {
+      "sembol": "SEGMN",
+      "website_ham": "www.segmen.com.tr",
+      "siteler": [
+        "https://www.segmen.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "SEKUR": {
+      "sembol": "SEKUR",
+      "website_ham": "www.sekuro.com.tr",
+      "siteler": [
+        "https://www.sekuro.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "SELEC": {
+      "sembol": "SELEC",
+      "website_ham": "www.selcukecza.com.tr",
+      "siteler": [
+        "https://www.selcukecza.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "SELVA": {
+      "sembol": "SELVA",
+      "website_ham": "www.selva.com.tr",
+      "siteler": [
+        "https://www.selva.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "SERNT": {
+      "sembol": "SERNT",
+      "website_ham": "www.seranit.com.tr / https://www.seranit.com.tr/tr/yatirimci-iliskileri/12",
+      "siteler": [
+        "https://www.seranit.com.tr",
+        "https://www.seranit.com.tr/tr/yatirimci-iliskileri/12"
+      ],
+      "site_adedi": 2,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "SRVGY": {
+      "sembol": "SRVGY",
+      "website_ham": "www.servetgyo.com.tr",
+      "siteler": [
+        "https://www.servetgyo.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "SEYKM": {
+      "sembol": "SEYKM",
+      "website_ham": "www.seyitler.com",
+      "siteler": [
+        "https://www.seyitler.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "SILVR": {
+      "sembol": "SILVR",
+      "website_ham": "www.silverline.com.tr",
+      "siteler": [
+        "https://www.silverline.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "SNGYO": {
+      "sembol": "SNGYO",
+      "website_ham": "https://sinpasgyo.com/",
+      "siteler": [
+        "https://sinpasgyo.com/"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "SKYLP": {
+      "sembol": "SKYLP",
+      "website_ham": "www.skyalp.com.tr",
+      "siteler": [
+        "https://www.skyalp.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "SMRTG": {
+      "sembol": "SMRTG",
+      "website_ham": "www.smartsolar.com.tr",
+      "siteler": [
+        "https://www.smartsolar.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "SMART": {
+      "sembol": "SMART",
+      "website_ham": "www.smartiks.com.tr",
+      "siteler": [
+        "https://www.smartiks.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "SODSN": {
+      "sembol": "SODSN",
+      "website_ham": "www.sodas.com.tr",
+      "siteler": [
+        "https://www.sodas.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "SOHOE": {
+      "sembol": "SOHOE",
+      "website_ham": "https://www.sohocompany.com.tr",
+      "siteler": [
+        "https://www.sohocompany.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "SOKE": {
+      "sembol": "SOKE",
+      "website_ham": "www.soke.com.tr",
+      "siteler": [
+        "https://www.soke.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "SKTAS": {
+      "sembol": "SKTAS",
+      "website_ham": "www.soktasgroup.com",
+      "siteler": [
+        "https://www.soktasgroup.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "SONME": {
+      "sembol": "SONME",
+      "website_ham": "www.sonmezfilament.com.tr",
+      "siteler": [
+        "https://www.sonmezfilament.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "SNPAM": {
+      "sembol": "SNPAM",
+      "website_ham": "www.sonmezpamuklu.com.tr",
+      "siteler": [
+        "https://www.sonmezpamuklu.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "SUMAS": {
+      "sembol": "SUMAS",
+      "website_ham": "www.sumas.com.tr",
+      "siteler": [
+        "https://www.sumas.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "SUNTK": {
+      "sembol": "SUNTK",
+      "website_ham": "www.suntekstil.com.tr",
+      "siteler": [
+        "https://www.suntekstil.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "SURGY": {
+      "sembol": "SURGY",
+      "website_ham": "www.surtatilevlerigyo.com.tr",
+      "siteler": [
+        "https://www.surtatilevlerigyo.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "SUWEN": {
+      "sembol": "SUWEN",
+      "website_ham": "www.suwen.com.tr - www.suwencompany.com",
+      "siteler": [
+        "https://www.suwen.com.tr",
+        "https://www.suwencompany.com"
+      ],
+      "site_adedi": 2,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "SMRVA": {
+      "sembol": "SMRVA",
+      "website_ham": "www.sumervarlik.com.tr",
+      "siteler": [
+        "https://www.sumervarlik.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "SARAE": {
+      "sembol": "SARAE",
+      "website_ham": "https://sara-enerji.com/",
+      "siteler": [
+        "https://sara-enerji.com/"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "SEKFK": {
+      "sembol": "SEKFK",
+      "website_ham": "www.sekerleasing.com.tr",
+      "siteler": [
+        "https://www.sekerleasing.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "SEGYO": {
+      "sembol": "SEGYO",
+      "website_ham": "www.sekergyo.com.tr",
+      "siteler": [
+        "https://www.sekergyo.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "SMRFA": {
+      "sembol": "SMRFA",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:SMRFA"
+    },
+    "SKYMD": {
+      "sembol": "SKYMD",
+      "website_ham": "www.sekeryatirim.com.tr",
+      "siteler": [
+        "https://www.sekeryatirim.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "SKBNK": {
+      "sembol": "SKBNK",
+      "website_ham": "www.sekerbank.com.tr",
+      "siteler": [
+        "https://www.sekerbank.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "SOKM": {
+      "sembol": "SOKM",
+      "website_ham": "www.sokmarket.com.tr",
+      "siteler": [
+        "https://www.sokmarket.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "TABGD": {
+      "sembol": "TABGD",
+      "website_ham": "https://www.tabgida.com.tr",
+      "siteler": [
+        "https://www.tabgida.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "SKY": {
+      "sembol": "SKY",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:SKY"
+    },
+    "SEK": {
+      "sembol": "SEK",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:SEK"
+    },
+    "TNZTP": {
+      "sembol": "TNZTP",
+      "website_ham": "https://tinaztepe.com",
+      "siteler": [
+        "https://tinaztepe.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "TARKM": {
+      "sembol": "TARKM",
+      "website_ham": "www.tarkimbk.com.tr",
+      "siteler": [
+        "https://www.tarkimbk.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "TATGD": {
+      "sembol": "TATGD",
+      "website_ham": "www.tatgida.com",
+      "siteler": [
+        "https://www.tatgida.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "TAC": {
+      "sembol": "TAC",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:TAC"
+    },
+    "TCRYT": {
+      "sembol": "TCRYT",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:TCRYT"
+    },
+    "TAMFA": {
+      "sembol": "TAMFA",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:TAMFA"
+    },
+    "TATEN": {
+      "sembol": "TATEN",
+      "website_ham": "www.tatlipinarenerji.com.tr",
+      "siteler": [
+        "https://www.tatlipinarenerji.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "TARFN": {
+      "sembol": "TARFN",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:TARFN"
+    },
+    "TAVHL": {
+      "sembol": "TAVHL",
+      "website_ham": "www.tavhavalimanlari.com.tr",
+      "siteler": [
+        "https://www.tavhavalimanlari.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "TEKTU": {
+      "sembol": "TEKTU",
+      "website_ham": "www.tek-artinsaat.com",
+      "siteler": [
+        "https://www.tek-artinsaat.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "TKFEN": {
+      "sembol": "TKFEN",
+      "website_ham": "www.tekfen.com.tr",
+      "siteler": [
+        "https://www.tekfen.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "TKNKA": {
+      "sembol": "TKNKA",
+      "website_ham": "www.teknikaplast.com.tr",
+      "siteler": [
+        "https://www.teknikaplast.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "TKNSA": {
+      "sembol": "TKNSA",
+      "website_ham": "www.teknosa.com",
+      "siteler": [
+        "https://www.teknosa.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "TMPOL": {
+      "sembol": "TMPOL",
+      "website_ham": "www.temapol.com.tr",
+      "siteler": [
+        "https://www.temapol.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "DRPHN": {
+      "sembol": "DRPHN",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:DRPHN"
+    },
+    "TEBFA": {
+      "sembol": "TEBFA",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:TEBFA"
+    },
+    "TRHOL": {
+      "sembol": "TRHOL",
+      "website_ham": "www.terafinansalyatirimlar.com",
+      "siteler": [
+        "https://www.terafinansalyatirimlar.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "TERA": {
+      "sembol": "TERA",
+      "website_ham": "www.terayatirim.com",
+      "siteler": [
+        "https://www.terayatirim.com"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "TRFFA": {
+      "sembol": "TRFFA",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:TRFFA"
+    },
+    "TEHOL": {
+      "sembol": "TEHOL",
+      "website_ham": "www.terayatirimteknoloji.com.tr",
+      "siteler": [
+        "https://www.terayatirimteknoloji.com.tr"
+      ],
+      "site_adedi": 1,
+      "site_durumu": "BULUNDU_2_TUR"
+    },
+    "TEVKS": {
+      "sembol": "TEVKS",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:TEVKS"
+    },
+    "TAE": {
+      "sembol": "TAE",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:TAE"
+    },
+    "TRBNK": {
+      "sembol": "TRBNK",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0,
+      "site_durumu": "IKINCI_KAYNAK_GEREKLI",
+      "son_hata": "API Error: No quote data received for BIST:TRBNK"
+    },
+    "TGSAS": {
+      "sembol": "TGSAS",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "TOASO": {
+      "sembol": "TOASO",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "TRA": {
+      "sembol": "TRA",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "TRGYO": {
+      "sembol": "TRGYO",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "TRMET": {
+      "sembol": "TRMET",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "TRENJ": {
+      "sembol": "TRENJ",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "TLMAN": {
+      "sembol": "TLMAN",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "TFNVK": {
+      "sembol": "TFNVK",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "TSPOR": {
+      "sembol": "TSPOR",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "TRYKI": {
+      "sembol": "TRYKI",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "TDGYO": {
+      "sembol": "TDGYO",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "TSGYO": {
+      "sembol": "TSGYO",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "TUCLK": {
+      "sembol": "TUCLK",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "TUKAS": {
+      "sembol": "TUKAS",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "TRCAS": {
+      "sembol": "TRCAS",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "TUREX": {
+      "sembol": "TUREX",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "MARBL": {
+      "sembol": "MARBL",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "TRMEN": {
+      "sembol": "TRMEN",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "TVM": {
+      "sembol": "TVM",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "TRILC": {
+      "sembol": "TRILC",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "TCELL": {
+      "sembol": "TCELL",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "TMSN": {
+      "sembol": "TMSN",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "TUPRS": {
+      "sembol": "TUPRS",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "TRALT": {
+      "sembol": "TRALT",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "THYAO": {
+      "sembol": "THYAO",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "TRKFN": {
+      "sembol": "TRKFN",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "PRKAB": {
+      "sembol": "PRKAB",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "TTKOM": {
+      "sembol": "TTKOM",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "TTRAK": {
+      "sembol": "TTRAK",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "TRKNT": {
+      "sembol": "TRKNT",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "TBORG": {
+      "sembol": "TBORG",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "TURGG": {
+      "sembol": "TURGG",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "VEYAS": {
+      "sembol": "VEYAS",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "GARAN": {
+      "sembol": "GARAN",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "HALKB": {
+      "sembol": "HALKB",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "ISATR": {
+      "sembol": "ISATR",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "TGB": {
+      "sembol": "TGB",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "THL": {
+      "sembol": "THL",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "ISCTR": {
+      "sembol": "ISCTR",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "EXIMB": {
+      "sembol": "EXIMB",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "THR": {
+      "sembol": "THR",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "ISKUR": {
+      "sembol": "ISKUR",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "KLNMA": {
+      "sembol": "KLNMA",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "TSKB": {
+      "sembol": "TSKB",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "TURSG": {
+      "sembol": "TURSG",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "SISE": {
+      "sembol": "SISE",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "TIB": {
+      "sembol": "TIB",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "KLN": {
+      "sembol": "KLN",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "TSK": {
+      "sembol": "TSK",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "VAKBN": {
+      "sembol": "VAKBN",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "UFUK": {
+      "sembol": "UFUK",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "ULAS": {
+      "sembol": "ULAS",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "ULUFA": {
+      "sembol": "ULUFA",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "ULUSE": {
+      "sembol": "ULUSE",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "TVB": {
+      "sembol": "TVB",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "ULUUN": {
+      "sembol": "ULUUN",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "UMPAS": {
+      "sembol": "UMPAS",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "TV8TV": {
+      "sembol": "TV8TV",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "USHOL": {
+      "sembol": "USHOL",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "USAK": {
+      "sembol": "USAK",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "UCAYM": {
+      "sembol": "UCAYM",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "ULKER": {
+      "sembol": "ULKER",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "UNLU": {
+      "sembol": "UNLU",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "VAKFA": {
+      "sembol": "VAKFA",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "VAKFN": {
+      "sembol": "VAKFN",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "VKGYO": {
+      "sembol": "VKGYO",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "VKFYO": {
+      "sembol": "VKFYO",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "ISBTR": {
+      "sembol": "ISBTR",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "VAKKO": {
+      "sembol": "VAKKO",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "VANGD": {
+      "sembol": "VANGD",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "VBTYZ": {
+      "sembol": "VBTYZ",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "VRGYO": {
+      "sembol": "VRGYO",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "VAKVK": {
+      "sembol": "VAKVK",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "VERUS": {
+      "sembol": "VERUS",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "VERTU": {
+      "sembol": "VERTU",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "VESBE": {
+      "sembol": "VESBE",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "VESTL": {
+      "sembol": "VESTL",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "VDFLO": {
+      "sembol": "VDFLO",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "VKING": {
+      "sembol": "VKING",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "VSNMD": {
+      "sembol": "VSNMD",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "VDFAS": {
+      "sembol": "VDFAS",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "YKFKT": {
+      "sembol": "YKFKT",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "YKBNK": {
+      "sembol": "YKBNK",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "YKFIN": {
+      "sembol": "YKFIN",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "YKR": {
+      "sembol": "YKR",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "YAPRK": {
+      "sembol": "YAPRK",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "YKYAT": {
+      "sembol": "YKYAT",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "YKB": {
+      "sembol": "YKB",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "YATAS": {
+      "sembol": "YATAS",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "YAYLA": {
+      "sembol": "YAYLA",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "YEOTK": {
+      "sembol": "YEOTK",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "YYAPI": {
+      "sembol": "YYAPI",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "YESIL": {
+      "sembol": "YESIL",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "YATVK": {
+      "sembol": "YATVK",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "YIGIT": {
+      "sembol": "YIGIT",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "YGGYO": {
+      "sembol": "YGGYO",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "YKSLN": {
+      "sembol": "YKSLN",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "YBTAS": {
+      "sembol": "YBTAS",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "YONGA": {
+      "sembol": "YONGA",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "YYLGD": {
+      "sembol": "YYLGD",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "YUNSA": {
+      "sembol": "YUNSA",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "ZGYO": {
+      "sembol": "ZGYO",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "ZEDUR": {
+      "sembol": "ZEDUR",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "ZERGY": {
+      "sembol": "ZERGY",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "ZRGYO": {
+      "sembol": "ZRGYO",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "ZOREN": {
+      "sembol": "ZOREN",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "BINHO": {
+      "sembol": "BINHO",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "ZKBVK": {
+      "sembol": "ZKBVK",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    },
+    "ZKBVR": {
+      "sembol": "ZKBVR",
+      "website_ham": "",
+      "siteler": [],
+      "site_adedi": 0
+    }
+  }
+}

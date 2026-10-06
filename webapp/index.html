@@ -1057,7 +1057,7 @@ async function showAiLearning(){
 
         const durumYazi = agirlik.aktif
             ? "AKT?F ??RENME"
-            : "VER? TOPLANIYOR";
+            : "VERİ TOPLANIYOR";
 
         const durumRenk = agirlik.aktif
             ? "#22c55e"
@@ -1069,7 +1069,7 @@ async function showAiLearning(){
             <div class="detail-card">
 
                 <div class="detail-title">
-                    &#129504; AI ??renme Durumu
+                    &#129504; AI Öğrenme Durumu
                 </div>
 
                 <div style="
@@ -1100,7 +1100,7 @@ async function showAiLearning(){
                         font-size:13px;
                         opacity:.75;
                     ">
-                        Ger?ek tamamlanm?? sinyal:
+                        Gerçek tamamlanmış sinyal:
                         ${tamamlanan} / ${minimum}
                     </div>
                 </div>
@@ -1116,26 +1116,26 @@ async function showAiLearning(){
                 </div>
 
                 <div class="detail-row">
-                    <span>Ger?ek E?itim Sonucu</span>
+                    <span>Gerçek Eğitim Sonucu</span>
                     <strong>${tamamlanan}</strong>
                 </div>
 
                 <div class="detail-row">
-                    <span>Kalan Minimum ?rnek</span>
+                    <span>Kalan Minimum Örnek</span>
                     <strong>${kalan}</strong>
                 </div>
 
                 <div class="detail-row">
-                    <span>Ba?ar? Oran?</span>
+                    <span>Başarı Oranı</span>
                     <strong>
                         ${tamamlanan > 0 ? basari.toFixed(1) + "%" : "-"}
                     </strong>
                 </div>
 
                 <div class="detail-row">
-                    <span>AI A??rl?klar?</span>
+                    <span>AI Ağırlıkları</span>
                     <strong>
-                        ${agirlik.aktif ? "AKT?F" : "PAS?F"}
+                        ${agirlik.aktif ? "AKT?F" : "PASİF"}
                     </strong>
                 </div>
 
@@ -1144,7 +1144,7 @@ async function showAiLearning(){
             <div class="detail-card">
 
                 <div class="detail-title">
-                    G?n ??i Veri Havuzu
+                    Gün İçi Veri Havuzu
                 </div>
 
                 <div class="detail-row">
@@ -1158,7 +1158,7 @@ async function showAiLearning(){
                 </div>
 
                 <div class="detail-row">
-                    <span>?ZLE</span>
+                    <span>İZLE</span>
                     <strong>${Number(kararlar.IZLE || 0)}</strong>
                 </div>
 
@@ -1167,7 +1167,7 @@ async function showAiLearning(){
             <div class="detail-card">
 
                 <div class="detail-title">
-                    ??renilen G?stergeler
+                    Öğrenilen Göstergeler
                 </div>
 
                 <div style="
@@ -1181,7 +1181,7 @@ async function showAiLearning(){
                     RSI<br>
                     Hacim<br>
                     15 / 30 dk Momentum<br>
-                    Hacimli K?r?l?m<br>
+                    Hacimli Kırılım<br>
                     Risk / Getiri
                 </div>
 
@@ -1190,8 +1190,8 @@ async function showAiLearning(){
                     font-size:13px;
                     opacity:.70;
                 ">
-                    En az 30 ger?ek tamamlanm?? sinyal olu?madan
-                    ??renilmi? a??rl?klar teknik karar motoruna
+                    En az 30 gerçek tamamlanmış sinyal oluşmadan
+                    öğrenilmiş ağırlıklar teknik karar motoruna
                     uygulanmaz.
                 </div>
 
@@ -1203,7 +1203,7 @@ async function showAiLearning(){
         console.error("AI OGRENME HATASI:", e);
 
         alan.innerHTML =
-            '<div class="empty">AI ??renme verileri y?klenemedi.</div>';
+            '<div class="empty">AI Öğrenme verileri y?klenemedi.</div>';
     }
 }
 
@@ -1582,7 +1582,15 @@ async function showKapAlarms(){
                                     font-size:13px;
                                     opacity:.7;
                                 ">
-                                    ${a.tarih || ""}
+                                    ${
+    a.tarih
+    ? (() => {
+        const [tarih, saat = ""] = String(a.tarih).split(" ");
+        const [yil, ay, gun] = tarih.split("-");
+        return `${gun}/${ay}/${yil} ${saat}`;
+      })()
+    : ""
+}
                                 </div>
                             </div>
 

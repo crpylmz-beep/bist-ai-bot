@@ -1238,44 +1238,19 @@ def hisse_analiz_hesapla(
                     )
                 )
 
-                eski_karar_hedef = karar_hedef
-                eski_karar_stop = karar_stop
-
-                yeni_ai_hedef = float(
+                karar_hedef = float(
                     haber_ai_sonuc.get(
                         "hedef",
                         karar_hedef
                     )
                 )
 
-                yeni_ai_stop = float(
+                karar_stop = float(
                     haber_ai_sonuc.get(
                         "stop",
                         karar_stop
                     )
                 )
-
-                toplam_ai_etki = (
-                    haber_ai_puani
-                    + makro_ai_puani
-                    + sektor_ai_puani
-                )
-
-                # Negatif etki hedefi yukari tasiyamaz,
-                # stopu da daha genis hale getiremez.
-                if toplam_ai_etki < 0:
-                    karar_hedef = min(
-                        eski_karar_hedef,
-                        yeni_ai_hedef
-                    )
-
-                    karar_stop = max(
-                        eski_karar_stop,
-                        yeni_ai_stop
-                    )
-                else:
-                    karar_hedef = yeni_ai_hedef
-                    karar_stop = yeni_ai_stop
 
                 karar_nedenleri.append(
                     f"Haber AI: {haber_ai_puani:+.1f}/10 "
@@ -1380,12 +1355,12 @@ def hisse_analiz_hesapla(
             "boll_genislik": boll_genislik,
             "boll_konum": boll_konum,
             "boll_durum": boll_durum,
-            "yarin_alim_alt": round(yarin_alim_alt, 2),
-            "yarin_alim_ust": round(yarin_alim_ust, 2),
-            "yarin_kar_al": round(yarin_kar_al, 2),
+            "yarin_alim_alt": yarin_alim_alt,
+            "yarin_alim_ust": yarin_alim_ust,
+            "yarin_kar_al": yarin_kar_al,
             "yarin_satim_alt": yarin_satim_alt,
             "yarin_satim_ust": yarin_satim_ust,
-            "yarin_stop": round(yarin_stop, 2),
+            "yarin_stop": yarin_stop,
             "yarin_kirilim": yarin_kirilim,
             "yarin_kirilim_hedef": yarin_kirilim_hedef,
             "hacimli_kirilim_durum": hacimli_kirilim_durum,
@@ -1395,10 +1370,10 @@ def hisse_analiz_hesapla(
             "guven_skoru": guven_skoru,
             "al_puani": al_puani,
             "sat_puani": sat_puani,
-            "karar_giris_alt": round(karar_giris_alt, 2),
-            "karar_giris_ust": round(karar_giris_ust, 2),
-            "karar_hedef": round(karar_hedef, 2),
-            "karar_stop": round(karar_stop, 2),
+            "karar_giris_alt": karar_giris_alt,
+            "karar_giris_ust": karar_giris_ust,
+            "karar_hedef": karar_hedef,
+            "karar_stop": karar_stop,
             "karar_risk": karar_risk,
             "karar_getiri": karar_getiri,
             "karar_rr": karar_rr,
@@ -4101,42 +4076,19 @@ def gun_ici_analiz_hesapla(sembol, veri=None):
                     )
                 )
 
-                eski_kar_al = kar_al
-                eski_stop = stop
-
-                yeni_ai_hedef = float(
+                kar_al = float(
                     ai_sonuc.get(
                         "hedef",
                         kar_al
                     )
                 )
 
-                yeni_ai_stop = float(
+                stop = float(
                     ai_sonuc.get(
                         "stop",
                         stop
                     )
                 )
-
-                toplam_ai_etki = (
-                    float(haber_puani or 0)
-                    + makro_ai_puani
-                    + sektor_ai_puani
-                )
-
-                if toplam_ai_etki < 0:
-                    kar_al = min(
-                        eski_kar_al,
-                        yeni_ai_hedef
-                    )
-
-                    stop = max(
-                        eski_stop,
-                        yeni_ai_stop
-                    )
-                else:
-                    kar_al = yeni_ai_hedef
-                    stop = yeni_ai_stop
 
                 gun_ici_karar_nedenleri.append(
                     f"Haber AI {float(haber_puani):+.1f}/10 "
@@ -6113,42 +6065,19 @@ def yarin_potansiyel_hesapla(a):
                     )
                 )
 
-                eski_ai_hedef = a["ai_yarin_hedef"]
-                eski_ai_stop = a["ai_yarin_stop"]
-
-                yeni_ai_hedef = guvenli_float(
+                a["ai_yarin_hedef"] = guvenli_float(
                     ai_sonuc.get(
                         "hedef",
-                        eski_ai_hedef
+                        a["ai_yarin_hedef"]
                     )
                 )
 
-                yeni_ai_stop = guvenli_float(
+                a["ai_yarin_stop"] = guvenli_float(
                     ai_sonuc.get(
                         "stop",
-                        eski_ai_stop
+                        a["ai_yarin_stop"]
                     )
                 )
-
-                toplam_ai_etki = (
-                    haber_puani_ai
-                    + makro_ai_puani
-                    + sektor_ai_puani
-                )
-
-                if toplam_ai_etki < 0:
-                    a["ai_yarin_hedef"] = min(
-                        eski_ai_hedef,
-                        yeni_ai_hedef
-                    )
-
-                    a["ai_yarin_stop"] = max(
-                        eski_ai_stop,
-                        yeni_ai_stop
-                    )
-                else:
-                    a["ai_yarin_hedef"] = yeni_ai_hedef
-                    a["ai_yarin_stop"] = yeni_ai_stop
 
         except Exception:
             pass

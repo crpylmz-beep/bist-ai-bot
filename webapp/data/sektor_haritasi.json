@@ -1,0 +1,4031 @@
+{
+  "guncelleme": "2026-10-06 14:20:13",
+  "toplam": 805,
+  "hisseler": {
+    "ACSEL": {
+      "sembol": "ACSEL",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "AFYON": {
+      "sembol": "AFYON",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "ADESE": {
+      "sembol": "ADESE",
+      "sektor": "GAYRİMENKUL FAALİYETLERİ",
+      "alt_sektor": "GAYRİMENKUL FAALİYETLERİ"
+    },
+    "ADEL": {
+      "sembol": "ADEL",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "ADGYO": {
+      "sembol": "ADGYO",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "ADLVY": {
+      "sembol": "ADLVY",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "AGESA": {
+      "sembol": "AGESA",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "AGHOL": {
+      "sembol": "AGHOL",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "AGROT": {
+      "sembol": "AGROT",
+      "sektor": "TARIM, ORMANCILIK VE BALIKÇILIK",
+      "alt_sektor": "TARIM, ORMANCILIK VE BALIKÇILIK"
+    },
+    "AAGYO": {
+      "sembol": "AAGYO",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "AHSGY": {
+      "sembol": "AHSGY",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "AHGAZ": {
+      "sembol": "AHGAZ",
+      "sektor": "ELEKTRİK GAZ VE SU",
+      "alt_sektor": "ELEKTRİK GAZ VE SU"
+    },
+    "AKBNK": {
+      "sembol": "AKBNK",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "AKSFA": {
+      "sembol": "AKSFA",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "AKFK": {
+      "sembol": "AKFK",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "AKM": {
+      "sembol": "AKM",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "AKMEN": {
+      "sembol": "AKMEN",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "AKCVR": {
+      "sembol": "AKCVR",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "AKCNS": {
+      "sembol": "AKCNS",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "AKYHO": {
+      "sembol": "AKYHO",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "AKENR": {
+      "sembol": "AKENR",
+      "sektor": "ELEKTRİK GAZ VE SU",
+      "alt_sektor": "ELEKTRİK GAZ VE SU"
+    },
+    "AKFGY": {
+      "sembol": "AKFGY",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "AKFIS": {
+      "sembol": "AKFIS",
+      "sektor": "İNŞAAT VE BAYINDIRLIK",
+      "alt_sektor": "İNŞAAT VE BAYINDIRLIK"
+    },
+    "AKFYE": {
+      "sembol": "AKFYE",
+      "sektor": "ELEKTRİK GAZ VE SU",
+      "alt_sektor": "ELEKTRİK GAZ VE SU"
+    },
+    "AKHAN": {
+      "sembol": "AKHAN",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "AKDFA": {
+      "sembol": "AKDFA",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "ATEKS": {
+      "sembol": "ATEKS",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "AKSGY": {
+      "sembol": "AKSGY",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "AKMGY": {
+      "sembol": "AKMGY",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "AKSA": {
+      "sembol": "AKSA",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "AKGRT": {
+      "sembol": "AKGRT",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "AKSEN": {
+      "sembol": "AKSEN",
+      "sektor": "ELEKTRİK GAZ VE SU",
+      "alt_sektor": "ELEKTRİK GAZ VE SU"
+    },
+    "AKSUE": {
+      "sembol": "AKSUE",
+      "sektor": "ELEKTRİK GAZ VE SU",
+      "alt_sektor": "ELEKTRİK GAZ VE SU"
+    },
+    "ALCAR": {
+      "sembol": "ALCAR",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "ALGYO": {
+      "sembol": "ALGYO",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "ALARK": {
+      "sembol": "ALARK",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "AKTVK": {
+      "sembol": "AKTVK",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "AFB": {
+      "sembol": "AFB",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "AKTIF": {
+      "sembol": "AKTIF",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "ALBRK": {
+      "sembol": "ALBRK",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "ALBTN": {
+      "sembol": "ALBTN",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "ALCTL": {
+      "sembol": "ALCTL",
+      "sektor": "TEKNOLOJİ",
+      "alt_sektor": "TEKNOLOJİ"
+    },
+    "ALFAS": {
+      "sembol": "ALFAS",
+      "sektor": "ELEKTRİK GAZ VE SU",
+      "alt_sektor": "ELEKTRİK GAZ VE SU"
+    },
+    "ALKIM": {
+      "sembol": "ALKIM",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "ALKA": {
+      "sembol": "ALKA",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "ALK": {
+      "sembol": "ALK",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "ALJF": {
+      "sembol": "ALJF",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "AYCES": {
+      "sembol": "AYCES",
+      "sektor": "OTELLER VE LOKANTALAR",
+      "alt_sektor": "OTELLER VE LOKANTALAR"
+    },
+    "ALTNY": {
+      "sembol": "ALTNY",
+      "sektor": "TEKNOLOJİ",
+      "alt_sektor": "TEKNOLOJİ"
+    },
+    "ALKLC": {
+      "sembol": "ALKLC",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "ALNUS": {
+      "sembol": "ALNUS",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "ALVES": {
+      "sembol": "ALVES",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "ANC": {
+      "sembol": "ANC",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "ANSGR": {
+      "sembol": "ANSGR",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "AEFES": {
+      "sembol": "AEFES",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "ANHYT": {
+      "sembol": "ANHYT",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "ASUZU": {
+      "sembol": "ASUZU",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "ANGEN": {
+      "sembol": "ANGEN",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "ANELE": {
+      "sembol": "ANELE",
+      "sektor": "İNŞAAT VE BAYINDIRLIK",
+      "alt_sektor": "İNŞAAT VE BAYINDIRLIK"
+    },
+    "ARCLK": {
+      "sembol": "ARCLK",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "ARDYZ": {
+      "sembol": "ARDYZ",
+      "sektor": "TEKNOLOJİ",
+      "alt_sektor": "TEKNOLOJİ"
+    },
+    "ADB": {
+      "sembol": "ADB",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "ADBNK": {
+      "sembol": "ADBNK",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "ARENA": {
+      "sembol": "ARENA",
+      "sektor": "TEKNOLOJİ",
+      "alt_sektor": "TEKNOLOJİ"
+    },
+    "ARFYE": {
+      "sembol": "ARFYE",
+      "sektor": "ELEKTRİK GAZ VE SU",
+      "alt_sektor": "ELEKTRİK GAZ VE SU"
+    },
+    "ARMGD": {
+      "sembol": "ARMGD",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "ARSAN": {
+      "sembol": "ARSAN",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "ARTMS": {
+      "sembol": "ARTMS",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "ARZUM": {
+      "sembol": "ARZUM",
+      "sektor": "TOPTAN VE PERAKENDE TİCARET",
+      "alt_sektor": "TOPTAN VE PERAKENDE TİCARET"
+    },
+    "ASGYO": {
+      "sembol": "ASGYO",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "ARSNF": {
+      "sembol": "ARSNF",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "ASELS": {
+      "sembol": "ASELS",
+      "sektor": "TEKNOLOJİ",
+      "alt_sektor": "TEKNOLOJİ"
+    },
+    "ARSVY": {
+      "sembol": "ARSVY",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "ASTOR": {
+      "sembol": "ASTOR",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "ATAGY": {
+      "sembol": "ATAGY",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "ATATR": {
+      "sembol": "ATATR",
+      "sektor": "OTELLER VE LOKANTALAR",
+      "alt_sektor": "OTELLER VE LOKANTALAR"
+    },
+    "AGYO": {
+      "sembol": "AGYO",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "ATAKP": {
+      "sembol": "ATAKP",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "ATAVK": {
+      "sembol": "ATAVK",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "ATA": {
+      "sembol": "ATA",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "ATAYM": {
+      "sembol": "ATAYM",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "ATLFA": {
+      "sembol": "ATLFA",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "ATLAS": {
+      "sembol": "ATLAS",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "ATATP": {
+      "sembol": "ATATP",
+      "sektor": "TEKNOLOJİ",
+      "alt_sektor": "TEKNOLOJİ"
+    },
+    "ATSYH": {
+      "sembol": "ATSYH",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "AVOD": {
+      "sembol": "AVOD",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "AVGYO": {
+      "sembol": "AVGYO",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "AVTUR": {
+      "sembol": "AVTUR",
+      "sektor": "OTELLER VE LOKANTALAR",
+      "alt_sektor": "OTELLER VE LOKANTALAR"
+    },
+    "AVHOL": {
+      "sembol": "AVHOL",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "AVPGY": {
+      "sembol": "AVPGY",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "AYDEM": {
+      "sembol": "AYDEM",
+      "sektor": "ELEKTRİK GAZ VE SU",
+      "alt_sektor": "ELEKTRİK GAZ VE SU"
+    },
+    "AYES": {
+      "sembol": "AYES",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "AYEN": {
+      "sembol": "AYEN",
+      "sektor": "ELEKTRİK GAZ VE SU",
+      "alt_sektor": "ELEKTRİK GAZ VE SU"
+    },
+    "AYGAZ": {
+      "sembol": "AYGAZ",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "AZTEK": {
+      "sembol": "AZTEK",
+      "sektor": "TEKNOLOJİ",
+      "alt_sektor": "TEKNOLOJİ"
+    },
+    "A1CAP": {
+      "sembol": "A1CAP",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "AYTEM": {
+      "sembol": "AYTEM",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "YYA": {
+      "sembol": "YYA",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "A1YEN": {
+      "sembol": "A1YEN",
+      "sektor": "ELEKTRİK GAZ VE SU",
+      "alt_sektor": "ELEKTRİK GAZ VE SU"
+    },
+    "BAGFS": {
+      "sembol": "BAGFS",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "ACP": {
+      "sembol": "ACP",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "BAHKM": {
+      "sembol": "BAHKM",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "BAKAB": {
+      "sembol": "BAKAB",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "BALAT": {
+      "sembol": "BALAT",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "BALSU": {
+      "sembol": "BALSU",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "BKRGY": {
+      "sembol": "BKRGY",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "BANVT": {
+      "sembol": "BANVT",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "BNTAS": {
+      "sembol": "BNTAS",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "BASGZ": {
+      "sembol": "BASGZ",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "BARMA": {
+      "sembol": "BARMA",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "BASCM": {
+      "sembol": "BASCM",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "BEGYO": {
+      "sembol": "BEGYO",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "BTCIM": {
+      "sembol": "BTCIM",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "BSOKE": {
+      "sembol": "BSOKE",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "BYDNR": {
+      "sembol": "BYDNR",
+      "sektor": "OTELLER VE LOKANTALAR",
+      "alt_sektor": "OTELLER VE LOKANTALAR"
+    },
+    "BERA": {
+      "sembol": "BERA",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "BAYRK": {
+      "sembol": "BAYRK",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "BESLR": {
+      "sembol": "BESLR",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "BRKSN": {
+      "sembol": "BRKSN",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "BRKT": {
+      "sembol": "BRKT",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "BJKAS": {
+      "sembol": "BJKAS",
+      "sektor": "EĞİTİM SAĞLIK SPOR VE EĞLENCE HİZMETLERİ",
+      "alt_sektor": "EĞİTİM SAĞLIK SPOR VE EĞLENCE HİZMETLERİ"
+    },
+    "BESTE": {
+      "sembol": "BESTE",
+      "sektor": "ELEKTRİK GAZ VE SU",
+      "alt_sektor": "ELEKTRİK GAZ VE SU"
+    },
+    "BIENY": {
+      "sembol": "BIENY",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "BEYAZ": {
+      "sembol": "BEYAZ",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "BETAE": {
+      "sembol": "BETAE",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "BIGTK": {
+      "sembol": "BIGTK",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "BLCYT": {
+      "sembol": "BLCYT",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "BINBN": {
+      "sembol": "BINBN",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "BIOEN": {
+      "sembol": "BIOEN",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "BRKO": {
+      "sembol": "BRKO",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "BLKOM": {
+      "sembol": "BLKOM",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "BIMAS": {
+      "sembol": "BIMAS",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "BRKVY": {
+      "sembol": "BRKVY",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "BIGEN": {
+      "sembol": "BIGEN",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "BRLSM": {
+      "sembol": "BRLSM",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "BMSTL": {
+      "sembol": "BMSTL",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "BRMEN": {
+      "sembol": "BRMEN",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "BIZIM": {
+      "sembol": "BIZIM",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "BOBET": {
+      "sembol": "BOBET",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "BORSK": {
+      "sembol": "BORSK",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "BRSAN": {
+      "sembol": "BRSAN",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "BNPPI": {
+      "sembol": "BNPPI",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "BRYAT": {
+      "sembol": "BRYAT",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "BFREN": {
+      "sembol": "BFREN",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "BRISA": {
+      "sembol": "BRISA",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "BLS": {
+      "sembol": "BLS",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "BLUME": {
+      "sembol": "BLUME",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "BURCE": {
+      "sembol": "BURCE",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "BLSMD": {
+      "sembol": "BLSMD",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "BMSCH": {
+      "sembol": "BMSCH",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "BURVA": {
+      "sembol": "BURVA",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "BORLS": {
+      "sembol": "BORLS",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "BRGAN": {
+      "sembol": "BRGAN",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "BUR": {
+      "sembol": "BUR",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "BOSSA": {
+      "sembol": "BOSSA",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "BRGFK": {
+      "sembol": "BRGFK",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "BULGS": {
+      "sembol": "BULGS",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "BVSAN": {
+      "sembol": "BVSAN",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "BIGCH": {
+      "sembol": "BIGCH",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "CEOEM": {
+      "sembol": "CEOEM",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "CCOLA": {
+      "sembol": "CCOLA",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "CONSE": {
+      "sembol": "CONSE",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "CRDFA": {
+      "sembol": "CRDFA",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "CVKMD": {
+      "sembol": "CVKMD",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "CWENE": {
+      "sembol": "CWENE",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "BUCIM": {
+      "sembol": "BUCIM",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "CRFSA": {
+      "sembol": "CRFSA",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "CASA": {
+      "sembol": "CASA",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "CEMZY": {
+      "sembol": "CEMZY",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "CAGFA": {
+      "sembol": "CAGFA",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "CANTE": {
+      "sembol": "CANTE",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "COSMO": {
+      "sembol": "COSMO",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "CATES": {
+      "sembol": "CATES",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "CLEBI": {
+      "sembol": "CLEBI",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "CMSAN": {
+      "sembol": "CMSAN",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "CEMTS": {
+      "sembol": "CEMTS",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "CMBTN": {
+      "sembol": "CMBTN",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "CLKMT": {
+      "sembol": "CLKMT",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "CIMSA": {
+      "sembol": "CIMSA",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "CGCAM": {
+      "sembol": "CGCAM",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "CITAS": {
+      "sembol": "CITAS",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "DVRLK": {
+      "sembol": "DVRLK",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "DYBNK": {
+      "sembol": "DYBNK",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "CELHA": {
+      "sembol": "CELHA",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "CEMAS": {
+      "sembol": "CEMAS",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "DGATE": {
+      "sembol": "DGATE",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "CMENT": {
+      "sembol": "CMENT",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "CUSAN": {
+      "sembol": "CUSAN",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "DGRVK": {
+      "sembol": "DGRVK",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "DAGI": {
+      "sembol": "DAGI",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "DAPGM": {
+      "sembol": "DAPGM",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "DENVA": {
+      "sembol": "DENVA",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "DNZEN": {
+      "sembol": "DNZEN",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "DENFA": {
+      "sembol": "DENFA",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "DCTTR": {
+      "sembol": "DCTTR",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "DERIM": {
+      "sembol": "DERIM",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "DNFIN": {
+      "sembol": "DNFIN",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "DARDL": {
+      "sembol": "DARDL",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "DMSAS": {
+      "sembol": "DMSAS",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "DERHL": {
+      "sembol": "DERHL",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "DESA": {
+      "sembol": "DESA",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "DESPC": {
+      "sembol": "DESPC",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "DENGE": {
+      "sembol": "DENGE",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "DZGYO": {
+      "sembol": "DZGYO",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "DEVA": {
+      "sembol": "DEVA",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "DSTKF": {
+      "sembol": "DSTKF",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "DNISI": {
+      "sembol": "DNISI",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "DIRIT": {
+      "sembol": "DIRIT",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "DITAS": {
+      "sembol": "DITAS",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "DIMES": {
+      "sembol": "DIMES",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "DOCO": {
+      "sembol": "DOCO",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "DMRGD": {
+      "sembol": "DMRGD",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "DOFRB": {
+      "sembol": "DOFRB",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "DOHOL": {
+      "sembol": "DOHOL",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "DKVRL": {
+      "sembol": "DKVRL",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "DGNMO": {
+      "sembol": "DGNMO",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "DOFER": {
+      "sembol": "DOFER",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "DKYVK": {
+      "sembol": "DKYVK",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "ARASE": {
+      "sembol": "ARASE",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "DGGYO": {
+      "sembol": "DGGYO",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "DOGUB": {
+      "sembol": "DOGUB",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "DOAS": {
+      "sembol": "DOAS",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "DTRND": {
+      "sembol": "DTRND",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "DURDO": {
+      "sembol": "DURDO",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "DOKTA": {
+      "sembol": "DOKTA",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "DURKN": {
+      "sembol": "DURKN",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "DOGVY": {
+      "sembol": "DOGVY",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "DUNYH": {
+      "sembol": "DUNYH",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "DYOBY": {
+      "sembol": "DYOBY",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "EBEBK": {
+      "sembol": "EBEBK",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "ECZYT": {
+      "sembol": "ECZYT",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "DFKTR": {
+      "sembol": "DFKTR",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "ECOGR": {
+      "sembol": "ECOGR",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "EDATA": {
+      "sembol": "EDATA",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "EDIP": {
+      "sembol": "EDIP",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "EGEEN": {
+      "sembol": "EGEEN",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "DNYVA": {
+      "sembol": "DNYVA",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "EFOR": {
+      "sembol": "EFOR",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "EGGUB": {
+      "sembol": "EGGUB",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "EGPRO": {
+      "sembol": "EGPRO",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "EGSER": {
+      "sembol": "EGSER",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "EGEGY": {
+      "sembol": "EGEGY",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "EPLAS": {
+      "sembol": "EPLAS",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "ECILC": {
+      "sembol": "ECILC",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "EKIM": {
+      "sembol": "EKIM",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "EKDMR": {
+      "sembol": "EKDMR",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "ECZIP": {
+      "sembol": "ECZIP",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "EKIZ": {
+      "sembol": "EKIZ",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "EKER": {
+      "sembol": "EKER",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "EMKEL": {
+      "sembol": "EMKEL",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "EKOFA": {
+      "sembol": "EKOFA",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "EMIRV": {
+      "sembol": "EMIRV",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "EKTVK": {
+      "sembol": "EKTVK",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "DMLKT": {
+      "sembol": "DMLKT",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "EMNIS": {
+      "sembol": "EMNIS",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "ELITE": {
+      "sembol": "ELITE",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "EKSUN": {
+      "sembol": "EKSUN",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "EKOS": {
+      "sembol": "EKOS",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "EKGYO": {
+      "sembol": "EKGYO",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "EMVAR": {
+      "sembol": "EMVAR",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "EMPAE": {
+      "sembol": "EMPAE",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "ENDAE": {
+      "sembol": "ENDAE",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "ENERY": {
+      "sembol": "ENERY",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "ENKAI": {
+      "sembol": "ENKAI",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "ENJSA": {
+      "sembol": "ENJSA",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "ENSRI": {
+      "sembol": "ENSRI",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "ERCB": {
+      "sembol": "ERCB",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "ENPRA": {
+      "sembol": "ENPRA",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "ERBOS": {
+      "sembol": "ERBOS",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "EREGL": {
+      "sembol": "EREGL",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "KIMMR": {
+      "sembol": "KIMMR",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "ERGLI": {
+      "sembol": "ERGLI",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "ESCOM": {
+      "sembol": "ESCOM",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "ESCAR": {
+      "sembol": "ESCAR",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "ERSU": {
+      "sembol": "ERSU",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "ESEN": {
+      "sembol": "ESEN",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "ETILR": {
+      "sembol": "ETILR",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "EUHOL": {
+      "sembol": "EUHOL",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "EUKYO": {
+      "sembol": "EUKYO",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "EUYO": {
+      "sembol": "EUYO",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "TEZOL": {
+      "sembol": "TEZOL",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "ETYAT": {
+      "sembol": "ETYAT",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "EUREN": {
+      "sembol": "EUREN",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "EYGYO": {
+      "sembol": "EYGYO",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "EUPWR": {
+      "sembol": "EUPWR",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "FADE": {
+      "sembol": "FADE",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "FMIZP": {
+      "sembol": "FMIZP",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "FENER": {
+      "sembol": "FENER",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "FAIRF": {
+      "sembol": "FAIRF",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "FBB": {
+      "sembol": "FBB",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "FONET": {
+      "sembol": "FONET",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "FBBNK": {
+      "sembol": "FBBNK",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "FLAP": {
+      "sembol": "FLAP",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "FIGOF": {
+      "sembol": "FIGOF",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "FKPET": {
+      "sembol": "FKPET",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "FORMT": {
+      "sembol": "FORMT",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "FRMPL": {
+      "sembol": "FRMPL",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "FROTO": {
+      "sembol": "FROTO",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "FORTE": {
+      "sembol": "FORTE",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "FRIGO": {
+      "sembol": "FRIGO",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "FZLGY": {
+      "sembol": "FZLGY",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "GWIND": {
+      "sembol": "GWIND",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "GSRAY": {
+      "sembol": "GSRAY",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "GARFA": {
+      "sembol": "GARFA",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "GRNYO": {
+      "sembol": "GRNYO",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "GATEG": {
+      "sembol": "GATEG",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "GARFL": {
+      "sembol": "GARFL",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "GEDIK": {
+      "sembol": "GEDIK",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "GRM": {
+      "sembol": "GRM",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "GRYAT": {
+      "sembol": "GRYAT",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "GEDZA": {
+      "sembol": "GEDZA",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "GLCVY": {
+      "sembol": "GLCVY",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "GENIL": {
+      "sembol": "GENIL",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "GENTS": {
+      "sembol": "GENTS",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "GENKM": {
+      "sembol": "GENKM",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "GEREL": {
+      "sembol": "GEREL",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "GZNMI": {
+      "sembol": "GZNMI",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "GIPTA": {
+      "sembol": "GIPTA",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "GMTAS": {
+      "sembol": "GMTAS",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "GESAN": {
+      "sembol": "GESAN",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "GLBMD": {
+      "sembol": "GLBMD",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "GLYHO": {
+      "sembol": "GLYHO",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "GOLDA": {
+      "sembol": "GOLDA",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "GOODY": {
+      "sembol": "GOODY",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "GLB": {
+      "sembol": "GLB",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "GOKNR": {
+      "sembol": "GOKNR",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "GOLTS": {
+      "sembol": "GOLTS",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "GGBVK": {
+      "sembol": "GGBVK",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "GRTHO": {
+      "sembol": "GRTHO",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "GSIPD": {
+      "sembol": "GSIPD",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "GOZDE": {
+      "sembol": "GOZDE",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "GSDHO": {
+      "sembol": "GSDHO",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "GSDDE": {
+      "sembol": "GSDDE",
+      "sektor": "ULAŞTIRMA VE DEPOLAMA",
+      "alt_sektor": "ULAŞTIRMA VE DEPOLAMA"
+    },
+    "GUBRF": {
+      "sembol": "GUBRF",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "GLRYH": {
+      "sembol": "GLRYH",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "GLRMK": {
+      "sembol": "GLRMK",
+      "sektor": "İNŞAAT VE BAYINDIRLIK",
+      "alt_sektor": "İNŞAAT VE BAYINDIRLIK"
+    },
+    "GUNDG": {
+      "sembol": "GUNDG",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "GRSEL": {
+      "sembol": "GRSEL",
+      "sektor": "ULAŞTIRMA VE DEPOLAMA",
+      "alt_sektor": "ULAŞTIRMA VE DEPOLAMA"
+    },
+    "SAHOL": {
+      "sembol": "SAHOL",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "HLGYO": {
+      "sembol": "HLGYO",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "GYVAR": {
+      "sembol": "GYVAR",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "HRKET": {
+      "sembol": "HRKET",
+      "sektor": "ULAŞTIRMA VE DEPOLAMA",
+      "alt_sektor": "ULAŞTIRMA VE DEPOLAMA"
+    },
+    "HALKF": {
+      "sembol": "HALKF",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "HATEK": {
+      "sembol": "HATEK",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "HLVKS": {
+      "sembol": "HLVKS",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "HALKI": {
+      "sembol": "HALKI",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "HLY": {
+      "sembol": "HLY",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "HDFGS": {
+      "sembol": "HDFGS",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "HEDEF": {
+      "sembol": "HEDEF",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "HAYVK": {
+      "sembol": "HAYVK",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "HDFFL": {
+      "sembol": "HDFFL",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "HDFVK": {
+      "sembol": "HDFVK",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "HDFYB": {
+      "sembol": "HDFYB",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "HYB": {
+      "sembol": "HYB",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "HTTBT": {
+      "sembol": "HTTBT",
+      "sektor": "TEKNOLOJİ",
+      "alt_sektor": "TEKNOLOJİ"
+    },
+    "HOROZ": {
+      "sembol": "HOROZ",
+      "sektor": "ULAŞTIRMA VE DEPOLAMA",
+      "alt_sektor": "ULAŞTIRMA VE DEPOLAMA"
+    },
+    "HUBVC": {
+      "sembol": "HUBVC",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "HUNER": {
+      "sembol": "HUNER",
+      "sektor": "ELEKTRİK GAZ VE SU",
+      "alt_sektor": "ELEKTRİK GAZ VE SU"
+    },
+    "HURGZ": {
+      "sembol": "HURGZ",
+      "sektor": "BİLGİ VE İLETİŞİM",
+      "alt_sektor": "BİLGİ VE İLETİŞİM"
+    },
+    "ENTRA": {
+      "sembol": "ENTRA",
+      "sektor": "ELEKTRİK GAZ VE SU",
+      "alt_sektor": "ELEKTRİK GAZ VE SU"
+    },
+    "HUZFA": {
+      "sembol": "HUZFA",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "ICBCT": {
+      "sembol": "ICBCT",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "ICUGS": {
+      "sembol": "ICUGS",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "ICB": {
+      "sembol": "ICB",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "INVEO": {
+      "sembol": "INVEO",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "INGRM": {
+      "sembol": "INGRM",
+      "sektor": "TEKNOLOJİ",
+      "alt_sektor": "TEKNOLOJİ"
+    },
+    "IAZ": {
+      "sembol": "IAZ",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "INVES": {
+      "sembol": "INVES",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "HEKTS": {
+      "sembol": "HEKTS",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "HKTM": {
+      "sembol": "HKTM",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "HATSN": {
+      "sembol": "HATSN",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "INVAZ": {
+      "sembol": "INVAZ",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "ISKPL": {
+      "sembol": "ISKPL",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "IEYHO": {
+      "sembol": "IEYHO",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "IDGYO": {
+      "sembol": "IDGYO",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "IHEVA": {
+      "sembol": "IHEVA",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "IHLAS": {
+      "sembol": "IHLAS",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "IMASM": {
+      "sembol": "IMASM",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "INALR": {
+      "sembol": "INALR",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "INFO": {
+      "sembol": "INFO",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "IYF": {
+      "sembol": "IYF",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "INTEK": {
+      "sembol": "INTEK",
+      "sektor": "TEKNOLOJİ",
+      "alt_sektor": "TEKNOLOJİ"
+    },
+    "IHLGM": {
+      "sembol": "IHLGM",
+      "sektor": "GAYRİMENKUL FAALİYETLERİ",
+      "alt_sektor": "GAYRİMENKUL FAALİYETLERİ"
+    },
+    "IHGZT": {
+      "sembol": "IHGZT",
+      "sektor": "BİLGİ VE İLETİŞİM",
+      "alt_sektor": "BİLGİ VE İLETİŞİM"
+    },
+    "IHAAS": {
+      "sembol": "IHAAS",
+      "sektor": "BİLGİ VE İLETİŞİM",
+      "alt_sektor": "BİLGİ VE İLETİŞİM"
+    },
+    "IHYAY": {
+      "sembol": "IHYAY",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "INTEM": {
+      "sembol": "INTEM",
+      "sektor": "TOPTAN VE PERAKENDE TİCARET",
+      "alt_sektor": "TOPTAN VE PERAKENDE TİCARET"
+    },
+    "ISDMR": {
+      "sembol": "ISDMR",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "ISVEA": {
+      "sembol": "ISVEA",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "INDES": {
+      "sembol": "INDES",
+      "sektor": "TEKNOLOJİ",
+      "alt_sektor": "TEKNOLOJİ"
+    },
+    "ISFIN": {
+      "sembol": "ISFIN",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "ISTFK": {
+      "sembol": "ISTFK",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "ISTVY": {
+      "sembol": "ISTVY",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "ISGSY": {
+      "sembol": "ISGSY",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "ISMEN": {
+      "sembol": "ISMEN",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "ISFAK": {
+      "sembol": "ISFAK",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "IYM": {
+      "sembol": "IYM",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "INTET": {
+      "sembol": "INTET",
+      "sektor": "TEKNOLOJİ",
+      "alt_sektor": "TEKNOLOJİ"
+    },
+    "IZENR": {
+      "sembol": "IZENR",
+      "sektor": "ELEKTRİK GAZ VE SU",
+      "alt_sektor": "ELEKTRİK GAZ VE SU"
+    },
+    "IZINV": {
+      "sembol": "IZINV",
+      "sektor": "TARIM, ORMANCILIK VE BALIKÇILIK",
+      "alt_sektor": "TARIM, ORMANCILIK VE BALIKÇILIK"
+    },
+    "ISGYO": {
+      "sembol": "ISGYO",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "IZMDC": {
+      "sembol": "IZMDC",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "IZFAS": {
+      "sembol": "IZFAS",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "JANTS": {
+      "sembol": "JANTS",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "KFEIN": {
+      "sembol": "KFEIN",
+      "sektor": "TEKNOLOJİ",
+      "alt_sektor": "TEKNOLOJİ"
+    },
+    "ISYAT": {
+      "sembol": "ISYAT",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "ISBIR": {
+      "sembol": "ISBIR",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "ISSEN": {
+      "sembol": "ISSEN",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "KLVKS": {
+      "sembol": "KLVKS",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "KTEST": {
+      "sembol": "KTEST",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "KAPLM": {
+      "sembol": "KAPLM",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "KPTGY": {
+      "sembol": "KPTGY",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "KRDMA": {
+      "sembol": "KRDMA",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "KRDMB": {
+      "sembol": "KRDMB",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "KLSER": {
+      "sembol": "KLSER",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "KLKIM": {
+      "sembol": "KLKIM",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "KRDMD": {
+      "sembol": "KRDMD",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "KLYPV": {
+      "sembol": "KLYPV",
+      "sektor": "ELEKTRİK GAZ VE SU",
+      "alt_sektor": "ELEKTRİK GAZ VE SU"
+    },
+    "KPEKS": {
+      "sembol": "KPEKS",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "KARSN": {
+      "sembol": "KARSN",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "KAREL": {
+      "sembol": "KAREL",
+      "sektor": "TEKNOLOJİ",
+      "alt_sektor": "TEKNOLOJİ"
+    },
+    "KRTEK": {
+      "sembol": "KRTEK",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "KARTN": {
+      "sembol": "KARTN",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "KTLEV": {
+      "sembol": "KTLEV",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "KATMR": {
+      "sembol": "KATMR",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "KAYSE": {
+      "sembol": "KAYSE",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "KATVK": {
+      "sembol": "KATVK",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "KARCL": {
+      "sembol": "KARCL",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "KFILO": {
+      "sembol": "KFILO",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "KRVGD": {
+      "sembol": "KRVGD",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "KNTFA": {
+      "sembol": "KNTFA",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "TCKRC": {
+      "sembol": "TCKRC",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "KZBGY": {
+      "sembol": "KZBGY",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "KLGYO": {
+      "sembol": "KLGYO",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "KLRHO": {
+      "sembol": "KLRHO",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "KMPUR": {
+      "sembol": "KMPUR",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "KLMSN": {
+      "sembol": "KLMSN",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "KCAER": {
+      "sembol": "KCAER",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "KCHOL": {
+      "sembol": "KCHOL",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "KOCFN": {
+      "sembol": "KOCFN",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "KSFIN": {
+      "sembol": "KSFIN",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "KNFRT": {
+      "sembol": "KNFRT",
+      "sektor": "TARIM, ORMANCILIK VE BALIKÇILIK",
+      "alt_sektor": "TARIM, ORMANCILIK VE BALIKÇILIK"
+    },
+    "KONTR": {
+      "sembol": "KONTR",
+      "sektor": "MESLEKİ, BİLİMSEL VE TEKNİK FAALİYETLER",
+      "alt_sektor": "MESLEKİ, BİLİMSEL VE TEKNİK FAALİYETLER"
+    },
+    "KONYA": {
+      "sembol": "KONYA",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "KENT": {
+      "sembol": "KENT",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "KONKA": {
+      "sembol": "KONKA",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "KERVN": {
+      "sembol": "KERVN",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "KGYO": {
+      "sembol": "KGYO",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "KORDS": {
+      "sembol": "KORDS",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "KOTON": {
+      "sembol": "KOTON",
+      "sektor": "TOPTAN VE PERAKENDE TİCARET",
+      "alt_sektor": "TOPTAN VE PERAKENDE TİCARET"
+    },
+    "KRPLS": {
+      "sembol": "KRPLS",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "KRGYO": {
+      "sembol": "KRGYO",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "KORTS": {
+      "sembol": "KORTS",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "KRSTL": {
+      "sembol": "KRSTL",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "KOCMT": {
+      "sembol": "KOCMT",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "KRONT": {
+      "sembol": "KRONT",
+      "sektor": "TEKNOLOJİ",
+      "alt_sektor": "TEKNOLOJİ"
+    },
+    "KLSYN": {
+      "sembol": "KLSYN",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "KUVVA": {
+      "sembol": "KUVVA",
+      "sektor": "TOPTAN VE PERAKENDE TİCARET",
+      "alt_sektor": "TOPTAN VE PERAKENDE TİCARET"
+    },
+    "KTKVK": {
+      "sembol": "KTKVK",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "KBORU": {
+      "sembol": "KBORU",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "KTSVK": {
+      "sembol": "KTSVK",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "KZGYO": {
+      "sembol": "KZGYO",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "KTSKR": {
+      "sembol": "KTSKR",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "KOPOL": {
+      "sembol": "KOPOL",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "LILAK": {
+      "sembol": "LILAK",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "KSTUR": {
+      "sembol": "KSTUR",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "LMKDC": {
+      "sembol": "LMKDC",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "KUYAS": {
+      "sembol": "KUYAS",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "LINK": {
+      "sembol": "LINK",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "LOGO": {
+      "sembol": "LOGO",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "KUTPO": {
+      "sembol": "KUTPO",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "LIDER": {
+      "sembol": "LIDER",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "LIDFA": {
+      "sembol": "LIDFA",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "LKMNH": {
+      "sembol": "LKMNH",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "LUKSK": {
+      "sembol": "LUKSK",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "LYDHO": {
+      "sembol": "LYDHO",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "MACKO": {
+      "sembol": "MACKO",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "LXGYO": {
+      "sembol": "LXGYO",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "LRSHO": {
+      "sembol": "LRSHO",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "MAKIM": {
+      "sembol": "MAKIM",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "LYDYE": {
+      "sembol": "LYDYE",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "MAKTK": {
+      "sembol": "MAKTK",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "MANAS": {
+      "sembol": "MANAS",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "MAGEN": {
+      "sembol": "MAGEN",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "MARMR": {
+      "sembol": "MARMR",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "MAALT": {
+      "sembol": "MAALT",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "MRSHL": {
+      "sembol": "MRSHL",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "MRBAS": {
+      "sembol": "MRBAS",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "MRGYO": {
+      "sembol": "MRGYO",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "MRS": {
+      "sembol": "MRS",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "MASFN": {
+      "sembol": "MASFN",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "MARTI": {
+      "sembol": "MARTI",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "MTRKS": {
+      "sembol": "MTRKS",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "MAVI": {
+      "sembol": "MAVI",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "MZHLD": {
+      "sembol": "MZHLD",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "MEDTR": {
+      "sembol": "MEDTR",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "MEGMT": {
+      "sembol": "MEGMT",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "MEGAP": {
+      "sembol": "MEGAP",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "MEKAG": {
+      "sembol": "MEKAG",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "MDIAZ": {
+      "sembol": "MDIAZ",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "MNDRS": {
+      "sembol": "MNDRS",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "MEPET": {
+      "sembol": "MEPET",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "MERCN": {
+      "sembol": "MERCN",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "MEKMD": {
+      "sembol": "MEKMD",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "MSA": {
+      "sembol": "MSA",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "MERIT": {
+      "sembol": "MERIT",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "MERKO": {
+      "sembol": "MERKO",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "METRO": {
+      "sembol": "METRO",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "MRBKF": {
+      "sembol": "MRBKF",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "METEN": {
+      "sembol": "METEN",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "MTRYO": {
+      "sembol": "MTRYO",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "MBFTR": {
+      "sembol": "MBFTR",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "MEYSU": {
+      "sembol": "MEYSU",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "MCARD": {
+      "sembol": "MCARD",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "MHRGY": {
+      "sembol": "MHRGY",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "MIATK": {
+      "sembol": "MIATK",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "MGROS": {
+      "sembol": "MGROS",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "MDASM": {
+      "sembol": "MDASM",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "MSGYO": {
+      "sembol": "MSGYO",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "MDS": {
+      "sembol": "MDS",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "MILKS": {
+      "sembol": "MILKS",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "MPARK": {
+      "sembol": "MPARK",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "MINTF": {
+      "sembol": "MINTF",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "MMCAS": {
+      "sembol": "MMCAS",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "MSY": {
+      "sembol": "MSY",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "MOGAN": {
+      "sembol": "MOGAN",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "MOBTL": {
+      "sembol": "MOBTL",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "MSYBN": {
+      "sembol": "MSYBN",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "MNDTR": {
+      "sembol": "MNDTR",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "MOPAS": {
+      "sembol": "MOPAS",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "NATEN": {
+      "sembol": "NATEN",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "MNGFA": {
+      "sembol": "MNGFA",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "EGEPO": {
+      "sembol": "EGEPO",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "NTGAZ": {
+      "sembol": "NTGAZ",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "NETGL": {
+      "sembol": "NETGL",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "NTHOL": {
+      "sembol": "NTHOL",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "NETAS": {
+      "sembol": "NETAS",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "NETCD": {
+      "sembol": "NETCD",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "NIBAS": {
+      "sembol": "NIBAS",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "NUHCM": {
+      "sembol": "NUHCM",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "NUGYO": {
+      "sembol": "NUGYO",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "OBAMS": {
+      "sembol": "OBAMS",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "OBASE": {
+      "sembol": "OBASE",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "ODAS": {
+      "sembol": "ODAS",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "NURVK": {
+      "sembol": "NURVK",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "ODINE": {
+      "sembol": "ODINE",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "NRBNK": {
+      "sembol": "NRBNK",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "NYB": {
+      "sembol": "NYB",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "OFSYM": {
+      "sembol": "OFSYM",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "ONCSM": {
+      "sembol": "ONCSM",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "ONRYT": {
+      "sembol": "ONRYT",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "ORCAY": {
+      "sembol": "ORCAY",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "ORGE": {
+      "sembol": "ORGE",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "ORMA": {
+      "sembol": "ORMA",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "ORZAX": {
+      "sembol": "ORZAX",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "OPET": {
+      "sembol": "OPET",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "OSMEN": {
+      "sembol": "OSMEN",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "ORFIN": {
+      "sembol": "ORFIN",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "OSTIM": {
+      "sembol": "OSTIM",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "OTKAR": {
+      "sembol": "OTKAR",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "OSVKS": {
+      "sembol": "OSVKS",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "OTTO": {
+      "sembol": "OTTO",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "OYAKC": {
+      "sembol": "OYAKC",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "OMD": {
+      "sembol": "OMD",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "OYYAT": {
+      "sembol": "OYYAT",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "OYAYO": {
+      "sembol": "OYAYO",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "OYLUM": {
+      "sembol": "OYLUM",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "OTOSR": {
+      "sembol": "OTOSR",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "OZKGY": {
+      "sembol": "OZKGY",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "OZATD": {
+      "sembol": "OZATD",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "OZGYO": {
+      "sembol": "OZGYO",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "OYA": {
+      "sembol": "OYA",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "OZRDN": {
+      "sembol": "OZRDN",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "OZSUB": {
+      "sembol": "OZSUB",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "OZYSR": {
+      "sembol": "OZYSR",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "PAMEL": {
+      "sembol": "PAMEL",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "PNLSN": {
+      "sembol": "PNLSN",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "PAGYO": {
+      "sembol": "PAGYO",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "PAPIL": {
+      "sembol": "PAPIL",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "PRDGS": {
+      "sembol": "PRDGS",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "PRKME": {
+      "sembol": "PRKME",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "PARSN": {
+      "sembol": "PARSN",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "PASEU": {
+      "sembol": "PASEU",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "PRFFK": {
+      "sembol": "PRFFK",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "PSGYO": {
+      "sembol": "PSGYO",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "PAHOL": {
+      "sembol": "PAHOL",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "PATEK": {
+      "sembol": "PATEK",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "PBT": {
+      "sembol": "PBT",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "PBTR": {
+      "sembol": "PBTR",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "PCILT": {
+      "sembol": "PCILT",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "PGSUS": {
+      "sembol": "PGSUS",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "PEKGY": {
+      "sembol": "PEKGY",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "PENGD": {
+      "sembol": "PENGD",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "PENTA": {
+      "sembol": "PENTA",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "PSDTC": {
+      "sembol": "PSDTC",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "PETKM": {
+      "sembol": "PETKM",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "PKENT": {
+      "sembol": "PKENT",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "PETUN": {
+      "sembol": "PETUN",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "PINSU": {
+      "sembol": "PINSU",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "PNSUT": {
+      "sembol": "PNSUT",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "PKART": {
+      "sembol": "PKART",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "PLTUR": {
+      "sembol": "PLTUR",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "POLHO": {
+      "sembol": "POLHO",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "POLTK": {
+      "sembol": "POLTK",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "PRZMA": {
+      "sembol": "PRZMA",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "QNBTR": {
+      "sembol": "QNBTR",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "QYATB": {
+      "sembol": "QYATB",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "YBQ": {
+      "sembol": "YBQ",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "QYHOL": {
+      "sembol": "QYHOL",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "QNBFK": {
+      "sembol": "QNBFK",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "FIN": {
+      "sembol": "FIN",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "QUAGR": {
+      "sembol": "QUAGR",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "QNBFF": {
+      "sembol": "QNBFF",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "QUICK": {
+      "sembol": "QUICK",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "RALYH": {
+      "sembol": "RALYH",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "RNPOL": {
+      "sembol": "RNPOL",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "RAYSG": {
+      "sembol": "RAYSG",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "QNBVK": {
+      "sembol": "QNBVK",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "REEDR": {
+      "sembol": "REEDR",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "QUFIN": {
+      "sembol": "QUFIN",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "RYSAS": {
+      "sembol": "RYSAS",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "RYGYO": {
+      "sembol": "RYGYO",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "RODRG": {
+      "sembol": "RODRG",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "RGYAS": {
+      "sembol": "RGYAS",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "RTALB": {
+      "sembol": "RTALB",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "SAFKR": {
+      "sembol": "SAFKR",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "SSAAT": {
+      "sembol": "SSAAT",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "RUBNS": {
+      "sembol": "RUBNS",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "RUZYE": {
+      "sembol": "RUZYE",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "SANEL": {
+      "sembol": "SANEL",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "SNICA": {
+      "sembol": "SNICA",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "SANKO": {
+      "sembol": "SANKO",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "SANFM": {
+      "sembol": "SANFM",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "SAMAT": {
+      "sembol": "SAMAT",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "SARKY": {
+      "sembol": "SARKY",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "SASA": {
+      "sembol": "SASA",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "SVGYO": {
+      "sembol": "SVGYO",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "SAYAS": {
+      "sembol": "SAYAS",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "SDTTR": {
+      "sembol": "SDTTR",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "SEGMN": {
+      "sembol": "SEGMN",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "SARTN": {
+      "sembol": "SARTN",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "SELVA": {
+      "sembol": "SELVA",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "SEKUR": {
+      "sembol": "SEKUR",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "SELEC": {
+      "sembol": "SELEC",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "SERNT": {
+      "sembol": "SERNT",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "SRVGY": {
+      "sembol": "SRVGY",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "SEYKM": {
+      "sembol": "SEYKM",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "SILVR": {
+      "sembol": "SILVR",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "SNGYO": {
+      "sembol": "SNGYO",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "SMART": {
+      "sembol": "SMART",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "SKYLP": {
+      "sembol": "SKYLP",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "SMRTG": {
+      "sembol": "SMRTG",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "SODSN": {
+      "sembol": "SODSN",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "SOHOE": {
+      "sembol": "SOHOE",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "SOKE": {
+      "sembol": "SOKE",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "SONME": {
+      "sembol": "SONME",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "SKTAS": {
+      "sembol": "SKTAS",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "SNPAM": {
+      "sembol": "SNPAM",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "SUMAS": {
+      "sembol": "SUMAS",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "SUWEN": {
+      "sembol": "SUWEN",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "SURGY": {
+      "sembol": "SURGY",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "SUNTK": {
+      "sembol": "SUNTK",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "SMRVA": {
+      "sembol": "SMRVA",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "SARAE": {
+      "sembol": "SARAE",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "SMRFA": {
+      "sembol": "SMRFA",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "SEKFK": {
+      "sembol": "SEKFK",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "SEGYO": {
+      "sembol": "SEGYO",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "SKYMD": {
+      "sembol": "SKYMD",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "SKY": {
+      "sembol": "SKY",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "TABGD": {
+      "sembol": "TABGD",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "SOKM": {
+      "sembol": "SOKM",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "SKBNK": {
+      "sembol": "SKBNK",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "SEK": {
+      "sembol": "SEK",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "TAC": {
+      "sembol": "TAC",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "TCRYT": {
+      "sembol": "TCRYT",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "TARKM": {
+      "sembol": "TARKM",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "TAMFA": {
+      "sembol": "TAMFA",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "TARFN": {
+      "sembol": "TARFN",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "TATGD": {
+      "sembol": "TATGD",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "TNZTP": {
+      "sembol": "TNZTP",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "TATEN": {
+      "sembol": "TATEN",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "TAVHL": {
+      "sembol": "TAVHL",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "TEKTU": {
+      "sembol": "TEKTU",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "DRPHN": {
+      "sembol": "DRPHN",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "TKFEN": {
+      "sembol": "TKFEN",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "TKNKA": {
+      "sembol": "TKNKA",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "TEBFA": {
+      "sembol": "TEBFA",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "TKNSA": {
+      "sembol": "TKNSA",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "TMPOL": {
+      "sembol": "TMPOL",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "TRHOL": {
+      "sembol": "TRHOL",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "TRFFA": {
+      "sembol": "TRFFA",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "TEVKS": {
+      "sembol": "TEVKS",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "TAE": {
+      "sembol": "TAE",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "TRBNK": {
+      "sembol": "TRBNK",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "TERA": {
+      "sembol": "TERA",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "TEHOL": {
+      "sembol": "TEHOL",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "TGSAS": {
+      "sembol": "TGSAS",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "TRA": {
+      "sembol": "TRA",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "TFNVK": {
+      "sembol": "TFNVK",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "TRGYO": {
+      "sembol": "TRGYO",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "TOASO": {
+      "sembol": "TOASO",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "TRYKI": {
+      "sembol": "TRYKI",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "TRENJ": {
+      "sembol": "TRENJ",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "TRMET": {
+      "sembol": "TRMET",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "TSPOR": {
+      "sembol": "TSPOR",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "TLMAN": {
+      "sembol": "TLMAN",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "TDGYO": {
+      "sembol": "TDGYO",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "TSGYO": {
+      "sembol": "TSGYO",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "TRMEN": {
+      "sembol": "TRMEN",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "TUCLK": {
+      "sembol": "TUCLK",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "TVM": {
+      "sembol": "TVM",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "TUKAS": {
+      "sembol": "TUKAS",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "TRCAS": {
+      "sembol": "TRCAS",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "TUREX": {
+      "sembol": "TUREX",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "MARBL": {
+      "sembol": "MARBL",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "TRILC": {
+      "sembol": "TRILC",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "TCELL": {
+      "sembol": "TCELL",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "TRKFN": {
+      "sembol": "TRKFN",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "TMSN": {
+      "sembol": "TMSN",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "TUPRS": {
+      "sembol": "TUPRS",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "TRKNT": {
+      "sembol": "TRKNT",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "THYAO": {
+      "sembol": "THYAO",
+      "sektor": "ULAŞTIRMA VE DEPOLAMA",
+      "alt_sektor": "ULAŞTIRMA VE DEPOLAMA"
+    },
+    "TRALT": {
+      "sembol": "TRALT",
+      "sektor": "MADENCİLİK VE TAŞ OCAKÇILIĞI",
+      "alt_sektor": "MADENCİLİK VE TAŞ OCAKÇILIĞI"
+    },
+    "TTKOM": {
+      "sembol": "TTKOM",
+      "sektor": "BİLGİ VE İLETİŞİM",
+      "alt_sektor": "BİLGİ VE İLETİŞİM"
+    },
+    "PRKAB": {
+      "sembol": "PRKAB",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "TBORG": {
+      "sembol": "TBORG",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "TTRAK": {
+      "sembol": "TTRAK",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "TURGG": {
+      "sembol": "TURGG",
+      "sektor": "İNŞAAT VE BAYINDIRLIK",
+      "alt_sektor": "İNŞAAT VE BAYINDIRLIK"
+    },
+    "GARAN": {
+      "sembol": "GARAN",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "VEYAS": {
+      "sembol": "VEYAS",
+      "sektor": "ELEKTRİK GAZ VE SU",
+      "alt_sektor": "ELEKTRİK GAZ VE SU"
+    },
+    "HALKB": {
+      "sembol": "HALKB",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "ISATR": {
+      "sembol": "ISATR",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "TGB": {
+      "sembol": "TGB",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "THL": {
+      "sembol": "THL",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "ISBTR": {
+      "sembol": "ISBTR",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "EXIMB": {
+      "sembol": "EXIMB",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "THR": {
+      "sembol": "THR",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "ISKUR": {
+      "sembol": "ISKUR",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "ISCTR": {
+      "sembol": "ISCTR",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "KLNMA": {
+      "sembol": "KLNMA",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "TIB": {
+      "sembol": "TIB",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "TURSG": {
+      "sembol": "TURSG",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "TSKB": {
+      "sembol": "TSKB",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "KLN": {
+      "sembol": "KLN",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "TSK": {
+      "sembol": "TSK",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "SISE": {
+      "sembol": "SISE",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "UFUK": {
+      "sembol": "UFUK",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "ULAS": {
+      "sembol": "ULAS",
+      "sektor": "OTELLER VE LOKANTALAR",
+      "alt_sektor": "OTELLER VE LOKANTALAR"
+    },
+    "TVB": {
+      "sembol": "TVB",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "TV8TV": {
+      "sembol": "TV8TV",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "ULUFA": {
+      "sembol": "ULUFA",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "ULUSE": {
+      "sembol": "ULUSE",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "ULUUN": {
+      "sembol": "ULUUN",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "UMPAS": {
+      "sembol": "UMPAS",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "USAK": {
+      "sembol": "USAK",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "UNLU": {
+      "sembol": "UNLU",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "VAKFA": {
+      "sembol": "VAKFA",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "VAKFN": {
+      "sembol": "VAKFN",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "VKGYO": {
+      "sembol": "VKGYO",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "VKFYO": {
+      "sembol": "VKFYO",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "VAKVK": {
+      "sembol": "VAKVK",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "VAKKO": {
+      "sembol": "VAKKO",
+      "sektor": "TOPTAN VE PERAKENDE TİCARET",
+      "alt_sektor": "TOPTAN VE PERAKENDE TİCARET"
+    },
+    "USHOL": {
+      "sembol": "USHOL",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "VAKBN": {
+      "sembol": "VAKBN",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "UCAYM": {
+      "sembol": "UCAYM",
+      "sektor": "İNŞAAT VE BAYINDIRLIK",
+      "alt_sektor": "İNŞAAT VE BAYINDIRLIK"
+    },
+    "ULKER": {
+      "sembol": "ULKER",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "VERUS": {
+      "sembol": "VERUS",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "VDFLO": {
+      "sembol": "VDFLO",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "VERTU": {
+      "sembol": "VERTU",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "VESBE": {
+      "sembol": "VESBE",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "VKING": {
+      "sembol": "VKING",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "VESTL": {
+      "sembol": "VESTL",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "VSNMD": {
+      "sembol": "VSNMD",
+      "sektor": "MADENCİLİK VE TAŞ OCAKÇILIĞI",
+      "alt_sektor": "MADENCİLİK VE TAŞ OCAKÇILIĞI"
+    },
+    "VANGD": {
+      "sembol": "VANGD",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "VBTYZ": {
+      "sembol": "VBTYZ",
+      "sektor": "TEKNOLOJİ",
+      "alt_sektor": "TEKNOLOJİ"
+    },
+    "VDFAS": {
+      "sembol": "VDFAS",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "YKFKT": {
+      "sembol": "YKFKT",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "YKFIN": {
+      "sembol": "YKFIN",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "YKR": {
+      "sembol": "YKR",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "YAPRK": {
+      "sembol": "YAPRK",
+      "sektor": "TARIM, ORMANCILIK VE BALIKÇILIK",
+      "alt_sektor": "TARIM, ORMANCILIK VE BALIKÇILIK"
+    },
+    "VRGYO": {
+      "sembol": "VRGYO",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "YKYAT": {
+      "sembol": "YKYAT",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "YKB": {
+      "sembol": "YKB",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "YATAS": {
+      "sembol": "YATAS",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "YYLGD": {
+      "sembol": "YYLGD",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "YGGYO": {
+      "sembol": "YGGYO",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "YEOTK": {
+      "sembol": "YEOTK",
+      "sektor": "MESLEKİ, BİLİMSEL VE TEKNİK FAALİYETLER",
+      "alt_sektor": "MESLEKİ, BİLİMSEL VE TEKNİK FAALİYETLER"
+    },
+    "YATVK": {
+      "sembol": "YATVK",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "YYAPI": {
+      "sembol": "YYAPI",
+      "sektor": "İNŞAAT VE BAYINDIRLIK",
+      "alt_sektor": "İNŞAAT VE BAYINDIRLIK"
+    },
+    "YIGIT": {
+      "sembol": "YIGIT",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "YONGA": {
+      "sembol": "YONGA",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "YUNSA": {
+      "sembol": "YUNSA",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "YKBNK": {
+      "sembol": "YKBNK",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "ZEDUR": {
+      "sembol": "ZEDUR",
+      "sektor": "ELEKTRİK GAZ VE SU",
+      "alt_sektor": "ELEKTRİK GAZ VE SU"
+    },
+    "YAYLA": {
+      "sembol": "YAYLA",
+      "sektor": "İNŞAAT VE BAYINDIRLIK",
+      "alt_sektor": "İNŞAAT VE BAYINDIRLIK"
+    },
+    "YESIL": {
+      "sembol": "YESIL",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "ZRGYO": {
+      "sembol": "ZRGYO",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "YBTAS": {
+      "sembol": "YBTAS",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "ZOREN": {
+      "sembol": "ZOREN",
+      "sektor": "ELEKTRİK GAZ VE SU",
+      "alt_sektor": "ELEKTRİK GAZ VE SU"
+    },
+    "YKSLN": {
+      "sembol": "YKSLN",
+      "sektor": "İMALAT",
+      "alt_sektor": "İMALAT"
+    },
+    "BINHO": {
+      "sembol": "BINHO",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "ZKBVK": {
+      "sembol": "ZKBVK",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "ZKBVR": {
+      "sembol": "ZKBVR",
+      "sektor": "BILINMIYOR",
+      "alt_sektor": "BILINMIYOR"
+    },
+    "ZGYO": {
+      "sembol": "ZGYO",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    },
+    "ZERGY": {
+      "sembol": "ZERGY",
+      "sektor": "MALİ KURULUŞLAR",
+      "alt_sektor": "MALİ KURULUŞLAR"
+    }
+  }
+}

@@ -244,81 +244,6 @@ def mesaj_parcala_gonder(update, mesaj, limit=3900):
 # TEKNİK ANALİZ
 # =========================================================
 
-
-
-# =========================================================
-# CANLI MAKRO / SEKTOR ETKI OKUYUCU
-# =========================================================
-
-_MAKRO_CACHE = {
-    "mtime": None,
-    "veri": {}
-}
-
-
-def canli_makro_puani_getir(sembol):
-    """
-    makro_canli_etki.json dosyasini mtime cache ile okur.
-    Her hisse analizinde diski tekrar tekrar okumaz.
-    """
-    try:
-        dosya = os.path.join(
-            "webapp",
-            "data",
-            "makro_canli_etki.json"
-        )
-
-        if not os.path.exists(dosya):
-            return {
-                "makro_puani": 0.0,
-                "sektor_puani": 0.0,
-                "sektor": ""
-            }
-
-        mtime = os.path.getmtime(dosya)
-
-        if _MAKRO_CACHE["mtime"] != mtime:
-            with open(
-                dosya,
-                "r",
-                encoding="utf-8"
-            ) as f:
-                _MAKRO_CACHE["veri"] = json.load(f)
-
-            _MAKRO_CACHE["mtime"] = mtime
-
-        hisseler = _MAKRO_CACHE[
-            "veri"
-        ].get(
-            "hisseler",
-            {}
-        )
-
-        bilgi = hisseler.get(
-            str(sembol or "").strip().upper(),
-            {}
-        )
-
-        return {
-            "makro_puani": guvenli_float(
-                bilgi.get("makro_puani")
-            ),
-            "sektor_puani": guvenli_float(
-                bilgi.get("sektor_puani")
-            ),
-            "sektor": str(
-                bilgi.get("sektor", "")
-            )
-        }
-
-    except Exception:
-        return {
-            "makro_puani": 0.0,
-            "sektor_puani": 0.0,
-            "sektor": ""
-        }
-
-
 def hisse_analiz_hesapla(
     sembol,
     period="6mo"
@@ -1136,25 +1061,9 @@ def hisse_analiz_hesapla(
                 haber_ai_puani = float(haber_bilgi)
 
             # Sadece anlamli haber teknik seviyeleri etkilesin.
-            makro_canli = canli_makro_puani_getir(
-                sembol
-            )
-
-            makro_ai_puani = guvenli_float(
-                makro_canli.get("makro_puani")
-            )
-
-            sektor_ai_puani = guvenli_float(
-                makro_canli.get("sektor_puani")
-            )
-
             haber_ai_aktif = (
-                (
-                    abs(haber_ai_puani) >= 0.5
-                    and haber_ai_guven >= 25
-                )
-                or abs(makro_ai_puani) >= 0.5
-                or abs(sektor_ai_puani) >= 0.5
+                abs(haber_ai_puani) >= 0.5
+                and haber_ai_guven >= 25
             )
 
             if haber_ai_aktif:
@@ -1179,14 +1088,8 @@ def hisse_analiz_hesapla(
                         direnc=direnc_ai,
                         haber_puani=haber_ai_puani,
                         haber_guven=haber_ai_guven,
-                        sektor_puani=canli_makro_puani_getir(sembol).get(
-                            "sektor_puani",
-                            0
-                        ),
-                        makro_puani=canli_makro_puani_getir(sembol).get(
-                            "makro_puani",
-                            0
-                        ),
+                        sektor_puani=0,
+                        makro_puani=0,
                         fiyat_degisim_yuzde=gunluk_degisim,
                         hacim_orani=hacim_orani,
                         vwap_ustu=vwap_ai_ustu,
@@ -1238,44 +1141,19 @@ def hisse_analiz_hesapla(
                     )
                 )
 
-                eski_karar_hedef = karar_hedef
-                eski_karar_stop = karar_stop
-
-                yeni_ai_hedef = float(
+                karar_hedef = float(
                     haber_ai_sonuc.get(
                         "hedef",
                         karar_hedef
                     )
                 )
 
-                yeni_ai_stop = float(
+                karar_stop = float(
                     haber_ai_sonuc.get(
                         "stop",
                         karar_stop
                     )
                 )
-
-                toplam_ai_etki = (
-                    haber_ai_puani
-                    + makro_ai_puani
-                    + sektor_ai_puani
-                )
-
-                # Negatif etki hedefi yukari tasiyamaz,
-                # stopu da daha genis hale getiremez.
-                if toplam_ai_etki < 0:
-                    karar_hedef = min(
-                        eski_karar_hedef,
-                        yeni_ai_hedef
-                    )
-
-                    karar_stop = max(
-                        eski_karar_stop,
-                        yeni_ai_stop
-                    )
-                else:
-                    karar_hedef = yeni_ai_hedef
-                    karar_stop = yeni_ai_stop
 
                 karar_nedenleri.append(
                     f"Haber AI: {haber_ai_puani:+.1f}/10 "
@@ -1380,12 +1258,12 @@ def hisse_analiz_hesapla(
             "boll_genislik": boll_genislik,
             "boll_konum": boll_konum,
             "boll_durum": boll_durum,
-            "yarin_alim_alt": round(yarin_alim_alt, 2),
-            "yarin_alim_ust": round(yarin_alim_ust, 2),
-            "yarin_kar_al": round(yarin_kar_al, 2),
+            "yarin_alim_alt": yarin_alim_alt,
+            "yarin_alim_ust": yarin_alim_ust,
+            "yarin_kar_al": yarin_kar_al,
             "yarin_satim_alt": yarin_satim_alt,
             "yarin_satim_ust": yarin_satim_ust,
-            "yarin_stop": round(yarin_stop, 2),
+            "yarin_stop": yarin_stop,
             "yarin_kirilim": yarin_kirilim,
             "yarin_kirilim_hedef": yarin_kirilim_hedef,
             "hacimli_kirilim_durum": hacimli_kirilim_durum,
@@ -1395,10 +1273,10 @@ def hisse_analiz_hesapla(
             "guven_skoru": guven_skoru,
             "al_puani": al_puani,
             "sat_puani": sat_puani,
-            "karar_giris_alt": round(karar_giris_alt, 2),
-            "karar_giris_ust": round(karar_giris_ust, 2),
-            "karar_hedef": round(karar_hedef, 2),
-            "karar_stop": round(karar_stop, 2),
+            "karar_giris_alt": karar_giris_alt,
+            "karar_giris_ust": karar_giris_ust,
+            "karar_hedef": karar_hedef,
+            "karar_stop": karar_stop,
             "karar_risk": karar_risk,
             "karar_getiri": karar_getiri,
             "karar_rr": karar_rr,
@@ -1413,18 +1291,6 @@ def hisse_analiz_hesapla(
             "haber_ai_karar": haber_ai_karar,
             "nihai_ai_puan": round(haber_nihai_ai_puan, 1),
             "haber_seviye_etkisi": round(haber_seviye_etkisi, 3),
-            "makro_puani": canli_makro_puani_getir(sembol).get(
-                "makro_puani",
-                0
-            ),
-            "sektor_puani": canli_makro_puani_getir(sembol).get(
-                "sektor_puani",
-                0
-            ),
-            "makro_sektor": canli_makro_puani_getir(sembol).get(
-                "sektor",
-                ""
-            ),
 
             "puan": puan,
             "nedenler": nedenler,
@@ -3986,25 +3852,9 @@ def gun_ici_analiz_hesapla(sembol, veri=None):
         gun_ici_haber_seviye_etkisi = 0.0
 
         try:
-            makro_canli = canli_makro_puani_getir(
-                sembol
-            )
-
-            makro_ai_puani = guvenli_float(
-                makro_canli.get("makro_puani")
-            )
-
-            sektor_ai_puani = guvenli_float(
-                makro_canli.get("sektor_puani")
-            )
-
             gun_ici_haber_ai_aktif = (
-                (
-                    abs(float(haber_puani or 0)) >= 0.5
-                    and float(haber_guven or 0) >= 25
-                )
-                or abs(makro_ai_puani) >= 0.5
-                or abs(sektor_ai_puani) >= 0.5
+                abs(float(haber_puani or 0)) >= 0.5
+                and float(haber_guven or 0) >= 25
             )
 
             if gun_ici_haber_ai_aktif:
@@ -4042,14 +3892,8 @@ def gun_ici_analiz_hesapla(sembol, veri=None):
                         ),
                         haber_puani=haber_puani,
                         haber_guven=haber_guven,
-                        sektor_puani=canli_makro_puani_getir(sembol).get(
-                            "sektor_puani",
-                            0
-                        ),
-                        makro_puani=canli_makro_puani_getir(sembol).get(
-                            "makro_puani",
-                            0
-                        ),
+                        sektor_puani=0,
+                        makro_puani=0,
                         fiyat_degisim_yuzde=acilisa_gore_degisim,
                         hacim_orani=hacim3_orani,
                         vwap_ustu=vwap_ai_ustu,
@@ -4101,42 +3945,19 @@ def gun_ici_analiz_hesapla(sembol, veri=None):
                     )
                 )
 
-                eski_kar_al = kar_al
-                eski_stop = stop
-
-                yeni_ai_hedef = float(
+                kar_al = float(
                     ai_sonuc.get(
                         "hedef",
                         kar_al
                     )
                 )
 
-                yeni_ai_stop = float(
+                stop = float(
                     ai_sonuc.get(
                         "stop",
                         stop
                     )
                 )
-
-                toplam_ai_etki = (
-                    float(haber_puani or 0)
-                    + makro_ai_puani
-                    + sektor_ai_puani
-                )
-
-                if toplam_ai_etki < 0:
-                    kar_al = min(
-                        eski_kar_al,
-                        yeni_ai_hedef
-                    )
-
-                    stop = max(
-                        eski_stop,
-                        yeni_ai_stop
-                    )
-                else:
-                    kar_al = yeni_ai_hedef
-                    stop = yeni_ai_stop
 
                 gun_ici_karar_nedenleri.append(
                     f"Haber AI {float(haber_puani):+.1f}/10 "
@@ -4257,18 +4078,6 @@ def gun_ici_analiz_hesapla(sembol, veri=None):
             "gun_ici_haber_seviye_etkisi": round(
                 gun_ici_haber_seviye_etkisi,
                 3
-            ),
-            "makro_puani": canli_makro_puani_getir(sembol).get(
-                "makro_puani",
-                0
-            ),
-            "sektor_puani": canli_makro_puani_getir(sembol).get(
-                "sektor_puani",
-                0
-            ),
-            "makro_sektor": canli_makro_puani_getir(sembol).get(
-                "sektor",
-                ""
             ),
 
             "gun_ici_karar": gun_ici_karar,
@@ -5638,26 +5447,9 @@ def gun_ici_top10_mesaji():
             ),
             (
                 f"   🤖 Nihai AI: "
-                f"{a.get('gun_ici_nihai_ai_puan', a.get('gun_ici_puan', 0)):.0f}/100 | "
+                f"{a.get('gun_ici_puan', 0):.0f}/100 | "
                 f"{a.get('haber_sinifi', 'NOTR')} | "
                 f"Güven %{a.get('haber_guven', 0):.0f}"
-            ),
-            (
-                f"   🧭 AI Kararı: "
-                f"{a.get('gun_ici_haber_ai_karar', a.get('gun_ici_karar', 'IZLE'))} | "
-                f"Fiyat Teyidi "
-                f"{a.get('gun_ici_haber_fiyat_teyidi', 0):+.1f}"
-            ),
-            (
-                f"   🎯 Alım Bölgesi: "
-                f"{a.get('gun_ici_alim_alt', 0):.2f} - "
-                f"{a.get('gun_ici_alim_ust', 0):.2f} TL"
-            ),
-            (
-                f"   💵 Hedef: "
-                f"{a.get('gun_ici_kar_al', 0):.2f} TL | "
-                f"🛑 Stop: "
-                f"{a.get('gun_ici_stop', 0):.2f} TL"
             ),
             (
                 f"   💰 {a['fiyat']:.2f} TL | "
@@ -5973,186 +5765,6 @@ def yarin_potansiyel_hesapla(a):
             teknik_puan
         )
 
-        # =================================================
-        # MADDE 44-47 - YARIN TOP10 DINAMIK HABER AI
-        # =================================================
-        a["yarin_haber_ai_aktif"] = False
-        a["yarin_ai_karar"] = "IZLE"
-        a["yarin_haber_fiyat_teyidi"] = 0.0
-        a["yarin_haber_seviye_etkisi"] = 0.0
-
-        # Varsayilan teknik seviyeler korunur.
-        a["ai_yarin_alim_alt"] = guvenli_float(
-            a.get("yarin_alim_alt")
-        )
-        a["ai_yarin_alim_ust"] = guvenli_float(
-            a.get("yarin_alim_ust")
-        )
-        a["ai_yarin_hedef"] = guvenli_float(
-            a.get("yarin_kar_al")
-        )
-        a["ai_yarin_stop"] = guvenli_float(
-            a.get("yarin_stop")
-        )
-
-        try:
-            haber_puani_ai = guvenli_float(
-                a.get("haber_puani")
-            )
-            haber_guven_ai = guvenli_float(
-                a.get("haber_guven")
-            )
-
-            makro_canli = canli_makro_puani_getir(
-                a.get("sembol")
-            )
-
-            makro_ai_puani = guvenli_float(
-                makro_canli.get("makro_puani")
-            )
-
-            sektor_ai_puani = guvenli_float(
-                makro_canli.get("sektor_puani")
-            )
-
-            haber_ai_aktif = (
-                (
-                    abs(haber_puani_ai) >= 0.5
-                    and haber_guven_ai >= 25
-                )
-                or abs(makro_ai_puani) >= 0.5
-                or abs(sektor_ai_puani) >= 0.5
-            )
-
-            a["yarin_haber_ai_aktif"] = haber_ai_aktif
-
-            if haber_ai_aktif:
-
-                vwap_ai_ustu = None
-
-                vwap_durum_ai = str(
-                    a.get("vwap20_durum", "")
-                )
-
-                if vwap_durum_ai == "USTUNDE":
-                    vwap_ai_ustu = True
-                elif vwap_durum_ai == "ALTINDA":
-                    vwap_ai_ustu = False
-
-                ai_sonuc = (
-                    haber_etki_motoru.hisse_haber_ai_guncelle(
-                        teknik_puan=teknik_puan,
-                        fiyat=fiyat,
-                        atr=max(
-                            guvenli_float(a.get("atr14")),
-                            fiyat * 0.003
-                        ),
-                        destek=guvenli_float(
-                            a.get("destek")
-                        ),
-                        direnc=guvenli_float(
-                            a.get("direnc")
-                        ),
-                        haber_puani=haber_puani_ai,
-                        haber_guven=haber_guven_ai,
-                        sektor_puani=canli_makro_puani_getir(sembol).get(
-                            "sektor_puani",
-                            0
-                        ),
-                        makro_puani=canli_makro_puani_getir(sembol).get(
-                            "makro_puani",
-                            0
-                        ),
-                        fiyat_degisim_yuzde=degisim,
-                        hacim_orani=hacim,
-                        vwap_ustu=vwap_ai_ustu,
-                        obv_pozitif=None,
-                        piyasa_rejimi=0,
-                        haber_dakika=0,
-                        ogrenilmis_katsayi=1.0,
-                    )
-                )
-
-                a["yarin_ai_karar"] = ai_sonuc.get(
-                    "ai_karar",
-                    "IZLE"
-                )
-
-                a["yarin_haber_fiyat_teyidi"] = (
-                    guvenli_float(
-                        ai_sonuc.get("fiyat_teyidi")
-                    )
-                )
-
-                a["yarin_haber_seviye_etkisi"] = (
-                    guvenli_float(
-                        ai_sonuc.get(
-                            "haber_seviye_etkisi"
-                        )
-                    )
-                )
-
-                a["nihai_ai_puan"] = guvenli_float(
-                    ai_sonuc.get(
-                        "nihai_ai_puan",
-                        a["nihai_ai_puan"]
-                    )
-                )
-
-                a["ai_yarin_alim_alt"] = guvenli_float(
-                    ai_sonuc.get(
-                        "alim_alt",
-                        a["ai_yarin_alim_alt"]
-                    )
-                )
-
-                a["ai_yarin_alim_ust"] = guvenli_float(
-                    ai_sonuc.get(
-                        "alim_ust",
-                        a["ai_yarin_alim_ust"]
-                    )
-                )
-
-                eski_ai_hedef = a["ai_yarin_hedef"]
-                eski_ai_stop = a["ai_yarin_stop"]
-
-                yeni_ai_hedef = guvenli_float(
-                    ai_sonuc.get(
-                        "hedef",
-                        eski_ai_hedef
-                    )
-                )
-
-                yeni_ai_stop = guvenli_float(
-                    ai_sonuc.get(
-                        "stop",
-                        eski_ai_stop
-                    )
-                )
-
-                toplam_ai_etki = (
-                    haber_puani_ai
-                    + makro_ai_puani
-                    + sektor_ai_puani
-                )
-
-                if toplam_ai_etki < 0:
-                    a["ai_yarin_hedef"] = min(
-                        eski_ai_hedef,
-                        yeni_ai_hedef
-                    )
-
-                    a["ai_yarin_stop"] = max(
-                        eski_ai_stop,
-                        yeni_ai_stop
-                    )
-                else:
-                    a["ai_yarin_hedef"] = yeni_ai_hedef
-                    a["ai_yarin_stop"] = yeni_ai_stop
-
-        except Exception:
-            pass
-
         return max(
             0,
             min(
@@ -6167,22 +5779,6 @@ def yarin_potansiyel_hesapla(a):
         a["haber_guven"] = 0
         a["haber_sinifi"] = "NOTR"
         a["nihai_ai_puan"] = teknik_puan
-        a["yarin_haber_ai_aktif"] = False
-        a["yarin_ai_karar"] = "IZLE"
-        a["yarin_haber_fiyat_teyidi"] = 0.0
-        a["yarin_haber_seviye_etkisi"] = 0.0
-        a["ai_yarin_alim_alt"] = guvenli_float(
-            a.get("yarin_alim_alt")
-        )
-        a["ai_yarin_alim_ust"] = guvenli_float(
-            a.get("yarin_alim_ust")
-        )
-        a["ai_yarin_hedef"] = guvenli_float(
-            a.get("yarin_kar_al")
-        )
-        a["ai_yarin_stop"] = guvenli_float(
-            a.get("yarin_stop")
-        )
         return teknik_puan
 
 
@@ -6237,17 +5833,6 @@ def yarin_top10_mesaji(sonuclar=None, toplam=None):
             f"{guvenli_float(a.get('nihai_ai_puan', skor)):.0f}/100 | "
             f"{a.get('haber_sinifi', 'NOTR')} | "
             f"Güven %{guvenli_float(a.get('haber_guven', 0)):.0f}\n"
-            f"   🧭 AI Kararı: "
-            f"{a.get('yarin_ai_karar', 'IZLE')} | "
-            f"Fiyat Teyidi "
-            f"{guvenli_float(a.get('yarin_haber_fiyat_teyidi', 0)):+.1f}\n"
-            f"   🎯 Alım Bölgesi: "
-            f"{guvenli_float(a.get('ai_yarin_alim_alt', a.get('yarin_alim_alt'))):.2f} - "
-            f"{guvenli_float(a.get('ai_yarin_alim_ust', a.get('yarin_alim_ust'))):.2f} TL\n"
-            f"   💵 AI Hedef: "
-            f"{guvenli_float(a.get('ai_yarin_hedef', a.get('yarin_kar_al'))):.2f} TL | "
-            f"🛑 AI Stop: "
-            f"{guvenli_float(a.get('ai_yarin_stop', a.get('yarin_stop'))):.2f} TL\n"
             f"   💰 {guvenli_float(a.get('fiyat')):.2f} TL "
             f"({guvenli_float(a.get('degisim')):+.2f}%)\n"
             f"   RSI {guvenli_float(a.get('rsi')):.1f} | "
