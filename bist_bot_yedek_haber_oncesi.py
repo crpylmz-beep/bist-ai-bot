@@ -2279,31 +2279,6 @@ def ozet_mesaji(a):
     hacim_y = hacim_yorumu(a["hacim_orani"])
     macd_y = macd_yorumu(a["macd"], a["signal"], a["hist"])
 
-    # HABER / KAP AI
-    try:
-        haber_ai = haber_zeka.haber_puani_getir(a.get("sembol"))
-        haber_puani = guvenli_float(haber_ai.get("puan"))
-        haber_guven = guvenli_float(haber_ai.get("guven"))
-        haber_sinifi = haber_ai.get("sinif", "NOTR")
-        haber_adet = int(haber_ai.get("adet", 0) or 0)
-
-        haber_birlesik = haber_zeka.teknik_haber_birlestir(
-            a.get("puan", 0),
-            haber_puani,
-            haber_guven
-        )
-
-        haber_nihai_ai = guvenli_float(
-            haber_birlesik.get("nihai_puan", a.get("puan", 0))
-        )
-
-    except Exception:
-        haber_puani = 0
-        haber_guven = 0
-        haber_sinifi = "NOTR"
-        haber_adet = 0
-        haber_nihai_ai = guvenli_float(a.get("puan", 0))
-
     durum = a.get("hacimli_kirilim_durum", "BEKLENIYOR")
 
     if durum == "GERCEKLESTI":
@@ -2393,15 +2368,6 @@ def ozet_mesaji(a):
         f"{a.get('yarin_kirilim_hedef', 0):.2f} TL\n"
 
         f"{kirilim_yazi}\n\n"
-
-        f"📰 HABER / KAP AI\n"
-        f"━━━━━━━━━━━━━━\n"
-        f"Etki: {haber_puani:+.1f}/10\n"
-        f"Sınıf: {haber_sinifi}\n"
-        f"Haber Güveni: %{haber_guven:.0f}\n"
-        f"İzlenen Haber: {haber_adet}\n"
-        f"Teknik Skor: {a.get('puan', 0)}/100\n"
-        f"🤖 Nihai AI Skoru: {haber_nihai_ai:.0f}/100\n\n"
 
         f"\U0001F9E0 ALGOR\u0130TMA KARARI\n"
         f"\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n"
@@ -3493,35 +3459,6 @@ def gun_ici_analiz_hesapla(sembol, veri=None):
             min(100, puan)
         )
 
-        # =================================================
-        # GUN ICI HABER / KAP AI KATKISI
-        # =================================================
-        teknik_gun_ici_puan = puan
-
-        try:
-            haber = haber_zeka.haber_puani_getir(sembol)
-
-            birlesik = haber_zeka.teknik_haber_birlestir(
-                teknik_gun_ici_puan,
-                haber.get("puan", 0),
-                haber.get("guven", 0)
-            )
-
-            puan = birlesik.get(
-                "nihai_puan",
-                teknik_gun_ici_puan
-            )
-
-            haber_puani = haber.get("puan", 0)
-            haber_guven = haber.get("guven", 0)
-            haber_sinifi = haber.get("sinif", "NOTR")
-
-        except Exception:
-            puan = teknik_gun_ici_puan
-            haber_puani = 0
-            haber_guven = 0
-            haber_sinifi = "NOTR"
-
         # -------------------------------------------------
         # GUN ICI ISLEM SEVIYELERI
         # -------------------------------------------------
@@ -3731,10 +3668,6 @@ def gun_ici_analiz_hesapla(sembol, veri=None):
             "sembol": sembol,
             "fiyat": fiyat,
             "gun_ici_puan": puan,
-            "teknik_gun_ici_puan": teknik_gun_ici_puan,
-            "haber_puani": haber_puani,
-            "haber_guven": haber_guven,
-            "haber_sinifi": haber_sinifi,
             "gun_ici_karar": gun_ici_karar,
             "gun_ici_guven": gun_ici_guven,
             "gun_ici_al_puani": gun_ici_al_puani,
@@ -5096,17 +5029,6 @@ def gun_ici_top10_mesaji():
                 f"{a['gun_ici_puan']:.0f}/100"
             ),
             (
-                f"   🧠 Teknik: "
-                f"{a.get('teknik_gun_ici_puan', a['gun_ici_puan']):.0f}/100 | "
-                f"Haber: {a.get('haber_puani', 0):+.1f}/10"
-            ),
-            (
-                f"   🤖 Nihai AI: "
-                f"{a.get('gun_ici_puan', 0):.0f}/100 | "
-                f"{a.get('haber_sinifi', 'NOTR')} | "
-                f"Güven %{a.get('haber_guven', 0):.0f}"
-            ),
-            (
                 f"   💰 {a['fiyat']:.2f} TL | "
                 f"Açılışa göre "
                 f"{a['acilisa_gore_degisim']:+.2f}%"
@@ -5391,50 +5313,11 @@ def yarin_potansiyel_hesapla(a):
     if degisim > 6:
         return -999
 
-    # =====================================================
-    # HABER / KAP AI KATKISI
-    # =====================================================
-
-    teknik_puan = max(
+    # 100/100 kesinlik algisini engelle
+    return max(
         0,
         min(95, round(puan))
     )
-
-    try:
-        haber = haber_zeka.haber_puani_getir(
-            a.get("sembol")
-        )
-
-        birlesik = haber_zeka.teknik_haber_birlestir(
-            teknik_puan,
-            haber.get("puan", 0),
-            haber.get("guven", 0)
-        )
-
-        a["teknik_puan_yarin"] = teknik_puan
-        a["haber_puani"] = haber.get("puan", 0)
-        a["haber_guven"] = haber.get("guven", 0)
-        a["haber_sinifi"] = haber.get("sinif", "NOTR")
-        a["nihai_ai_puan"] = birlesik.get(
-            "nihai_puan",
-            teknik_puan
-        )
-
-        return max(
-            0,
-            min(
-                95,
-                round(a["nihai_ai_puan"])
-            )
-        )
-
-    except Exception:
-        a["teknik_puan_yarin"] = teknik_puan
-        a["haber_puani"] = 0
-        a["haber_guven"] = 0
-        a["haber_sinifi"] = "NOTR"
-        a["nihai_ai_puan"] = teknik_puan
-        return teknik_puan
 
 
 # =========================================================
@@ -5481,13 +5364,6 @@ def yarin_top10_mesaji(sonuclar=None, toplam=None):
 
         mesaj += (
             f"🏅 {i}. {a.get('sembol', '-')} — {skor}/100\n"
-            f"   🧠 Teknik: "
-            f"{guvenli_float(a.get('teknik_puan_yarin', skor)):.0f}/100 | "
-            f"Haber: {guvenli_float(a.get('haber_puani', 0)):+.1f}/10\n"
-            f"   🤖 Nihai AI: "
-            f"{guvenli_float(a.get('nihai_ai_puan', skor)):.0f}/100 | "
-            f"{a.get('haber_sinifi', 'NOTR')} | "
-            f"Güven %{guvenli_float(a.get('haber_guven', 0)):.0f}\n"
             f"   💰 {guvenli_float(a.get('fiyat')):.2f} TL "
             f"({guvenli_float(a.get('degisim')):+.2f}%)\n"
             f"   RSI {guvenli_float(a.get('rsi')):.1f} | "

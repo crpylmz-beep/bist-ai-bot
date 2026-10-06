@@ -1,4 +1,3 @@
-import haber_zeka
 import os
 import math
 import time
@@ -2279,31 +2278,6 @@ def ozet_mesaji(a):
     hacim_y = hacim_yorumu(a["hacim_orani"])
     macd_y = macd_yorumu(a["macd"], a["signal"], a["hist"])
 
-    # HABER / KAP AI
-    try:
-        haber_ai = haber_zeka.haber_puani_getir(a.get("sembol"))
-        haber_puani = guvenli_float(haber_ai.get("puan"))
-        haber_guven = guvenli_float(haber_ai.get("guven"))
-        haber_sinifi = haber_ai.get("sinif", "NOTR")
-        haber_adet = int(haber_ai.get("adet", 0) or 0)
-
-        haber_birlesik = haber_zeka.teknik_haber_birlestir(
-            a.get("puan", 0),
-            haber_puani,
-            haber_guven
-        )
-
-        haber_nihai_ai = guvenli_float(
-            haber_birlesik.get("nihai_puan", a.get("puan", 0))
-        )
-
-    except Exception:
-        haber_puani = 0
-        haber_guven = 0
-        haber_sinifi = "NOTR"
-        haber_adet = 0
-        haber_nihai_ai = guvenli_float(a.get("puan", 0))
-
     durum = a.get("hacimli_kirilim_durum", "BEKLENIYOR")
 
     if durum == "GERCEKLESTI":
@@ -2393,15 +2367,6 @@ def ozet_mesaji(a):
         f"{a.get('yarin_kirilim_hedef', 0):.2f} TL\n"
 
         f"{kirilim_yazi}\n\n"
-
-        f"📰 HABER / KAP AI\n"
-        f"━━━━━━━━━━━━━━\n"
-        f"Etki: {haber_puani:+.1f}/10\n"
-        f"Sınıf: {haber_sinifi}\n"
-        f"Haber Güveni: %{haber_guven:.0f}\n"
-        f"İzlenen Haber: {haber_adet}\n"
-        f"Teknik Skor: {a.get('puan', 0)}/100\n"
-        f"🤖 Nihai AI Skoru: {haber_nihai_ai:.0f}/100\n\n"
 
         f"\U0001F9E0 ALGOR\u0130TMA KARARI\n"
         f"\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n"
@@ -3493,35 +3458,6 @@ def gun_ici_analiz_hesapla(sembol, veri=None):
             min(100, puan)
         )
 
-        # =================================================
-        # GUN ICI HABER / KAP AI KATKISI
-        # =================================================
-        teknik_gun_ici_puan = puan
-
-        try:
-            haber = haber_zeka.haber_puani_getir(sembol)
-
-            birlesik = haber_zeka.teknik_haber_birlestir(
-                teknik_gun_ici_puan,
-                haber.get("puan", 0),
-                haber.get("guven", 0)
-            )
-
-            puan = birlesik.get(
-                "nihai_puan",
-                teknik_gun_ici_puan
-            )
-
-            haber_puani = haber.get("puan", 0)
-            haber_guven = haber.get("guven", 0)
-            haber_sinifi = haber.get("sinif", "NOTR")
-
-        except Exception:
-            puan = teknik_gun_ici_puan
-            haber_puani = 0
-            haber_guven = 0
-            haber_sinifi = "NOTR"
-
         # -------------------------------------------------
         # GUN ICI ISLEM SEVIYELERI
         # -------------------------------------------------
@@ -3731,10 +3667,6 @@ def gun_ici_analiz_hesapla(sembol, veri=None):
             "sembol": sembol,
             "fiyat": fiyat,
             "gun_ici_puan": puan,
-            "teknik_gun_ici_puan": teknik_gun_ici_puan,
-            "haber_puani": haber_puani,
-            "haber_guven": haber_guven,
-            "haber_sinifi": haber_sinifi,
             "gun_ici_karar": gun_ici_karar,
             "gun_ici_guven": gun_ici_guven,
             "gun_ici_al_puani": gun_ici_al_puani,
@@ -3967,22 +3899,6 @@ def ai_ogrenme_kaydet(sonuclar, model="GUN_ICI"):
     zaman = simdi.strftime("%Y-%m-%d %H:%M:%S")
     dakika = (simdi.minute // 5) * 5
 
-    # AI EGITIM KORUMASI
-    # Sadece hafta ici BIST seansi icinde olusan kayitlar
-    # gercek egitim verisi sayilir.
-    hafta_ici = simdi.weekday() < 5
-    dakika_no = simdi.hour * 60 + simdi.minute
-    seans_acik = (
-        hafta_ici
-        and (10 * 60) <= dakika_no <= (18 * 60 + 10)
-    )
-
-    egitim_durumu = (
-        "EGITIM"
-        if seans_acik
-        else "REFERANS"
-    )
-
     eklenen = 0
 
     for a in sonuclar:
@@ -4009,7 +3925,6 @@ def ai_ogrenme_kaydet(sonuclar, model="GUN_ICI"):
             "model": model,
             "sembol": sembol,
             "zaman": zaman,
-            "egitim_durumu": egitim_durumu,
 
             "karar": karar,
             "sinyal_durumu": a.get(
@@ -4091,13 +4006,8 @@ def ai_ogrenme_kaydet(sonuclar, model="GUN_ICI"):
                 a.get("hacimli_kirilim", False)
             ),
 
-            # Seans disi kayitlar sadece referans veridir.
-            # Gercek basari / ogrenme hesabina girmez.
-            "sonuc": (
-                "BEKLIYOR"
-                if egitim_durumu == "EGITIM"
-                else "REFERANS"
-            ),
+            # Sonraki asamada otomatik doldurulacak.
+            "sonuc": "BEKLIYOR",
             "sonuc_fiyat": None,
             "sonuc_zaman": None,
             "getiri_yuzde": None,
@@ -4240,342 +4150,6 @@ def ai_ogrenme_ozeti_yaz():
             indent=2
         )
 
-
-
-
-
-def ai_ogrenilmis_agirliklari_hesapla():
-    """
-    Tamamlanmis gercek GUN_ICI AL/SAT sinyallerinden
-    gosterge ve kombinasyon basarilarini hesaplar.
-
-    REFERANS kayitlar kullanilmaz.
-    Minimum 30 tamamlanmis sinyal olmadan
-    aktif ogrenilmis agirlik uretilmez.
-    """
-    import json
-    import os
-    from datetime import datetime
-    from collections import defaultdict
-
-    klasor = os.path.join(
-        os.path.dirname(__file__),
-        "webapp",
-        "data"
-    )
-
-    kaynak = os.path.join(
-        klasor,
-        "ai_ogrenme_gecmisi.json"
-    )
-
-    hedef = os.path.join(
-        klasor,
-        "ai_ogrenilmis_agirliklar.json"
-    )
-
-    if not os.path.exists(kaynak):
-        return None
-
-    try:
-        with open(kaynak, "r", encoding="utf-8") as f:
-            veri = json.load(f)
-    except Exception:
-        return None
-
-    kayitlar = [
-        x for x in veri.get("kayitlar", [])
-        if x.get("model") == "GUN_ICI"
-        and x.get("egitim_durumu") != "REFERANS"
-        and x.get("karar") in ("AL", "SAT")
-        and x.get("sonuc") in (
-            "BASARILI",
-            "BASARISIZ"
-        )
-    ]
-
-    minimum = 30
-
-    if len(kayitlar) < minimum:
-        sonuc = {
-            "guncelleme": datetime.now().strftime(
-                "%Y-%m-%d %H:%M:%S"
-            ),
-            "durum": "VERI_TOPLANIYOR",
-            "tamamlanan_sinyal": len(kayitlar),
-            "minimum_gerekli": minimum,
-            "kalan": max(
-                0,
-                minimum - len(kayitlar)
-            ),
-            "aktif": False,
-            "gostergeler": {},
-            "not": (
-                "Minimum gercek tamamlanmis AL/SAT "
-                "ornegi olusmadan ogrenilmis agirliklar "
-                "karar motoruna uygulanmaz."
-            )
-        }
-
-        with open(hedef, "w", encoding="utf-8") as f:
-            json.dump(
-                sonuc,
-                f,
-                ensure_ascii=False,
-                indent=2
-            )
-
-        return sonuc
-
-    istatistik = defaultdict(
-        lambda: {
-            "ornek": 0,
-            "basarili": 0
-        }
-    )
-
-    def ekle(anahtar, basarili):
-        istatistik[anahtar]["ornek"] += 1
-        if basarili:
-            istatistik[anahtar]["basarili"] += 1
-
-    for x in kayitlar:
-        basarili = (
-            x.get("sonuc") == "BASARILI"
-        )
-
-        karar = x.get("karar")
-
-        vwap = float(
-            x.get("vwap_uzaklik", 0) or 0
-        )
-        ema = float(
-            x.get("ema_fark", 0) or 0
-        )
-        rsi = float(
-            x.get("rsi5", 0) or 0
-        )
-        hacim = float(
-            x.get("hacim_orani", 0) or 0
-        )
-        mom15 = float(
-            x.get("momentum15", 0) or 0
-        )
-        mom30 = float(
-            x.get("momentum30", 0) or 0
-        )
-        rr = float(
-            x.get("rr", 0) or 0
-        )
-
-        obv = str(
-            x.get("obv_durum", "YATAY")
-        ).upper()
-
-        kirilim = bool(
-            x.get("hacimli_kirilim", False)
-        )
-
-        # VWAP
-        if vwap > 0:
-            ekle(
-                f"{karar}|VWAP_USTU",
-                basarili
-            )
-        elif vwap < 0:
-            ekle(
-                f"{karar}|VWAP_ALTI",
-                basarili
-            )
-
-        # EMA 9 / 21
-        if ema > 0:
-            ekle(
-                f"{karar}|EMA_POZITIF",
-                basarili
-            )
-        elif ema < 0:
-            ekle(
-                f"{karar}|EMA_NEGATIF",
-                basarili
-            )
-
-        # OBV
-        ekle(
-            f"{karar}|OBV_{obv}",
-            basarili
-        )
-
-        # RSI
-        if rsi < 35:
-            rsi_grup = "RSI_DUSUK"
-        elif rsi < 50:
-            rsi_grup = "RSI_35_50"
-        elif rsi <= 68:
-            rsi_grup = "RSI_50_68"
-        elif rsi < 75:
-            rsi_grup = "RSI_68_75"
-        else:
-            rsi_grup = "RSI_YUKSEK"
-
-        ekle(
-            f"{karar}|{rsi_grup}",
-            basarili
-        )
-
-        # HACIM
-        if hacim >= 150:
-            hacim_grup = "HACIM_150_USTU"
-        elif hacim >= 120:
-            hacim_grup = "HACIM_120_150"
-        elif hacim >= 80:
-            hacim_grup = "HACIM_NORMAL"
-        else:
-            hacim_grup = "HACIM_ZAYIF"
-
-        ekle(
-            f"{karar}|{hacim_grup}",
-            basarili
-        )
-
-        # MOMENTUM
-        if mom15 > 0 and mom30 > 0:
-            momentum = "MOMENTUM_POZITIF"
-        elif mom15 < 0 and mom30 < 0:
-            momentum = "MOMENTUM_NEGATIF"
-        else:
-            momentum = "MOMENTUM_KARISIK"
-
-        ekle(
-            f"{karar}|{momentum}",
-            basarili
-        )
-
-        # HACIMLI KIRILIM
-        ekle(
-            f"{karar}|KIRILIM_"
-            + ("VAR" if kirilim else "YOK"),
-            basarili
-        )
-
-        # R/R
-        if rr >= 2:
-            rr_grup = "RR_2_USTU"
-        elif rr >= 1.4:
-            rr_grup = "RR_1_4_2"
-        else:
-            rr_grup = "RR_DUSUK"
-
-        ekle(
-            f"{karar}|{rr_grup}",
-            basarili
-        )
-
-        # Ana kombinasyon
-        if karar == "AL":
-            kombinasyon = (
-                vwap > 0
-                and ema > 0
-                and obv == "YUKSELEN"
-                and mom15 > 0
-                and mom30 > 0
-            )
-        else:
-            kombinasyon = (
-                vwap < 0
-                and ema < 0
-                and obv == "DUSEN"
-                and mom15 < 0
-                and mom30 < 0
-            )
-
-        if kombinasyon:
-            ekle(
-                f"{karar}|ANA_KOMBINASYON",
-                basarili
-            )
-
-    gostergeler = {}
-
-    for anahtar, d in istatistik.items():
-        n = d["ornek"]
-        bas = d["basarili"]
-
-        oran = (
-            (bas / n) * 100.0
-            if n
-            else 0.0
-        )
-
-        # Tek tek kriterlerin algoritmaya etkisi icin
-        # kendi minimum ornek korumasi.
-        guvenilir = n >= 30
-
-        # 50% notr merkezdir.
-        # Maksimum +/-15 puanlik ogrenilmis etki.
-        if guvenilir:
-            agirlik = max(
-                -15.0,
-                min(
-                    15.0,
-                    (oran - 50.0) * 0.30
-                )
-            )
-        else:
-            agirlik = 0.0
-
-        gostergeler[anahtar] = {
-            "ornek": n,
-            "basarili": bas,
-            "basari_yuzde": round(
-                oran,
-                2
-            ),
-            "guvenilir": guvenilir,
-            "ogrenilmis_agirlik": round(
-                agirlik,
-                2
-            )
-        }
-
-    genel_basari = sum(
-        1
-        for x in kayitlar
-        if x.get("sonuc") == "BASARILI"
-    )
-
-    sonuc = {
-        "guncelleme": datetime.now().strftime(
-            "%Y-%m-%d %H:%M:%S"
-        ),
-        "durum": "AKTIF",
-        "aktif": True,
-        "tamamlanan_sinyal": len(kayitlar),
-        "minimum_gerekli": minimum,
-        "genel_basari_yuzde": round(
-            (
-                genel_basari /
-                len(kayitlar)
-            ) * 100.0,
-            2
-        ),
-        "gostergeler": gostergeler,
-        "not": (
-            "Ogrenilmis agirliklar teknik motorun "
-            "yerine gecmez. Ikinci guven katmani "
-            "olarak kullanilir."
-        )
-    }
-
-    with open(hedef, "w", encoding="utf-8") as f:
-        json.dump(
-            sonuc,
-            f,
-            ensure_ascii=False,
-            indent=2
-        )
-
-    return sonuc
 
 
 
@@ -4868,10 +4442,6 @@ def gun_ici_top10_tara():
     # TELEFON / WEB ICIN AI OZETINI GUNCELLE.
     ai_ogrenme_ozeti_yaz()
 
-    # TAMAMLANMIS GERCEK SINYALLERDEN
-    # OGRENILMIS GOSTERGE AGIRLIKLARINI GUNCELLE.
-    ai_ogrenilmis_agirliklari_hesapla()
-
     sonuclar.sort(
         key=lambda a: (
             guvenli_float(a.get("gun_ici_puan")),
@@ -5094,17 +4664,6 @@ def gun_ici_top10_mesaji():
             (
                 f"{sira}. {a['sembol']} — "
                 f"{a['gun_ici_puan']:.0f}/100"
-            ),
-            (
-                f"   🧠 Teknik: "
-                f"{a.get('teknik_gun_ici_puan', a['gun_ici_puan']):.0f}/100 | "
-                f"Haber: {a.get('haber_puani', 0):+.1f}/10"
-            ),
-            (
-                f"   🤖 Nihai AI: "
-                f"{a.get('gun_ici_puan', 0):.0f}/100 | "
-                f"{a.get('haber_sinifi', 'NOTR')} | "
-                f"Güven %{a.get('haber_guven', 0):.0f}"
             ),
             (
                 f"   💰 {a['fiyat']:.2f} TL | "
@@ -5391,50 +4950,11 @@ def yarin_potansiyel_hesapla(a):
     if degisim > 6:
         return -999
 
-    # =====================================================
-    # HABER / KAP AI KATKISI
-    # =====================================================
-
-    teknik_puan = max(
+    # 100/100 kesinlik algisini engelle
+    return max(
         0,
         min(95, round(puan))
     )
-
-    try:
-        haber = haber_zeka.haber_puani_getir(
-            a.get("sembol")
-        )
-
-        birlesik = haber_zeka.teknik_haber_birlestir(
-            teknik_puan,
-            haber.get("puan", 0),
-            haber.get("guven", 0)
-        )
-
-        a["teknik_puan_yarin"] = teknik_puan
-        a["haber_puani"] = haber.get("puan", 0)
-        a["haber_guven"] = haber.get("guven", 0)
-        a["haber_sinifi"] = haber.get("sinif", "NOTR")
-        a["nihai_ai_puan"] = birlesik.get(
-            "nihai_puan",
-            teknik_puan
-        )
-
-        return max(
-            0,
-            min(
-                95,
-                round(a["nihai_ai_puan"])
-            )
-        )
-
-    except Exception:
-        a["teknik_puan_yarin"] = teknik_puan
-        a["haber_puani"] = 0
-        a["haber_guven"] = 0
-        a["haber_sinifi"] = "NOTR"
-        a["nihai_ai_puan"] = teknik_puan
-        return teknik_puan
 
 
 # =========================================================
@@ -5481,13 +5001,6 @@ def yarin_top10_mesaji(sonuclar=None, toplam=None):
 
         mesaj += (
             f"🏅 {i}. {a.get('sembol', '-')} — {skor}/100\n"
-            f"   🧠 Teknik: "
-            f"{guvenli_float(a.get('teknik_puan_yarin', skor)):.0f}/100 | "
-            f"Haber: {guvenli_float(a.get('haber_puani', 0)):+.1f}/10\n"
-            f"   🤖 Nihai AI: "
-            f"{guvenli_float(a.get('nihai_ai_puan', skor)):.0f}/100 | "
-            f"{a.get('haber_sinifi', 'NOTR')} | "
-            f"Güven %{guvenli_float(a.get('haber_guven', 0)):.0f}\n"
             f"   💰 {guvenli_float(a.get('fiyat')):.2f} TL "
             f"({guvenli_float(a.get('degisim')):+.2f}%)\n"
             f"   RSI {guvenli_float(a.get('rsi')):.1f} | "
