@@ -1,5 +1,5 @@
 {
-  "guncelleme": "2026-10-06 00:16:42",
+  "guncelleme": "2026-10-06 06:24:44",
   "bist100": {
     "fiyat": 12443.92,
     "degisim": 1.42,
@@ -260,11 +260,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "ACP",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "ACSEL",
       "fiyat": 89.0,
       "degisim": 0.0,
@@ -345,16 +340,6 @@
       "guclu_tepki": false,
       "tepki_puani": 0,
       "analiz_durumu": "HAZIR"
-    },
-    {
-      "sembol": "ADB",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
-      "sembol": "ADBNK",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
     },
     {
       "sembol": "ADEL",
@@ -604,11 +589,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "ADLVY",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "AEFES",
       "fiyat": 18.08,
       "degisim": 0.2217294900221682,
@@ -690,11 +670,6 @@
       "guclu_tepki": false,
       "tepki_puani": 0,
       "analiz_durumu": "HAZIR"
-    },
-    {
-      "sembol": "AFB",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
     },
     {
       "sembol": "AFYON",
@@ -1451,16 +1426,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "AKCVR",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
-      "sembol": "AKDFA",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "AKENR",
       "fiyat": 8.07,
       "degisim": -1.1029411764705863,
@@ -1710,11 +1675,6 @@
       "guclu_tepki": false,
       "tepki_puani": 0,
       "analiz_durumu": "HAZIR"
-    },
-    {
-      "sembol": "AKFK",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
     },
     {
       "sembol": "AKFYE",
@@ -1974,16 +1934,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "AKM",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
-      "sembol": "AKMEN",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "AKMGY",
       "fiyat": 217.0,
       "degisim": 0.09225092250921985,
@@ -2238,11 +2188,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "AKSFA",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "AKSGY",
       "fiyat": 9.57,
       "degisim": 0.736842105263161,
@@ -2409,16 +2354,6 @@
       "guclu_tepki": false,
       "tepki_puani": 0,
       "analiz_durumu": "HAZIR"
-    },
-    {
-      "sembol": "AKTIF",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
-      "sembol": "AKTVK",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
     },
     {
       "sembol": "AKYHO",
@@ -3093,16 +3028,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "ALJF",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
-      "sembol": "ALK",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "ALKA",
       "fiyat": 6.15,
       "degisim": -0.9661835748792208,
@@ -3352,11 +3277,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "ALNUS",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "ALTNY",
       "fiyat": 13.18,
       "degisim": 0.15197568389057428,
@@ -3524,11 +3444,6 @@
       "guclu_tepki": false,
       "tepki_puani": 0,
       "analiz_durumu": "HAZIR"
-    },
-    {
-      "sembol": "ANC",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
     },
     {
       "sembol": "ANELE",
@@ -4456,16 +4371,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "ARSNF",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
-      "sembol": "ARSVY",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "ARTMS",
       "fiyat": 34.26,
       "degisim": -0.982658959537582,
@@ -4966,11 +4871,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "ATA",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "ATAGY",
       "fiyat": 8.78,
       "degisim": -0.22727272727274261,
@@ -5297,16 +5197,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "ATAVK",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
-      "sembol": "ATAYM",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "ATEKS",
       "fiyat": 89.1,
       "degisim": 9.999999999999993,
@@ -5478,11 +5368,6 @@
       "guclu_tepki": false,
       "tepki_puani": 0,
       "analiz_durumu": "HAZIR"
-    },
-    {
-      "sembol": "ATLFA",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
     },
     {
       "sembol": "ATSYH",
@@ -6412,11 +6297,6 @@
       "guclu_tepki": false,
       "tepki_puani": 0,
       "analiz_durumu": "HAZIR"
-    },
-    {
-      "sembol": "AYTEM",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
     },
     {
       "sembol": "AZTEK",
@@ -8938,21 +8818,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "BLKOM",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
-      "sembol": "BLS",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
-      "sembol": "BLSMD",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "BLUME",
       "fiyat": 35.34,
       "degisim": -0.4507042253521031,
@@ -9204,11 +9069,6 @@
       "guclu_tepki": false,
       "tepki_puani": 0,
       "analiz_durumu": "HAZIR"
-    },
-    {
-      "sembol": "BNPPI",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
     },
     {
       "sembol": "BNTAS",
@@ -9627,16 +9487,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "BRGAN",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
-      "sembol": "BRGFK",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "BRISA",
       "fiyat": 72.8,
       "degisim": -0.2056202878684108,
@@ -9885,11 +9735,6 @@
       "guclu_tepki": false,
       "tepki_puani": 0,
       "analiz_durumu": "HAZIR"
-    },
-    {
-      "sembol": "BRKT",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
     },
     {
       "sembol": "BRKVY",
@@ -10646,11 +10491,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "BUR",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "BURCE",
       "fiyat": 26.68,
       "degisim": 1.3677811550151953,
@@ -10982,11 +10822,6 @@
       "guclu_tepki": false,
       "tepki_puani": 0,
       "analiz_durumu": "HAZIR"
-    },
-    {
-      "sembol": "CAGFA",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
     },
     {
       "sembol": "CANTE",
@@ -12081,11 +11916,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "CLKMT",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "CMBTN",
       "fiyat": 1285.0,
       "degisim": 2.717825739408473,
@@ -12254,11 +12084,6 @@
       "guclu_tepki": false,
       "tepki_puani": 0,
       "analiz_durumu": "HAZIR"
-    },
-    {
-      "sembol": "CMSAN",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
     },
     {
       "sembol": "CONSE",
@@ -13178,11 +13003,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "DENFA",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "DENGE",
       "fiyat": 1.84,
       "degisim": 2.222222222222224,
@@ -13265,11 +13085,6 @@
       "guclu_tepki": false,
       "tepki_puani": 0,
       "analiz_durumu": "HAZIR"
-    },
-    {
-      "sembol": "DENVA",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
     },
     {
       "sembol": "DERHL",
@@ -13693,11 +13508,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "DFKTR",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "DGATE",
       "fiyat": 65.95,
       "degisim": 1.3835511145272954,
@@ -13956,16 +13766,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "DGRVK",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
-      "sembol": "DIMES",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "DIRIT",
       "fiyat": 20.16,
       "degisim": -3.9999999999999996,
@@ -14131,16 +13931,6 @@
       "guclu_tepki": true,
       "tepki_puani": 51.0,
       "analiz_durumu": "HAZIR"
-    },
-    {
-      "sembol": "DKVRL",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
-      "sembol": "DKYVK",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
     },
     {
       "sembol": "DMLKT",
@@ -14398,11 +14188,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "DNFIN",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "DNISI",
       "fiyat": 4.25,
       "degisim": 1.9184652278177474,
@@ -14484,16 +14269,6 @@
       "guclu_tepki": false,
       "tepki_puani": 0,
       "analiz_durumu": "HAZIR"
-    },
-    {
-      "sembol": "DNYVA",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
-      "sembol": "DNZEN",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
     },
     {
       "sembol": "DOAS",
@@ -14925,11 +14700,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "DOGVY",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "DOHOL",
       "fiyat": 19.27,
       "degisim": 1.7960908610670887,
@@ -15097,11 +14867,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "DRPHN",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "DSTKF",
       "fiyat": 625.0,
       "degisim": -9.94236311239193,
@@ -15183,11 +14948,6 @@
       "guclu_tepki": false,
       "tepki_puani": 0,
       "analiz_durumu": "HAZIR"
-    },
-    {
-      "sembol": "DTRND",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
     },
     {
       "sembol": "DUNYH",
@@ -15442,16 +15202,6 @@
       "guclu_tepki": false,
       "tepki_puani": 0,
       "analiz_durumu": "HAZIR"
-    },
-    {
-      "sembol": "DVRLK",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
-      "sembol": "DYBNK",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
     },
     {
       "sembol": "DYOBY",
@@ -15872,11 +15622,6 @@
       "guclu_tepki": false,
       "tepki_puani": 0,
       "analiz_durumu": "HAZIR"
-    },
-    {
-      "sembol": "ECZIP",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
     },
     {
       "sembol": "ECZYT",
@@ -16798,11 +16543,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "EKER",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "EKGYO",
       "fiyat": 19.91,
       "degisim": 4.404824331410592,
@@ -17056,11 +16796,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "EKOFA",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "EKOS",
       "fiyat": 3.48,
       "degisim": -1.4164305949008449,
@@ -17229,11 +16964,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "EKTVK",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "ELITE",
       "fiyat": 19.9,
       "degisim": -0.5994005994006043,
@@ -17314,11 +17044,6 @@
       "guclu_tepki": false,
       "tepki_puani": 0,
       "analiz_durumu": "HAZIR"
-    },
-    {
-      "sembol": "EMIRV",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
     },
     {
       "sembol": "EMKEL",
@@ -17569,11 +17294,6 @@
       "guclu_tepki": false,
       "tepki_puani": 0,
       "analiz_durumu": "HAZIR"
-    },
-    {
-      "sembol": "EMVAR",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
     },
     {
       "sembol": "ENDAE",
@@ -18519,11 +18239,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "ERGLI",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "ERSU",
       "fiyat": 14.99,
       "degisim": 6.690391459074729,
@@ -19444,11 +19159,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "EXIMB",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "EYGYO",
       "fiyat": 1.91,
       "degisim": -1.0362694300518145,
@@ -19615,21 +19325,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "FAIRF",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
-      "sembol": "FBB",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
-      "sembol": "FBBNK",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "FENER",
       "fiyat": 2.43,
       "degisim": 1.2500000000000104,
@@ -19712,21 +19407,6 @@
       "guclu_tepki": false,
       "tepki_puani": 0,
       "analiz_durumu": "HAZIR"
-    },
-    {
-      "sembol": "FIGOF",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
-      "sembol": "FIN",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
-      "sembol": "FKPET",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
     },
     {
       "sembol": "FLAP",
@@ -20663,11 +20343,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "GARFL",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "GATEG",
       "fiyat": 115.2,
       "degisim": -9.929632525410478,
@@ -21333,11 +21008,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "GGBVK",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "GIPTA",
       "fiyat": 27.94,
       "degisim": -3.721571330117155,
@@ -21419,11 +21089,6 @@
       "guclu_tepki": false,
       "tepki_puani": 0,
       "analiz_durumu": "HAZIR"
-    },
-    {
-      "sembol": "GLB",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
     },
     {
       "sembol": "GLBMD",
@@ -22347,11 +22012,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "GRM",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "GRNYO",
       "fiyat": 8.39,
       "degisim": 9.960681520314557,
@@ -22607,11 +22267,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "GRYAT",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "GSDDE",
       "fiyat": 11.93,
       "degisim": -1.5676567656765636,
@@ -22778,11 +22433,6 @@
       "guclu_tepki": false,
       "tepki_puani": 0,
       "analiz_durumu": "HAZIR"
-    },
-    {
-      "sembol": "GSIPD",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
     },
     {
       "sembol": "GSRAY",
@@ -23119,11 +22769,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "GYVAR",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "GZNMI",
       "fiyat": 30.88,
       "degisim": 0.5863192182410415,
@@ -23293,16 +22938,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "HALKF",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
-      "sembol": "HALKI",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "HATEK",
       "fiyat": 8.05,
       "degisim": -2.4242424242424154,
@@ -23468,16 +23103,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "HAYVK",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
-      "sembol": "HDFFL",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "HDFGS",
       "fiyat": 1.0,
       "degisim": 3.092783505154642,
@@ -23560,16 +23185,6 @@
       "guclu_tepki": false,
       "tepki_puani": 0,
       "analiz_durumu": "HAZIR"
-    },
-    {
-      "sembol": "HDFVK",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
-      "sembol": "HDFYB",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
     },
     {
       "sembol": "HEDEF",
@@ -23904,16 +23519,6 @@
       "guclu_tepki": false,
       "tepki_puani": 0,
       "analiz_durumu": "HAZIR"
-    },
-    {
-      "sembol": "HLVKS",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
-      "sembol": "HLY",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
     },
     {
       "sembol": "HOROZ",
@@ -24424,26 +24029,6 @@
       "guclu_tepki": false,
       "tepki_puani": 0,
       "analiz_durumu": "HAZIR"
-    },
-    {
-      "sembol": "HUZFA",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
-      "sembol": "HYB",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
-      "sembol": "IAZ",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
-      "sembol": "ICB",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
     },
     {
       "sembol": "ICBCT",
@@ -25359,11 +24944,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "INALR",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "INDES",
       "fiyat": 11.62,
       "degisim": 0.08613264427217732,
@@ -25862,11 +25442,6 @@
       "guclu_tepki": false,
       "tepki_puani": 0,
       "analiz_durumu": "HAZIR"
-    },
-    {
-      "sembol": "INVAZ",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
     },
     {
       "sembol": "INVEO",
@@ -26453,11 +26028,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "ISFAK",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "ISFIN",
       "fiyat": 17.26,
       "degisim": -0.23121387283236502,
@@ -27041,16 +26611,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "ISTFK",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
-      "sembol": "ISTVY",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "ISVEA",
       "fiyat": 22.32,
       "degisim": -10.000000000000002,
@@ -27215,16 +26775,6 @@
       "guclu_tepki": false,
       "tepki_puani": 0,
       "analiz_durumu": "HAZIR"
-    },
-    {
-      "sembol": "IYF",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
-      "sembol": "IYM",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
     },
     {
       "sembol": "IZENR",
@@ -28146,11 +27696,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "KATVK",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "KAYSE",
       "fiyat": 3.15,
       "degisim": 2.605863192182413,
@@ -28734,11 +28279,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "KFILO",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "KGYO",
       "fiyat": 8.79,
       "degisim": -6.984126984126986,
@@ -29158,11 +28698,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "KLN",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "KLNMA",
       "fiyat": 7.55,
       "degisim": 0.8010680907877117,
@@ -29503,11 +29038,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "KLVKS",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "KLYPV",
       "fiyat": 54.25,
       "degisim": 0.7428040854224671,
@@ -29759,16 +29289,6 @@
       "guclu_tepki": false,
       "tepki_puani": 0,
       "analiz_durumu": "HAZIR"
-    },
-    {
-      "sembol": "KNTFA",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
-      "sembol": "KOCFN",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
     },
     {
       "sembol": "KOCMT",
@@ -30278,11 +29798,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "KORTS",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "KOTON",
       "fiyat": 10.14,
       "degisim": 0.7952286282306169,
@@ -30447,11 +29962,6 @@
       "guclu_tepki": false,
       "tepki_puani": 0,
       "analiz_durumu": "HAZIR"
-    },
-    {
-      "sembol": "KPTGY",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
     },
     {
       "sembol": "KRDMA",
@@ -31218,11 +30728,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "KSFIN",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "KSTUR",
       "fiyat": 2087.0,
       "degisim": 9.842105263157896,
@@ -31309,16 +30814,6 @@
       "guclu_tepki": false,
       "tepki_puani": 0,
       "analiz_durumu": "HAZIR"
-    },
-    {
-      "sembol": "KTEST",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
-      "sembol": "KTKVK",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
     },
     {
       "sembol": "KTLEV",
@@ -31489,11 +30984,6 @@
       "guclu_tepki": false,
       "tepki_puani": 0,
       "analiz_durumu": "HAZIR"
-    },
-    {
-      "sembol": "KTSVK",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
     },
     {
       "sembol": "KUTPO",
@@ -33845,11 +33335,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "MBFTR",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "MCARD",
       "fiyat": 98.2,
       "degisim": 3.695881731784583,
@@ -33931,21 +33416,6 @@
       "guclu_tepki": false,
       "tepki_puani": 0,
       "analiz_durumu": "HAZIR"
-    },
-    {
-      "sembol": "MDASM",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
-      "sembol": "MDIAZ",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
-      "sembol": "MDS",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
     },
     {
       "sembol": "MEDTR",
@@ -34284,11 +33754,6 @@
       "guclu_tepki": false,
       "tepki_puani": 0,
       "analiz_durumu": "HAZIR"
-    },
-    {
-      "sembol": "MEKMD",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
     },
     {
       "sembol": "MEPET",
@@ -35144,16 +34609,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "MILKS",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
-      "sembol": "MINTF",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "MMCAS",
       "fiyat": 15.96,
       "degisim": -0.8695652173913079,
@@ -35402,11 +34857,6 @@
       "guclu_tepki": false,
       "tepki_puani": 0,
       "analiz_durumu": "HAZIR"
-    },
-    {
-      "sembol": "MNGFA",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
     },
     {
       "sembol": "MOBTL",
@@ -35746,16 +35196,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "MRBAS",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
-      "sembol": "MRBKF",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "MRGYO",
       "fiyat": 1.35,
       "degisim": 9.756097560975618,
@@ -35840,11 +35280,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "MRS",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "MRSHL",
       "fiyat": 1306.0,
       "degisim": -1.951951951951952,
@@ -35925,11 +35360,6 @@
       "guclu_tepki": false,
       "tepki_puani": 0,
       "analiz_durumu": "HAZIR"
-    },
-    {
-      "sembol": "MSA",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
     },
     {
       "sembol": "MSGYO",
@@ -36013,16 +35443,6 @@
       "guclu_tepki": false,
       "tepki_puani": 0,
       "analiz_durumu": "HAZIR"
-    },
-    {
-      "sembol": "MSY",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
-      "sembol": "MSYBN",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
     },
     {
       "sembol": "MTRKS",
@@ -36684,11 +36104,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "NRBNK",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "NTGAZ",
       "fiyat": 11.06,
       "degisim": 0.2719854941069913,
@@ -37031,16 +36446,6 @@
       "guclu_tepki": false,
       "tepki_puani": 0,
       "analiz_durumu": "HAZIR"
-    },
-    {
-      "sembol": "NURVK",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
-      "sembol": "NYB",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
     },
     {
       "sembol": "OBAMS",
@@ -37463,11 +36868,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "OMD",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "ONCSM",
       "fiyat": 95.65,
       "degisim": -0.3645833333333274,
@@ -37635,11 +37035,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "OPET",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "ORCAY",
       "fiyat": 2.51,
       "degisim": 1.209677419354831,
@@ -37722,11 +37117,6 @@
       "guclu_tepki": true,
       "tepki_puani": 51.3,
       "analiz_durumu": "HAZIR"
-    },
-    {
-      "sembol": "ORFIN",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
     },
     {
       "sembol": "ORGE",
@@ -38153,11 +37543,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "OSVKS",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "OTKAR",
       "fiyat": 340.5,
       "degisim": 0.07347538574577515,
@@ -38246,11 +37631,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "OTOSR",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "OTTO",
       "fiyat": 120.5,
       "degisim": 9.94525547445256,
@@ -38336,11 +37716,6 @@
       "guclu_tepki": false,
       "tepki_puani": 0,
       "analiz_durumu": "HAZIR"
-    },
-    {
-      "sembol": "OYA",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
     },
     {
       "sembol": "OYAKC",
@@ -39781,16 +39156,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "PBT",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
-      "sembol": "PBTR",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "PCILT",
       "fiyat": 31.44,
       "degisim": -2.782931354359932,
@@ -41137,11 +40502,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "PRFFK",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "PRKAB",
       "fiyat": 24.6,
       "degisim": -0.24330900243308481,
@@ -41556,11 +40916,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "QNBFF",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "QNBFK",
       "fiyat": 41.48,
       "degisim": 9.968186638388119,
@@ -41736,11 +41091,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "QNBVK",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "QUAGR",
       "fiyat": 2.02,
       "degisim": -0.980392156862746,
@@ -41821,11 +41171,6 @@
       "guclu_tepki": false,
       "tepki_puani": 0,
       "analiz_durumu": "HAZIR"
-    },
-    {
-      "sembol": "QUFIN",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
     },
     {
       "sembol": "QUICK",
@@ -41912,16 +41257,6 @@
       "guclu_tepki": false,
       "tepki_puani": 0,
       "analiz_durumu": "HAZIR"
-    },
-    {
-      "sembol": "QYATB",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
-      "sembol": "QYHOL",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
     },
     {
       "sembol": "RALYH",
@@ -43528,11 +42863,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "SARTN",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "SASA",
       "fiyat": 1.94,
       "degisim": 0.5181347150259072,
@@ -43947,11 +43277,6 @@
       "guclu_tepki": false,
       "tepki_puani": 0,
       "analiz_durumu": "HAZIR"
-    },
-    {
-      "sembol": "SEK",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
     },
     {
       "sembol": "SEKFK",
@@ -44801,11 +44126,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "SKY",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "SKYLP",
       "fiyat": 53.9,
       "degisim": 9.910277324632952,
@@ -45057,11 +44377,6 @@
       "guclu_tepki": false,
       "tepki_puani": 0,
       "analiz_durumu": "HAZIR"
-    },
-    {
-      "sembol": "SMRFA",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
     },
     {
       "sembol": "SMRTG",
@@ -46580,26 +45895,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "TAC",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
-      "sembol": "TAE",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
-      "sembol": "TAMFA",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
-      "sembol": "TARFN",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "TARKM",
       "fiyat": 375.5,
       "degisim": 0.13333333333333333,
@@ -47191,11 +46486,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "TCRYT",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "TDGYO",
       "fiyat": 7.08,
       "degisim": 9.259259259259252,
@@ -47278,11 +46568,6 @@
       "guclu_tepki": false,
       "tepki_puani": 0,
       "analiz_durumu": "HAZIR"
-    },
-    {
-      "sembol": "TEBFA",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
     },
     {
       "sembol": "TEHOL",
@@ -47534,11 +46819,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "TEVKS",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "TEZOL",
       "fiyat": 7.55,
       "degisim": -2.0752269779507153,
@@ -47623,16 +46903,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "TFNVK",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
-      "sembol": "TGB",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "TGSAS",
       "fiyat": 124.6,
       "degisim": 9.97352162400706,
@@ -47714,16 +46984,6 @@
       "guclu_tepki": false,
       "tepki_puani": 0,
       "analiz_durumu": "HAZIR"
-    },
-    {
-      "sembol": "THL",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
-      "sembol": "THR",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
     },
     {
       "sembol": "THYAO",
@@ -47812,11 +47072,6 @@
       "guclu_tepki": false,
       "tepki_puani": 0,
       "analiz_durumu": "HAZIR"
-    },
-    {
-      "sembol": "TIB",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
     },
     {
       "sembol": "TKFEN",
@@ -48488,11 +47743,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "TRA",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "TRALT",
       "fiyat": 43.88,
       "degisim": 0.0912408759124068,
@@ -48575,11 +47825,6 @@
       "guclu_tepki": false,
       "tepki_puani": 0,
       "analiz_durumu": "HAZIR"
-    },
-    {
-      "sembol": "TRBNK",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
     },
     {
       "sembol": "TRCAS",
@@ -48747,11 +47992,6 @@
       "guclu_tepki": false,
       "tepki_puani": 0,
       "analiz_durumu": "HAZIR"
-    },
-    {
-      "sembol": "TRFFA",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
     },
     {
       "sembol": "TRGYO",
@@ -49011,21 +48251,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "TRKFN",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
-      "sembol": "TRKNT",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
-      "sembol": "TRMEN",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "TRMET",
       "fiyat": 127.7,
       "degisim": -0.8540372670807518,
@@ -49107,11 +48332,6 @@
       "guclu_tepki": false,
       "tepki_puani": 0,
       "analiz_durumu": "HAZIR"
-    },
-    {
-      "sembol": "TRYKI",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
     },
     {
       "sembol": "TSGYO",
@@ -49196,11 +48416,6 @@
       "guclu_tepki": false,
       "tepki_puani": 0,
       "analiz_durumu": "HAZIR"
-    },
-    {
-      "sembol": "TSK",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
     },
     {
       "sembol": "TSKB",
@@ -50045,21 +49260,6 @@
       "guclu_tepki": false,
       "tepki_puani": 0,
       "analiz_durumu": "HAZIR"
-    },
-    {
-      "sembol": "TV8TV",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
-      "sembol": "TVB",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
-      "sembol": "TVM",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
     },
     {
       "sembol": "UCAYM",
@@ -51313,11 +50513,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "VAKVK",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "VANGD",
       "fiyat": 63.65,
       "degisim": 9.93091537132988,
@@ -51479,16 +50674,6 @@
       "guclu_tepki": false,
       "tepki_puani": 0,
       "analiz_durumu": "HAZIR"
-    },
-    {
-      "sembol": "VDFAS",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
-      "sembol": "VDFLO",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
     },
     {
       "sembol": "VERTU",
@@ -52494,11 +51679,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "YATVK",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "YAYLA",
       "fiyat": 14.14,
       "degisim": 2.3154848046309717,
@@ -52581,11 +51761,6 @@
       "guclu_tepki": false,
       "tepki_puani": 0,
       "analiz_durumu": "HAZIR"
-    },
-    {
-      "sembol": "YBQ",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
     },
     {
       "sembol": "YBTAS",
@@ -53010,11 +52185,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "YKB",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "YKBNK",
       "fiyat": 35.9,
       "degisim": 2.7475672581568427,
@@ -53102,21 +52272,6 @@
       "analiz_durumu": "HAZIR"
     },
     {
-      "sembol": "YKFIN",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
-      "sembol": "YKFKT",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
-      "sembol": "YKR",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
       "sembol": "YKSLN",
       "fiyat": 2.28,
       "degisim": 9.615384615384603,
@@ -53199,11 +52354,6 @@
       "guclu_tepki": false,
       "tepki_puani": 0,
       "analiz_durumu": "HAZIR"
-    },
-    {
-      "sembol": "YKYAT",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
     },
     {
       "sembol": "YONGA",
@@ -53374,11 +52524,6 @@
       "guclu_tepki": false,
       "tepki_puani": 0,
       "analiz_durumu": "HAZIR"
-    },
-    {
-      "sembol": "YYA",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
     },
     {
       "sembol": "YYAPI",
@@ -53793,16 +52938,6 @@
       "guclu_tepki": false,
       "tepki_puani": 0,
       "analiz_durumu": "HAZIR"
-    },
-    {
-      "sembol": "ZKBVK",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
-    },
-    {
-      "sembol": "ZKBVR",
-      "analiz_durumu": "VERI_YOK",
-      "veri_mesaji": "Analiz verisi su anda alinamadi."
     },
     {
       "sembol": "ZOREN",
