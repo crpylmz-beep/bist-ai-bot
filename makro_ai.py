@@ -1,7 +1,11 @@
 
 from __future__ import annotations
+from veri_yollari import public_file, runtime_file
+
 
 import json
+import hashlib
+from kullanici_kayitlari import atomic_json, now
 from pathlib import Path
 
 import sektor_haritasi
@@ -12,13 +16,9 @@ import canli_motor
 # BIST ASISTANI - MAKRO / EKONOMI AI MOTORU
 # =========================================================
 
-MAKRO_GECMIS = Path(
-    "webapp/data/makro_ai_gecmisi.json"
-)
+MAKRO_GECMIS = runtime_file('makro_ai_gecmisi.json')
 
-CANLI_MAKRO_DOSYA = Path(
-    "webapp/data/makro_canli_etki.json"
-)
+CANLI_MAKRO_DOSYA = public_file('makro_canli_etki.json')
 
 
 # Gercek borsapy sektor adlarimiz.
@@ -378,9 +378,15 @@ def canli_makro_etki_yaz(analiz, hisseler):
         ),
         "hisseler": {}
     }
+    veri['updated_at'] = now()
+    veri['event_id'] = analiz.get('canonical_id') or hashlib.sha256(
+        json.dumps([analiz.get('kaynak'),analiz.get('baslik'),analiz.get('kategori'),
+                    veri['updated_at'][:10]],ensure_ascii=False).encode()).hexdigest()
 
     for sembol, bilgi in hisseler.items():
         veri["hisseler"][sembol] = {
+            "event_id": veri['event_id'],
+            "sektor_event_id": veri['event_id'],
             "makro_puani": float(
                 bilgi.get(
                     "makro_puani",
@@ -404,14 +410,28 @@ def canli_makro_etki_yaz(analiz, hisseler):
         exist_ok=True
     )
 
-    CANLI_MAKRO_DOSYA.write_text(
-        json.dumps(
-            veri,
-            ensure_ascii=False,
-            indent=2
-        ),
-        encoding="utf-8"
-    )
+    atomic_json(CANLI_MAKRO_DOSYA, veri)
+
+    # Keep observation metadata for 1/3/5-session outcome tracking, not new scores.
+    from ai_karar_motoru import locked, load, stamp, number, ISTANBUL
+    from datetime import datetime
+    from veri_yollari import public_file
+    current=datetime.now(ISTANBUL)
+    live=load(public_file('bist_data.json'),{'hisseler':[]})
+    quotes={r.get('sembol'):r for r in live.get('hisseler',[]) if isinstance(r,dict)}
+    observed=json.loads(json.dumps(veri))
+    for stock,row in observed['hisseler'].items():
+        quote=quotes.get(stock,{})
+        at=stamp(quote.get('canli_guncelleme') or quote.get('updated_at'))
+        row['referans_fiyat']=number(quote.get('fiyat')) if at and 0<=(current-at).total_seconds()<=1200 else None
+        row['referans_fiyat_zamani']=at.isoformat() if row['referans_fiyat'] else None
+    with locked(MAKRO_GECMIS):
+        history=load(MAKRO_GECMIS,{'olaylar':[]})
+        if not isinstance(history,dict):history={'legacy':history,'olaylar':[]}
+        events=history.setdefault('olaylar',[])
+        if not any(e.get('event_id')==veri['event_id'] for e in events):
+            events.append(observed)
+            atomic_json(MAKRO_GECMIS,history)
 
     return veri
 
@@ -470,7 +490,7 @@ def makro_haber_isle(
             adet += 1
 
         except Exception:
-            continue
+            raise
 
     # Bir kez Gun Ici TOP10 yenile.
     if adet > 0:

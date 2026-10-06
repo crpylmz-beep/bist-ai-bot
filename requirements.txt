@@ -1,4 +1,6 @@
 python-telegram-bot==22.8
-borsapy
-requests
+borsapy==0.11.0
+requests==2.34.2
+
+pywebpush==2.1.2
 cryptography==50.0.2

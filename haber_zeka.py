@@ -1,12 +1,17 @@
+from veri_yollari import data_file
 import os
+import fcntl
+from functools import wraps
 import json
+from pathlib import Path
+from kullanici_kayitlari import atomic_json
 import re
 import hashlib
 from datetime import datetime
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.path.join(BASE_DIR, "webapp", "data")
-HABER_FILE = os.path.join(DATA_DIR, "haber_zeka_gecmisi.json")
+HABER_FILE = str(data_file("haber_zeka_gecmisi.json"))
+DATA_DIR = str(Path(HABER_FILE).parent)
 
 POZITIF_KELIMELER = {
     "sozlesme": 2.5,
@@ -89,13 +94,7 @@ def _load():
 def _save(data):
     os.makedirs(DATA_DIR, exist_ok=True)
 
-    with open(HABER_FILE, "w", encoding="utf-8") as f:
-        json.dump(
-            data,
-            f,
-            ensure_ascii=False,
-            indent=2
-        )
+    atomic_json(Path(HABER_FILE), data)
 
 
 def _haber_id(sembol, baslik, metin, tarih):
@@ -235,10 +234,24 @@ def kap_haber_analiz_et(
     }
 
 
+def _haber_kayit_kilidi(function):
+    @wraps(function)
+    def locked(*args, **kwargs):
+        # KAP and company collectors share this history: serialize read/modify/write.
+        target = Path(kwargs.get("store_path") or HABER_FILE)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        with open(str(target) + ".lock", "a", encoding="utf-8") as lock:
+            fcntl.flock(lock, fcntl.LOCK_EX)
+            return function(*args, **kwargs)
+    return locked
+
+
+@_haber_kayit_kilidi
 def haber_kaydet(
     analiz,
     tarih=None,
-    fiyat=None
+    fiyat=None,
+    store_path=None
 ):
     tarih = (
         tarih
@@ -247,9 +260,10 @@ def haber_kaydet(
         )
     )
 
-    data = _load()
+    target = Path(store_path) if store_path is not None else Path(HABER_FILE)
+    data = json.loads(target.read_text()) if store_path is not None and target.exists() else (_load() if store_path is None else {"surum":1,"haberler":[]})
 
-    hid = _haber_id(
+    hid = analiz.get("canonical_id") or _haber_id(
         analiz.get("sembol"),
         analiz.get("baslik"),
         analiz.get("metin"),
@@ -282,7 +296,7 @@ def haber_kaydet(
         kayit
     )
 
-    _save(data)
+    atomic_json(target, data) if store_path is not None else _save(data)
 
     return True
 
@@ -367,6 +381,16 @@ def haber_puani_getir(
             puan
         ),
     }
+
+
+def haber_yasi_getir(sembol, current=None):
+    """Use actual stored news time; undated news is never treated as fresh."""
+    from ai_karar_motoru import ISTANBUL, minutes
+    current = current or datetime.now(ISTANBUL)
+    rows = [r for r in _load().get('haberler',[]) if r.get('sembol') == sembol]
+    ages = [minutes(r.get('published_at') or r.get('tarih'),current) for r in rows[-5:]]
+    ages = [a for a in ages if a is not None]
+    return min(ages) if ages else 1440
 
 
 def teknik_haber_birlestir(

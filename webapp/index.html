@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="theme-color" content="#101827">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>BIST AI</title>
@@ -380,13 +383,28 @@ body{
         transform:translateX(-50%);
     }
 }
+
+.seviye-columns{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin-top:14px}
+.seviye-panel{border:1px solid #64748b;border-radius:10px;padding:14px}
+.seviye-panel label{display:block;margin:10px 0}
+.seviye-panel input,.seviye-panel select{width:100%;padding:10px;background:#111827;color:#fff;border:1px solid #64748b;border-radius:6px;margin-top:5px}
+.seviye-panel button,.price-alarm-actions button{padding:9px 12px;border:1px solid #64748b;border-radius:6px;background:#1e293b;color:#fff;cursor:pointer;margin:6px 6px 0 0}
+.seviye-panel button:disabled{opacity:.5;cursor:wait}
+.price-alarm-row{padding:12px 0;border-bottom:1px solid #334155}
+
 </style>
 </head>
 
 <body>
+<section style="padding:12px" aria-label="Push bildirimleri">
+<button onclick="pushAc()" id="pushEnable">Bildirimleri Aç</button>
+<button onclick="pushKapat()" id="pushDisable">Bildirimleri Kapat</button>
+<span id="pushStatus" role="status">iPhone: Safari’den Ana Ekran’a ekleyip uygulamayı oradan açın. Bildirimler için HTTPS gerekir.</span>
+</section>
 
 <!-- ANA SAYFA -->
 <div id="homePage" class="page">
+    <p id="cloudStatus" role="status">Arka plan çalışma durumu kontrol ediliyor…</p>
 
     <div class="header">
         <h1>🤖 BIST AI Asistanı</h1>
@@ -630,8 +648,14 @@ body{
 <div id="gunIciTop10Page" class="page" style="display:none">
     <div class="page-header">
         <button class="back-btn" onclick="goHome()">‹ Geri</button>
-        <div class="page-title">⚡ Gün İçi TOP 10</div>
+        <div>
+            <div class="page-title">⚡ Gün İçi TOP 10</div>
+            <div id="gunIciFreshness" style="font-size:13px;margin-top:6px" aria-live="polite">
+                Son Güncelleme: — · Veri Yaşı: bilinmiyor
+            </div>
+        </div>
     </div>
+    <div id="gunIciWarning" role="status" style="display:none;margin:0 0 14px;padding:14px;border:2px solid #f59e0b;border-radius:10px;background:#3b260a;color:#fff;font-weight:700"></div>
     <div id="gunIciTop10List" class="list"></div>
 </div>
 
@@ -766,12 +790,13 @@ body{
 <script>
 
 let tumVeriler = [];
+let anaUpdatedAt = null;
 let oncekiSayfa = "home";
 
 
 /* VERİYİ YÜKLE */
 
-async function gercekVeriyiYukle(){
+async function gercekVeriyiYukle(openStock = true){
 
     try{
 
@@ -779,7 +804,9 @@ async function gercekVeriyiYukle(){
             "data/bist_data.json?t=" + Date.now()
         );
 
+        if(!cevap.ok) throw new Error("Ana veri okunamadı");
         const veri = await cevap.json();
+        anaUpdatedAt = veri.updated_at || null;
 
         if(Array.isArray(veri)){
             tumVeriler = veri;
@@ -853,6 +880,11 @@ async function gercekVeriyiYukle(){
         }
 
         anaSayfayiDoldur();
+        if (openStock && typeof window !== 'undefined') {
+            const stock = new URLSearchParams(window.location.search).get('stock');
+            const selected = tumVeriler.find(row => row.sembol === stock);
+            if (selected) hisseDetay(selected);
+        }
 
     }
     catch(hata){
@@ -904,9 +936,10 @@ function anaSayfayiDoldur(){
 
     sayilariGuncelle();
 
+    const freshness = gunIciVeriYasi(anaUpdatedAt);
     document.getElementById("updateTime").innerText =
-        "Son güncelleme: " +
-        new Date().toLocaleString("tr-TR");
+        "Son güncelleme: " + freshness.time + " (İstanbul) · Veri yaşı: " + freshness.age +
+        (freshness.status !== "normal" ? " · ESKİ / GÜNCELLİĞİ DOĞRULANAMAYAN VERİ" : "");
 }
 
 
@@ -958,6 +991,9 @@ function sayilariGuncelle(){
 /* SAYFA GİZLE */
 
 function tumSayfalariGizle(){
+
+    clearInterval(gunIciFreshnessTimer);
+    clearInterval(fiyatAlarmTimer);
 
     document.getElementById("homePage").style.display = "none";
     document.getElementById("scannerPage").style.display = "none";
@@ -1308,17 +1344,17 @@ function signalBack(){
 
 /* TOP 10 */
 
-async function showTop10(){
+async function showTop10(refresh = false){
 
     oncekiSayfa = "top10";
 
-    tumSayfalariGizle();
+    if(!refresh) tumSayfalariGizle();
 
     document.getElementById("top10Page").style.display = "block";
 
     const alan = document.getElementById("top10List");
 
-    alan.innerHTML =
+    if(!refresh) alan.innerHTML =
         '<div class="empty">Kilitli Yarın TOP 10 yükleniyor...</div>';
 
     try{
@@ -1332,7 +1368,42 @@ async function showTop10(){
             throw new Error("Yarın TOP10 dosyası bulunamadı.");
         }
 
-        const veri = await cevap.json();
+        let veri = await cevap.json();
+        // Ekran dosyasi sadece tarih isaretcisi; asil tahmin gunluk arsivdir.
+        if(/^\d{4}-\d{2}-\d{2}$/.test(veri.analiz_tarihi || "")){
+            const arsiv = await fetch(
+                `data/yarin_top10_arsiv/${veri.analiz_tarihi}.json?t=${Date.now()}`,
+                {cache: "no-store"}
+            );
+            if(arsiv.ok){
+                const snapshot = await arsiv.json();
+                if(snapshot.analiz_tarihi !== veri.analiz_tarihi){
+                    throw new Error("Snapshot tarihi uyuşmuyor.");
+                }
+                veri = snapshot;
+            }else if(arsiv.status !== 404){
+                throw new Error("Snapshot arşivi okunamadı.");
+            }
+            // 404: arşiv öncesi eski kaydı değiştirmeden göster.
+        }
+        let canliVeri = {};
+        try{
+            const canliCevap = await fetch(
+                "data/yarin_top10_canli.json?t=" + Date.now(), {cache:"no-store"}
+            );
+            if(canliCevap.ok){
+                const kayit = await canliCevap.json();
+                if(kayit.analiz_tarihi === veri.analiz_tarihi){
+                    canliVeri = kayit;
+                }
+            }
+        }catch(e){
+            console.warn("Yarın TOP10 canlı verisi okunamadı:", e);
+        }
+        const canliMap = new Map(
+            (Array.isArray(canliVeri.top10) ? canliVeri.top10 : [])
+                .map(h => [h.sembol, h])
+        );
 
         const liste = Array.isArray(veri.top10)
             ? veri.top10
@@ -1347,11 +1418,7 @@ async function showTop10(){
         }
 
         alan.innerHTML = liste.map((hisse,index) =>
-            hisseSatiri(
-                hisse,
-                hisse.yarin_top10_sira ?? (index + 1),
-                "YARIN_TOP10"
-            )
+            yarinTop10Karti(hisse, veri, canliMap.get(hisse.sembol), index + 1)
         ).join("");
 
     }catch(e){
@@ -1363,6 +1430,103 @@ async function showTop10(){
     }
 }
 
+
+/* YARIN: dondurulmus alanlar canli alanlarla birlestirilmez. */
+function yarinMetin(value){
+    if(value === null || value === undefined || value === "") return "--";
+    return String(value).replace(/[&<>"']/g, c => ({
+        "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
+    }[c]));
+}
+
+function yarinSayi(value, suffix = ""){
+    if(value === null || value === undefined || value === "" || !Number.isFinite(Number(value))){
+        return "--";
+    }
+    return Number(value).toFixed(2) + suffix;
+}
+
+function yarinZaman(value){
+    if(typeof value !== "string" || !/(?:Z|[+-]\d{2}:\d{2})$/.test(value)) return "--";
+    const date = new Date(value);
+    if(!Number.isFinite(date.getTime())) return "--";
+    return new Intl.DateTimeFormat("tr-TR", {
+        timeZone:"Europe/Istanbul", dateStyle:"short", timeStyle:"medium"
+    }).format(date) + " (İstanbul)";
+}
+
+function yarinTop10Karti(hisse, snapshot, kayit = {}, sira = 1){
+    const tahmin = hisse.tahmin || {};
+    const canli = kayit.canli || {};
+    const performans = kayit.performans || {};
+    const fiyat = tahmin.fiyat ?? hisse.fiyat;
+    const age = gunIciVeriYasi(canli.updated_at);
+    const bugun = new Intl.DateTimeFormat("sv-SE", {
+        timeZone:"Europe/Istanbul", year:"numeric", month:"2-digit", day:"2-digit"
+    }).format(new Date());
+    const durum = canli.fiyat_tarihi && canli.fiyat_tarihi !== bugun
+        ? "Fiyat verisi bugüne ait değil — son alınan değerler; güncel fiyat doğrulanmadı."
+        : !canli.updated_at || age.status === "unknown"
+        ? "Canlı veri güncelliği doğrulanamadı."
+        : age.status === "stale" ? "ESKİ VERİ — son alınan değerler; canlı fiyat olarak kullanmayın."
+        : age.status === "delayed" ? "Gecikmiş olabilir — son alınan değerler."
+        : "Son alınan teknik analiz verisi; anlık fiyat akışı değildir.";
+    const kriter = tahmin.kriter_ozeti || {nedenler:hisse.nedenler};
+    const ozet = Object.entries(kriter)
+        .filter(([,v]) => v !== undefined && v !== null)
+        .map(([k,v]) => `${yarinMetin(k)}: ${yarinMetin(Array.isArray(v) ? v.join("; ") : v)}`)
+        .join("<br>") || "--";
+    const yesNo = value => value === true ? "Evet" : value === false ? "Hayır" : "--";
+    // Simdiki performans da snapshot fiyatindan hesaplanir; snapshot nesnesine yazilmaz.
+    const currentPerformance = fiyat != null && Number(fiyat) > 0 && canli.fiyat != null && Number(canli.fiyat) > 0
+        ? (Number(canli.fiyat) / Number(fiyat) - 1) * 100 : null;
+    const field = (label, value) => `<div><span style="opacity:.7">${label}</span><br><strong>${value}</strong></div>`;
+    return `
+        <article class="detail-card">
+            <h3>${sira}. ${yarinMetin(hisse.sembol)}</h3>
+            <section style="padding:14px;border:1px solid #38bdf8;border-radius:10px;margin-bottom:14px">
+                <b>CANLI DURUM</b>
+                <p style="font-size:13px;color:#fbbf24">${durum}</p>
+                <div class="detail-grid">
+                    ${field("Güncel fiyat", yarinSayi(canli.fiyat, " TL"))}
+                    ${field("Günlük değişim", yarinSayi(canli.degisim, "%"))}
+                    ${field("Teknik skor", yarinSayi(canli.teknik_skor, "/100"))}
+                    ${field("AI skoru", yarinSayi(canli.ai_skor, "/100"))}
+                    ${field("Güncel karar", yarinMetin(canli.karar))}
+                    ${field("Haber / Makro", yarinSayi(canli.haber_puani) + " / " + yarinSayi(canli.makro_puani))}
+                    ${field("Son canlı güncelleme", yarinZaman(canli.updated_at))}
+                    ${field("Fiyat verisinin tarihi", yarinMetin(canli.fiyat_tarihi))}
+                </div>
+            </section>
+            <section style="padding:14px;border:1px solid #a78bfa;border-radius:10px;margin-bottom:14px">
+                <b>🔒 DONDURULMUŞ TAHMİN</b>
+                <div class="detail-grid" style="margin-top:12px">
+                    ${field("Tahmin zamanı", yarinZaman(tahmin.tahmin_zamani ?? snapshot.tahmin_zamani))}
+                    ${field("Tahmin fiyatı", yarinSayi(fiyat, " TL"))}
+                    ${field("Tahmin skoru", yarinSayi(tahmin.skor ?? hisse.yarin_top10_puani, "/100"))}
+                    ${field("Tahmin kararı", yarinMetin(tahmin.karar ?? hisse.yarin_ai_karar ?? hisse.karar))}
+                    ${field("Tahmin AL bölgesi", yarinSayi(tahmin.alim_alt ?? hisse.ai_yarin_alim_alt ?? hisse.yarin_alim_alt) + " – " + yarinSayi(tahmin.alim_ust ?? hisse.ai_yarin_alim_ust ?? hisse.yarin_alim_ust))}
+                    ${field("Tahmin HEDEF", yarinSayi(tahmin.hedef ?? hisse.ai_yarin_hedef ?? hisse.yarin_kar_al, " TL"))}
+                    ${field("Tahmin STOP", yarinSayi(tahmin.stop ?? hisse.ai_yarin_stop ?? hisse.yarin_stop, " TL"))}
+                    ${field("Tahmin Haber / Makro", yarinSayi(tahmin.haber_puani ?? hisse.haber_puani) + " / " + yarinSayi(tahmin.makro_puani ?? hisse.makro_puani))}
+                </div>
+                <p style="font-size:13px">Kriter özeti:<br>${ozet}</p>
+                ${snapshot.zaman_kaynagi === "LEGACY_BELIRSIZ" || !snapshot.tahmin_zamani
+                    ? `<p style="font-size:12px">Eski kayıt zamanı: ${yarinMetin(snapshot.olusturma_zamani)} — saat dilimi doğrulanamadı.</p>` : ""}
+            </section>
+            <section style="padding:14px;border:1px solid #64748b;border-radius:10px">
+                <b>TAHMİNDEN BERİ PERFORMANS</b>
+                <div class="detail-grid" style="margin-top:12px">
+                    ${field("Şu anki performans", yarinSayi(currentPerformance, "%"))}
+                    ${field("En yüksek", yarinSayi(performans.en_yuksek_yuzde, "%"))}
+                    ${field("En düşük", yarinSayi(performans.en_dusuk_yuzde, "%"))}
+                    ${field("Hedefe ulaştı mı?", yesNo(performans.hedefe_ulasti))}
+                    ${field("Stop oldu mu?", yesNo(performans.stop_oldu))}
+                </div>
+                <p style="font-size:12px">${yarinMetin(performans.not || "Geçmiş fiyat verisi henüz doğrulanmadı.")}</p>
+            </section>
+        </article>`;
+}
 
 /* HİSSE SATIRI */
 
@@ -1487,26 +1651,13 @@ async function showKapAlarms(){
 
     try{
 
-        const cevap = await fetch(
-            "data/kap_alarmlar.json?t=" + Date.now(),
-            {
-                cache:"no-store"
-            }
-        );
-
-        if(!cevap.ok){
-            throw new Error(
-                "Henüz KAP alarm dosyası oluşmadı"
-            );
-        }
-
-        const veri = await cevap.json();
-
-        const liste = Array.isArray(
-            veri.alarmlar
-        )
-            ? veri.alarmlar
-            : [];
+        const sources = await Promise.allSettled([
+            fetch('data/canonical_haberler.json?t=' + Date.now(), {cache:'no-store'}).then(r => {if(!r.ok) throw new Error('No canonical data'); return r.json();}),
+            fetch('data/kap_alarmlar.json?t=' + Date.now(), {cache:'no-store'}).then(r => {if(!r.ok) throw new Error('No legacy data'); return r.json();})
+        ]);
+        const canonical = sources[0].status === 'fulfilled' ? sources[0].value.alarmlar || [] : [];
+        const legacy = sources[1].status === 'fulfilled' ? sources[1].value.alarmlar || [] : [];
+        const liste = haberListesiniBirlestir(canonical, legacy);
 
         if(!liste.length){
 
@@ -1574,7 +1725,7 @@ async function showKapAlarms(){
                                     font-weight:900;
                                 ">
                                     ${ikon}
-                                    ${a.sembol || "-"}
+                                    ${yarinMetin(a.sembol || "-")}
                                 </div>
 
                                 <div style="
@@ -1582,15 +1733,7 @@ async function showKapAlarms(){
                                     font-size:13px;
                                     opacity:.7;
                                 ">
-                                    ${
-    a.tarih
-    ? (() => {
-        const [tarih, saat = ""] = String(a.tarih).split(" ");
-        const [yil, ay, gun] = tarih.split("-");
-        return `${gun}/${ay}/${yil} ${saat}`;
-      })()
-    : ""
-}
+                                    ${yarinMetin(yarinZaman(a.tarih) !== "--" ? yarinZaman(a.tarih) : (a.tarih || "--"))}
                                 </div>
                             </div>
 
@@ -1612,7 +1755,8 @@ async function showKapAlarms(){
                             font-weight:700;
                             line-height:1.45;
                         ">
-                            ${a.baslik || ""}
+                            ${yarinMetin(a.baslik || "")}
+                            <div style="font-size:12px;opacity:.7;margin-top:6px">${yarinMetin(a.kaynak_etiketi || "KAP")}</div>
                         </div>
 
                         <div style="
@@ -1693,17 +1837,62 @@ async function showKapAlarms(){
 
 /* HİSSE ARA */
 
-async function showGunIciTop10(){
+let gunIciUpdatedAt = null;
+let gunIciFreshnessTimer = null;
+
+function gunIciVeriYasi(updatedAt, now = Date.now()){
+    // Saat dilimi olmayan eski guncelleme alanini tahmin ederek kullanma.
+    const iso = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
+    const timestamp = typeof updatedAt === "string" && iso.test(updatedAt)
+        ? Date.parse(updatedAt)
+        : NaN;
+    if(!Number.isFinite(timestamp) || timestamp > now){
+        return {time: "—", age: "bilinmiyor", status: "unknown"};
+    }
+    const minutes = (now - timestamp) / 60000;
+    return {
+        time: new Intl.DateTimeFormat("tr-TR", {
+            timeZone: "Europe/Istanbul", hour: "2-digit",
+            minute: "2-digit", second: "2-digit", hourCycle: "h23"
+        }).format(new Date(timestamp)),
+        age: Math.floor(minutes) + " dk",
+        status: minutes > 20 ? "stale" : minutes > 10 ? "delayed" : "normal"
+    };
+}
+
+function gunIciGuncellikGoster(){
+    const state = gunIciVeriYasi(gunIciUpdatedAt);
+    const labels = {
+        normal: "", delayed: "Gecikmiş olabilir", stale: "ESKİ VERİ",
+        unknown: "Güncelliği doğrulanamadı"
+    };
+    document.getElementById("gunIciFreshness").textContent =
+        `Son Güncelleme: ${state.time} (İstanbul) · Veri Yaşı: ${state.age}` +
+        (labels[state.status] ? ` · ${labels[state.status]}` : "");
+    const warning = document.getElementById("gunIciWarning");
+    warning.style.display = state.status === "normal" ? "none" : "block";
+    warning.textContent = state.status === "stale"
+        ? "⚠ ESKİ VERİ — Bu kartlar güncel piyasa durumunu göstermeyebilir. Canlı veri olarak kullanmayın."
+        : state.status === "delayed"
+        ? "⚠ Gecikmiş olabilir — Son veri güncellemesi 10 dakikadan eski."
+        : "⚠ Güncelliği doğrulanamadı — Güvenilir güncelleme zamanı yok veya saat bilgisi hatalı. Kartları canlı veri olarak kullanmayın.";
+}
+
+async function showGunIciTop10(refresh = false){
 
     oncekiSayfa = "gunici_top10";
 
-    tumSayfalariGizle();
+    if(!refresh) tumSayfalariGizle();
 
     document.getElementById("gunIciTop10Page").style.display = "block";
 
     const alan = document.getElementById("gunIciTop10List");
 
-    alan.innerHTML =
+    clearInterval(gunIciFreshnessTimer);
+    if(!refresh) gunIciUpdatedAt = null;
+    gunIciGuncellikGoster();
+
+    if(!refresh) alan.innerHTML =
         '<div class="empty">Gün İçi TOP 10 yükleniyor...</div>';
 
     try{
@@ -1718,6 +1907,11 @@ async function showGunIciTop10(){
         }
 
         const veri = await cevap.json();
+
+        gunIciUpdatedAt = veri.updated_at;
+        gunIciGuncellikGoster();
+        // Ekran acik kaldiginda da veri yasi ve uyari eskimesin.
+        gunIciFreshnessTimer = setInterval(gunIciGuncellikGoster, 15000);
 
         const liste = Array.isArray(veri.top10)
             ? veri.top10
@@ -2056,6 +2250,8 @@ function hisseDetay(hisse){
 
     document.getElementById("stockDetail").innerHTML = `
 
+        ${kullaniciSeviyeBolumu()}
+
         <div class="detail-card">
 
             <div class="detail-symbol">
@@ -2331,8 +2527,243 @@ function hisseDetay(hisse){
 
         </div>
     `;
+    kullaniciSeviyeAc(hisse);
 }
 
+
+/* Kullanici seviyeleri ve fiyat alarmlari: teknik veriye yazilmaz. */
+let seviyeContext = null;
+let fiyatAlarmTimer = null;
+
+function kullaniciSeviyeBolumu(){
+    const input = (key, label) => `<label>${label}<input id="${key}" type="number" min="0.01" step="any" inputmode="decimal" placeholder="--"></label>`;
+    return `<section class="detail-card" id="userLevelsSection">
+        <h3>AL / SAT / STOP / HEDEF / ALARM</h3>
+        <div class="seviye-columns">
+            <div class="seviye-panel">
+                <b>🤖 BIST Asistanı Otomatik</b>
+                <div id="automaticLevels" style="margin-top:12px">Analiz seviyeleri yükleniyor…</div>
+            </div>
+            <div class="seviye-panel">
+                <b>👤 Benim Seviyelerim</b>
+                ${input("manuel_al", "Manuel AL")}
+                ${input("manuel_sat", "Manuel SAT")}
+                ${input("manuel_stop", "Manuel STOP")}
+                ${input("manuel_hedef", "Manuel HEDEF")}
+                <button class="level-action" onclick="manuelSeviyeKaydet()">Seviyelerimi Kaydet</button>
+                <div id="manualLevelTime" style="font-size:12px;margin-top:8px"></div>
+            </div>
+        </div>
+        <div class="seviye-panel" style="margin-top:14px">
+            <b>Fiyat Alarmı Oluştur</b>
+            <label>Alarm türü<select id="priceAlarmType" onchange="fiyatAlarmTuruDegisti()">
+                <option value="FIYAT_USTU">MANUEL · Fiyat X olunca / üstüne çıkınca (≥)</option>
+                <option value="FIYAT_ALTI">MANUEL · Fiyat X altına düşünce (≤)</option>
+                <option value="MANUEL_AL">MANUEL · Kaydedilmiş AL seviyem (≤)</option>
+                <option value="MANUEL_SAT">MANUEL · Kaydedilmiş SAT seviyem (≥)</option>
+                <option value="MANUEL_STOP">MANUEL · Kaydedilmiş STOP seviyem (≤)</option>
+                <option value="MANUEL_HEDEF">MANUEL · Kaydedilmiş HEDEF seviyem (≥)</option>
+                <option value="AI_ALIM_BOLGESI">AI · Alım bölgesine girince</option>
+                <option value="AI_HEDEF">AI · Hedefe ulaşınca (≥)</option>
+                <option value="AI_STOP">AI · Stop seviyesine gelince (≤)</option>
+            </select></label>
+            <label id="alarmPriceLabel">Hedef fiyat<input id="alarmPrice" type="number" min="0.01" step="any" inputmode="decimal"></label>
+            <button class="level-action" onclick="fiyatAlarmOlustur()">Alarm Oluştur</button>
+            <p style="font-size:12px">Manuel seviye alarmları kaydedilmiş değerlerinizi kullanır. AI alarmı oluşturulurken seçilen seviyeler dondurulur.</p>
+            <p style="font-size:12px">Alarmlar fiyat kontrol motoru çalıştırıldığında kontrol edilir. Push bildirimi için “Bildirimleri Aç” düğmesini kullanın. Gönderim motoru ayrıca çalıştırılmalıdır.</p>
+        </div>
+        <div id="levelsStatus" role="status" style="margin-top:12px"></div>
+        <button onclick="fiyatAlarmlariYenile()" style="margin-top:14px;padding:8px">Alarmları Yenile</button>
+        <div id="priceAlarmList" style="margin-top:14px">Alarmlar yükleniyor…</div>
+        <p style="font-size:12px;opacity:.7">Kayıtlarınız bu tarayıcıya özeldir. Çerezleri silerseniz veya başka cihaz kullanırsanız bu kayıtlara erişemezsiniz.</p>
+    </section>`;
+}
+
+async function seviyeApi(url, method = "GET", body){
+    const response = await fetch(url, {
+        method, credentials:"same-origin", cache:"no-store",
+        headers:{"Content-Type":"application/json", "X-Bist-Request":"1"},
+        ...(body === undefined ? {} : {body:JSON.stringify(body)})
+    });
+    const result = await response.json();
+    if(!response.ok){
+        const error = new Error(result.error || "Kayıt işlemi tamamlanamadı.");
+        error.status = response.status;
+        throw error;
+    }
+    return result;
+}
+
+function otomatikSeviyeGoster(a){
+    const field = (label, value) => detayKutu(label, value);
+    return `<div class="detail-grid">
+        ${field("ALIM BÖLGESİ", yarinSayi(a.alim_alt) + " – " + yarinSayi(a.alim_ust))}
+        ${field("SAT / KÂR AL", yarinSayi(a.sat_kar_al, " TL"))}
+        ${field("STOP", yarinSayi(a.stop, " TL"))}
+        ${field("HEDEF", yarinSayi(a.hedef, " TL"))}
+        ${field("Destek", yarinSayi(a.destek))}${field("Direnç", yarinSayi(a.direnc))}
+        ${field("Hacimli Kırılım", yarinSayi(a.hacimli_kirilim))}
+        ${field("Risk/Getiri", yarinSayi(a.risk_getiri))}
+        ${field("Karar", yarinMetin(a.karar))}
+        ${field("Nihai AI puanı", yarinSayi(a.nihai_ai_puan))}
+        ${field("Güven", yarinSayi(a.guven))}
+    </div><p style="font-size:12px">${a.model === "GUN_ICI" ? "Gün içi analiz" : "Günlük analiz"} ·
+        Son analiz: ${a.updated_at ? yarinZaman(a.updated_at) : yarinMetin(a.eski_zaman_metni) + " (saat dilimi doğrulanamadı)"}.
+        Bunlar son kaydedilmiş analiz seviyeleridir.</p>`;
+}
+
+function ortakAiGoster(ai){
+    if(!ai) return '<p>Ortak AI özeti henüz yok.</p>';
+    const field = (label,value) => detayKutu(label,value);
+    const freshness = gunIciVeriYasi(ai.updated_at);
+    const parts = ai.katkilar || {};
+    return '<h3>Ortak AI Kararı</h3><div class="detail-grid">' +
+        field('Karar',yarinMetin(ai.karar)) + field('AI puanı',yarinSayi(ai.ai_score)) +
+        field('Confidence / Güven',yarinSayi(ai.confidence)) +
+        field('Piyasa rejimi',yarinMetin(ai.piyasa_rejimi)) +
+        field('Piyasa breadth',yarinSayi(ai.piyasa_baglami?.breadth_score)) +
+        field('Sektör relatif güç',yarinSayi(ai.piyasa_baglami?.sektor_rs_score)) +
+        field('Haber/KAP etkisi',yarinSayi(parts.haber)) + field('Makro etkisi',yarinSayi(parts.makro)) +
+        field('Sektör etkisi',yarinSayi(parts.sektor)) + '</div><p>' +
+        yarinMetin(ai.kisa_gerekce) + '</p><p>Son güncelleme: ' + yarinZaman(ai.updated_at) +
+        ' · Veri yaşı: ' + yarinMetin(freshness.age) +
+        (freshness.status !== 'normal' ? ' · ESKİ / GÜNCELLİĞİ DOĞRULANAMAYAN ANALİZ' : '') + '</p>';
+}
+
+function fiyatAlarmListesi(alarms){
+    if(!alarms.length) return "Bu hisse için fiyat alarmınız yok.";
+    const names = {
+        FIYAT_USTU:"Fiyat üst sınırı", FIYAT_ALTI:"Fiyat alt sınırı",
+        MANUEL_AL:"Manuel AL", MANUEL_SAT:"Manuel SAT", MANUEL_STOP:"Manuel STOP",
+        MANUEL_HEDEF:"Manuel HEDEF", AI_ALIM_BOLGESI:"AI alım bölgesi",
+        AI_HEDEF:"AI hedef", AI_STOP:"AI stop"
+    };
+    return alarms.map(a => {
+        const triggered = a.status === "TRIGGERED" || Boolean(a.triggered_at);
+        const status = triggered ? "TETİKLENDİ" : a.aktif ? "Aktif" : "Pasif";
+        const range = a.hedef_fiyat_ust != null ? ` ve ≤ ${yarinSayi(a.hedef_fiyat_ust)}` : "";
+        const actions = /^[a-f0-9]{32}$/.test(a.id) ? `<div class="price-alarm-actions">
+            ${a.aktif && !triggered ? `<button class="level-action" onclick="fiyatAlarmDegistir('${a.id}',false)">Pasif Yap</button>` : ""}
+            <button class="level-action" onclick="fiyatAlarmDegistir('${a.id}',true)">Sil</button></div>` : "";
+        return `<div class="price-alarm-row"><b>${status} · ${yarinMetin(a.kaynak)}</b>
+            <div>${yarinMetin(names[a.alarm_turu] || a.alarm_turu)} · ${yarinMetin(a.operator)} ${yarinSayi(a.hedef_fiyat)}${range} TL</div>
+            <div style="font-size:12px">Oluşturma: ${yarinZaman(a.created_at)} · Tetiklenme: ${yarinZaman(a.triggered_at)}</div>
+            ${triggered ? `<div>Tetiklenme fiyatı: ${yarinSayi(a.triggered_price, " TL")}</div>` : ""}${actions}</div>`;
+    }).join("");
+}
+
+function kullaniciSeviyeAc(hisse){
+    const stock = String(hisse.sembol ?? hisse.symbol ?? "").toUpperCase();
+    const model = hisse.gun_ici_puan != null ? "GUN_ICI" : "GUNLUK";
+    const context = {stock, model, busy:false, ready:false, otomatik:null};
+    seviyeContext = context;
+    document.getElementById("userLevelsSection").querySelectorAll(".level-action")
+        .forEach(b => {b.disabled = true;});
+    kullaniciSeviyeYukle(context).then(() => {
+        if(context === seviyeContext && document.getElementById("stockPage").style.display === "block"){
+            fiyatAlarmTimer = setInterval(fiyatAlarmlariYenile, 30000);
+        }
+    }).catch(error => {
+        if(seviyeContext === context){
+            document.getElementById("levelsStatus").textContent = error.message;
+        }
+    });
+}
+
+async function kullaniciSeviyeYukle(context){
+    const data = await seviyeApi(`/api/stocks/${encodeURIComponent(context.stock)}?model=${context.model}`);
+    if(context !== seviyeContext) return;
+    context.otomatik = data.otomatik || {};
+    document.getElementById("automaticLevels").innerHTML = otomatikSeviyeGoster(context.otomatik) + ortakAiGoster(data.ai_ozet);
+    for(const field of ["manuel_al", "manuel_sat", "manuel_stop", "manuel_hedef"]){
+        document.getElementById(field).value = data.manuel?.[field] ?? "";
+    }
+    document.getElementById("manualLevelTime").textContent = data.manuel?.updated_at
+        ? "Son kayıt: " + yarinZaman(data.manuel.updated_at) : "Henüz manuel seviye kaydedilmedi.";
+    document.getElementById("priceAlarmList").innerHTML = fiyatAlarmListesi(data.alarmlar || []);
+    context.ready = true;
+    if(!context.busy){
+        document.getElementById("userLevelsSection").querySelectorAll(".level-action")
+            .forEach(b => {b.disabled = false;});
+    }
+}
+
+function fiyatAlarmTuruDegisti(){
+    const kind = document.getElementById("priceAlarmType").value;
+    document.getElementById("alarmPriceLabel").style.display = kind.startsWith("FIYAT_") ? "block" : "none";
+}
+
+async function fiyatAlarmlariYenile(){
+    const context = seviyeContext;
+    if(!context || !context.ready || context.busy) return;
+    const revision = context.alarmRevision;
+    try{
+        const data = await seviyeApi(`/api/stocks/${encodeURIComponent(context.stock)}?model=${context.model}`);
+        if(context !== seviyeContext || context.busy || revision !== context.alarmRevision) return;
+        // Update saved analysis and alarms without replacing unsaved manual input.
+        context.otomatik = data.otomatik || {};
+        document.getElementById("automaticLevels").innerHTML = otomatikSeviyeGoster(context.otomatik) + ortakAiGoster(data.ai_ozet);
+        document.getElementById("priceAlarmList").innerHTML = fiyatAlarmListesi(data.alarmlar || []);
+    }catch(error){
+        if(context === seviyeContext) document.getElementById("levelsStatus").textContent = error.message;
+    }
+}
+
+async function seviyeIslem(action, message){
+    const context = seviyeContext;
+    if(!context || context.busy || !context.ready) return;
+    context.busy = true;
+    context.alarmRevision = (context.alarmRevision || 0) + 1;
+    const buttons = document.getElementById("userLevelsSection").querySelectorAll(".level-action");
+    buttons.forEach(b => {b.disabled = true;});
+    try{
+        await action(context);
+        await kullaniciSeviyeYukle(context);
+        if(context === seviyeContext) document.getElementById("levelsStatus").textContent =
+            typeof message === "function" ? message() : message;
+    }catch(error){
+        if(context === seviyeContext){
+            document.getElementById("levelsStatus").textContent = error.message;
+            // AI seviyeleri degistiyse yeni analizi goster; eski hedefi sessizce degistirme.
+            if(error.status === 409) await kullaniciSeviyeYukle(context).catch(() => {});
+        }
+    }finally{
+        context.busy = false;
+        if(context === seviyeContext) buttons.forEach(b => {b.disabled = false;});
+    }
+}
+
+function manuelSeviyeKaydet(){
+    const data = {};
+    for(const field of ["manuel_al", "manuel_sat", "manuel_stop", "manuel_hedef"]){
+        const input = document.getElementById(field);
+        const value = input.value;
+        if(input.validity?.badInput || (value !== "" && (!Number.isFinite(Number(value)) || Number(value) <= 0))){
+            document.getElementById("levelsStatus").textContent = "Manuel seviyeler pozitif ve geçerli fiyatlar olmalı.";
+            return;
+        }
+        data[field] = value === "" ? null : Number(value);
+    }
+    return seviyeIslem(c => seviyeApi(`/api/stocks/${c.stock}/levels`, "PUT", data), "Manuel seviyeleriniz kaydedildi.");
+}
+
+function fiyatAlarmOlustur(){
+    const kind = document.getElementById("priceAlarmType").value;
+    const source = kind.startsWith("AI_") ? "AI" : "MANUEL";
+    let created = true;
+    return seviyeIslem(async c => {
+        const result = await seviyeApi(`/api/stocks/${c.stock}/alarms`, "POST", {
+            kaynak:source, alarm_turu:kind, hedef_fiyat:Number(document.getElementById("alarmPrice").value),
+            model:c.model, analiz_kimligi:c.otomatik?.analiz_kimligi
+        });
+        created = result.created;
+    }, () => created ? "Alarm kaydı hazır. Fiyat kontrol motoru çalıştırıldığında izlenecek." : "Bu alarm zaten mevcut; ikinci kayıt oluşturulmadı.");
+}
+
+function fiyatAlarmDegistir(id, remove){
+    return seviyeIslem(() => seviyeApi(`/api/alarms/${id}`, remove ? "DELETE" : "PATCH",
+        remove ? undefined : {aktif:false}), remove ? "Alarm silindi." : "Alarm pasifleştirildi.");
+}
 
 function detayKutu(label,value){
 
@@ -2399,8 +2830,120 @@ function goAI(){
 }
 
 
+
+let pushBusy = false;
+function pushMesaj(text) { document.getElementById('pushStatus').textContent = text; }
+function pushKey(key) {
+    const binary = atob(key.replace(/-/g, '+').replace(/_/g, '/'));
+    return Uint8Array.from(binary, c => c.charCodeAt(0));
+}
+async function pushAc() {
+    if (pushBusy) return;
+    if (!window.isSecureContext || !('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
+        pushMesaj('Bu tarayıcıda push desteklenmiyor. HTTPS ve iPhone’da Ana Ekran PWA gerekir.'); return;
+    }
+    const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    if (ios && !navigator.standalone && !window.matchMedia('(display-mode: standalone)').matches) {
+        pushMesaj('Safari paylaş menüsünden Ana Ekran’a ekleyin ve uygulamayı oradan açın (iOS 16.4+).'); return;
+    }
+    pushBusy = true;
+    try {
+        // Permission request begins directly inside the explicit button gesture.
+        const permission = await Notification.requestPermission();
+        if (permission !== 'granted') { pushMesaj('Bildirim izni verilmedi. Tarayıcı ayarlarından değiştirebilirsiniz.'); return; }
+        const config = await seviyeApi('/api/push/config');
+        if (!config.configured) throw new Error('Sunucuda VAPID anahtarları henüz yapılandırılmadı.');
+        await navigator.serviceWorker.register('/service-worker.js', {scope:'/'});
+        const registration = await navigator.serviceWorker.ready;
+        let subscription = await registration.pushManager.getSubscription();
+        if (!subscription) subscription = await registration.pushManager.subscribe({userVisibleOnly:true, applicationServerKey:pushKey(config.public_key)});
+        let browser = localStorage.getItem('bist_push_browser');
+        if (!browser) { browser = crypto.randomUUID(); localStorage.setItem('bist_push_browser', browser); }
+        try {
+            const saved = await seviyeApi('/api/push/subscriptions', 'POST', {...subscription.toJSON(), browser_id:browser});
+            localStorage.setItem('bist_push_subscription', saved.id);
+        } catch (error) { await subscription.unsubscribe(); throw error; }
+        pushMesaj('Bildirimler bu tarayıcı için açık.');
+    } catch (error) { pushMesaj(error.message); }
+    finally { pushBusy = false; }
+}
+async function pushKapat() {
+    if (pushBusy) return;
+    pushBusy = true;
+    try {
+        let subscription = null;
+        if ('serviceWorker' in navigator) {
+            const registration = await navigator.serviceWorker.getRegistration('/');
+            subscription = registration ? await registration.pushManager.getSubscription() : null;
+        }
+        let id = localStorage.getItem('bist_push_subscription');
+        if (!id && subscription) {
+            const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(subscription.endpoint));
+            id = Array.from(new Uint8Array(hash), b => b.toString(16).padStart(2,'0')).join('');
+        }
+        if (id) {
+            try { await seviyeApi('/api/push/subscriptions/' + id, 'DELETE'); }
+            catch (error) { if (error.status !== 404) throw error; }
+        }
+        if (subscription) await subscription.unsubscribe();
+        localStorage.removeItem('bist_push_subscription');
+        pushMesaj('Bildirimler bu tarayıcı için kapalı.');
+    } catch (error) { pushMesaj(error.message); }
+    finally { pushBusy = false; }
+}
+
+
+function haberListesiniBirlestir(canonical, legacy) {
+    const result = [];
+    const ids = new Set();
+    const title = a => String(a.sembol || '') + '|' + String(a.baslik || '').toLocaleLowerCase('tr-TR').replace(/[^\p{L}\p{N}]+/gu,' ').trim();
+    const stamp = a => Date.parse(String(a.tarih || '').includes('T') ? a.tarih : String(a.tarih || '').replace(' ','T') + '+03:00');
+    for (const row of canonical) {
+        const id = row.canonical_id || row.id;
+        if (id && ids.has(id)) continue;
+        if (id) ids.add(id);
+        result.push(row);
+    }
+    for (const row of legacy) {
+        const id = row.canonical_id || row.id;
+        if (id && ids.has(id)) continue;
+        if (canonical.some(a => title(a) === title(row) && Number.isFinite(stamp(a)) && Number.isFinite(stamp(row)) && Math.abs(stamp(a)-stamp(row)) <= 21600000)) continue;
+        if (id) ids.add(id);
+        result.push(row);
+    }
+    return result;
+}
+
 /* BAŞLAT */
 
+async function cloudDurumYenile(){
+    try {
+        const response = await fetch('/health', {cache:'no-store'});
+        if(!response.ok) throw new Error('health');
+        const status = (await response.json()).ana_motor || {};
+        document.getElementById('cloudStatus').textContent =
+            'Arka plan: ' + (status.worker_status || 'DURMUS_OLABILIR') +
+            ' · Son heartbeat: ' + yarinZaman(status.updated_at);
+    } catch (_) {
+        document.getElementById('cloudStatus').textContent = 'Arka plan durumu doğrulanamadı';
+    }
+}
+
+if(typeof document.addEventListener === "function"){
+    cloudDurumYenile();
+    let refreshing = false;
+    setInterval(async () => {
+        if(document.hidden || refreshing) return;
+        refreshing = true;
+        try {
+            await cloudDurumYenile();
+            if(document.getElementById("gunIciTop10Page").style.display === "block") await showGunIciTop10(true);
+            else if(document.getElementById("top10Page").style.display === "block") await showTop10(true);
+            else if(document.getElementById("kapAlarmPage").style.display === "block") await showKapAlarms();
+            else if(document.getElementById("homePage").style.display === "block") await gercekVeriyiYukle(false);
+        } finally { refreshing = false; }
+    }, 60000);
+}
 gercekVeriyiYukle();
 
 </script>

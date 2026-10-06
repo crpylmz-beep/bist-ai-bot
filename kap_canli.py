@@ -1,3 +1,4 @@
+from veri_yollari import public_file, runtime_file
 
 import re
 import time
@@ -10,6 +11,7 @@ from pathlib import Path
 from bs4 import BeautifulSoup
 import haber_zeka
 import canli_motor
+from kullanici_kayitlari import atomic_json
 
 
 KAP_URL = (
@@ -21,7 +23,7 @@ HEADERS = {
     "User-Agent": "Mozilla/5.0"
 }
 
-DURUM_DOSYA = Path("kap_son_gorulen.json")
+DURUM_DOSYA = runtime_file('kap_son_gorulen.json')
 
 
 def bist_sembolleri_getir():
@@ -47,7 +49,7 @@ def bist_sembolleri_getir():
         return set()
 
 
-BIST_SEMBOLLER = bist_sembolleri_getir()
+BIST_SEMBOLLER = None  # Provider discovery is lazy; imports remain offline.
 
 
 def kap_sayfa_oku():
@@ -62,6 +64,12 @@ def kap_sayfa_oku():
 
 
 def sembol_bul(text):
+    global BIST_SEMBOLLER
+    if BIST_SEMBOLLER is None:
+        BIST_SEMBOLLER = bist_sembolleri_getir()
+        if not BIST_SEMBOLLER:
+            BIST_SEMBOLLER = None
+            raise RuntimeError("KAP sembol listesi alinamadi")
     adaylar = re.findall(
         r"\b[A-Z0-9]{3,6}\b",
         text or ""
@@ -106,9 +114,15 @@ def kap_bildirimleri_ayir(html):
         if not sembol:
             continue
 
+        link=tr.find('a',href=True)
+        from urllib.parse import urljoin
+        from sirket_site_icerik import published_time
         sonuc.append({
             "sembol": sembol,
-            "ham_metin": tam
+            "ham_metin": tam,
+            "baslik": hucreler[-1],
+            "url": urljoin(KAP_URL,link['href']) if link else '',
+            "published_at": next((published_time(v) for v in hucreler if published_time(v)),None)
         })
 
     return sonuc
@@ -131,14 +145,7 @@ def durum_oku():
 
 
 def durum_yaz(ids):
-    DURUM_DOSYA.write_text(
-        json.dumps(
-            sorted(list(ids)),
-            ensure_ascii=False,
-            indent=2
-        ),
-        encoding="utf-8"
-    )
+    atomic_json(DURUM_DOSYA, sorted(list(ids)))
 
 
 def kayit_id(kayit):
@@ -157,7 +164,7 @@ def kayit_id(kayit):
 
 
 def sadece_yeni_bildirimler(
-    bildirimler
+    bildirimler, kaydet=True
 ):
     mevcut_ids = {
         kayit_id(x)
@@ -191,78 +198,22 @@ def sadece_yeni_bildirimler(
         mevcut_ids
     )
 
-    durum_yaz(
-        gorulen
-    )
+    if kaydet:
+        durum_yaz(gorulen)
 
     return yeniler
 
 
 def kap_bildirim_isle(kayit):
-    sembol = kayit.get(
-        "sembol"
-    )
-
-    metin = kayit.get(
-        "ham_metin",
-        ""
-    )
-
-    sonuc = haber_zeka.kap_haber_isle(
-        sembol=sembol,
-        baslik=metin[:180],
-        metin=metin,
-        kaynak="KAP",
-        fiyat_verisi=None
-    )
-
-    analiz = sonuc.get(
-        "analiz",
-        {}
-    )
-
-    alarm = sonuc.get(
-        "alarm",
-        {}
-    )
-
-    print(
-        f"{sembol} | "
-        f"{analiz.get('etki_sinifi', 'NOTR')} | "
-        f"{analiz.get('etki_puani', 0):+.1f}/10"
-    )
-
-    if alarm.get("alarm"):
-        print()
-        print(
-            alarm.get(
-                "mesaj",
-                ""
-            )
-        )
-        print()
-
-        web_alarm_kaydet(
-            analiz,
-            alarm
-        )
-
-    # =====================================================
-    # MADDE 48 - KAP GELEN HISSEYI ANINDA YENIDEN ANALIZ ET
-    # Alarm cikmasa bile haber ilgili hissenin AI skorunu
-    # ve AL / SAT / STOP seviyelerini etkileyebilir.
-    # =====================================================
-    if sembol:
-        try:
-            canli_motor.oncelikli_hisse_guncelle(
-                sembol,
-                gun_ici_yenile=True
-            )
-        except Exception as e:
-            print(
-                "KAP AI HISSE TETIK HATASI:",
-                e
-            )
+    from haber_tekillestirme import CanonicalNews
+    from kullanici_kayitlari import now
+    text = kayit.get('ham_metin', '')
+    event = {'sembol':kayit['sembol'], 'kaynak':'KAP',
+             'baslik':kayit.get('baslik') or text[:180], 'metin':text,
+             'url':kayit.get('url',''), 'published_at':kayit.get('published_at'),
+             'discovered_at':now()}
+    return CanonicalNews().process(event, enqueue=canli_motor.oncelikli_hisse_guncelle,
+                                   alarm_writer=web_alarm_kaydet)
 
 
 def kap_kontrol():
@@ -273,7 +224,7 @@ def kap_kontrol():
     )
 
     yeniler = sadece_yeni_bildirimler(
-        bildirimler
+        bildirimler, kaydet=False
     )
 
     print(
@@ -282,12 +233,20 @@ def kap_kontrol():
         f"YENI: {len(yeniler)}"
     )
 
+    gorulen = durum_oku()
+    tamamlanan = 0
+    hata = False
     for kayit in yeniler[:30]:
-        kap_bildirim_isle(
-            kayit
-        )
-
-    return len(yeniler)
+        try:
+            kap_bildirim_isle(kayit)
+            gorulen.add(kayit_id(kayit))
+            durum_yaz(gorulen)
+            tamamlanan += 1
+        except Exception:
+            hata = True
+    if hata:
+        raise RuntimeError('Bazi KAP olaylari islenemedi; yeniden denenecek')
+    return tamamlanan
 
 
 def kap_surekli_izle(
@@ -321,24 +280,23 @@ def kap_surekli_izle(
 
 
 
-WEB_ALARM_DOSYA = Path(
-    "webapp/data/kap_alarmlar.json"
-)
+WEB_ALARM_DOSYA = public_file('kap_alarmlar.json')
 
 
-def web_alarm_kaydet(analiz, alarm):
+def web_alarm_kaydet(analiz, alarm, output_path=None):
     if not alarm.get("alarm"):
         return False
 
-    WEB_ALARM_DOSYA.parent.mkdir(
+    output_path = Path(output_path) if output_path is not None else WEB_ALARM_DOSYA
+    output_path.parent.mkdir(
         parents=True,
         exist_ok=True
     )
 
     try:
-        if WEB_ALARM_DOSYA.exists():
+        if output_path.exists():
             veri = json.loads(
-                WEB_ALARM_DOSYA.read_text(
+                output_path.read_text(
                     encoding="utf-8"
                 )
             )
@@ -355,7 +313,7 @@ def web_alarm_kaydet(analiz, alarm):
         }
 
     kayit = {
-        "id": hashlib.sha1(
+        "id": analiz.get("canonical_id") or hashlib.sha1(
             (
                 str(analiz.get("sembol", ""))
                 + "|"
@@ -438,14 +396,7 @@ def web_alarm_kaydet(analiz, alarm):
         "%Y-%m-%d %H:%M:%S"
     )
 
-    WEB_ALARM_DOSYA.write_text(
-        json.dumps(
-            veri,
-            ensure_ascii=False,
-            indent=2
-        ),
-        encoding="utf-8"
-    )
+    atomic_json(output_path, veri)
 
     print(
         "WEB KAP ALARMI KAYDEDILDI:",

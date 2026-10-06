@@ -1,0 +1,13 @@
+webapp/data/yarin_top10.json.lock
+webapp/data/yarin_top10_canli.json.lock
+webapp/data/**/.snapshot-*.tmp
+.local/
+.env
+.env.*
+!.env.example
+*.pem
+
+__pycache__/
+*.pyc
+*.key
+vapid_keys/

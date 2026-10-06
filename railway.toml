@@ -1,0 +1,10 @@
+# Single service / one volume / separate web and worker child processes.
+[build]
+builder = "DOCKERFILE"
+
+[deploy]
+startCommand = "python cloud_baslat.py"
+healthcheckPath = "/health"
+healthcheckTimeout = 60
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10

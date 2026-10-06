@@ -1,5 +1,7 @@
 
 from __future__ import annotations
+from veri_yollari import public_file, runtime_file
+
 
 import json
 import time
@@ -9,12 +11,24 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import borsapy as bp
 
 
-DOSYA = Path("webapp/data/sektor_haritasi.json")
+DOSYA = public_file('sektor_haritasi.json')
 MAX_WORKERS = 6
 
 
 def _norm(v):
     return str(v or "").strip()
+
+
+def sektor_eslestirmesi(location=None):
+    """Read the existing map only; scoring must never initiate a metadata crawl."""
+    from veri_yollari import paths
+    target=(location or paths()).public/'sektor_haritasi.json'
+    try:
+        data=json.loads(target.read_text(encoding='utf-8')).get('hisseler',{})
+        return {str(s).upper():_norm(v.get('sektor')) or 'BILINMIYOR'
+                for s,v in data.items() if isinstance(v,dict)}
+    except (OSError,ValueError,AttributeError):
+        return {}
 
 
 def sektor_bilgisi_al(sembol):

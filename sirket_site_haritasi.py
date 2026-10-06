@@ -1,5 +1,7 @@
 
 from __future__ import annotations
+from veri_yollari import public_file, runtime_file
+
 
 import json
 import re
@@ -10,9 +12,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import borsapy as bp
 
 
-DOSYA = Path(
-    "webapp/data/sirket_site_haritasi.json"
-)
+DOSYA = public_file('sirket_site_haritasi.json')
 
 MAX_WORKERS = 6
 

@@ -1,10 +1,14 @@
 
 from __future__ import annotations
+from veri_yollari import public_file, runtime_file
+
 
 import json
 import time
 import traceback
 from datetime import datetime
+from zoneinfo import ZoneInfo
+from kullanici_kayitlari import atomic_json
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -16,7 +20,7 @@ import bist_bot
 # MADDE 48
 # =========================================================
 
-DURUM_DOSYA = Path("webapp/data/canli_motor_durum.json")
+DURUM_DOSYA = runtime_file('canli_motor_durum.json')
 
 # Veri kaynagini gereksiz yere bogmamak icin sinirli paralellik.
 MAX_WORKERS = 6
@@ -33,7 +37,7 @@ TUR_ARASI_SANIYE = 30
 
 
 def simdi():
-    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    return datetime.now(ZoneInfo("Europe/Istanbul")).isoformat(timespec="seconds")
 
 
 def durum_yaz(**alanlar):
@@ -58,14 +62,7 @@ def durum_yaz(**alanlar):
         mevcut.update(alanlar)
         mevcut["son_durum_guncelleme"] = simdi()
 
-        DURUM_DOSYA.write_text(
-            json.dumps(
-                mevcut,
-                ensure_ascii=False,
-                indent=2
-            ),
-            encoding="utf-8"
-        )
+        atomic_json(DURUM_DOSYA, mevcut)
 
     except Exception:
         pass
@@ -372,7 +369,7 @@ def oncelikli_hisse_guncelle(
             getattr(
                 bist_bot,
                 "DATA_FILE",
-                "webapp/data/bist_veri.json"
+                str(public_file('bist_veri.json'))
             )
         )
 
@@ -439,21 +436,7 @@ def oncelikli_hisse_guncelle(
             exist_ok=True
         )
 
-        gecici = data_file.with_suffix(
-            data_file.suffix + ".tmp"
-        )
-
-        gecici.write_text(
-            json.dumps(
-                mevcut,
-                ensure_ascii=False,
-                indent=2,
-                default=str
-            ),
-            encoding="utf-8"
-        )
-
-        gecici.replace(data_file)
+        atomic_json(data_file, json.loads(json.dumps(mevcut, default=str)))
 
         durum_yaz(
             son_oncelikli_hisse=sembol,

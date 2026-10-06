@@ -1,5 +1,7 @@
-
 from __future__ import annotations
+from veri_yollari import public_file, runtime_file
+
+from kullanici_kayitlari import atomic_json
 import re
 
 import json
@@ -12,13 +14,9 @@ from pathlib import Path
 import makro_ai
 
 
-DURUM_DOSYA = Path(
-    "webapp/data/makro_kaynak_durum.json"
-)
+DURUM_DOSYA = public_file('makro_kaynak_durum.json')
 
-GORULEN_DOSYA = Path(
-    "webapp/data/makro_gorulen.json"
-)
+GORULEN_DOSYA = runtime_file('makro_gorulen.json')
 
 TCMB_RSS = (
     "https://www.tcmb.gov.tr/wps/wcm/connect/TR/"
@@ -53,14 +51,7 @@ def _save(path, veri):
         exist_ok=True
     )
 
-    path.write_text(
-        json.dumps(
-            veri,
-            ensure_ascii=False,
-            indent=2
-        ),
-        encoding="utf-8"
-    )
+    atomic_json(path, veri)
 
 
 def _id(kaynak, baslik, link):
@@ -220,6 +211,7 @@ def tcmb_oku():
 def tum_kaynaklari_oku():
 
     sonuc = []
+    basarili_kaynak = 0
 
     kaynaklar = [
         (
@@ -246,6 +238,7 @@ def tum_kaynaklari_oku():
             sonuc.extend(
                 kayitlar
             )
+            basarili_kaynak += 1
 
             print(
                 f"{kaynak} RSS | "
@@ -258,6 +251,8 @@ def tum_kaynaklari_oku():
                 e
             )
 
+    if not basarili_kaynak:
+        raise RuntimeError('Tum makro kaynaklari gecici olarak kullanilamiyor')
     return sonuc
 
 
@@ -319,6 +314,7 @@ def yeni_haberleri_isle():
         f"YENI: {len(yeniler)}"
     )
 
+    basarisiz_olay = 0
     for h in reversed(
         yeniler
     ):
@@ -358,6 +354,9 @@ def yeni_haberleri_isle():
                 "MAKRO AI ISLEME HATASI:",
                 e
             )
+            # Leave failed events unseen for a later collector round.
+            basarisiz_olay += 1
+            continue
 
         gorulen_set.add(
             h["id"]
@@ -388,6 +387,8 @@ def yeni_haberleri_isle():
         }
     )
 
+    if basarisiz_olay:
+        raise RuntimeError('Bazi makro olaylari islenemedi; yeniden denenecek')
     return len(
         yeniler
     )

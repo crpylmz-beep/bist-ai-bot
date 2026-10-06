@@ -1,9 +1,10 @@
-﻿from pathlib import Path
+from veri_yollari import public_file, runtime_file
+from pathlib import Path
 import json
 import time
 import borsapy as bp
 
-DOSYA = Path("webapp/data/sirket_site_haritasi.json")
+DOSYA = public_file('sirket_site_haritasi.json')
 
 veri = json.loads(
     DOSYA.read_text(encoding="utf-8")

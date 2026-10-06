@@ -1,11 +1,14 @@
+from veri_yollari import data_file, public_dir, archive_dir, paths
 import haber_zeka
 import haber_etki_motoru
+from ai_karar_motoru import learning_history_lock
 import os
 import math
 import time
 import asyncio
 import json
 from datetime import datetime
+from zoneinfo import ZoneInfo
 import borsapy as bp
 import pandas as pd
 
@@ -21,33 +24,18 @@ from telegram.ext import (
 
 TOKEN = os.getenv("BOT_TOKEN")
 
-DATA_FILE = os.path.join(
-    os.path.dirname(__file__),
-    "webapp",
-    "data",
-    "bist_data.json"
+DATA_FILE = str(data_file('bist_data.json', repo_root=os.path.dirname(__file__)))
+
+TAHMIN_GECMISI_FILE = str(data_file('tahmin_gecmisi.json', repo_root=os.path.dirname(__file__)))
+
+YARIN_TOP10_FILE = str(data_file('yarin_top10.json', repo_root=os.path.dirname(__file__)))
+
+YARIN_TOP10_ARSIV_DIR = str(archive_dir())
+YARIN_TOP10_CANLI_FILE = os.path.join(
+    os.path.dirname(YARIN_TOP10_FILE), "yarin_top10_canli.json"
 )
 
-TAHMIN_GECMISI_FILE = os.path.join(
-    os.path.dirname(__file__),
-    "webapp",
-    "data",
-    "tahmin_gecmisi.json"
-)
-
-YARIN_TOP10_FILE = os.path.join(
-    os.path.dirname(__file__),
-    "webapp",
-    "data",
-    "yarin_top10.json"
-)
-
-GUN_ICI_GECERSIZ_FILE = os.path.join(
-    os.path.dirname(__file__),
-    "webapp",
-    "data",
-    "gun_ici_gecersiz_semboller.json"
-)
+GUN_ICI_GECERSIZ_FILE = str(data_file('gun_ici_gecersiz_semboller.json', repo_root=os.path.dirname(__file__)))
 
 
 # =========================================================
@@ -262,11 +250,7 @@ def canli_makro_puani_getir(sembol):
     Her hisse analizinde diski tekrar tekrar okumaz.
     """
     try:
-        dosya = os.path.join(
-            "webapp",
-            "data",
-            "makro_canli_etki.json"
-        )
+        dosya = str(data_file('makro_canli_etki.json'))
 
         if not os.path.exists(dosya):
             return {
@@ -1192,7 +1176,7 @@ def hisse_analiz_hesapla(
                         vwap_ustu=vwap_ai_ustu,
                         obv_pozitif=None,
                         piyasa_rejimi=0,
-                        haber_dakika=0,
+                        haber_dakika=haber_zeka.haber_yasi_getir(sembol),
                         ogrenilmis_katsayi=1.0,
                     )
                 )
@@ -1337,7 +1321,7 @@ def hisse_analiz_hesapla(
                 if karar == "AL":
                     karar = "IZLE"
 
-        return {
+        sonuc = {
             "sembol": sembol,
             "fiyat": fiyat,
             "degisim": gunluk_degisim,
@@ -1429,6 +1413,9 @@ def hisse_analiz_hesapla(
             "puan": puan,
             "nedenler": nedenler,
         }
+        # Kayit hatasi teknik analizin sonucunu etkilemez.
+        yarin_top10_canli_guncelle(sonuc, veri)
+        return sonuc
 
     except Exception:
         return None
@@ -1964,10 +1951,22 @@ def web_verisi_kaydet(sonuclar, tum_semboller=None):
 
         # BIST 100 verisini al
         xu100 = None
+        from ai_karar_motoru import stamp
+        endeks_simdi = datetime.now(ZoneInfo('Europe/Istanbul'))
+        cached_index = {}
+        try:
+            with open(DATA_FILE,encoding='utf-8') as cached_file:
+                cached_index = json.load(cached_file).get('bist100') or {}
+        except (OSError,ValueError):
+            pass
+        cached_at = stamp(cached_index.get('updated_at'))
+        index_cache_valid = bool(cached_at and cached_at<=endeks_simdi and cached_at.date()==endeks_simdi.date()
+                                 and (endeks_simdi-cached_at).total_seconds()<300)
 
         try:
-            endeks = bp.Index("XU100")
-            xu100 = endeks.info
+            if not index_cache_valid:
+                endeks = bp.Index("XU100")
+                xu100 = endeks.info
         except Exception as e:
             print("BIST 100 VERİ HATASI:", e)
 
@@ -2005,24 +2004,21 @@ def web_verisi_kaydet(sonuclar, tum_semboller=None):
             "hisseler": web_hisseler
         }
 
+        if index_cache_valid or (not xu100 and cached_index):
+            veri['bist100'] = cached_index
+        elif xu100:
+            veri['bist100']['updated_at'] = endeks_simdi.isoformat()
+
         os.makedirs(
             os.path.dirname(DATA_FILE),
             exist_ok=True
         )
 
-        with open(
-            DATA_FILE,
-            "w",
-            encoding="utf-8"
-        ) as f:
-
-            json.dump(
-                veri,
-                f,
-                ensure_ascii=False,
-                indent=2,
-                default=str
-            )
+        from pathlib import Path
+        from kullanici_kayitlari import atomic_json, now
+        veri['updated_at'] = now()
+        # Preserve the existing default=str conversion for provider scalar values.
+        atomic_json(Path(DATA_FILE), json.loads(json.dumps(veri, default=str)))
 
     except Exception as e:
 
@@ -2030,6 +2026,7 @@ def web_verisi_kaydet(sonuclar, tum_semboller=None):
             "WEB VERİ KAYIT HATASI:",
             e
         )
+        raise
 def tahmin_sonrasi_fiyatlarini_bul(sembol, tahmin_tarihi, veri_cache=None):
     try:
         if veri_cache is not None and sembol in veri_cache:
@@ -2174,20 +2171,40 @@ def tahmin_sonuclarini_guncelle():
         return False
 
 
-def yarin_top10_listesi(sonuclar):
+def yarin_top10_listesi(sonuclar, kalibrasyon=None, piyasa=None):
+    from yarin_kalibrasyon import YarinKalibrasyon, score
+    from piyasa_baglami import PiyasaBaglami, annotate, effects, usable_context
+    baglam_zamani = datetime.now(ZoneInfo('Europe/Istanbul'))
+    if piyasa is None:
+        piyasa = PiyasaBaglami(paths(repo_root=os.path.dirname(__file__))).context('YARIN')
+    piyasa = usable_context(piyasa,baglam_zamani,'YARIN')
+    if piyasa:
+        annotate([a for a in sonuclar if isinstance(a,dict) and a],piyasa)
+    if kalibrasyon is None:
+        try:
+            kalibrasyon = YarinKalibrasyon(paths(repo_root=os.path.dirname(__file__))).context()
+        except Exception:
+            kalibrasyon = {"learning_enabled": False}
     sirali = []
     for a in sonuclar:
-        skor = yarin_potansiyel_hesapla(a)
-        if skor >= 55:
-            sirali.append((skor, a))
-    sirali.sort(
-        key=lambda x: (
-            x[0],
-            guvenli_float(x[1].get("hacim_orani")),
-            guvenli_float(x[1].get("risk_getiri"))
-        ),
-        reverse=True
-    )
+        if not isinstance(a, dict) or not a:
+            continue
+        ham = yarin_potansiyel_hesapla(a)
+        # Existing eligibility and safety gates always run before learned scoring.
+        try:
+            a.update(score(a, ham, kalibrasyon))
+        except Exception:
+            a.update(ham_puan=ham, kalibrasyon_duzeltmesi=0, final_puan=ham,
+                     shadow_puan=ham, calibration_version="BASE", shadow_version="BASE")
+        a['kalibrasyon_sonrasi_puan'] = a['final_puan']
+        a.update(effects(a,ham,baglam_zamani,'YARIN'))
+        if ham >= 55:
+            a['final_puan'] = max(0,min(95,a['final_puan']+a['piyasa_baglami_etkisi']))
+            a['shadow_puan'] = max(0,min(95,a['shadow_puan']+a['piyasa_baglami_etkisi']))
+        if ham >= 55:
+            sirali.append((a["final_puan"], a))
+    sirali.sort(key=lambda x: (x[0], guvenli_float(x[1].get("hacim_orani")),
+                              guvenli_float(x[1].get("risk_getiri"))), reverse=True)
     return sirali[:10]
 
 
@@ -2210,67 +2227,299 @@ def yarin_top10_kilitli_oku():
         return None
 
 
-def yarin_top10_kilitli_kaydet(sonuclar, toplam_hisse):
+def json_atomik_yaz(dosya, veri, overwrite=True):
+    """Tam JSON'u ayni dizinde hazirla; arsivde mevcut dosyaya dokunma."""
+    import tempfile
+
+    dizin = os.path.dirname(os.path.abspath(dosya))
+    os.makedirs(dizin, exist_ok=True)
+    fd, gecici = tempfile.mkstemp(prefix=".snapshot-", suffix=".tmp", dir=dizin)
     try:
-        top10 = yarin_top10_listesi(sonuclar)
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            json.dump(veri, f, ensure_ascii=False, indent=2, default=str,
+                      allow_nan=False)
+            f.flush()
+            os.fsync(f.fileno())
+        if overwrite:
+            os.replace(gecici, dosya)
+        else:
+            # link() mevcut hedef varsa atomik olarak hata verir;
+            # kontrol-et/sonra-yaz yarisi veya yarim JSON olusmaz.
+            os.link(gecici, dosya)
+    finally:
+        if os.path.exists(gecici):
+            os.unlink(gecici)
 
-        kayitlar = []
 
-        for sira, (skor, a) in enumerate(top10, 1):
-            hisse = dict(a)
+def yarin_snapshot_oku(dosya):
+    with open(dosya, "r", encoding="utf-8") as f:
+        veri = json.load(f)
+    if not isinstance(veri, dict) or not isinstance(veri.get("top10"), list):
+        raise ValueError("Gecersiz Yarin TOP10 snapshot")
+    tarih = veri.get("analiz_tarihi", "")
+    if datetime.strptime(tarih, "%Y-%m-%d").strftime("%Y-%m-%d") != tarih:
+        raise ValueError("Gecersiz snapshot tarihi")
+    return veri
 
-            hisse["yarin_top10_sira"] = sira
-            hisse["yarin_top10_puani"] = skor
 
-            # Kilitlenen ilk listede henuz ilk hacimli kirilim
-            # saati bilinmiyor. Gun ici takip sistemi daha sonra
-            # bu alani ilk gerceklesme aninda dolduracak.
-            hisse["ilk_hacimli_kirilim_saati"] = None
+def yarin_snapshot_modeli(veri, tahmin_zamani=None):
+    """Eski ekran alanlarini koru; tahmini acik ve ayri alanlarda sakla."""
+    import copy
 
-            kayitlar.append(hisse)
-
-        simdi = datetime.now()
-
-        veri = {
-            "olusturma_zamani": simdi.strftime("%Y-%m-%d %H:%M:%S"),
-            "analiz_tarihi": simdi.strftime("%Y-%m-%d"),
-            "kilitli": True,
-            "toplam_hisse": toplam_hisse,
-            "teknik_aday": len([
-                a for a in sonuclar
-                if yarin_potansiyel_hesapla(a) >= 55
-            ]),
-            "top10": kayitlar
+    snapshot = copy.deepcopy(veri)
+    snapshot["snapshot_surumu"] = 1
+    snapshot["saat_dilimi"] = "Europe/Istanbul"
+    snapshot["kayit_turu"] = "DONDURULMUS_TAHMIN"
+    snapshot["tahmin_zamani"] = tahmin_zamani
+    snapshot["zaman_kaynagi"] = "ISTANBUL" if tahmin_zamani else "LEGACY_BELIRSIZ"
+    for hisse in snapshot["top10"] + snapshot.get('ham_top10', []) + snapshot.get('shadow_top10', []):
+        hisse["tahmin"] = {
+            "sembol": hisse.get("sembol"),
+            "tahmin_zamani": tahmin_zamani,
+            "eski_zaman_metni": veri.get("olusturma_zamani"),
+            "fiyat": hisse.get("fiyat"),
+            "skor": hisse.get("yarin_top10_puani"),
+            "karar": hisse.get("yarin_ai_karar", hisse.get("karar")),
+            "alim_alt": hisse.get("ai_yarin_alim_alt", hisse.get("yarin_alim_alt")),
+            "alim_ust": hisse.get("ai_yarin_alim_ust", hisse.get("yarin_alim_ust")),
+            "hedef": hisse.get("ai_yarin_hedef", hisse.get("yarin_kar_al")),
+            "stop": hisse.get("ai_yarin_stop", hisse.get("yarin_stop")),
+            "ham_puan": hisse.get('ham_puan'),
+            "kalibrasyon_duzeltmesi": hisse.get('kalibrasyon_duzeltmesi'),
+            "final_puan": hisse.get('final_puan'),
+            "shadow_puan": hisse.get('shadow_puan'),
+            "calibration_version": hisse.get('calibration_version'),
+            "shadow_version": hisse.get('shadow_version'),
+            "piyasa_baglami": hisse.get("piyasa_baglami"),
+            "piyasa_duzeltmesi": hisse.get("piyasa_duzeltmesi",0),
+            "breadth_duzeltmesi": hisse.get("breadth_duzeltmesi",0),
+            "sektor_duzeltmesi": hisse.get("sektor_duzeltmesi",0),
+            "piyasa_model_version": hisse.get("piyasa_model_version"),
+            "haber_puani": hisse.get("haber_puani"),
+            "makro_puani": hisse.get("makro_puani"),
+            "sektor_puani": hisse.get("sektor_puani"),
+            "kriter_ozeti": {
+                k: copy.deepcopy(hisse[k]) for k in (
+                    "nedenler", "teknik_puan_yarin", "nihai_ai_puan", "rsi",
+                    "macd", "hacim_orani", "risk_getiri", "haber_guven"
+                ) if k in hisse
+            }
         }
+    return snapshot
 
-        os.makedirs(
-            os.path.dirname(YARIN_TOP10_FILE),
-            exist_ok=True
-        )
 
-        with open(
-            YARIN_TOP10_FILE,
-            "w",
-            encoding="utf-8"
-        ) as f:
-            json.dump(
-                veri,
-                f,
-                ensure_ascii=False,
-                indent=2,
-                default=str
-            )
+def yarin_top10_kilitli_kaydet(sonuclar, toplam_hisse):
+    """Gunluk arsiv ilk yazimda kilitlenir; canli verilerle degistirilmez."""
+    import fcntl
 
-        print(
-            f"YARIN TOP10 KILITLENDI: "
-            f"{len(kayitlar)} hisse"
-        )
+    try:
+        os.makedirs(os.path.dirname(YARIN_TOP10_FILE), exist_ok=True)
+        # Ayni anda iki tarama olsa bile arsiv ve ekran dosyasi tutarli kalsin.
+        with open(YARIN_TOP10_FILE + ".lock", "a", encoding="utf-8") as kilit:
+            fcntl.flock(kilit, fcntl.LOCK_EX)
+            simdi = datetime.now(ZoneInfo("Europe/Istanbul"))
+            bugun = simdi.strftime("%Y-%m-%d")
+            arsiv = os.path.join(YARIN_TOP10_ARSIV_DIR, bugun + ".json")
 
-        return veri
+            # Once eski ekran kaydini kayipsiz arsivle. Bozuk dosyada
+            # sessizce yeni tahmin yazmak yerine islemi durdur.
+            eski = None
+            if os.path.exists(YARIN_TOP10_FILE):
+                eski = yarin_snapshot_oku(YARIN_TOP10_FILE)
+                eski_arsiv = os.path.join(
+                    YARIN_TOP10_ARSIV_DIR, eski["analiz_tarihi"] + ".json"
+                )
+                if not os.path.exists(eski_arsiv):
+                    eski_snapshot = (
+                        eski if eski.get("snapshot_surumu")
+                        else yarin_snapshot_modeli(eski)
+                    )
+                    json_atomik_yaz(eski_arsiv, eski_snapshot, overwrite=False)
 
+            if os.path.exists(arsiv):
+                veri = yarin_snapshot_oku(arsiv)
+                if veri["analiz_tarihi"] != bugun:
+                    raise ValueError("Arsiv tarihi dosya adi ile uyusmuyor")
+                if eski != veri:
+                    json_atomik_yaz(YARIN_TOP10_FILE, veri)
+                print("YARIN TOP10 ZATEN KILITLI - TAHMIN DEGISTIRILMEDI")
+                return veri
+
+            from yarin_kalibrasyon import YarinKalibrasyon
+            from piyasa_baglami import PiyasaBaglami
+            piyasa = PiyasaBaglami(paths(repo_root=os.path.dirname(__file__)),clock=lambda:simdi).refresh(
+                rows=sonuclar,fallback=simdi.isoformat(),force=True)
+            calibration = YarinKalibrasyon(paths(repo_root=os.path.dirname(__file__)), clock=lambda: simdi).freeze_day()
+            top10 = yarin_top10_listesi(sonuclar, kalibrasyon=calibration, piyasa=piyasa)
+            # Prospective baseline/shadow lists; never recomputed from later outcomes.
+            eligible = [a for a in sonuclar if a.get("ham_puan", -999) >= 55]
+            def comparison_rows(field):
+                ranked = sorted(eligible, key=lambda a: (a[field], guvenli_float(a.get("hacim_orani")),
+                    guvenli_float(a.get("risk_getiri"))), reverse=True)[:10]
+                return [dict(a, yarin_top10_sira=i+1, yarin_top10_puani=a[field]) for i,a in enumerate(ranked)]
+            ham_top10 = comparison_rows("ham_puan")
+            shadow_top10 = comparison_rows("shadow_puan")
+            kayitlar = []
+            for sira, (skor, a) in enumerate(top10, 1):
+                hisse = dict(a)
+                hisse["yarin_top10_sira"] = sira
+                hisse["yarin_top10_puani"] = skor
+                hisse["ilk_hacimli_kirilim_saati"] = None
+                kayitlar.append(hisse)
+
+            veri = yarin_snapshot_modeli({
+                "olusturma_zamani": simdi.strftime("%Y-%m-%d %H:%M:%S"),
+                "analiz_tarihi": bugun,
+                "kilitli": True,
+                "toplam_hisse": toplam_hisse,
+                "teknik_aday": len(eligible),
+                "kalibrasyon_modeli": calibration,
+                "piyasa_modeli": piyasa,
+                "ham_top10": ham_top10,
+                "shadow_top10": shadow_top10,
+                "top10": kayitlar
+            }, simdi.isoformat(timespec="seconds"))
+            json_atomik_yaz(arsiv, veri, overwrite=False)
+            # Mevcut web/Telegram okuyuculari ayni top10 yapisini kullanir.
+            json_atomik_yaz(YARIN_TOP10_FILE, veri)
+            print(f"YARIN TOP10 KILITLENDI: {len(kayitlar)} hisse")
+            return veri
     except Exception as e:
         print("YARIN TOP10 KILITLEME HATASI:", e)
         return None
+
+def yarin_top10_snapshot_oku():
+    """Arsiv asil kaynak; eski kurulumlarda ekran dosyasini yalnizca oku."""
+    mevcut = yarin_top10_kilitli_oku()
+    if not mevcut:
+        return None
+    tarih = mevcut.get("analiz_tarihi", "")
+    if datetime.strptime(tarih, "%Y-%m-%d").strftime("%Y-%m-%d") != tarih:
+        raise ValueError("Gecersiz snapshot tarihi")
+    arsiv = os.path.join(YARIN_TOP10_ARSIV_DIR, tarih + ".json")
+    snapshot = yarin_snapshot_oku(arsiv) if os.path.exists(arsiv) else mevcut
+    if snapshot.get("analiz_tarihi") != tarih:
+        raise ValueError("Arsiv tarihi uyusmuyor")
+    return snapshot
+
+
+def yarin_canli_oku(snapshot):
+    mevcut = {}
+    if os.path.exists(YARIN_TOP10_CANLI_FILE):
+        with open(YARIN_TOP10_CANLI_FILE, "r", encoding="utf-8") as f:
+            mevcut = json.load(f)
+    if mevcut.get("analiz_tarihi") != snapshot.get("analiz_tarihi"):
+        mevcut = {"analiz_tarihi": snapshot.get("analiz_tarihi"), "top10": []}
+    return mevcut
+
+
+def yarin_tahmin_performansi(hisse, snapshot, fiyat, gecmis):
+    """Baz daima dondurulmus fiyat. Tahmin gununun High/Low'u kullanilmaz."""
+    tahmin = hisse.get("tahmin") or {}
+    baz = guvenli_float(tahmin.get("fiyat", hisse.get("fiyat")))
+    hedef = guvenli_float(tahmin.get("hedef", hisse.get("ai_yarin_hedef", hisse.get("yarin_kar_al"))))
+    stop = guvenli_float(tahmin.get("stop", hisse.get("ai_yarin_stop", hisse.get("yarin_stop"))))
+    sonuc = {"simdi_yuzde": None, "en_yuksek_yuzde": None,
+             "en_dusuk_yuzde": None, "hedefe_ulasti": None, "stop_oldu": None,
+             "not": "Gecmis veya guvenilir tahmin zamani eksik."}
+    if baz <= 0:
+        return sonuc
+    if guvenli_float(fiyat) > 0:
+        sonuc["simdi_yuzde"] = round((fiyat / baz - 1) * 100, 2)
+    zaman = tahmin.get("tahmin_zamani", snapshot.get("tahmin_zamani"))
+    try:
+        baslangic = datetime.fromisoformat(zaman)
+        if baslangic.tzinfo is None:
+            return sonuc
+        baslangic = baslangic.astimezone(ZoneInfo("Europe/Istanbul"))
+    except (TypeError, ValueError):
+        return sonuc
+    # Gunluk mumlarla kapanis oncesi tahminin ayni gun icindeki
+    # hareketlerini ayirmak mumkun degil: eksik sonuclari uydurma.
+    if (baslangic.hour, baslangic.minute) < (18, 15):
+        sonuc["not"] = "Kapanis oncesi tahmin icin gunluk mumlar yeterli degil."
+        return sonuc
+    if gecmis is None or gecmis.empty or not {"High", "Low"}.issubset(gecmis.columns):
+        return sonuc
+    tarihler = pd.DatetimeIndex(gecmis.index)
+    if tarihler.tz is not None:
+        tarihler = tarihler.tz_convert("Europe/Istanbul")
+    gunler = tarihler.date
+    bugun = datetime.now(ZoneInfo("Europe/Istanbul")).date()
+    sonrasi = gecmis[(gunler > baslangic.date()) & (gunler <= bugun)]
+    if sonrasi.empty:
+        return sonuc
+    high = sonrasi["High"].dropna()
+    low = sonrasi["Low"].dropna()
+    # Eksik High/Low veya tarih araligi varsa en yuksek/en dusuk
+    # ve 'hayir' sonucu kanitlanamaz; gorulen temas yine kaydedilir.
+    tam = (min(gunler) <= baslangic.date()
+           and len(high) == len(sonrasi) and len(low) == len(sonrasi))
+    yuksek = guvenli_float(high.max()) if not high.empty else 0
+    dusuk = guvenli_float(low.min()) if not low.empty else 0
+    if tam and yuksek > 0 and dusuk > 0:
+        sonuc["en_yuksek_yuzde"] = round((yuksek / baz - 1) * 100, 2)
+        sonuc["en_dusuk_yuzde"] = round((dusuk / baz - 1) * 100, 2)
+    if hedef > 0 and yuksek > 0:
+        sonuc["hedefe_ulasti"] = True if yuksek >= hedef else (False if tam else None)
+    if stop > 0 and dusuk > 0:
+        sonuc["stop_oldu"] = True if dusuk <= stop else (False if tam else None)
+    sonuc["not"] = (
+        "Gunluk mumlarla, tahminden sonraki islem gunleri. "
+        "Hedef/stop temasi; gercek emir sonucu degildir."
+        if tam else "Gecmis araligi eksik; tum donemin en yuksek/en dusuk degeri bilinmiyor."
+    )
+    return sonuc
+
+
+def yarin_top10_canli_guncelle(analiz, gecmis):
+    """Yalniz gunluk teknik analizden canli kayit; snapshot'a yazmaz."""
+    import fcntl
+
+    try:
+        snapshot = yarin_top10_snapshot_oku()
+        if not snapshot:
+            return
+        hisse = next((h for h in snapshot.get("top10", [])
+                      if h.get("sembol") == analiz.get("sembol")), None)
+        if not hisse or gecmis is None or gecmis.empty:
+            return
+        son_tarih = pd.Timestamp(gecmis.index[-1])
+        if son_tarih.tzinfo is not None:
+            son_tarih = son_tarih.tz_convert("Europe/Istanbul")
+        if son_tarih.date().isoformat() <= snapshot["analiz_tarihi"]:
+            return  # Tahmin oncesi/kapanis verisini yeni canli veri gibi sunma.
+        simdi = datetime.now(ZoneInfo("Europe/Istanbul")).isoformat(timespec="seconds")
+        fiyat = guvenli_float(analiz.get("fiyat"))
+        if fiyat <= 0:
+            return
+        performans = yarin_tahmin_performansi(hisse, snapshot, fiyat, gecmis)
+        os.makedirs(os.path.dirname(YARIN_TOP10_CANLI_FILE), exist_ok=True)
+        with open(YARIN_TOP10_CANLI_FILE + ".lock", "a", encoding="utf-8") as kilit:
+            fcntl.flock(kilit, fcntl.LOCK_EX)
+            mevcut = yarin_canli_oku(snapshot)
+            kayit = next((h for h in mevcut["top10"]
+                          if h.get("sembol") == analiz.get("sembol")), None)
+            if kayit is None:
+                kayit = {"sembol": analiz.get("sembol")}
+                mevcut["top10"].append(kayit)
+            kayit["canli"] = {
+                "fiyat": fiyat, "degisim": analiz.get("degisim"),
+                "teknik_skor": analiz.get("puan"), "ai_skor": analiz.get("nihai_ai_puan"),
+                "karar": analiz.get("karar"), "haber_puani": analiz.get("haber_puani"),
+                "makro_puani": analiz.get("makro_puani"), "updated_at": simdi,
+                "fiyat_tarihi": son_tarih.date().isoformat(), "kaynak": "GUNLUK_TEKNIK_ANALIZ"
+            }
+            # Daha once kanitlanan temas, eksik sonraki veriyle silinmez.
+            for alan in ("hedefe_ulasti", "stop_oldu"):
+                if kayit.get("performans", {}).get(alan) is True:
+                    performans[alan] = True
+            kayit["performans"] = performans
+            mevcut["updated_at"] = simdi
+            json_atomik_yaz(YARIN_TOP10_CANLI_FILE, mevcut)
+    except Exception as e:
+        print("YARIN TOP10 CANLI KAYIT HATASI:", e)
+
 
 def tahminleri_kaydet(sonuclar, toplam_hisse):
     try:
@@ -2552,31 +2801,13 @@ def bist_tara():
         toplam
     )
 
-    # YARIN TOP10 KAPANIS KILIDI
-    # 18:15'ten onceki taramalar kilitli listeyi degistirmez.
-    # Ayni gun liste bir kez olusturulduysa tekrar yazilmaz.
-    simdi_dt = datetime.now()
-
+    # Istanbul kapanis saati; tekrar yazim korumasi kayit fonksiyonunda.
+    simdi_dt = datetime.now(ZoneInfo("Europe/Istanbul"))
     if (
         simdi_dt.weekday() < 5
         and (simdi_dt.hour, simdi_dt.minute) >= (18, 15)
     ):
-        mevcut_kilit = yarin_top10_kilitli_oku()
-        bugun = simdi_dt.strftime("%Y-%m-%d")
-
-        if (
-            not mevcut_kilit
-            or mevcut_kilit.get("analiz_tarihi") != bugun
-        ):
-            yarin_top10_kilitli_kaydet(
-                sonuclar,
-                toplam
-            )
-        else:
-            print(
-                "YARIN TOP10 ZATEN BUGUN KILITLENDI - "
-                "LISTE DEGISTIRILMEDI"
-            )
+        yarin_top10_kilitli_kaydet(sonuclar, toplam)
 
     return (
         sonuclar,
@@ -3306,6 +3537,14 @@ def gun_ici_analiz_hesapla(sembol, veri=None):
 
         if veri is None or veri.empty:
             return None
+
+        # Intraday indicators must not include a still-open or future 5m candle.
+        veri = veri.copy()
+        zamanlar = pd.to_datetime(veri.index)
+        if zamanlar.tz is None:
+            zamanlar = zamanlar.tz_localize("Europe/Istanbul")
+        veri.index = zamanlar.tz_convert("Europe/Istanbul")
+        veri = veri[veri.index + pd.Timedelta(minutes=5) <= datetime.now(ZoneInfo("Europe/Istanbul"))]
 
         if len(veri) < 30:
             return None
@@ -4055,7 +4294,7 @@ def gun_ici_analiz_hesapla(sembol, veri=None):
                         vwap_ustu=vwap_ai_ustu,
                         obv_pozitif=obv_ai_pozitif,
                         piyasa_rejimi=0,
-                        haber_dakika=0,
+                        haber_dakika=haber_zeka.haber_yasi_getir(sembol),
                         ogrenilmis_katsayi=1.0,
                     )
                 )
@@ -4349,12 +4588,7 @@ def gun_ici_sinyal_durumlarini_guncelle(sonuclar):
 
     onceki_map = {}
 
-    dosya = os.path.join(
-        os.path.dirname(__file__),
-        "webapp",
-        "data",
-        "gun_ici_tum.json"
-    )
+    dosya = str(data_file('gun_ici_tum.json', repo_root=os.path.dirname(__file__)))
 
     try:
         if os.path.exists(dosya):
@@ -4369,7 +4603,7 @@ def gun_ici_sinyal_durumlarini_guncelle(sonuclar):
     except Exception as e:
         print("SINYAL GECMISI OKUMA UYARISI:", e)
 
-    simdi = datetime.now()
+    simdi = datetime.now(ZoneInfo("Europe/Istanbul"))
 
     for x in sonuclar:
         sembol = str(x.get("sembol", "")).upper().strip()
@@ -4442,7 +4676,7 @@ def gun_ici_sinyal_durumlarini_guncelle(sonuclar):
                 dt = datetime.strptime(
                     str(baslangic),
                     "%Y-%m-%d %H:%M:%S"
-                )
+                ).replace(tzinfo=ZoneInfo("Europe/Istanbul"))
 
                 yas_dk = max(
                     0,
@@ -4466,6 +4700,7 @@ def gun_ici_sinyal_durumlarini_guncelle(sonuclar):
 # Modeller birbirinden ayri tutulur.
 # =========================================================
 
+@learning_history_lock
 def ai_ogrenme_kaydet(sonuclar, model="GUN_ICI"):
     import json
     import os
@@ -4474,14 +4709,10 @@ def ai_ogrenme_kaydet(sonuclar, model="GUN_ICI"):
     if not sonuclar:
         return 0
 
-    klasor = os.path.join(
-        os.path.dirname(__file__),
-        "webapp",
-        "data"
-    )
+    klasor = str(public_dir(repo_root=os.path.dirname(__file__)))
     os.makedirs(klasor, exist_ok=True)
 
-    dosya = os.path.join(klasor, "ai_ogrenme_gecmisi.json")
+    dosya = str(data_file("ai_ogrenme_gecmisi.json", repo_root=os.path.dirname(__file__)))
 
     if os.path.exists(dosya):
         try:
@@ -4499,7 +4730,7 @@ def ai_ogrenme_kaydet(sonuclar, model="GUN_ICI"):
         if x.get("kayit_id")
     }
 
-    simdi = datetime.now()
+    simdi = datetime.now(ZoneInfo("Europe/Istanbul"))
     zaman = simdi.strftime("%Y-%m-%d %H:%M:%S")
     dakika = (simdi.minute // 5) * 5
 
@@ -4656,13 +4887,7 @@ def ai_ogrenme_kaydet(sonuclar, model="GUN_ICI"):
         "kayitlar": kayitlar
     }
 
-    with open(dosya, "w", encoding="utf-8") as f:
-        json.dump(
-            veri,
-            f,
-            ensure_ascii=False,
-            indent=2
-        )
+    json_atomik_yaz(dosya, veri)
 
     print(
         f"AI OGRENME | MODEL: {model} | "
@@ -4679,16 +4904,9 @@ def ai_ogrenme_ozeti_yaz():
     from datetime import datetime
     from collections import Counter
 
-    klasor = os.path.join(
-        os.path.dirname(__file__),
-        "webapp",
-        "data"
-    )
+    klasor = str(public_dir(repo_root=os.path.dirname(__file__)))
 
-    kaynak = os.path.join(
-        klasor,
-        "ai_ogrenme_gecmisi.json"
-    )
+    kaynak = str(data_file("ai_ogrenme_gecmisi.json", repo_root=os.path.dirname(__file__)))
     hedef = os.path.join(
         klasor,
         "ai_ogrenme_ozeti.json"
@@ -4794,16 +5012,9 @@ def ai_ogrenilmis_agirliklari_hesapla():
     from datetime import datetime
     from collections import defaultdict
 
-    klasor = os.path.join(
-        os.path.dirname(__file__),
-        "webapp",
-        "data"
-    )
+    klasor = str(public_dir(repo_root=os.path.dirname(__file__)))
 
-    kaynak = os.path.join(
-        klasor,
-        "ai_ogrenme_gecmisi.json"
-    )
+    kaynak = str(data_file("ai_ogrenme_gecmisi.json", repo_root=os.path.dirname(__file__)))
 
     hedef = os.path.join(
         klasor,
@@ -5115,6 +5326,7 @@ def ai_ogrenilmis_agirliklari_hesapla():
 
 
 
+@learning_history_lock
 def ai_sinyal_sonuc_guncelle(guncel_sonuclar):
     """
     GUN_ICI modelindeki gercek AL/SAT sinyallerini degerlendirir.
@@ -5136,16 +5348,9 @@ def ai_sinyal_sonuc_guncelle(guncel_sonuclar):
     import os
     from datetime import datetime
 
-    klasor = os.path.join(
-        os.path.dirname(__file__),
-        "webapp",
-        "data"
-    )
+    klasor = str(public_dir(repo_root=os.path.dirname(__file__)))
 
-    dosya = os.path.join(
-        klasor,
-        "ai_ogrenme_gecmisi.json"
-    )
+    dosya = str(data_file("ai_ogrenme_gecmisi.json", repo_root=os.path.dirname(__file__)))
 
     if not os.path.exists(dosya):
         return 0
@@ -5167,7 +5372,7 @@ def ai_sinyal_sonuc_guncelle(guncel_sonuclar):
         if sembol:
             guncel_map[sembol] = a
 
-    simdi = datetime.now()
+    simdi = datetime.now(ZoneInfo("Europe/Istanbul"))
     degisen = 0
 
     for kayit in veri.get("kayitlar", []):
@@ -5298,13 +5503,7 @@ def ai_sinyal_sonuc_guncelle(guncel_sonuclar):
 
         degisen += 1
 
-    with open(dosya, "w", encoding="utf-8") as f:
-        json.dump(
-            veri,
-            f,
-            ensure_ascii=False,
-            indent=2
-        )
+    json_atomik_yaz(dosya, veri)
 
     if degisen:
         print(
@@ -5318,6 +5517,7 @@ def ai_sinyal_sonuc_guncelle(guncel_sonuclar):
 
 def gun_ici_top10_tara():
     """Tum BIST hisselerini hizli Stream mimarisiyle 5 dk veride tarar."""
+    from pathlib import Path
     tum_semboller = bist_hisseleri_getir()
     toplam = len(tum_semboller)
 
@@ -5390,6 +5590,17 @@ def gun_ici_top10_tara():
     # MADDE 33 - SINYAL DURUMU VE SINYAL YASI
     sonuclar = gun_ici_sinyal_durumlarini_guncelle(sonuclar)
 
+    # Reuse all closed stream quotes, including technically filtered stocks, for breadth.
+    try:
+        from piyasa_baglami import PiyasaBaglami,intraday_quotes,annotate
+        piyasa_simdi = datetime.now(ZoneInfo('Europe/Istanbul'))
+        quote_rows = intraday_quotes(veri_map,sonuclar+list(filtre_disi_map.values()),piyasa_simdi)
+        piyasa = PiyasaBaglami(paths(repo_root=Path(__file__).parent),clock=lambda:piyasa_simdi).refresh(
+            rows=quote_rows,universe=tum_semboller,source='INTRADAY',force=True)
+        annotate(sonuclar,piyasa)
+    except Exception as e:
+        print('PIYASA BAGLAMI UYARISI:',type(e).__name__)
+
     # AI - ONCE ESKI GERCEK AL/SAT SINYALLERININ
     # SONUCLARINI GUNCEL FIYATLARLA DEGERLENDIR.
     ai_sinyal_sonuc_guncelle(sonuclar)
@@ -5408,9 +5619,22 @@ def gun_ici_top10_tara():
     # OGRENILMIS GOSTERGE AGIRLIKLARINI GUNCELLE.
     ai_ogrenilmis_agirliklari_hesapla()
 
+    # Independent intraday model; failure falls back to the original raw ranking.
+    gun_ici_performans = None
+    try:
+        from gun_ici_performans import GunIciPerformans
+        gun_ici_performans = GunIciPerformans(paths(repo_root=Path(__file__).parent))
+        gun_ici_performans.rank(sonuclar)
+        gun_ici_performans.cache_bars(veri_map)
+    except Exception as e:
+        gun_ici_performans = None
+        for a in sonuclar:
+            a['gun_ici_final_puan'] = guvenli_float(a.get('gun_ici_puan'))
+        print('GUN ICI PERFORMANS BAGLANTI UYARISI:', type(e).__name__)
+
     sonuclar.sort(
         key=lambda a: (
-            guvenli_float(a.get("gun_ici_puan")),
+            guvenli_float(a.get("gun_ici_final_puan", a.get("gun_ici_puan"))),
             guvenli_float(a.get("hacim3_orani")),
             guvenli_float(a.get("momentum15"))
         ),
@@ -5421,6 +5645,12 @@ def gun_ici_top10_tara():
         a for a in sonuclar
         if guvenli_float(a.get("gun_ici_puan")) >= 45
     ][:10]
+
+    if gun_ici_performans is not None:
+        try:
+            gun_ici_performans.record(top10, sonuclar)
+        except Exception as e:
+            print('GUN ICI SINYAL KAYIT UYARISI:', type(e).__name__)
 
     print(
         "GUN ICI OZET | "
@@ -5441,61 +5671,41 @@ def gun_ici_top10_tara():
         import json
         import os
 
-        web_dosya = os.path.join(
-            os.path.dirname(__file__),
-            "webapp",
-            "data",
-            "gun_ici_top10.json"
-        )
+        web_dosya = str(data_file('gun_ici_top10.json', repo_root=os.path.dirname(__file__)))
 
         os.makedirs(
             os.path.dirname(web_dosya),
             exist_ok=True
         )
 
+        # Bu taramanin kayit zamani: sunucunun yerel saatinden bagimsiz.
+        guncelleme_zamani = datetime.now(ZoneInfo("Europe/Istanbul"))
         web_veri = {
-            "guncelleme": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "updated_at": guncelleme_zamani.isoformat(timespec="seconds"),
+            "guncelleme": guncelleme_zamani.strftime("%Y-%m-%d %H:%M:%S"),
             "toplam": toplam,
             "teknik_aday": len(sonuclar),
             "top10": top10
         }
 
-        with open(web_dosya, "w", encoding="utf-8") as f:
-            json.dump(
-                web_veri,
-                f,
-                ensure_ascii=False,
-                indent=2,
-                default=str
-            )
+        json_atomik_yaz(web_dosya, web_veri)
 
         print(
             f"GUN ICI WEB VERISI KAYDEDILDI: {len(top10)} hisse"
         )
 
         # Tum basarili gun ici analizlerini Hisse Ara icin ayri kaydet.
-        tum_web_dosya = os.path.join(
-            os.path.dirname(__file__),
-            "webapp",
-            "data",
-            "gun_ici_tum.json"
-        )
+        tum_web_dosya = str(data_file('gun_ici_tum.json', repo_root=os.path.dirname(__file__)))
 
         tum_web_veri = {
-            "guncelleme": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "updated_at": guncelleme_zamani.isoformat(timespec="seconds"),
+            "guncelleme": guncelleme_zamani.strftime("%Y-%m-%d %H:%M:%S"),
             "toplam_bist": toplam,
             "analizli": len(sonuclar),
             "hisseler": sonuclar
         }
 
-        with open(tum_web_dosya, "w", encoding="utf-8") as f:
-            json.dump(
-                tum_web_veri,
-                f,
-                ensure_ascii=False,
-                indent=2,
-                default=str
-            )
+        json_atomik_yaz(tum_web_dosya, tum_web_veri)
 
         print(
             f"GUN ICI TUM WEB VERISI KAYDEDILDI: {len(sonuclar)} hisse"
@@ -5507,86 +5717,93 @@ def gun_ici_top10_tara():
     # -------------------------------------------------
     # KILITLI YARIN TOP10 HACIMLI KIRILIM TAKIBI
     # -------------------------------------------------
-    # Burasi sadece kilitli listedeki canli kirilim durumunu
-    # ve ilk gerceklesme saatini gunceller.
-    # Sira, puan ve islem seviyeleri DEGISTIRILMEZ.
+    # Snapshot yalnizca okunur. Kirilim takibi ayri canli dosyaya yazilir.
     try:
-        kilitli_yarin = yarin_top10_kilitli_oku()
+        kilitli_yarin = yarin_top10_snapshot_oku()
 
         if kilitli_yarin and isinstance(
             kilitli_yarin.get("top10"),
             list
         ):
-            degisiklik_var = False
+            import fcntl
+            os.makedirs(os.path.dirname(YARIN_TOP10_CANLI_FILE), exist_ok=True)
+            with open(YARIN_TOP10_CANLI_FILE + ".lock", "a", encoding="utf-8") as kilit:
+                fcntl.flock(kilit, fcntl.LOCK_EX)
+                canli_yarin = yarin_canli_oku(kilitli_yarin)
+                canli_map = {h.get("sembol"): h for h in canli_yarin["top10"]}
+                for h in kilitli_yarin["top10"]:
+                    if h.get("sembol") not in canli_map:
+                        canli_yarin["top10"].append({
+                            "sembol": h.get("sembol"),
+                            "ilk_hacimli_kirilim_saati": h.get("ilk_hacimli_kirilim_saati"),
+                            "hacimli_kirilim_durum": h.get("hacimli_kirilim_durum", "BEKLENIYOR")
+                        })
+                kirilim_seviyeleri = {
+                    h.get("sembol"): h.get("yarin_kirilim")
+                    for h in kilitli_yarin["top10"]
+                }
+                degisiklik_var = False
 
-            for hisse in kilitli_yarin["top10"]:
-                sembol = hisse.get("sembol")
+                for hisse in canli_yarin["top10"]:
+                    sembol = hisse.get("sembol")
 
-                if not sembol:
-                    continue
+                    if not sembol:
+                        continue
 
-                mum_verisi = veri_map.get(sembol)
+                    mum_verisi = veri_map.get(sembol)
 
-                if mum_verisi is None or mum_verisi.empty:
-                    continue
+                    if mum_verisi is None or mum_verisi.empty:
+                        continue
 
-                kirilim_seviyesi = guvenli_float(
-                    hisse.get("yarin_kirilim")
-                )
-
-                ilk_saat, yeni_durum = ilk_hacimli_kirilim_bul(
-                    mum_verisi,
-                    kirilim_seviyesi
-                )
-
-                eski_saat = hisse.get(
-                    "ilk_hacimli_kirilim_saati"
-                )
-
-                eski_durum = hisse.get(
-                    "hacimli_kirilim_durum",
-                    "BEKLENIYOR"
-                )
-
-                # Ilk gerceklesme saati bir kez bulunduysa
-                # daha sonraki taramalarda ASLA degistirilmez.
-                if eski_saat:
-                    if eski_durum != "GERCEKLESTI":
-                        hisse["hacimli_kirilim_durum"] = "GERCEKLESTI"
-                        degisiklik_var = True
-                    continue
-
-                if ilk_saat:
-                    hisse["ilk_hacimli_kirilim_saati"] = ilk_saat
-                    hisse["hacimli_kirilim_durum"] = "GERCEKLESTI"
-                    degisiklik_var = True
-
-                elif yeni_durum != eski_durum:
-                    hisse["hacimli_kirilim_durum"] = yeni_durum
-                    degisiklik_var = True
-
-            if degisiklik_var:
-                with open(
-                    YARIN_TOP10_FILE,
-                    "w",
-                    encoding="utf-8"
-                ) as f:
-                    json.dump(
-                        kilitli_yarin,
-                        f,
-                        ensure_ascii=False,
-                        indent=2,
-                        default=str
+                    kirilim_seviyesi = guvenli_float(
+                        kirilim_seviyeleri.get(sembol)
                     )
 
-                print(
-                    "YARIN TOP10 KIRILIM TAKIBI GUNCELLENDI"
-                )
-            else:
-                print(
-                    "YARIN TOP10 KIRILIM TAKIBI: "
-                    "YENI DEGISIKLIK YOK"
-                )
+                    ilk_saat, yeni_durum = ilk_hacimli_kirilim_bul(
+                        mum_verisi,
+                        kirilim_seviyesi
+                    )
+
+                    eski_saat = hisse.get(
+                        "ilk_hacimli_kirilim_saati"
+                    )
+
+                    eski_durum = hisse.get(
+                        "hacimli_kirilim_durum",
+                        "BEKLENIYOR"
+                    )
+
+                    # Ilk gerceklesme saati bir kez bulunduysa
+                    # daha sonraki taramalarda ASLA degistirilmez.
+                    if eski_saat:
+                        if eski_durum != "GERCEKLESTI":
+                            hisse["hacimli_kirilim_durum"] = "GERCEKLESTI"
+                            degisiklik_var = True
+                        continue
+
+                    if ilk_saat:
+                        hisse["ilk_hacimli_kirilim_saati"] = ilk_saat
+                        hisse["hacimli_kirilim_durum"] = "GERCEKLESTI"
+                        degisiklik_var = True
+
+                    elif yeni_durum != eski_durum:
+                        hisse["hacimli_kirilim_durum"] = yeni_durum
+                        degisiklik_var = True
+
+                if degisiklik_var:
+                    canli_yarin["updated_at"] = datetime.now(
+                        ZoneInfo("Europe/Istanbul")
+                    ).isoformat(timespec="seconds")
+                    json_atomik_yaz(YARIN_TOP10_CANLI_FILE, canli_yarin)
+
+                    print(
+                        "YARIN TOP10 KIRILIM TAKIBI GUNCELLENDI"
+                    )
+                else:
+                    print(
+                        "YARIN TOP10 KIRILIM TAKIBI: "
+                        "YENI DEGISIKLIK YOK"
+                    )
 
     except Exception as e:
         print(
@@ -6068,7 +6285,7 @@ def yarin_potansiyel_hesapla(a):
                         vwap_ustu=vwap_ai_ustu,
                         obv_pozitif=None,
                         piyasa_rejimi=0,
-                        haber_dakika=0,
+                        haber_dakika=haber_zeka.haber_yasi_getir(sembol),
                         ogrenilmis_katsayi=1.0,
                     )
                 )
@@ -6659,6 +6876,7 @@ else:
 # =========================================================
 
 if __name__ == "__main__":
+    paths().ensure()
 
     if not TOKEN:
         print("BOT_TOKEN bulunamadı. Telegram botu çalıştırılmadan devam ediliyor.")

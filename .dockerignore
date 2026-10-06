@@ -1,0 +1,15 @@
+.git
+.local
+.env
+.env.*
+*.pem
+__pycache__
+**/__pycache__
+*.pyc
+webapp/data/*
+!webapp/data/sektor_haritasi.json
+!webapp/data/sirket_site_haritasi.json
+*.log
+
+*.key
+vapid_keys/
