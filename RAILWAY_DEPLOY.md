@@ -34,7 +34,7 @@ Mevcut JSON/flock mimarisi için hazırlanmış uygulanabilir seçenek: **bir Ra
 
 ## Mevcut veriyi koruma / ilk kurulum
 
-Volume `public/`, `private/user-data/`, `runtime/`, `archives/yarin_top10_arsiv/` içerir. Private/runtime HTTP statik servisinin dışındadır; health yalnız güvenli görev alanlarını döndürür. Docker image kullanıcı verileri ve geçmiş piyasa kayıtlarını içermez. Yalnız sektör/şirket referans haritaları ilk boş volume'a üzerine yazmadan kopyalanır.
+Volume `public/`, `private/user-data/`, `runtime/`, `archives/yarin_top10_arsiv/` içerir. Private/runtime HTTP statik servisinin dışındadır; health yalnız güvenli görev alanlarını döndürür. Docker image kullanıcı verileri ve geçmiş piyasa kayıtlarını içermez. Sektör/şirket haritaları ve allowlist içindeki geçmiş public piyasa JSON dosyaları ilk boş volume'a üzerine yazmadan kopyalanır. Tarihler korunur, eski kayıtlar canlı sayılmaz; private/runtime geçmişleri image'a alınmaz. Son mevcut Yarın arşivi view dosyasından bulunur.
 
 İlk deploy'dan önce var olan yerel verileri koruyacaksanız **web/worker durdurulmuşken**, güvenilir ortamda `BIST_DATA_DIR=/mutlak/yedek-klasor python veri_yollari.py --migrate` ile düzenlenmiş yedeği oluşturun. Ardından sağlayıcının güvenli volume upload/restore yöntemiyle `/data` içine aktarın; yeni worker'ı ancak aktarım bitince açın. Bu görev gerçek kullanıcı dosyalarını taşımadı. Volume'u silmeyin/recreate etmeyin. Image build/deploy sırasında migration çalıştırılmıyor; mevcut arşiv/user/state üzerine yazılmıyor.
 
@@ -66,3 +66,11 @@ Scheduler açık piyasada döner 10'luk batch kullanır; 805 hisse için agresif
 `node tests/test_cloud_ui.cjs` ve mevcut dört `.cjs` test grubu.
 
 `BIST_DATA_DIR=/tmp/gecici-volume python ana_motor.py --check` yalnız offline import/config kontrolüdür. Gerçek deploy ve gerçek VAPID/push teslimi bu görevde yapılmamıştır.
+
+## Boş volume ilk açılışı
+
+`cloud_bootstrap.py` yalnız public allowlist (bist_data, gun_ici_tum/top10, yarin_top10 ve immutable günlük arşivler) aktarır. Mevcut dosya ve arşiv byte'ları overwrite edilmez. En yeni arşiv için public Yarın view dosyası ilerletilebilir, arşiv değişmez. Hiç kaynak yoksa açık WAITING durumu vardır; sahte fiyat/tahmin oluşturulmaz.
+
+Worker `bootstrap` görevi mevcut `full_scan` batch fonksiyonuyla bir ilk turu seans dışında da tamamlar. `BOOTSTRAP_INTERVAL_SECONDS=30`, mevcut FULL_SCAN_BATCH_SIZE=10; aynı teknik hattı paylaşır, tur bittiğinde runtime marker ile durur. KAP/push/alarm işler sürer. Gün İçi eski liste son kayıt olarak gösterilir; yeni 5m tarama yalnız açık seanstadır. Learning/snapshot seçimi değişmedi.
+
+Railway diski doğrudan bu Codex ortamında incelenmedi. Kaynak kodda Docker allowlist'in yalnız iki harita içermesi ve worker full_scan seans kapısı boş ekranı açıklıyordu. Ayrıca index UI root bist100 yerine hayali BIST100 hisse satırını arıyordu; bu düzeltildi. Yeni image deployment'ta eski public JSON'lar seed-public üzerinden volume'a aktarılır; ek migration komutu gerekmez.

@@ -19,13 +19,13 @@ from veri_yollari import paths
 
 ROOT = Path(__file__).resolve().parent
 ISTANBUL = ZoneInfo('Europe/Istanbul')
-DEFAULTS = {'kap':60, 'macro':120, 'alarm':30, 'push':20,
+DEFAULTS = {'bootstrap':30, 'kap':60, 'macro':120, 'alarm':30, 'push':20,
             'intraday_top10':300, 'company_site':900, 'full_scan':30,
             'priority':2, 'yarin_top10':60, 'performance':900, 'intraday_performance':300, 'market_context':300}
-ENV_NAMES = {'kap':'KAP', 'macro':'MACRO', 'alarm':'ALARM', 'push':'PUSH',
+ENV_NAMES = {'bootstrap':'BOOTSTRAP', 'kap':'KAP', 'macro':'MACRO', 'alarm':'ALARM', 'push':'PUSH',
              'intraday_top10':'INTRADAY_TOP10', 'company_site':'COMPANY_SITE',
              'full_scan':'FULL_SCAN', 'priority':'PRIORITY', 'yarin_top10':'YARIN_TOP10', 'performance':'PERFORMANCE', 'intraday_performance':'INTRADAY_PERFORMANCE', 'market_context':'MARKET_CONTEXT'}
-TECHNICAL = {'full_scan', 'priority', 'intraday_top10', 'yarin_top10'}
+TECHNICAL = {'bootstrap', 'full_scan', 'priority', 'intraday_top10', 'yarin_top10'}
 
 
 def istanbul_now():
@@ -164,6 +164,10 @@ class AnaMotor:
                 task = self.tasks[name]
                 if task.future or mono < task.next_due:
                     continue
+                if name == 'full_scan' and 'bootstrap' in self.tasks and not (self.directory/'public_bootstrap_complete.json').exists():
+                    continue
+                if name == 'bootstrap' and (self.directory/'public_bootstrap_complete.json').exists():
+                    continue
                 if name in ('intraday_top10','full_scan','market_context') and not market_open(current,self.holiday):
                     continue
                 if name == 'yarin_top10':
@@ -212,6 +216,8 @@ def main():
         print(json.dumps(check_configuration(),ensure_ascii=False));return
     with worker_lock(runtime_dir()):
         from ana_motor_gorevleri import WorkerTasks
+        from cloud_bootstrap import bootstrap_public
+        bootstrap_public()
         adapter=WorkerTasks()
         motor=AnaMotor(adapter.callbacks())
         adapter.stop=motor.stop

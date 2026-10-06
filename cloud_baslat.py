@@ -13,9 +13,9 @@ ROOT = Path(__file__).resolve().parent
 
 
 def seed_reference_data(location):
-    # Only reference maps, never user data, snapshots or generated market quotes.
-    for name in ('sektor_haritasi.json', 'sirket_site_haritasi.json'):
-        copy_new(ROOT/'seed-public'/name, location.public_file(name))
+    from cloud_bootstrap import bootstrap_public
+    result=bootstrap_public(location)
+    logging.info('[CLOUD] public bootstrap: %s kayıt hazırlandı', result['created'])
 
 
 def stop_children(children, timeout=25):

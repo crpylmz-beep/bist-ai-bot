@@ -122,6 +122,15 @@ class WorkerTasks:
                 if row is None:self.enqueue(stock)
         return {'updated':len(successful), 'cycle_complete':self.cursor>=len(self.symbols)}
 
+    def bootstrap(self):
+        # One bounded daily-analysis pass even outside the trading session.
+        # Existing providers/analysis/write functions; no intraday/snapshot fabrication.
+        result=self.full_scan()
+        if result.get('cycle_complete'):
+            atomic_json(self.directory/'public_bootstrap_complete.json',
+                        {'completed_at':istanbul_now().isoformat()})
+        return result
+
     def intraday(self):
         if not market_open(istanbul_now()):
             return 0
@@ -158,7 +167,7 @@ class WorkerTasks:
         import makro_kaynak
         from sirket_site_motoru import SirketSiteMotoru
         self.company=SirketSiteMotoru(self.directory,enqueue=self.enqueue,stop=lambda:self.stop.is_set())
-        return {'kap':kap_canli.kap_kontrol, 'macro':makro_kaynak.yeni_haberleri_isle,
+        return {'bootstrap':self.bootstrap, 'kap':kap_canli.kap_kontrol, 'macro':makro_kaynak.yeni_haberleri_isle,
                 'alarm':self.alarm, 'push':self.push,
                 'priority':self.priority, 'full_scan':self.full_scan,
                 'intraday_top10':self.intraday, 'yarin_top10':self.tomorrow,

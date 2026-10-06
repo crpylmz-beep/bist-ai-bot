@@ -392,14 +392,16 @@ body{
 .seviye-panel button:disabled{opacity:.5;cursor:wait}
 .price-alarm-row{padding:12px 0;border-bottom:1px solid #334155}
 
+#pushControls button{min-height:44px;padding:10px 14px;border:1px solid #94a3b8;border-radius:6px;background:#1e293b;color:white;font-weight:bold}
+#pushStatus{display:block;width:100%;font-size:13px}
 </style>
 </head>
 
 <body>
-<section style="padding:12px" aria-label="Push bildirimleri">
+<section id="pushControls" style="padding:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;border-bottom:1px solid #64748b" aria-label="Push bildirimleri">
 <button onclick="pushAc()" id="pushEnable">Bildirimleri Aç</button>
 <button onclick="pushKapat()" id="pushDisable">Bildirimleri Kapat</button>
-<span id="pushStatus" role="status">iPhone: Safari’den Ana Ekran’a ekleyip uygulamayı oradan açın. Bildirimler için HTTPS gerekir.</span>
+<span id="pushStatus" role="status">Bildirim ayarları kontrol ediliyor…</span>
 </section>
 
 <!-- ANA SAYFA -->
@@ -791,6 +793,8 @@ body{
 
 let tumVeriler = [];
 let anaUpdatedAt = null;
+let anaBist100 = {};
+let anaSinyalVeriler = [];
 let oncekiSayfa = "home";
 
 
@@ -807,6 +811,7 @@ async function gercekVeriyiYukle(openStock = true){
         if(!cevap.ok) throw new Error("Ana veri okunamadı");
         const veri = await cevap.json();
         anaUpdatedAt = veri.updated_at || null;
+        anaBist100 = veri.bist100 || {};
 
         if(Array.isArray(veri)){
             tumVeriler = veri;
@@ -826,6 +831,8 @@ async function gercekVeriyiYukle(openStock = true){
         else{
             tumVeriler = [];
         }
+
+        anaSinyalVeriler = tumVeriler.slice();
 
         // Gun ici 5 dakikalik analizleri yukle ve ana hisse verisiyle birlestir.
         try{
@@ -861,7 +868,9 @@ async function gercekVeriyiYukle(openStock = true){
 
                     const gunIci = gunIciMap.get(kod);
 
-                    return gunIci
+                    const dailyTime = Date.parse(hisse.canli_guncelleme || anaUpdatedAt);
+                    const intraTime = Date.parse(gunIciVeri.updated_at);
+                    return gunIci && Number.isFinite(intraTime) && (!Number.isFinite(dailyTime) || intraTime >= dailyTime)
                         ? {...hisse, ...gunIci}
                         : hisse;
                 });
@@ -901,9 +910,7 @@ async function gercekVeriyiYukle(openStock = true){
 
 function anaSayfayiDoldur(){
 
-    if(!tumVeriler.length) return;
-
-    const bist = tumVeriler.find(x =>
+    const bist = Object.keys(anaBist100).length ? anaBist100 : tumVeriler.find(x =>
         String(x.sembol || x.symbol || "").toUpperCase() === "BIST100"
     );
 
@@ -922,24 +929,28 @@ function anaSayfayiDoldur(){
             bist.change_percent;
 
         document.getElementById("bistPrice").innerText =
-            fiyat != null ? Number(fiyat).toFixed(2) : "--";
+            fiyat != null ? Number(fiyat).toFixed(2) : "Endeks sağlayıcısından geçerli veri bekleniyor";
 
         document.getElementById("bistChange").innerText =
-            degisim != null
-                ? "%" + Number(degisim).toFixed(2)
-                : "--";
+            (degisim != null ? "%" + Number(degisim).toFixed(2) : "Değişim verisi yok") +
+            (!piyasaAcikMi() ? " · Son seans" : gunIciVeriYasi(bist.updated_at).status !== "normal" ? " · Son kayıt / güncelliği doğrulanamadı" : "");
 
         document.getElementById("bistChange").className =
             "market-change " +
             (Number(degisim) >= 0 ? "up" : "down");
     }
 
+    if(!bist){
+        document.getElementById("bistPrice").innerText = "Endeks verisi henüz alınamadı; ilk batch bekleniyor";
+        document.getElementById("bistChange").innerText = "";
+    }
     sayilariGuncelle();
 
     const freshness = gunIciVeriYasi(anaUpdatedAt);
     document.getElementById("updateTime").innerText =
         "Son güncelleme: " + freshness.time + " (İstanbul) · Veri yaşı: " + freshness.age +
-        (freshness.status !== "normal" ? " · ESKİ / GÜNCELLİĞİ DOĞRULANAMAYAN VERİ" : "");
+        (freshness.status !== "normal" ? " · SON KAYIT / ESKİ VERİ — canlı değil" : "") +
+        (!piyasaAcikMi() ? " · Piyasa kapalı / Son seans" : "");
 }
 
 
@@ -963,7 +974,7 @@ function sayilariGuncelle(){
     let satim = 0;
     let alim = 0;
 
-    tumVeriler.forEach(hisse => {
+    (anaSinyalVeriler.length ? anaSinyalVeriler : tumVeriler).forEach(hisse => {
 
         const tip = sinyalTip(hisse);
 
@@ -1412,7 +1423,7 @@ async function showTop10(refresh = false){
         if(!liste.length){
 
             alan.innerHTML =
-                '<div class="empty">Kilitli Yarın TOP 10 listesi henüz oluşturulmadı.</div>';
+                '<div class="empty">Geçerli geçmiş snapshot bulunamadı. İlk başarılı kapanış tahmini bekleniyor.</div>';
 
             return;
         }
@@ -1838,7 +1849,15 @@ async function showKapAlarms(){
 /* HİSSE ARA */
 
 let gunIciUpdatedAt = null;
+let gunIciLegacyTime = null;
 let gunIciFreshnessTimer = null;
+
+function piyasaAcikMi(now = new Date()){
+    const parts = new Intl.DateTimeFormat('en-GB', {timeZone:'Europe/Istanbul', weekday:'short',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(now);
+    const get = type => parts.find(p => p.type === type)?.value;
+    const minutes = Number(get('hour')) * 60 + Number(get('minute'));
+    return !['Sat','Sun'].includes(get('weekday')) && minutes >= 600 && minutes < 1090;
+}
 
 function gunIciVeriYasi(updatedAt, now = Date.now()){
     // Saat dilimi olmayan eski guncelleme alanini tahmin ederek kullanma.
@@ -1868,7 +1887,9 @@ function gunIciGuncellikGoster(){
     };
     document.getElementById("gunIciFreshness").textContent =
         `Son Güncelleme: ${state.time} (İstanbul) · Veri Yaşı: ${state.age}` +
-        (labels[state.status] ? ` · ${labels[state.status]}` : "");
+        (labels[state.status] ? ` · ${labels[state.status]}` : "") +
+        (!piyasaAcikMi() ? " · Piyasa kapalı / Son seans" : state.status !== "normal" ? " · Son kayıt" : "") +
+        (gunIciLegacyTime && !gunIciUpdatedAt ? ` · Eski kayıt zamanı: ${gunIciLegacyTime} (saat dilimi doğrulanamadı)` : "");
     const warning = document.getElementById("gunIciWarning");
     warning.style.display = state.status === "normal" ? "none" : "block";
     warning.textContent = state.status === "stale"
@@ -1909,6 +1930,7 @@ async function showGunIciTop10(refresh = false){
         const veri = await cevap.json();
 
         gunIciUpdatedAt = veri.updated_at;
+        gunIciLegacyTime = veri.guncelleme || null;
         gunIciGuncellikGoster();
         // Ekran acik kaldiginda da veri yasi ve uyari eskimesin.
         gunIciFreshnessTimer = setInterval(gunIciGuncellikGoster, 15000);
@@ -1920,7 +1942,7 @@ async function showGunIciTop10(refresh = false){
         if(!liste.length){
 
             alan.innerHTML =
-                '<div class="empty">Gün İçi TOP 10 verisi bulunamadı.</div>';
+                '<div class="empty">Son seans kaydı henüz yok. İlk açık seans taraması bekleniyor; veri uydurulmaz.</div>';
 
             return;
         }
@@ -2832,6 +2854,19 @@ function goAI(){
 
 
 let pushBusy = false;
+async function pushDurumHazirla(){
+    const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const standalone = Boolean(navigator.standalone || window.matchMedia('(display-mode: standalone)').matches);
+    if(ios && !standalone){pushMesaj('Ana Ekrana ekleyip oradan açın (iOS 16.4+).');return;}
+    if(!window.isSecureContext || !('Notification' in window) || !('PushManager' in window)){
+        pushMesaj('Bu tarayıcıda web push desteklenmiyor; HTTPS ve desteklenen PWA gerekir.');return;
+    }
+    try {
+        const config = await seviyeApi('/api/push/config');
+        pushMesaj(config.configured ? (Notification.permission === 'granted' ? 'Bildirim izni mevcut. Bu cihazı bağlamak için Bildirimleri Aç düğmesine basın.' : 'Bildirimleri Aç düğmesine basarak izin verebilirsiniz.') : 'Bildirim için sunucudaki VAPID ayarları tamamlanmalı.');
+    } catch (_) {pushMesaj('Bildirim ayarları okunamadı; tekrar deneyin.');}
+}
+
 function pushMesaj(text) { document.getElementById('pushStatus').textContent = text; }
 function pushKey(key) {
     const binary = atob(key.replace(/-/g, '+').replace(/_/g, '/'));
@@ -2931,6 +2966,7 @@ async function cloudDurumYenile(){
 
 if(typeof document.addEventListener === "function"){
     cloudDurumYenile();
+    pushDurumHazirla();
     let refreshing = false;
     setInterval(async () => {
         if(document.hidden || refreshing) return;
@@ -2941,6 +2977,10 @@ if(typeof document.addEventListener === "function"){
             else if(document.getElementById("top10Page").style.display === "block") await showTop10(true);
             else if(document.getElementById("kapAlarmPage").style.display === "block") await showKapAlarms();
             else if(document.getElementById("homePage").style.display === "block") await gercekVeriyiYukle(false);
+            else if(document.getElementById("searchPage").style.display === "block"){
+                await gercekVeriyiYukle(false);
+                aramaYap();
+            }
         } finally { refreshing = false; }
     }, 60000);
 }

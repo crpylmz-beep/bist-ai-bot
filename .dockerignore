@@ -13,3 +13,10 @@ webapp/data/*
 
 *.key
 vapid_keys/
+
+!webapp/data/bist_data.json
+!webapp/data/gun_ici_top10.json
+!webapp/data/gun_ici_tum.json
+!webapp/data/yarin_top10.json
+!webapp/data/yarin_top10_arsiv/
+!webapp/data/yarin_top10_arsiv/*.json
