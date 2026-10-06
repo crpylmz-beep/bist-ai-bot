@@ -18,10 +18,10 @@ vm.runInContext(code,ctx);
  assert.equal(element('countSatim').innerText,1);
  assert.ok(element('updateTime').innerText.includes('SON KAYIT'));
  assert.equal(vm.runInContext('tumVeriler[0].fiyat',ctx),300); // old intraday cannot replace newer daily price
- await ctx.pushDurumHazirla();assert.ok(element('pushStatus').textContent.includes('Bildirimleri Aç'));
+ await ctx.pushDurumHazirla();assert.equal(element('pushStatus').textContent,'Bildirimler Kapalı');
  assert.ok(!element('pushStatus').textContent.includes('Ana Ekrana ekleyip'));
  ctx.navigator.standalone=false;ctx.window.matchMedia=()=>({matches:false});
- await ctx.pushDurumHazirla();assert.ok(element('pushStatus').textContent.includes('Ana Ekrana ekleyip'));
+ await ctx.pushDurumHazirla();assert.equal(element('pushStatus').textContent,'Bildirimler Kapalı');
  assert.equal((html.match(/id="pushEnable"/g)||[]).length,1);
  assert.ok(html.includes('id="pushControls"'));
  assert.ok(!html.includes('id="pushEnable" disabled'));

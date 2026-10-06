@@ -3,9 +3,11 @@
 <head>
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#101827">
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>BIST AI</title>
 
 <style>
@@ -392,26 +394,56 @@ body{
 .seviye-panel button:disabled{opacity:.5;cursor:wait}
 .price-alarm-row{padding:12px 0;border-bottom:1px solid #334155}
 
-#pushControls button{min-height:44px;padding:10px 14px;border:1px solid #94a3b8;border-radius:6px;background:#1e293b;color:white;font-weight:bold}
-#pushStatus{display:block;width:100%;font-size:13px}
+html{height:100%;overflow:hidden;overscroll-behavior:none}
+body{height:100vh;height:100dvh;background:#111827;overflow:hidden;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
+.page{background:#f4f6f8;flex:1 1 auto;min-height:0;width:100%;overflow-y:auto;overflow-x:hidden;padding-bottom:16px;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch}
+.page > *{min-width:0;max-width:100%}
+.bottom-nav{position:relative;flex:0 0 auto;height:calc(72px + env(safe-area-inset-bottom,0px));padding-bottom:env(safe-area-inset-bottom,0px);width:100%}
+#pushControls{padding:8px 14px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.status-line{display:flex;flex-direction:column;gap:4px;font-size:12px}
+.notification-actions{display:flex;gap:8px}
+#pushControls button{min-height:44px;padding:8px 12px;border:1px solid #94a3b8;border-radius:6px;background:white;color:#17212b;font-weight:600}
+#pushActionMessage{font-size:12px;overflow-wrap:anywhere}
+.detail-grid,.seviye-columns{min-width:0}
+.detail-grid > *{min-width:0;overflow-wrap:anywhere}
+@media(max-width:480px){
+    #homePage .header{padding:12px 14px;border-radius:0 0 16px 16px}
+    #homePage .header h1{font-size:21px}
+    #homePage .header p{display:none}
+    #homePage .market-card{margin:8px 12px;padding:10px 14px}
+    #homePage .market-price{font-size:26px;overflow-wrap:anywhere}
+    #homePage .market-change{font-size:12px}
+    #homePage .section-title{font-size:16px;margin:8px 0}
+    #homePage .signal-grid{gap:8px}
+    #homePage .signal-card{min-height:82px;padding:8px 12px}
+    #homePage .signal-icon{font-size:18px}
+    #homePage .signal-name{font-size:12px;margin-top:4px}
+    #homePage .signal-count{font-size:22px;margin-top:2px}
+    #homePage .main-actions{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:12px}
+    #homePage .action-btn{font-size:12px;padding:12px 6px;min-height:64px}
+    #homePage .update-time{padding:6px 12px;overflow-wrap:anywhere}
+}
+@media(min-width:700px){.bottom-nav{left:auto;right:auto;transform:none;align-self:center}}
 </style>
 </head>
 
 <body>
-<section id="pushControls" style="padding:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;border-bottom:1px solid #64748b" aria-label="Push bildirimleri">
-<button onclick="pushAc()" id="pushEnable">Bildirimleri Aç</button>
-<button onclick="pushKapat()" id="pushDisable">Bildirimleri Kapat</button>
-<span id="pushStatus" role="status">Bildirim ayarları kontrol ediliyor…</span>
-</section>
+
 
 <!-- ANA SAYFA -->
 <div id="homePage" class="page">
-    <p id="cloudStatus" role="status">Arka plan çalışma durumu kontrol ediliyor…</p>
+
 
     <div class="header">
         <h1>🤖 BIST AI Asistanı</h1>
         <p>Yapay zekâ destekli BIST tarama terminali</p>
     </div>
+
+    <section id="pushControls" aria-label="Sistem ve bildirim durumu">
+        <div class="status-line"><span id="cloudStatus" role="status">Sistem kontrol ediliyor</span><span id="pushStatus" role="status">Bildirimler Kapalı</span></div>
+        <div class="notification-actions"><button onclick="pushAc()" id="pushEnable">Bildirimleri Aç</button><button onclick="pushKapat()" id="pushDisable" hidden>Bildirimleri Kapat</button></div>
+        <span id="pushActionMessage" role="status" hidden></span>
+    </section>
 
     <div class="market-card">
         <div class="market-title">BIST 100</div>
@@ -933,7 +965,7 @@ function anaSayfayiDoldur(){
 
         document.getElementById("bistChange").innerText =
             (degisim != null ? "%" + Number(degisim).toFixed(2) : "Değişim verisi yok") +
-            (!piyasaAcikMi() ? " · Son seans" : gunIciVeriYasi(bist.updated_at).status !== "normal" ? " · Son kayıt / güncelliği doğrulanamadı" : "");
+            (!piyasaAcikMi() ? " · Son seans" : gunIciVeriYasi(bist.updated_at).status !== "normal" ? " · Son kayıt" : "");
 
         document.getElementById("bistChange").className =
             "market-change " +
@@ -2855,19 +2887,28 @@ function goAI(){
 
 let pushBusy = false;
 async function pushDurumHazirla(){
-    const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-    const standalone = Boolean(navigator.standalone || window.matchMedia('(display-mode: standalone)').matches);
-    if(ios && !standalone){pushMesaj('Ana Ekrana ekleyip oradan açın (iOS 16.4+).');return;}
-    if(!window.isSecureContext || !('Notification' in window) || !('PushManager' in window)){
-        pushMesaj('Bu tarayıcıda web push desteklenmiyor; HTTPS ve desteklenen PWA gerekir.');return;
-    }
+    // Inspect permission/subscription without requesting permission on startup.
+    let enabled=false;
     try {
-        const config = await seviyeApi('/api/push/config');
-        pushMesaj(config.configured ? (Notification.permission === 'granted' ? 'Bildirim izni mevcut. Bu cihazı bağlamak için Bildirimleri Aç düğmesine basın.' : 'Bildirimleri Aç düğmesine basarak izin verebilirsiniz.') : 'Bildirim için sunucudaki VAPID ayarları tamamlanmalı.');
-    } catch (_) {pushMesaj('Bildirim ayarları okunamadı; tekrar deneyin.');}
+        const registration = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration('/') : null;
+        const subscription = registration ? await registration.pushManager.getSubscription() : null;
+        enabled=Boolean(subscription && typeof Notification !== 'undefined' && Notification.permission==='granted');
+    } catch (_) {}
+    document.getElementById('pushStatus').textContent=enabled ? 'Bildirimler Açık' : 'Bildirimler Kapalı';
+    document.getElementById('pushEnable').hidden=enabled;
+    document.getElementById('pushDisable').hidden=!enabled;
 }
 
-function pushMesaj(text) { document.getElementById('pushStatus').textContent = text; }
+function pushMesaj(text) {
+    const message=document.getElementById('pushActionMessage');
+    message.textContent=text;
+    message.hidden=false;
+    if(text === 'Bildirimler bu tarayıcı için açık.' || text === 'Bildirimler bu tarayıcı için kapalı.'){
+        message.hidden=true;
+        pushDurumHazirla();
+    }
+}
+
 function pushKey(key) {
     const binary = atob(key.replace(/-/g, '+').replace(/_/g, '/'));
     return Uint8Array.from(binary, c => c.charCodeAt(0));
@@ -2957,15 +2998,16 @@ async function cloudDurumYenile(){
         if(!response.ok) throw new Error('health');
         const status = (await response.json()).ana_motor || {};
         document.getElementById('cloudStatus').textContent =
-            'Arka plan: ' + (status.worker_status || 'DURMUS_OLABILIR') +
-            ' · Son heartbeat: ' + yarinZaman(status.updated_at);
+            status.healthy ? 'Sistem Aktif' : 'Sistem kontrol ediliyor';
     } catch (_) {
-        document.getElementById('cloudStatus').textContent = 'Arka plan durumu doğrulanamadı';
+        document.getElementById('cloudStatus').textContent = 'Sistem bağlantısı bekleniyor';
     }
 }
 
 if(typeof document.addEventListener === "function"){
     cloudDurumYenile();
+    const standalone=Boolean(navigator.standalone || window.matchMedia('(display-mode: standalone)').matches);
+    document.documentElement.dataset.displayMode=standalone ? 'standalone' : 'browser';
     pushDurumHazirla();
     let refreshing = false;
     setInterval(async () => {
