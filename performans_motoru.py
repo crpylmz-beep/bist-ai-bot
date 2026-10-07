@@ -341,7 +341,7 @@ class PerformansMotoru:
             if name in state.get('arsivler',{}):continue
             raw=path.read_bytes();snapshot=json.loads(raw);day=snapshot.get('analiz_tarihi',path.stem)
             snapshot_id=day+'_'+hashlib.sha256(raw).hexdigest()[:16]
-            lists=[('YARIN_TOP10',snapshot.get('top10',[])),('YARIN_BASELINE',snapshot.get('ham_top10',[])),('YARIN_SHADOW',snapshot.get('shadow_top10',[])),('YARIN_CONTROLLED_SHADOW',snapshot.get('controlled_shadow_top10',[]))]
+            lists=[('YARIN_TOP10',snapshot.get('top10',[])),('YARIN_BASELINE',snapshot.get('ham_top10',[])),('YARIN_LEARNING_BASELINE',snapshot.get('base_top10',[])),('YARIN_SHADOW',snapshot.get('shadow_top10',[])),('YARIN_CONTROLLED_SHADOW',snapshot.get('controlled_shadow_top10',[]))]
             lists.append(('POSITIVE_CANDIDATE',(snapshot.get('pozitif_havuz') or {}).get('adaylar',[])))
             entries=[(model,rank,row) for model,rows in lists for rank,row in enumerate(rows,1)]
             for model,rank,row in entries:
@@ -369,6 +369,7 @@ class PerformansMotoru:
                     'teknik_katkilar':prediction.get('teknik_katkilar',row.get('teknik_katkilar')),
                     'teknik_shadow_puan':prediction.get('teknik_shadow_puan',row.get('teknik_shadow_puan')),
                     'piyasa_baglami':prediction.get('piyasa_baglami',row.get('piyasa_baglami')),
+                    **{key:prediction.get(key,row.get(key)) for key in ('base_score','learning_adjustment','final_ranking_score','base_rank','learned_rank','rank_change','learning_version','learning_reasons','learning_confidence_summary')},
                     'ham_puan':prediction.get('ham_puan',row.get('ham_puan')),
                     'kalibrasyon_duzeltmesi':prediction.get('kalibrasyon_duzeltmesi',row.get('kalibrasyon_duzeltmesi')),
                     'final_puan':prediction.get('final_puan',row.get('final_puan')),
@@ -440,6 +441,9 @@ class PerformansMotoru:
             for r in rows:groups.setdefault(r.get(field) or 'BILINMIYOR',[]).append(r)
             return {k:summarize(v) for k,v in groups.items()}
         forecasts=[r for r in records if r.get('model')=='YARIN_TOP10']
+        learning_base=[r for r in diagnostic_records if r.get('model')=='YARIN_LEARNING_BASELINE']
+        learning_days={r.get('snapshot_id') for r in learning_base}
+        learning_main=[r for r in forecasts if r.get('snapshot_id') in learning_days]
         days={}
         for row in forecasts:days.setdefault(row['snapshot_tarihi'],[]).append(row)
         daily={day:daily_report(rows) for day,rows in sorted(days.items())}
@@ -451,6 +455,8 @@ class PerformansMotoru:
             'yarin_top10':summarize(forecasts),'yarin_top10_vadeler':{str(h):summarize(forecasts,h) for h in HORIZONS},'son20_gun':summarize(recent),
             'kriter_performansi':criterion_report(eligible),'yarin_kriter_performansi':criterion_report(forecasts),
             'sinirlamalar':['TATIL_TAKVIMI_ENJEKSIYONLA_DESTEKLENIR','YANLIS_NEGATIF_YALNIZCA_KAYITLI_SINYALLER','KRITER_ILISKISI_NEDENSELLIK_DEGIL']}
+        report['top10_learning_comparison']={'paired_snapshots':len(learning_days),
+            'vadeler':{str(h):{'base':summarize(learning_base,h),'learned':summarize(learning_main,h)} for h in HORIZONS}}
         report['sektor_kriterleri']={sector:criterion_report([r for r in eligible if (r.get('sektor') or 'BILINMIYOR')==sector]) for sector in report['sektorler']}
         report['rejim_kriterleri']={regime:criterion_report([r for r in eligible if (r.get('piyasa_rejimi') or 'BILINMIYOR')==regime]) for regime in report['rejimler']}
         report['son20_gun']['gun_sayisi']=len(complete_dates)

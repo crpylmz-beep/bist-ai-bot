@@ -106,6 +106,23 @@ def end_session(day, horizon, holiday):
     return sessions_after(day, horizon, holiday)[-1]
 
 
+def frozen_feature_issue(row, at):
+    """Shared provenance guard for learning outcomes and new rank candidates."""
+    if not isinstance(row,dict):return 'MALFORMED'
+    if any(row.get(key) is not None and not isinstance(row[key],dict) for key in ('kriterler','girdiler','teknik_gostergeler','criteria_snapshot','positive_opportunity','indicator_snapshot')):return 'MALFORMED'
+    snapshot_value=row.get('indicator_snapshot')
+    if isinstance(snapshot_value,dict) and (not stamp(snapshot_value.get('captured_at')) or not isinstance(snapshot_value.get('inputs'),dict)):
+        return 'UNVERIFIED_FEATURES'
+    indicator_snapshot=snapshot_value or {}
+    technical=indicator_snapshot.get('technical') or {}
+    if not isinstance(technical,dict):return 'MALFORMED'
+    for source in (technical,row, row.get('kriterler') or {}, row.get('girdiler') or {}, row.get('teknik_gostergeler') or {}, row.get('criteria_snapshot') or {}, row.get('indicator_snapshot') or {}, row.get('positive_opportunity') or {}):
+        for key in ('captured_at', 'asof', 'feature_timestamp'):
+            recorded = stamp(source.get(key))
+            if recorded and recorded > at: return 'FUTURE_FEATURES'
+    return None
+
+
 def quality(row, horizon, current, holiday=None):
     """Return one exclusion reason; never repair or invent an old label."""
     from performans_motoru import session_closed
@@ -119,16 +136,8 @@ def quality(row, horizon, current, holiday=None):
         return 'NON_LIVE'
     if row.get('performance_source') not in (None, 'LIVE'): return 'NON_LIVE'
     if any(row.get(key) for key in ('lookahead_suspected', 'legacy_unverified', 'unverified')): return 'UNVERIFIED'
-    snapshot_value=row.get('indicator_snapshot')
-    if isinstance(snapshot_value,dict) and (not stamp(snapshot_value.get('captured_at')) or not isinstance(snapshot_value.get('inputs'),dict)):
-        return 'UNVERIFIED_FEATURES'
-    indicator_snapshot=snapshot_value or {}
-    technical=indicator_snapshot.get('technical') or {}
-    if not isinstance(technical,dict):return 'MALFORMED'
-    for source in (technical,row, row.get('kriterler') or {}, row.get('girdiler') or {}, row.get('teknik_gostergeler') or {}, row.get('criteria_snapshot') or {}, row.get('indicator_snapshot') or {}, row.get('positive_opportunity') or {}):
-        for key in ('captured_at', 'asof', 'feature_timestamp'):
-            recorded = stamp(source.get(key))
-            if recorded and recorded > at: return 'FUTURE_FEATURES'
+    feature_error=frozen_feature_issue(row,at)
+    if feature_error:return feature_error
     base = number(row.get('referans_fiyat'), number(row.get('fiyat')))
     if base is None or base <= 0: return 'MISSING_BASE_PRICE'
     target = number(row.get('hedef'), number(row.get('hedef1')))
@@ -164,7 +173,7 @@ def duplicate_key(row):
     # identical observations imported twice under different IDs.
     at = row.get('zaman') or row.get('tarih')
     return (str(row.get('sembol')), str(at), str(signal(row)),
-            str(row.get('kaynak') or row.get('model') or 'LEGACY'), bool(row.get('guclu_tepki')))
+            str(row.get('kaynak') or 'LEGACY'),str(row.get('model') or 'LEGACY'), bool(row.get('guclu_tepki')))
 
 
 def unique_records(records):
@@ -236,7 +245,9 @@ class Stats:
                 'mean_return': mean(values) if values else None, 'median_return': median(values) if values else None,
                 'best_return': max(values) if values else None, 'worst_return': min(values) if values else None,
                 'stddev': pstdev(values) if len(values) > 1 else None, 'mean_raw_price_return': mean(self.raw) if self.raw else None,
+                'median_mfe': median(self.mfe) if self.mfe else None,
                 'mean_mfe': mean(self.mfe) if self.mfe else None, 'mfe_samples': len(self.mfe),
+                'median_mae': median(self.mae) if self.mae else None,
                 'mean_mae': mean(self.mae) if self.mae else None, 'mae_samples': len(self.mae),
                 'mean_positive_return': avg_win, 'mean_negative_return': avg_loss,
                 'payoff_ratio': number(avg_win/abs(avg_loss)) if avg_win is not None and avg_loss else None,

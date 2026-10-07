@@ -2046,7 +2046,7 @@ def tahmin_sonuclarini_guncelle():
         return False
 
 
-def yarin_top10_listesi(sonuclar, kalibrasyon=None, piyasa=None):
+def yarin_top10_listesi(sonuclar, kalibrasyon=None, piyasa=None, learning_context=None):
     from yarin_kalibrasyon import YarinKalibrasyon, score
     from piyasa_baglami import PiyasaBaglami, annotate, effects, usable_context
     baglam_zamani = datetime.now(ZoneInfo('Europe/Istanbul'))
@@ -2060,6 +2060,9 @@ def yarin_top10_listesi(sonuclar, kalibrasyon=None, piyasa=None):
             kalibrasyon = YarinKalibrasyon(paths(repo_root=os.path.dirname(__file__))).context()
         except Exception:
             kalibrasyon = {"learning_enabled": False}
+    from yarin_kalibrasyon import top10_learning_context,rank_with_learning
+    if learning_context is None:
+        learning_context=top10_learning_context(paths(repo_root=os.path.dirname(__file__)),baglam_zamani)
     sirali = []
     from performans_motoru import controlled_context,controlled_score
     controlled=controlled_context(paths(repo_root=os.path.dirname(__file__)),baglam_zamani,'DAILY')
@@ -2087,7 +2090,7 @@ def yarin_top10_listesi(sonuclar, kalibrasyon=None, piyasa=None):
             sirali.append((a["final_puan"], a))
     sirali.sort(key=lambda x: (x[0], guvenli_float(x[1].get("hacim_orani")),
                               guvenli_float(x[1].get("risk_getiri"))), reverse=True)
-    return sirali[:10]
+    return rank_with_learning(sirali,learning_context,baglam_zamani)[:10]
 
 
 
@@ -2154,7 +2157,7 @@ def yarin_snapshot_modeli(veri, tahmin_zamani=None):
     snapshot["kayit_turu"] = "DONDURULMUS_TAHMIN"
     snapshot["tahmin_zamani"] = tahmin_zamani
     snapshot["zaman_kaynagi"] = "ISTANBUL" if tahmin_zamani else "LEGACY_BELIRSIZ"
-    for hisse in snapshot["top10"] + snapshot.get('ham_top10', []) + snapshot.get('shadow_top10', []) + snapshot.get('controlled_shadow_top10',[]) + (snapshot.get('pozitif_havuz') or {}).get('adaylar',[]):
+    for hisse in snapshot["top10"] + snapshot.get('ham_top10', []) + snapshot.get('shadow_top10', []) + snapshot.get('controlled_shadow_top10',[]) + snapshot.get('base_top10',[]) + (snapshot.get('pozitif_havuz') or {}).get('adaylar',[]):
         hisse["tahmin"] = {
             "sembol": hisse.get("sembol"),
             "tahmin_zamani": tahmin_zamani,
@@ -2166,6 +2169,7 @@ def yarin_snapshot_modeli(veri, tahmin_zamani=None):
             "alim_ust": hisse.get("ai_yarin_alim_ust", hisse.get("yarin_alim_ust")),
             "hedef": hisse.get("ai_yarin_hedef", hisse.get("yarin_kar_al")),
             "stop": hisse.get("ai_yarin_stop", hisse.get("yarin_stop")),
+            **{key:copy.deepcopy(hisse.get(key)) for key in ('base_score','learning_adjustment','final_ranking_score','base_rank','learned_rank','rank_change','learning_version','learning_confidence_summary','learning_reasons')},
             "ham_puan": hisse.get('ham_puan'),
             "kalibrasyon_duzeltmesi": hisse.get('kalibrasyon_duzeltmesi'),
             "final_puan": hisse.get('final_puan'),
@@ -2247,7 +2251,9 @@ def yarin_top10_kilitli_kaydet(sonuclar, toplam_hisse, pozitif_kapanis=False):
             piyasa = PiyasaBaglami(paths(repo_root=os.path.dirname(__file__)),clock=lambda:simdi).refresh(
                 rows=sonuclar,fallback=simdi.isoformat(),force=True)
             calibration = YarinKalibrasyon(paths(repo_root=os.path.dirname(__file__)), clock=lambda: simdi).freeze_day()
-            top10 = yarin_top10_listesi(sonuclar, kalibrasyon=calibration, piyasa=piyasa)
+            from yarin_kalibrasyon import top10_learning_context,rank_with_learning
+            learning_context=top10_learning_context(paths(repo_root=os.path.dirname(__file__)),simdi)
+            top10 = yarin_top10_listesi(sonuclar, kalibrasyon=calibration, piyasa=piyasa,learning_context=learning_context)
             # Prospective baseline/shadow lists; never recomputed from later outcomes.
             eligible = [a for a in sonuclar if a.get("ham_puan", -999) >= 55]
             def comparison_rows(field):
@@ -2258,6 +2264,7 @@ def yarin_top10_kilitli_kaydet(sonuclar, toplam_hisse, pozitif_kapanis=False):
             shadow_top10 = comparison_rows("shadow_puan")
             controlled_candidates=sorted(eligible,key=lambda a:(a.get('controlled_shadow') or {}).get('score',a['ham_puan']),reverse=True)[:10]
             controlled_top10=[dict(a,yarin_top10_sira=i+1,yarin_top10_puani=(a.get('controlled_shadow') or {}).get('score',a['ham_puan'])) for i,a in enumerate(controlled_candidates)]
+            learning_candidates=[a for a in eligible if 'base_rank' in a]
             pool=None
             if pozitif_kapanis:
                 from pozitif_kapanis import build_pool
@@ -2266,7 +2273,14 @@ def yarin_top10_kilitli_kaydet(sonuclar, toplam_hisse, pozitif_kapanis=False):
                 pool=build_pool(closing_source,simdi,toplam_hisse,yarin_potansiyel_hesapla,history)
                 if pool['positive_count'] and not pool['analyzed_count']:raise RuntimeError('Pozitif kapanış kalite verisi yetersiz; snapshot yazılmadı')
                 by_symbol={r['sembol']:r for r in pool['adaylar']}
-                top10=[(by_symbol[s]['positive_opportunity']['future_opportunity_score'],by_symbol[s]) for s in pool['eligible_symbols'][:10]]
+                ordered=[(by_symbol[s]['positive_opportunity']['future_opportunity_score'],by_symbol[s]) for s in pool['eligible_symbols']]
+                learned=rank_with_learning(ordered,learning_context,simdi)
+                top10=learned[:10];learning_candidates=[a for _,a in learned]
+            base_top10=[dict(a,yarin_top10_sira=i+1,yarin_top10_puani=a['base_score'])
+                for i,a in enumerate(sorted(learning_candidates,key=lambda a:a['base_rank'])[:10])]
+            comparison_symbols={a['sembol'] for _,a in top10}|{a['sembol'] for a in base_top10}
+            learning_comparison=[{key:a.get(key) for key in ('sembol','base_rank','learned_rank','rank_change','base_score','learning_adjustment','final_ranking_score','learning_version')}
+                for a in learning_candidates if a['sembol'] in comparison_symbols]
             kayitlar = []
             for sira, (skor, a) in enumerate(top10, 1):
                 hisse = dict(a)
@@ -2283,6 +2297,8 @@ def yarin_top10_kilitli_kaydet(sonuclar, toplam_hisse, pozitif_kapanis=False):
                 "teknik_aday": len(eligible),
                 "kalibrasyon_modeli": calibration,
                 "piyasa_modeli": piyasa,
+                "base_top10":base_top10,
+                "learning_comparison":learning_comparison,
                 "ham_top10": ham_top10,
                 "shadow_top10": shadow_top10,
                 "controlled_shadow_top10":controlled_top10,
