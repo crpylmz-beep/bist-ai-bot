@@ -441,9 +441,6 @@ class PerformansMotoru:
             for r in rows:groups.setdefault(r.get(field) or 'BILINMIYOR',[]).append(r)
             return {k:summarize(v) for k,v in groups.items()}
         forecasts=[r for r in records if r.get('model')=='YARIN_TOP10']
-        learning_base=[r for r in diagnostic_records if r.get('model')=='YARIN_LEARNING_BASELINE']
-        learning_days={r.get('snapshot_id') for r in learning_base}
-        learning_main=[r for r in forecasts if r.get('snapshot_id') in learning_days]
         days={}
         for row in forecasts:days.setdefault(row['snapshot_tarihi'],[]).append(row)
         daily={day:daily_report(rows) for day,rows in sorted(days.items())}
@@ -455,8 +452,11 @@ class PerformansMotoru:
             'yarin_top10':summarize(forecasts),'yarin_top10_vadeler':{str(h):summarize(forecasts,h) for h in HORIZONS},'son20_gun':summarize(recent),
             'kriter_performansi':criterion_report(eligible),'yarin_kriter_performansi':criterion_report(forecasts),
             'sinirlamalar':['TATIL_TAKVIMI_ENJEKSIYONLA_DESTEKLENIR','YANLIS_NEGATIF_YALNIZCA_KAYITLI_SINYALLER','KRITER_ILISKISI_NEDENSELLIK_DEGIL']}
-        report['top10_learning_comparison']={'paired_snapshots':len(learning_days),
-            'vadeler':{str(h):{'base':summarize(learning_base,h),'learned':summarize(learning_main,h)} for h in HORIZONS}}
+        from top10_ogrenme_performansi import safe_publish
+        comparison_report=safe_publish(self.location,diagnostic_records,current,self.holiday)
+        report['top10_learning_comparison']=({'status':'AVAILABLE','summary':comparison_report['summary'],
+            'vadeler':comparison_report['horizons'],'api':'/api/top10-learning-performance'}
+            if comparison_report else {'status':'UNAVAILABLE','api':'/api/top10-learning-performance'})
         report['sektor_kriterleri']={sector:criterion_report([r for r in eligible if (r.get('sektor') or 'BILINMIYOR')==sector]) for sector in report['sektorler']}
         report['rejim_kriterleri']={regime:criterion_report([r for r in eligible if (r.get('piyasa_rejimi') or 'BILINMIYOR')==regime]) for regime in report['rejimler']}
         report['son20_gun']['gun_sayisi']=len(complete_dates)

@@ -115,6 +115,10 @@ class BistHandler(SimpleHTTPRequestHandler):
                         or (origin and urlsplit(origin).netloc != self.headers.get('Host'))):
                     raise RecordError('Aynı uygulamadan yapılan istek gerekiyor.', 403)
             url = urlsplit(self.path)
+            if url.path == '/api/top10-learning-performance' and self.command == 'GET':
+                from top10_ogrenme_performansi import api_report
+                self.respond(api_report(parse_qs(url.query,keep_blank_values=True),self.data_paths))
+                return
             if url.path == '/api/indicator-performance' and self.command == 'GET':
                 from sinyal_performansi import indicator_report
                 self.respond(indicator_report(parse_qs(url.query,keep_blank_values=True),self.data_paths))
