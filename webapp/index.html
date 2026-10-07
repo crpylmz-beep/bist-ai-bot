@@ -2909,10 +2909,22 @@ function pushMesaj(text) {
     }
 }
 
+const PUSH_KEY_ERROR = 'Bildirim anahtarı geçersiz. Sistem yöneticisi ayarı kontrol etmeli.';
 function pushKey(key) {
-    const binary = atob(key.replace(/-/g, '+').replace(/_/g, '/'));
-    return Uint8Array.from(binary, c => c.charCodeAt(0));
+    try {
+        if(typeof key !== 'string') throw new Error();
+        key=key.trim().replace(/^VAPID_PUBLIC_KEY=/,'').trim().replace(/^(["'])(.*)\1$/,'$2').replace(/\s/g,'');
+        if(!/^[A-Za-z0-9_+\/-]+={0,2}$/.test(key)) throw new Error();
+        const unpadded=key.replace(/=+$/,'');
+        if(unpadded.length % 4 === 1) throw new Error();
+        const base64=unpadded.replace(/-/g,'+').replace(/_/g,'/') + '='.repeat((4-unpadded.length % 4) % 4);
+        const binary=atob(base64);
+        const bytes=Uint8Array.from(binary,c=>c.charCodeAt(0));
+        if(bytes.length !== 65 || bytes[0] !== 4) throw new Error();
+        return bytes;
+    } catch (_) {throw new Error(PUSH_KEY_ERROR);}
 }
+
 async function pushAc() {
     if (pushBusy) return;
     if (!window.isSecureContext || !('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
@@ -2928,11 +2940,17 @@ async function pushAc() {
         const permission = await Notification.requestPermission();
         if (permission !== 'granted') { pushMesaj('Bildirim izni verilmedi. Tarayıcı ayarlarından değiştirebilirsiniz.'); return; }
         const config = await seviyeApi('/api/push/config');
+        if(config.public_key_error || !config.public_key) throw new Error(PUSH_KEY_ERROR);
         if (!config.configured) throw new Error('Sunucuda VAPID anahtarları henüz yapılandırılmadı.');
+        const applicationServerKey=pushKey(config.public_key);
+        if(crypto.subtle){
+            try {await crypto.subtle.importKey('raw',applicationServerKey,{name:'ECDSA',namedCurve:'P-256'},false,['verify']);}
+            catch (_) {throw new Error(PUSH_KEY_ERROR);}
+        }
         await navigator.serviceWorker.register('/service-worker.js', {scope:'/'});
         const registration = await navigator.serviceWorker.ready;
         let subscription = await registration.pushManager.getSubscription();
-        if (!subscription) subscription = await registration.pushManager.subscribe({userVisibleOnly:true, applicationServerKey:pushKey(config.public_key)});
+        if (!subscription) subscription = await registration.pushManager.subscribe({userVisibleOnly:true, applicationServerKey});
         let browser = localStorage.getItem('bist_push_browser');
         if (!browser) { browser = crypto.randomUUID(); localStorage.setItem('bist_push_browser', browser); }
         try {
@@ -2940,7 +2958,7 @@ async function pushAc() {
             localStorage.setItem('bist_push_subscription', saved.id);
         } catch (error) { await subscription.unsubscribe(); throw error; }
         pushMesaj('Bildirimler bu tarayıcı için açık.');
-    } catch (error) { pushMesaj(error.message); }
+    } catch (error) { pushMesaj(/applicationServerKey|P-256|InvalidCharacterError/i.test(error.message || '') ? PUSH_KEY_ERROR : error.message); }
     finally { pushBusy = false; }
 }
 async function pushKapat() {

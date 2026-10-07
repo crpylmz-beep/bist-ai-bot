@@ -90,9 +90,11 @@ class BootstrapTests(unittest.TestCase):
             self.assertEqual(json.load(response)['bist100']['fiyat'],12000)
         with urllib.request.urlopen(base+'/api/stocks/THYAO') as response:
             self.assertEqual(json.load(response)['otomatik']['karar'],'AL')
-        with patch.dict('os.environ',{'VAPID_PUBLIC_KEY':'public','VAPID_PRIVATE_KEY':'private','VAPID_SUBJECT':'mailto:test@example.com'}):
+        from vapid_uret import generate
+        key=generate('test@example.com')['VAPID_PUBLIC_KEY']
+        with patch.dict('os.environ',{'VAPID_PUBLIC_KEY':key,'VAPID_PRIVATE_KEY':'private','VAPID_SUBJECT':'mailto:test@example.com'}):
             with urllib.request.urlopen(base+'/api/push/config') as response:
-                doc=json.load(response);self.assertEqual(doc['public_key'],'public');self.assertTrue(doc['configured'])
+                doc=json.load(response);self.assertEqual(doc['public_key'],key);self.assertTrue(doc['configured'])
                 self.assertNotIn('private',json.dumps(doc))
 
 

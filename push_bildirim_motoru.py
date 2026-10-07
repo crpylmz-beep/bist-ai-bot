@@ -15,9 +15,47 @@ SUBSCRIPTIONS = 'push_subscriptions.json'
 OUTBOX = 'fiyat_alarmlari.json'
 
 
+def normalize_public_key(value):
+    """Return canonical uncompressed P-256 base64url; never expose private key."""
+    import re
+    from cryptography.hazmat.primitives.asymmetric import ec
+    key=value.strip()
+    if key.startswith('VAPID_PUBLIC_KEY='):
+        key=key.split('=',1)[1].strip()
+    key=key.strip('\"\'')
+    key=''.join(key.split())
+    if not re.fullmatch(r'[A-Za-z0-9_+/\-]+={0,2}',key):
+        raise ValueError('Invalid public key')
+    raw=base64.b64decode(key.replace('-','+').replace('_','/')+'='*(-len(key)%4),validate=True)
+    if len(raw)!=65 or raw[0]!=4:
+        raise ValueError('Invalid P-256 length/prefix')
+    ec.EllipticCurvePublicKey.from_encoded_point(ec.SECP256R1(),raw)
+    return base64.urlsafe_b64encode(raw).rstrip(b'=').decode('ascii')
+
+
 def public_config():
-    key = os.environ.get('VAPID_PUBLIC_KEY', '')
-    return {'public_key': key, 'configured': bool(key and os.environ.get('VAPID_PRIVATE_KEY') and os.environ.get('VAPID_SUBJECT'))}
+    value=os.environ.get('VAPID_PUBLIC_KEY','')
+    recovered=False
+    try:
+        key=normalize_public_key(value) if value.strip() else ''
+        if not key:raise ValueError('Missing public key')
+    except (ValueError,TypeError):
+        # Recover the PUBLIC half from the existing private key; never rotate keys.
+        # This also repairs accidentally pasting the private/string label as public.
+        try:
+            from py_vapid import Vapid
+            from cryptography.hazmat.primitives import serialization
+            from cryptography.hazmat.primitives.asymmetric import ec
+            vapid=Vapid.from_string(os.environ.get('VAPID_PRIVATE_KEY','').strip())
+            if not isinstance(vapid.public_key.curve,ec.SECP256R1):raise ValueError('Wrong curve')
+            raw=vapid.public_key.public_bytes(serialization.Encoding.X962,serialization.PublicFormat.UncompressedPoint)
+            key=normalize_public_key(base64.urlsafe_b64encode(raw).rstrip(b'=').decode('ascii'))
+            recovered=True
+        except (ValueError,TypeError,AttributeError):
+            return {'public_key':'','configured':False,'public_key_error':bool(value.strip())}
+    result={'public_key':key, 'configured':bool(key and os.environ.get('VAPID_PRIVATE_KEY') and os.environ.get('VAPID_SUBJECT'))}
+    if recovered:result['public_key_recovered']=True
+    return result
 
 
 def validate_endpoint(endpoint):
