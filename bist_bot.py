@@ -293,13 +293,15 @@ def hisse_analiz_hesapla(
     period="6mo"
 ):
     try:
+        from saglayici_sembolleri import bist_symbol
+        sembol=bist_symbol(sembol)
         hisse = bp.Ticker(sembol)
 
         try:
             veri = hisse.history(period=period)
         except Exception as error:
             from gorev_hatalari import remember
-            remember(error,'PROVIDER')
+            remember(error,'PROVIDER',sembol)
             raise
 
         if veri is None or veri.empty:
@@ -1377,7 +1379,7 @@ def hisse_analiz_hesapla(
 
     except Exception as error:
         from gorev_hatalari import remember
-        remember(error,'ANALYSIS')
+        remember(error,'ANALYSIS',sembol)
         return None
 
 
@@ -1669,10 +1671,11 @@ def bist_hisseleri_getir():
 
         for s in semboller:
 
-            s = str(s).strip().upper()
-
-            if s and s.isalnum():
-                sonuc.append(s)
+            from saglayici_sembolleri import bist_symbol
+            try:sonuc.append(bist_symbol(s))
+            except ValueError:
+                import logging
+                logging.warning('[UNIVERSE] Geçersiz BIST kod biçimi; sağlayıcıya gönderilmedi')
 
         return sorted(
             list(set(sonuc))

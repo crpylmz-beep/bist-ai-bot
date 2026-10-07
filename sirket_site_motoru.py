@@ -18,6 +18,10 @@ from bs4 import BeautifulSoup
 from kullanici_kayitlari import atomic_json
 from sirket_site_icerik import canonical, official, discover, extract, sitemap_links, xml_kind, clean_text
 
+from gorev_hatalari import ResponseLimitError
+
+MAX_RESPONSE_BYTES=512000
+
 AGENT='BIST-Asistani-SiteMonitor'
 
 
@@ -72,10 +76,14 @@ class SirketSiteMotoru:
                     if redirect_guard:redirect_guard(target)
                     url=target;continue
                 response.raise_for_status()
+                length=response.headers.get('Content-Length','')
+                if length.isdigit() and int(length)>MAX_RESPONSE_BYTES:
+                    raise ResponseLimitError('Yanıt boyutu sınırı')
                 content=bytearray()
                 for part in response.iter_content(8192):
+                    if len(content)+len(part)>MAX_RESPONSE_BYTES:raise ResponseLimitError('Yanıt boyutu sınırı')
+                    if time.monotonic()>deadline:raise requests.Timeout('Şirket sitesi yanıt süresi sınırı')
                     content.extend(part)
-                    if len(content)>512000 or time.monotonic()>deadline:raise ValueError('Yanıt boyutu/süresi sınırı')
                 mime=response.headers.get('Content-Type','').lower()
                 if mime and not any(t in mime for t in ('html','xml','text/plain')):raise ValueError('Desteklenmeyen içerik türü')
                 encoding=response.encoding or 'utf-8'

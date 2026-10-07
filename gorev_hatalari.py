@@ -24,6 +24,8 @@ ERRORS={
  'HTTP_AUTH':('CONFIG','Dış veri kaynağı yetkilendirmesi başarısız.',False),
  'HTTP_UNAVAILABLE':('REMOTE','Dış veri kaynağı geçici olarak kullanılamıyor.',True),
  'HTTP_REQUEST':('CONFIG','Dış kaynak isteği veya endpoint doğrulanmalı.',False),
+ 'PROVIDER_UNSUPPORTED':('SOURCE_DATA','TradingView bu sembolü desteklemiyor (invalid symbol).',True),
+ 'SOURCE_RESPONSE_TOO_LARGE':('SOURCE_DATA','Dış kaynak yanıtı güvenli boyut sınırını aştı; indirme durduruldu.',True),
  'PROVIDER_API_ERROR':('REMOTE','Fiyat sağlayıcısı isteği başarısız; kaynak hata konumu loglarda.',True),
  'NETWORK_TLS':('CONFIG','Dış kaynak TLS bağlantısı doğrulanamadı.',False),
  'NETWORK_DNS':('REMOTE','Dış kaynağın adresi çözümlenemedi.',True),
@@ -56,7 +58,8 @@ def describe(error,stage=None):
     if isinstance(error,TaskIssue):return public_issue(error.issue)
     status=getattr(error,'status',None) or getattr(error,'status_code',None) or getattr(getattr(error,'response',None),'status_code',None)
     code='TASK_ERROR'
-    if isinstance(error,OSError) and error.errno in (errno.ENOSPC,errno.EDQUOT):code='DISK_FULL'
+    if isinstance(error,ResponseLimitError):code='SOURCE_RESPONSE_TOO_LARGE'
+    elif isinstance(error,OSError) and error.errno in (errno.ENOSPC,errno.EDQUOT):code='DISK_FULL'
     elif isinstance(error,OSError) and error.errno in (errno.EACCES,errno.EPERM):code='STORAGE_PERMISSION'
     elif isinstance(error,requests.exceptions.SSLError):code='NETWORK_TLS'
     elif isinstance(error,socket.gaierror):code='NETWORK_DNS'
@@ -72,6 +75,9 @@ def describe(error,stage=None):
     elif isinstance(error,(DataNotAvailableError,TickerNotFoundError)):code='PROVIDER_DATA'
     elif isinstance(error,(InvalidPeriodError,InvalidIntervalError)):code='PROVIDER_CONFIG'
     elif isinstance(error,APIError):
+        # Exact TradingView protocol reason, not generic network/no-data text.
+        if re.search(r"['\"]invalid symbol['\"]\s*\]\s*$",str(error),re.I):
+            return public_issue({'code':'PROVIDER_UNSUPPORTED'})
         cause=error.__cause__
         cause_issue=describe(cause,stage) if cause is not None and cause is not error and not isinstance(cause,APIError) else None
         if cause_issue and cause_issue['code']!='TASK_ERROR':return cause_issue
@@ -80,6 +86,10 @@ def describe(error,stage=None):
         code='PROVIDER_DATA' if stage=='PROVIDER' else 'CODE_ERROR'
     elif isinstance(error,OSError):code='STORAGE_IO'
     return public_issue({'code':code,'http_status':status})
+
+
+class ResponseLimitError(Exception):
+    pass
 
 
 class TaskIssue(RuntimeError):
@@ -131,8 +141,10 @@ def log_source(error,stage=None):
         current=current.__cause__ or (None if current.__suppress_context__ else current.__context__)
 
 
-def remember(error,stage=None):
+def remember(error,stage=None,stock=None):
     issues=CAPTURE.get()
     if issues is not None and not issues:
         issue=describe(error,stage);issues.append(issue)
         log_source(error,stage)
+        if isinstance(stock,str) and re.fullmatch(r'[A-Z0-9]{2,12}',stock):
+            logging.warning('[PROVIDER_SYMBOL] symbol=%s tradingview=BIST:%s code=%s',stock,stock,issue['code'])
