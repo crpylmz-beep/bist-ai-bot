@@ -223,13 +223,13 @@ class PositiveClosingTests(unittest.TestCase):
    frozen=copy.deepcopy(snapshot)
    for row in records:row['sonuc_1g']={'getiri_yuzde':99}
    self.assertEqual(snapshot,frozen);self.assertEqual(path.read_bytes(),before)
- def test_pending_positive_horizons_only_three_and_bounded_provider(self):
+ def test_pending_positive_five_horizons_and_bounded_provider(self):
   rows=self.signals(12)
   for r in rows:
    for h in (1,3,5):r['sonuc_'+str(h)+'g']=None
   atomic_json(self.paths.runtime_file('ai_ogrenme_gecmisi.json'),{'kayitlar':rows});provider=Mock(return_value=[])
   result=PerformansMotoru(self.paths,clock=lambda:self.now,history_provider=provider,batch_size=2).one_round();self.assertEqual(provider.call_count,2)
-  history=json.loads(self.paths.runtime_file('ai_ogrenme_gecmisi.json').read_text())['kayitlar'];self.assertTrue(all('sonuc_10g' not in r for r in history))
+  history=json.loads(self.paths.runtime_file('ai_ogrenme_gecmisi.json').read_text())['kayitlar'];self.assertTrue(any('sonuc_2g' in r and 'sonuc_10g' in r for r in history));self.assertTrue(all('sonuc_20g' not in r for r in history))
  def test_worker_closing_cache_resume_and_skip_existing_archive(self):
   from ana_motor_gorevleri import WorkerTasks
   with patch('ana_motor_gorevleri.istanbul_now',return_value=self.now):

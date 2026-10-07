@@ -176,7 +176,7 @@ class PerformanceTests(unittest.TestCase):
         self.seed();self.engine().one_round()
         report=json.loads((self.location.public/'performans_ozeti.json').read_text())
         self.assertIn('TEKNOLOJI',report['sektorler']);self.assertIn('POZITIF',report['rejimler'])
-        self.assertEqual(set(report['vadeler']),{'1','3','5','10','20','60'})
+        self.assertEqual(set(report['vadeler']),{'1','2','3','5','10','20','60'})
 
     def calibration_records(self,count=40):
         rows=[]

@@ -9,7 +9,7 @@ from statistics import median
 from ai_karar_motoru import ISTANBUL,number,stamp,load,locked,attach_final_decision
 from kullanici_kayitlari import atomic_json
 from performans_motoru import (evidence_features,evidence_limits,evidence_report,diagnostic_stats,combination_catalog,
-                               combination_report,combination_limits,signal_day,distribution,robust)
+                               combination_report,combination_limits,signal_day,distribution,robust,POSITIVE_HORIZONS)
 MODEL='POSITIVE_OPPORTUNITY_V1'
 
 
@@ -223,7 +223,7 @@ def capture_metrics(pairs,complete=True):
     winners=[p for p in pairs if p[1]['getiri_yuzde']>=threshold];result={}
     for size in (10,30,50):
         chosen=[p for p in pairs if 0<number((p[0].get('positive_opportunity') or {}).get('selection_rank'),100000)<=size]
-        hits=[p for p in chosen if p[1]['getiri_yuzde']>=threshold];stats=diagnostic_stats(chosen)
+        hits=[p for p in chosen if p[1]['getiri_yuzde']>=threshold];stats=horizon_stats(chosen)
         reliable=complete and stats['sufficient'];wins_reliable=complete and diagnostic_stats(winners)['sufficient']
         result[str(size)]={'selected_count':len(chosen),'winner_count':len(hits),'all_winner_count':len(winners),
             'winner_recall':len(hits)/len(winners) if wins_reliable and winners else None,
@@ -231,8 +231,20 @@ def capture_metrics(pairs,complete=True):
             'precision':len(hits)/len(chosen) if reliable and chosen else None,
             'false_positive_rate':(len(chosen)-len(hits))/(len(pairs)-len(winners)) if reliable and diagnostic_stats(pairs)['sufficient'] and len(pairs)>len(winners) else None,
             'average_return':stats['average_return'] if complete else None,'median_return':stats['median_return'] if complete else None,
-            'continuation_success_rate':stats['success_rate'] if complete else None,'confidence':'YETERLI' if reliable and wins_reliable else 'DUSUK','cohort_complete':complete}
+            'continuation_success_rate':stats['success_rate'] if complete else None,
+            'target_hit_rate':stats['target_hit_rate'] if complete else None,'stop_hit_rate':stats['stop_hit_rate'] if complete else None,
+            'mfe':stats['mfe'] if complete else None,'mae':stats['mae'] if complete else None,
+            'confidence':'YETERLI' if reliable and wins_reliable else 'DUSUK','cohort_complete':complete}
     return {'denominator_scope':'FROZEN_QUALITY_POSITIVE_POOL','winner_threshold_pct':threshold,'top':result}
+
+
+def horizon_stats(pairs):
+    stats=diagnostic_stats(pairs)
+    for key,field in (('mfe','mfe_pct'),('mae','mae_pct')):
+        selected=[p for p in pairs if number(p[1].get(field)) is not None]
+        values=[number(p[1][field]) for p in selected];enough=diagnostic_stats(selected)['sufficient']
+        stats[key]={'sample_count':len(values),'mean':sum(values)/len(values) if enough else None,'median':median(values) if enough else None}
+    return stats
 
 
 def continuation_report(records,current,horizon):
@@ -252,7 +264,7 @@ def continuation_report(records,current,horizon):
         stats=diagnostic_stats([p for p,v in values]);errors=[p[1]['getiri_yuzde']-v for p,v in values]
         return {**stats,'prediction_error':median(errors) if stats['sufficient'] else None,'mean_absolute_error':sum(abs(v) for v in errors)/len(errors) if stats['sufficient'] else None}
     for p in pairs:
-        forecast=p[0].get('positive_opportunity') or {};value=number(forecast.get({1:'expected_return_next_session',3:'expected_return_3d',5:'expected_return_5d'}[horizon]))
+        forecast=p[0].get('positive_opportunity') or {};value=number(forecast.get('expected_return_next_session' if horizon==1 else 'expected_return_'+str(horizon)+'d'))
         if value is not None:
             key='NEGATIVE' if value<0 else '0-1' if value<1 else '1-2' if value<2 else '2-3' if value<3 else '3-5' if value<5 else '5+'
             return_buckets.setdefault(key,[]).append((p,value))
@@ -284,7 +296,7 @@ def continuation_report(records,current,horizon):
     for key in ('baseline_rank','selection_rank','shadow_rank'):
         selected=[p for p in pairs if 0<number((p[0].get('positive_opportunity') or {}).get(key),100000)<=10]
         comparisons[key]=diagnostic_stats(selected)
-    return {'horizon':horizon,'stats':diagnostic_stats(pairs),'capture':capture_metrics(pairs),
+    return {'horizon':horizon,'horizon_unit':'TRADING_SESSIONS','stats':horizon_stats(pairs),'capture':capture_metrics(pairs),
         'daily':{d:{'expected_count':len(expected[d]),'observed_count':len(value),'complete':d in complete_days,
                     'capture':capture_metrics(value,d in complete_days)} for d,value in by_day.items()},
         'continued':diagnostic_stats([p for p in pairs if p[1]['continuation_class']=='CONTINUED']),
@@ -295,18 +307,44 @@ def continuation_report(records,current,horizon):
         'ranking_comparison':comparisons,'automatic_changes':False}
 
 
+def best_horizons(records,current):
+    """Compare the same matured signals, never young 1G vs older 10G cohorts."""
+    pairs={str(h):continuation_pairs(records,current,h) for h in POSITIVE_HORIZONS}
+    identity=lambda p:(p[0].get('sembol'),p[0].get('zaman'))
+    common=set.intersection(*(set(map(identity,value)) for value in pairs.values()))
+    expected={}
+    for r in records:
+        at=stamp(r.get('zaman'))
+        if r.get('model')=='POSITIVE_CANDIDATE' and at and at<current:expected.setdefault(signal_day(r),set()).add((r.get('sembol'),r.get('zaman')))
+    complete={day for day,ids in expected.items() if ids<=common}
+    pairs={h:[p for p in values if identity(p) in common and signal_day(p[0]) in complete] for h,values in pairs.items()}
+    minimum,days,_=combination_limits()
+    def compare(predicate):
+        stats={h:diagnostic_stats([p for p in values if predicate(p[2])],minimum,days) for h,values in pairs.items()}
+        enough=all(s['sufficient'] for s in stats.values())
+        if not enough:return {'best_horizon':None,'sufficient':False,'conclusive':False,'horizons':stats}
+        best=max(stats,key=lambda h:(stats[h]['success_rate'],stats[h]['median_return'],-int(h)))
+        conclusive=all(stats[best]['success_interval'][0]>s['success_interval'][1] for h,s in stats.items() if h!=best)
+        return {'best_horizon':int(best),'sufficient':True,'conclusive':conclusive,'horizons':stats,
+                'interpretation':'CONFIRMED_DIFFERENCE' if conclusive else 'OBSERVED_BEST_DIFFERENCE_UNCONFIRMED'}
+    base=pairs['1'];criteria={key:compare(lambda flags,k=key:flags.get(k) is True) for key in (base[0][2] if base else [])}
+    combos={'+'.join(keys):compare(lambda flags,ks=keys:all(flags.get(k.lstrip('!')) is (not k.startswith('!')) for k in ks)) for keys in combination_catalog(base)}
+    return {'population':'SAME_FULLY_MATURED_DAILY_COHORTS','horizon_unit':'TRADING_SESSIONS','sample_count':len(base),
+            'minimum_samples':minimum,'minimum_days':days,'criteria':criteria,'combinations':combos,'automatic_application':False}
+
+
 def publish_performance(location,records,current):
     eligible=[r for r in records if r.get('model')=='POSITIVE_CANDIDATE' and stamp(r.get('zaman')) and stamp(r['zaman'])<=current]
     if not eligible:return None
     path=location.public/'pozitif_hisseler_performansi.json'
     known=[]
     for r in eligible:
-        outcomes={str(h):r.get('sonuc_'+str(h)+'g') for h in (1,3,5) if stamp((r.get('sonuc_'+str(h)+'g') or {}).get('observed_at')) and stamp(r['sonuc_'+str(h)+'g']['observed_at'])<=current}
+        outcomes={str(h):r.get('sonuc_'+str(h)+'g') for h in POSITIVE_HORIZONS if stamp((r.get('sonuc_'+str(h)+'g') or {}).get('observed_at')) and stamp(r['sonuc_'+str(h)+'g']['observed_at'])<=current}
         known.append((r.get('kayit_id'),r.get('positive_opportunity'),outcomes))
-    fingerprint=hashlib.sha256(json.dumps([MODEL,'PERFORMANCE_V1',known,current.date().isoformat(),evidence_limits(),combination_limits(),os.environ.get('POSITIVE_WINNER_RETURN_PCT','2')],sort_keys=True,default=str).encode()).hexdigest()
+    fingerprint=hashlib.sha256(json.dumps([MODEL,'PERFORMANCE_V2',known,current.date().isoformat(),evidence_limits(),combination_limits(),os.environ.get('POSITIVE_WINNER_RETURN_PCT','2')],sort_keys=True,default=str).encode()).hexdigest()
     previous=load(path,{})
     if previous.get('fingerprint')==fingerprint:return previous
-    report={str(h):continuation_report(eligible,current,h) for h in (1,3,5)}
+    report={str(h):continuation_report(eligible,current,h) for h in POSITIVE_HORIZONS}
     latest=max(signal_day(r) for r in eligible);snapshot=load(location.archives/(latest+'.json'),{})
     pool=snapshot.get('pozitif_havuz') or {};missed=[]
     complete_days={d for d,v in report['1']['daily'].items() if v['complete']}
@@ -333,7 +371,8 @@ def publish_performance(location,records,current):
         'analyzed_count':pool.get('analyzed_count'), 'quality_rejected_count':len(pool.get('rejected',[])),
         'missed_winner_count':len(missed),'most_common_failure':max((f for e in missed for f in e['filters']),key=lambda key:sum(key in e['filters'] for e in missed),default=None),
         'average_analyzed_positive_count':sum(len({r['sembol'] for r in eligible if signal_day(r)==d}) for d in {signal_day(r) for r in eligible})/len({signal_day(r) for r in eligible}),
-        'fingerprint':fingerprint,'horizons':report,'learning_enabled':False,'automatic_application':False,'measurement_population':'QUALITY_POSITIVE_CLOSING_POOL'}
+        'fingerprint':fingerprint,'horizons':report,'best_horizons':best_horizons(eligible,current),
+        'horizon_unit':'TRADING_SESSIONS','learning_enabled':False,'automatic_application':False,'measurement_population':'QUALITY_POSITIVE_CLOSING_POOL'}
     path=location.public/'pozitif_hisseler_performansi.json'
     with locked(path):atomic_json(path,result)
     return result

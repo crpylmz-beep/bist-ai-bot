@@ -55,3 +55,17 @@ Opsiyonel ayarlar: `POSITIVE_MIN_TURNOVER_TL=1000000`, `POSITIVE_WINNER_RETURN_P
 ## Doğrulama
 
 `python -m unittest discover -s tests` ve `node tests/test_pozitif_kapanis_ui.cjs`. Yeni testler küçük pozitif/280 aday, doğrudan getiri yerine fırsat sırası, hard-safety, provider/cache/batch, cutoff ve gelecekteki fiyat/haber/model/outcome, immutable snapshot, 1/3/5 sonuçlar, tüm kalibrasyonlar/kontrol grupları, capture/recall/precision/FPR, private hata kayıtları ve HTTP/UI davranışını kapsar. Mobil browser smoke 430×932 Chromium emülasyonudur; fiziksel iPhone veya canlı Railway seansı değildir.
+
+## Vade genişletmesi: 1 / 2 / 3 / 5 / 10 işlem günü
+
+Pozitif adaylar artık `sonuc_1g`, `sonuc_2g`, `sonuc_3g`, `sonuc_5g`, `sonuc_10g` ile takip edilir. Yarın TOP10 kayıtlarına 2G eklenmiştir; daha önce var olan 20/60 günlük Yarın takipleri korunur. Haber/makro ve Gün İçi dakika vadeleri değiştirilmez. Eski kayıtlar tekrar arşivlenmeden, eksik 2G/10G sonuçları mevcut performans turunda tamamlanır. Tamamlanmış sonuçlar ikinci turda değiştirilmez.
+
+İşlem günü sayımı `exchange-calendars==4.13.2` paketinin **XIST/Borsa İstanbul** takvimini kullanır. Hafta sonları, ulusal ve dini tam gün tatilleri atlanır; yarım seans işlem günü sayılır. Provider'da eksik bar olması tatil kabul edilmez. Mevcut özel tatil callback'i test/istisna için kullanılabilir. Sonuçlar kapanış tamamlanmadan üretilmez; yarım seanslar da mevcut muhafazakâr 18:15 kapanış kontrolünden sonra değerlendirilir. Takvim hatasında hafta içini otomatik işlem günü sayan fallback yoktur.
+
+Her sonuç yalnız kendi son işlem gününe kadar normalleştirilmiş OHLC penceresini kullanır. Kapanış getirisi, dönem içi maksimum yükseliş/düşüş, en yüksek/en düşük fiyat, MFE/MAE, hedef/stop teması ve bilinen ilk temas sırası ayrı tutulur. Aynı bar içindeki bilinmeyen sıra `BELIRSIZ` kalır. `pozitif_sonuc` yön getirisinin >0 olmasını gösterir; trade `durum` ve kapanış devam sınıfı ayrı kavramlardır.
+
+Public pozitif performans raporu beş vade için ayrı başarı, ortalama/medyan getiri, hedef/stop oranı, MFE/MAE ortalama/medyanı ve TOP10/30/50 ölçümleri içerir. Yeni 2G/10G outcome'lar **eski tahmin fiyatı, rank, expected return, olasılık, confidence, risk, fırsat puanı ve model sürümünü değiştirmez**. Geçmiş snapshot'ta 2G/10G expected return tahmini yoksa kalibrasyon için sonradan tahmin uydurulmaz; o bucket boş kalır.
+
+`best_horizons` kriter/kombinasyon başına en iyi gözlenen vadeyi ölçer. Kıyaslamada yalnız tüm beş vadeyi tamamlamış **aynı günlük aday kohortları** kullanılır; 1G genç havuz ile 10G eski havuz karşılaştırılmaz. Her vade için en az 50 örnek / 7 ayrı gün gerekir. Yetersiz örnekte `best_horizon=null`; yeterli örnekte başarı oranı ve medyanla gözlenen en iyi vade seçilir. Wilson aralıkları ayrışmıyorsa `conclusive=false` ve UI'da “gözlenen; fark teyitli değil” yazılır. Bu gözlem otomatik öğrenme/ağırlık değişikliği değildir.
+
+AI Öğrenme / Model Performansı ekranında 1G/2G/3G/5G/10G kompakt satırları ve kombinasyon vade özeti görünür. Yeni doğrulamalar `tests/test_pozitif_vadeler.py` içinde; gerçek push veya piyasa fiyatı kullanılmaz. Bağımlılık kurulumu mevcut `requirements.txt` üzerinden yapılır. Railway mimarisi, volume, worker başlatıcısı, push ve snapshot yazım yapısı değişmez.

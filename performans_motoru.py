@@ -7,11 +7,26 @@ import json
 import math
 import os
 from itertools import combinations
+from functools import lru_cache
 
 from ai_karar_motoru import (HORIZONS, ISTANBUL, DEFAULT_WEIGHTS, LIMITS, number,
                              stamp, load, locked, normalize_weights)
 from kullanici_kayitlari import atomic_json
 from veri_yollari import paths
+
+POSITIVE_HORIZONS=(1,2,3,5,10)
+DAILY_HORIZONS=tuple(sorted(set(HORIZONS+POSITIVE_HORIZONS)))
+
+
+@lru_cache(maxsize=8)
+def bist_calendar(year):
+    import exchange_calendars
+    return exchange_calendars.get_calendar('XIST',start=f'{year-1}-01-01',end=f'{year+1}-12-31')
+
+
+def bist_holiday(day):
+    # Half sessions remain sessions; missing provider bars are not assumed holidays.
+    return not bist_calendar(day.year).is_session(day.isoformat())
 
 
 def minimum_samples():
@@ -21,7 +36,7 @@ def minimum_samples():
 
 
 def business_day(day, holiday=None):
-    return day.weekday()<5 and not (holiday and holiday(day))
+    return day.weekday()<5 and not (holiday or bist_holiday)(day)
 
 
 def sessions_after(day, count, holiday=None):
@@ -60,7 +75,9 @@ def outcome(record, bars, horizon, current, holiday=None, require_ohlc=True):
     if not start or base<=0:return dict(empty,neden='REFERANS_EKSIK')
     days=sessions_after(start.date(),horizon,holiday)
     if not session_closed(days[-1],current):return None
-    data=normalize_bars(bars,current,holiday)
+    # Bound normalization too: later horizons cannot affect even validation of this one.
+    end=datetime.combine(days[-1],time(18,15),ISTANBUL)
+    data=normalize_bars(bars,min(current,end),holiday)
     if any(day not in data for day in days):return dict(empty,neden='ISLEM_GUNU_EKSIK',eksik_gunler=[d.isoformat() for d in days if d not in data])
     window=[data[day] for day in days]
     full=all(all(bar[k] is not None for k in ('open','high','low','close')) for bar in window)
@@ -110,6 +127,8 @@ def outcome(record, bars, horizon, current, holiday=None, require_ohlc=True):
         'hedef_once':True if first=='HEDEF' else False if first=='STOP' else None,
         'stop_once':True if first=='STOP' else False if first=='HEDEF' else None,
         'en_iyi_fiyat':min_price if short else max_price,'en_kotu_fiyat':max_price if short else min_price,
+        'en_yuksek_fiyat':max_price,'en_dusuk_fiyat':min_price,'pozitif_sonuc':directional>0,
+        'vade_islem_gunu':horizon,
         'risk_yuzde':risk,'risk_getiri':reward/risk if risk else None,
         'ertesi_gun_acilis':window[0]['open'],'ertesi_gun_kapanis':window[0]['close'],
         'ertesi_gun_yuksek':window[0]['high'],'ertesi_gun_dusuk':window[0]['low'],
@@ -312,7 +331,7 @@ class PerformansMotoru:
                     'final_puan':prediction.get('final_puan',row.get('final_puan')),
                     'calibration_version':prediction.get('calibration_version',row.get('calibration_version')),
                     'shadow_version':prediction.get('shadow_version',row.get('shadow_version')),
-                    **{'sonuc_'+str(h)+'g':None for h in HORIZONS}}
+                    **{'sonuc_'+str(h)+'g':None for h in (POSITIVE_HORIZONS if model=='POSITIVE_CANDIDATE' else DAILY_HORIZONS)}}
                 if model=='POSITIVE_CANDIDATE':
                     record['recorded_decision']=record['karar'];record['karar']='AL'
                     record['model_version']=(record.get('positive_opportunity') or {}).get('model_version','LEGACY_UNKNOWN')
@@ -384,7 +403,7 @@ class PerformansMotoru:
         eligible=[r for r in records if r.get('egitim_durumu')!='REFERANS' and r.get('model') not in ('YARIN_BASELINE','YARIN_SHADOW','YARIN_CONTROLLED_SHADOW','POSITIVE_CANDIDATE')]
         complete_dates=sorted({v['sonuc_tarihi'] for v in daily.values() if v['tamamlandi'] and v['sonuc_tarihi']})[-20:]
         recent=[r for r in forecasts if usable(r) and r['sonuc_1g'].get('tarih') in complete_dates and daily[r['snapshot_tarihi']]['tamamlandi']]
-        report={'updated_at':current.isoformat(),'vadeler':{str(h):summarize(eligible,h) for h in HORIZONS},
+        report={'updated_at':current.isoformat(),'vadeler':{str(h):summarize(eligible,h) for h in DAILY_HORIZONS},
             'modeller':grouping('model',eligible),'sektorler':grouping('sektor',eligible),'rejimler':grouping('piyasa_rejimi',eligible),
             'yarin_top10':summarize(forecasts),'son20_gun':summarize(recent),
             'kriter_performansi':criterion_report(eligible),'yarin_kriter_performansi':criterion_report(forecasts),
@@ -436,7 +455,8 @@ class PerformansMotoru:
                     if not start:continue
                     retry=stamp(state['tekrar'].get(record['sinyal_id']))
                     if retry and retry>current:continue
-                    horizons=(1,3,5) if record.get('model') in ('HABER','MAKRO','POSITIVE_CANDIDATE') else HORIZONS
+                    model=record.get('model','')
+                    horizons=POSITIVE_HORIZONS if model=='POSITIVE_CANDIDATE' else (1,3,5) if model in ('HABER','MAKRO') else DAILY_HORIZONS if model.startswith('YARIN') else HORIZONS
                     due=[h for h in horizons if not (isinstance(record.get('sonuc_'+str(h)+'g'),dict) and record['sonuc_'+str(h)+'g'].get('degerlendirme_tamamlandi',True))
                          and session_closed(sessions_after(start.date(),h,self.holiday)[-1],current)]
                     if due:pending.append((dict(record),due))

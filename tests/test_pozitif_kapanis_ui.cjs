@@ -20,6 +20,10 @@ assert.equal(JSON.stringify(snapshot),before);assert.equal(ctx.pozitifFirsatOzet
 assert.ok(ctx.pozitifOgrenmeGoster(null).includes('Learning: KAPALI'));
 const report={analysis_date:'2026-10-06',positive_count:280,analyzed_count:260,missed_winner_count:2,horizons:{1:{stats:{success_rate:.7},capture:{top:{10:{continuation_success_rate:.8}}},patterns:{60:{combinations:{'<script>':{strong:true,success_rate:.9}}}}}}};
 const learning=ctx.pozitifOgrenmeGoster(report);assert.ok(learning.includes('Pozitif Hisselerden Öğrenme'));assert.ok(learning.includes('80.00%'));assert.ok(learning.includes('&lt;script&gt;'));
+for(const h of [1,2,3,5,10])assert.ok(learning.includes(h+'G · İşlem günü'));
+assert.ok(learning.includes('MFE:'));assert.ok(learning.includes('MAE:'));assert.ok(learning.includes('Hangi vadede çalışıyor?'));
+const ranked={...report,best_horizons:{combinations:{'<b>OBV</b>':{sufficient:true,best_horizon:3,conclusive:false}}}};
+assert.ok(ctx.pozitifOgrenmeGoster(ranked).includes('&lt;b&gt;OBV&lt;/b&gt;: 3G'));assert.ok(ctx.pozitifOgrenmeGoster(ranked).includes('fark teyitli değil'));
 (async()=>{
  const {chromium}=require('playwright');const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH || '/usr/bin/chromium',headless:true,args:['--no-sandbox']});
  try{

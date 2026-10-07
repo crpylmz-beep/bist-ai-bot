@@ -1613,11 +1613,20 @@ function pozitifOgrenmeGoster(report){
     if(!report?.horizons)return '<div class="detail-card"><h3>Pozitif Hisselerden Öğrenme</h3><p>Henüz kapanış havuzu ölçümü yok. Learning: KAPALI</p></div>';
     const h=report.horizons['1'] || {};const top=h.capture?.top || {};const pct=v=>yarinSayi(v == null ? null : v*100,'%');
     const combos=Object.entries(h.patterns?.['60']?.combinations || {}).filter(([k,v])=>v.strong).sort((a,b)=>b[1].success_rate-a[1].success_rate).slice(0,3);
+    const horizons=[1,2,3,5,10].map(n=>{
+        const v=report.horizons[n] || {},s=v.stats || {},t=v.capture?.top || {};
+        return '<div class="detail-card"><strong>'+n+'G · İşlem günü</strong><p>Başarı: '+pct(s.success_rate)+' · Medyan: '+yarinSayi(s.median_return,'%')+' · Ortalama: '+yarinSayi(s.average_return,'%')+'</p>'+
+            '<p>TOP10 / TOP30 / TOP50: '+[10,30,50].map(k=>pct(t[k]?.continuation_success_rate)).join(' / ')+'</p>'+
+            '<p>Hedef: '+pct(s.target_hit_rate)+' · Stop: '+pct(s.stop_hit_rate)+' · MFE: '+yarinSayi(s.mfe?.median,'%')+' · MAE: '+yarinSayi(s.mae?.median,'%')+'</p></div>';
+    }).join('');
+    const best=Object.entries(report.best_horizons?.combinations || {}).filter(([k,v])=>v.sufficient && v.best_horizon).slice(0,3)
+        .map(([k,v])=>yarinMetin(k)+': '+v.best_horizon+'G'+(v.conclusive?'':' (gözlenen; fark teyitli değil)')).join('; ');
     return '<div class="detail-card"><h3>Pozitif Hisselerden Öğrenme</h3><p>Analiz günü: '+yarinMetin(report.analysis_date)+' · Artı kapanan: '+yarinMetin(report.positive_count)+' · Analiz edilen: '+yarinMetin(report.analyzed_count)+'</p>'+
         '<p>TOP10 / TOP30 / TOP50 başarı: '+[10,30,50].map(n=>pct(top[n]?.continuation_success_rate)).join(' / ')+'</p>'+
         '<p>Devam başarısı: '+pct(h.stats?.success_rate)+' · Kaçırılan güçlü aday: '+yarinMetin(report.missed_winner_count)+'</p>'+
         '<p>En sık başarısızlık nedeni: '+yarinMetin(report.most_common_failure)+'</p>'+
-        '<p>En güçlü continuation kriterleri: '+yarinMetin(combos.map(([k,v])=>k).join('; ') || 'Yetersiz veri')+'</p><p>Learning: KAPALI · Ölçüm kapsamı: pozitif kapanış havuzu</p></div>';
+        '<p>En güçlü continuation kriterleri: '+yarinMetin(combos.map(([k,v])=>k).join('; ') || 'Yetersiz veri')+'</p>'+horizons+
+        '<p>Hangi vadede çalışıyor? '+(best || 'Yeterli olgunlaşmış örnek yok.')+'</p><p>Learning: KAPALI · Ölçüm kapsamı: pozitif kapanış havuzu</p></div>';
 }
 
 /* HİSSE SATIRI */

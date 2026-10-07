@@ -38,7 +38,7 @@ class CalibrationTests(unittest.TestCase):
                     'kriterler':dict(self.row,hacim_orani=180 if present else 80),
                     'sonuc_1g':{'durum':'BASARILI' if present else 'BASARISIZ','degerlendirme_tamamlandi':True,
                         'getiri_yuzde':2 if present else -2,'tarih':at.isoformat(),'observed_at':observed.isoformat()},
-                    **{'sonuc_'+str(h)+'g':{'durum':'VERI_YETERSIZ','degerlendirme_tamamlandi':True} for h in (3,5,10,20,60)}})
+                    **{'sonuc_'+str(h)+'g':{'durum':'VERI_YETERSIZ','degerlendirme_tamamlandi':True} for h in (2,3,5,10,20,60)}})
         atomic_json(self.location.runtime_file('ai_ogrenme_gecmisi.json'),{'kayitlar':rows});return rows
 
     def test_learning_disabled_raw_score_and_ranking_unchanged(self):
