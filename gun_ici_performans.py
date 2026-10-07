@@ -130,6 +130,8 @@ class GunIciPerformans:
         from piyasa_baglami import PiyasaBaglami,annotate,effects
         from teknik_gostergeler import shadow
         current=self.clock().astimezone(ISTANBUL);model=self.model()
+        from performans_motoru import controlled_context,controlled_score
+        controlled=controlled_context(self.location,current,'INTRADAY')
         context=PiyasaBaglami(self.location,clock=self.clock).context('INTRADAY')
         if context:annotate(rows,context)
         for row in rows:
@@ -138,6 +140,7 @@ class GunIciPerformans:
             row.update(effects(row,row['gun_ici_ham_puan'],current,'INTRADAY'))
             from ai_karar_motoru import attach_final_decision
             attach_final_decision(row,current,'INTRADAY')
+            row['controlled_shadow']=controlled_score(row,row['gun_ici_ham_puan'],current,'INTRADAY',controlled)
             row['gun_ici_kalibrasyon_sonrasi_puan']=row['gun_ici_final_puan']
             row['gun_ici_final_puan']=clamp(row['gun_ici_final_puan']+row['piyasa_baglami_etkisi'],0,100)
             row['gun_ici_shadow_puan']=clamp(row['gun_ici_shadow_puan']+row['piyasa_baglami_etkisi'],0,100)
@@ -174,7 +177,9 @@ class GunIciPerformans:
             membership=[];shadow_members=[]
             candidates=[r for r in (rows or top10) if number(r.get('gun_ici_puan'),0)>=45]
             shadow=sorted(candidates,key=lambda r:(number(r.get('gun_ici_shadow_puan'),number(r.get('gun_ici_puan'),0)),number(r.get('hacim3_orani'),0),number(r.get('momentum15'),0)),reverse=True)[:10]
+            controlled=sorted(candidates,key=lambda r:number((r.get('controlled_shadow') or {}).get('score'),number(r.get('gun_ici_puan'),0)),reverse=True)[:10]
             to_record=list(top10)+[r for r in shadow if r.get('sembol') not in {x.get('sembol') for x in top10}]
+            to_record.extend(r for r in controlled if r.get('sembol') not in {x.get('sembol') for x in to_record})
             # A list occurrence can reference an older signal; first occurrence/rank is frozen.
             for rank,row in enumerate(to_record,1):
                 symbol=row.get('sembol');price=number(row.get('fiyat'),0);source=stamp(row.get('veri_tarihi'))
@@ -203,6 +208,8 @@ class GunIciPerformans:
                     'ilk_sira':rank,'ana_liste_adayi':symbol in {x.get('sembol') for x in top10},
                     'teknik_gostergeler':snapshot.get('teknik_gostergeler'),
                     'nihai_karar':snapshot.get('nihai_karar'),
+                    'controlled_shadow':snapshot.get('controlled_shadow'),
+                    'controlled_shadow_adayi':symbol in {x.get('sembol') for x in controlled},
                     'teknik_katkilar':snapshot.get('teknik_katkilar'),
                     'teknik_shadow_puan':snapshot.get('teknik_shadow_puan'),
                     'piyasa_baglami':snapshot.get('piyasa_baglami'),
@@ -296,7 +303,7 @@ class GunIciPerformans:
                 version='GUN_ICI_'+day+'_'+hashlib.sha256(json.dumps([weights,approved],sort_keys=True).encode()).hexdigest()[:16]
                 variant={'weights':weights,'approved':approved,'asof':current.isoformat()}
                 versions=model.get('versions',{});versions[version]=variant
-                model=dict(variant,version=version,versions=versions,refresh_day=day)
+                model=dict(model,**variant,version=version,versions=versions,refresh_day=day)
                 atomic_json(self.weights_file,model)
         daily={};by_id={r['id']:r for r in state['kayitlar']}
         reporting={};seen=set()
@@ -349,6 +356,8 @@ class GunIciPerformans:
             'kriterler':report,'standart_teknik_kriterler':technical,'nihai_karar_performansi':final_report,'shadow_karsilastirmasi':comparisons,'ornek_birimi':'HISSE_GUN','learning_enabled':os.environ.get('GUN_ICI_LEARNING_ENABLED','false').lower()=='true'})
         atomic_json(self.location.public/'gun_ici_onerilen_agirliklar.json',{'updated_at':current.isoformat(),'version':model['version'],'oneriler':model['approved'],
             'minimum_her_grup':minimum,'minimum_islem_gunu':5,'otomatik_aktivasyon':False})
+        from performans_motoru import controlled_publish
+        controlled_publish(self.location,state['kayitlar'],current,'INTRADAY')
 
 
 def bekleyen_gun_ici_sonuclari_guncelle(**kwargs):return GunIciPerformans(**kwargs).one_round()

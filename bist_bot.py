@@ -2137,6 +2137,8 @@ def yarin_top10_listesi(sonuclar, kalibrasyon=None, piyasa=None):
         except Exception:
             kalibrasyon = {"learning_enabled": False}
     sirali = []
+    from performans_motoru import controlled_context,controlled_score
+    controlled=controlled_context(paths(repo_root=os.path.dirname(__file__)),baglam_zamani,'DAILY')
     for a in sonuclar:
         if not isinstance(a, dict) or not a:
             continue
@@ -2153,6 +2155,7 @@ def yarin_top10_listesi(sonuclar, kalibrasyon=None, piyasa=None):
         a.update(effects(a,ham,baglam_zamani,'YARIN'))
         from ai_karar_motoru import attach_final_decision
         attach_final_decision(a,baglam_zamani,'DAILY')
+        a['controlled_shadow']=controlled_score(a,ham,baglam_zamani,'DAILY',controlled)
         if ham >= 55:
             a['final_puan'] = max(0,min(95,a['final_puan']+a['piyasa_baglami_etkisi']))
             a['shadow_puan'] = max(0,min(95,a['shadow_puan']+a['piyasa_baglami_etkisi']))
@@ -2227,7 +2230,7 @@ def yarin_snapshot_modeli(veri, tahmin_zamani=None):
     snapshot["kayit_turu"] = "DONDURULMUS_TAHMIN"
     snapshot["tahmin_zamani"] = tahmin_zamani
     snapshot["zaman_kaynagi"] = "ISTANBUL" if tahmin_zamani else "LEGACY_BELIRSIZ"
-    for hisse in snapshot["top10"] + snapshot.get('ham_top10', []) + snapshot.get('shadow_top10', []):
+    for hisse in snapshot["top10"] + snapshot.get('ham_top10', []) + snapshot.get('shadow_top10', []) + snapshot.get('controlled_shadow_top10',[]):
         hisse["tahmin"] = {
             "sembol": hisse.get("sembol"),
             "tahmin_zamani": tahmin_zamani,
@@ -2248,6 +2251,7 @@ def yarin_snapshot_modeli(veri, tahmin_zamani=None):
             "teknik_gostergeler":copy.deepcopy(hisse.get('teknik_gostergeler')),
             "teknik_katkilar":copy.deepcopy(hisse.get('teknik_katkilar')),
             "nihai_karar":copy.deepcopy(hisse.get('nihai_karar')),
+            "controlled_shadow":copy.deepcopy(hisse.get('controlled_shadow')),
             "teknik_shadow_puan":hisse.get('teknik_shadow_puan'),
             "teknik_model_version":hisse.get('teknik_model_version'),
             "piyasa_baglami": hisse.get("piyasa_baglami"),
@@ -2319,6 +2323,8 @@ def yarin_top10_kilitli_kaydet(sonuclar, toplam_hisse):
                 return [dict(a, yarin_top10_sira=i+1, yarin_top10_puani=a[field]) for i,a in enumerate(ranked)]
             ham_top10 = comparison_rows("ham_puan")
             shadow_top10 = comparison_rows("shadow_puan")
+            controlled_candidates=sorted(eligible,key=lambda a:(a.get('controlled_shadow') or {}).get('score',a['ham_puan']),reverse=True)[:10]
+            controlled_top10=[dict(a,yarin_top10_sira=i+1,yarin_top10_puani=(a.get('controlled_shadow') or {}).get('score',a['ham_puan'])) for i,a in enumerate(controlled_candidates)]
             kayitlar = []
             for sira, (skor, a) in enumerate(top10, 1):
                 hisse = dict(a)
@@ -2337,6 +2343,7 @@ def yarin_top10_kilitli_kaydet(sonuclar, toplam_hisse):
                 "piyasa_modeli": piyasa,
                 "ham_top10": ham_top10,
                 "shadow_top10": shadow_top10,
+                "controlled_shadow_top10":controlled_top10,
                 "top10": kayitlar
             }, simdi.isoformat(timespec="seconds"))
             json_atomik_yaz(arsiv, veri, overwrite=False)

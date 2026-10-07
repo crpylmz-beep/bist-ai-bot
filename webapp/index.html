@@ -1285,6 +1285,7 @@ async function showAiLearning(){
             '<div class="empty">AI Öğrenme verileri y?klenemedi.</div>';
     }
     await teknikOlcumleriYukle(alan);
+    await modelPerformansiYukle(alan);
 }
 
 
@@ -2705,6 +2706,36 @@ async function teknikOlcumleriYukle(alan){
     alan.insertAdjacentHTML('beforeend','<div class="detail-card"><h3>Teknik Kriter Ölçümleri</h3><p>Yeni kriterler ölçülüyor; otomatik ağırlık uygulaması kapalı.</p>' +
         teknikKriterRaporuGoster(results[0].status === 'fulfilled' ? results[0].value : null,'Gün İçi') +
         teknikKriterRaporuGoster(results[1].status === 'fulfilled' ? results[1].value : null,'Yarın') + '</div>');
+}
+
+function modelPerformansiGoster(report){
+    if(!report?.modes) return '<p>Model performansı için henüz tamamlanmış ölçüm yok.</p>';
+    return Object.entries(report.modes).map(([mode,model])=>{
+        const latest=Object.values(model.comparisons || {}).at(-1);
+        const percent=value=>yarinSayi(value == null ? null : value*100,'%');
+        const criteria=model.criteria?.[mode==='INTRADAY'?'60':'1'] || {};
+        const valid=Object.entries(criteria).filter(([key,value])=>value.confidence==='YETERLI' && value.success_difference != null);
+        const ordered=valid.sort((a,b)=>b[1].success_difference-a[1].success_difference);
+        const list=entries=>entries.length ? '<ul>'+entries.map(([key,value])=>'<li>'+yarinMetin(key.replaceAll('_',' '))+' · '+percent(value.success_difference)+'</li>').join('')+'</ul>' : '<p>Yeterli ölçüm yok.</p>';
+        return '<div class="detail-card"><h3>Model Performansı · '+(mode==='INTRADAY'?'Gün İçi':'Yarın / Günlük')+'</h3>' +
+            '<p>Learning: KAPALI · Shadow: '+(model.shadow_active?'AKTİF':'PASİF')+'</p>' +
+            '<p>Ana model başarı: '+percent(latest?.main?.success_rate)+' · Shadow başarı: '+percent(latest?.shadow?.success_rate)+'</p>' +
+            '<p>Değerlendirme örneği: '+yarinMetin(latest?.main?.sample_count ?? 0)+' / '+yarinMetin(latest?.shadow?.sample_count ?? 0)+'</p>' +
+            '<p>'+(latest ? (latest.promotion_candidate?'Kontrollü geçiş için aday; otomatik uygulama yok.':'Ayrı değerlendirmede yeterli üstünlük kanıtlanmadı.') : 'Öneriden sonraki ayrı değerlendirme verisi bekleniyor.')+'</p>' +
+            '<details><summary>En güçlü 5 kriter</summary>'+list(ordered.filter(([k,v])=>v.success_difference>0).slice(0,5))+'</details>' +
+            '<details><summary>En zayıf 5 kriter</summary>'+list([...ordered].reverse().filter(([k,v])=>v.success_difference<0).slice(0,5))+'</details>' +
+            '<p>Son model güncelleme: '+yarinZaman(model.updated_at)+' · Minimum '+yarinMetin(model.minimum_samples)+' örnek / '+yarinMetin(model.minimum_days)+' işlem günü</p></div>';
+    }).join('');
+}
+
+async function modelPerformansiYukle(alan){
+    try{
+        const response=await fetch('data/kriter_performansi.json?t='+Date.now(),{cache:'no-store'});
+        if(document.getElementById('aiLearningPage').style.display!=='block') return;
+        alan.insertAdjacentHTML('beforeend',modelPerformansiGoster(response.ok ? await response.json() : null));
+    }catch(error){
+        if(document.getElementById('aiLearningPage').style.display==='block') alan.insertAdjacentHTML('beforeend',modelPerformansiGoster(null));
+    }
 }
 
 function nihaiKararGoster(final){
