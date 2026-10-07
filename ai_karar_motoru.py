@@ -645,6 +645,8 @@ class AIKararMotoru:
                                 'kaynak':'ORTAK_AI','snapshot_id':None,'hedef':number(row.get('karar_hedef'),number(row.get('hedef1'))),
                                 'stop':number(row.get('karar_stop'),number(row.get('stop'))),
                                 **{'sonuc_'+str(day)+'g':None for day in HORIZONS}}
+                            from sinyal_performansi import capture_indicators
+                            record['indicator_snapshot']=capture_indicators(dict(row,nihai_karar=result['nihai_karar']),result['updated_at'])
                             records.append(record);ids.add(signal_id)
                     except Exception as error:
                         errors[str(raw_stock)] = type(error).__name__

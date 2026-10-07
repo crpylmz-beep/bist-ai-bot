@@ -2545,6 +2545,8 @@ def _tahminleri_kaydet_kilitli(sonuclar,toplam_hisse,kaynak,liste_kaydet,hedef,s
             }
 
             from performans_motoru import legacy_slots
+            from sinyal_performansi import capture_indicators
+            kayit['indicator_snapshot']=capture_indicators(a,simdi)
             legacy_slots(kayit)
             tahminler.append(kayit)
             eklenen += 1
