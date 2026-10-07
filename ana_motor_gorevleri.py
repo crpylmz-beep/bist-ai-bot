@@ -243,7 +243,11 @@ class WorkerTasks:
                 'company_site':self.company_site,'performance':self.performance,
                 'intraday_performance':self.intraday_performance,'market_context':self.market_context}
         from gunluk_al_sat import enabled,GunlukAlSat
-        if enabled():
+        intraday_enabled=enabled()
+        if not getattr(self,'_intraday_flag_logged',False):
+            logging.info('[INTRADAY_SIGNAL] enabled=true timeframe=5m market_gate=enabled' if intraday_enabled else '[INTRADAY_SIGNAL] enabled=false')
+            self._intraday_flag_logged=True
+        if intraday_enabled:
             from veri_yollari import paths
             self.daily_intraday=GunlukAlSat(location=paths(),universe=self.bot.bist_hisseleri_getir)
             result['intraday_signals']=self.daily_intraday.one_round

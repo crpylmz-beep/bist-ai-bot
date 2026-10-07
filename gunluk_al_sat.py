@@ -39,7 +39,7 @@ _cache_lock = threading.Lock()
 
 
 def enabled():
-    return os.environ.get('INTRADAY_SIGNAL_ENGINE_ENABLED', 'false').lower() in ('true', '1', 'yes', 'on')
+    return os.environ.get('INTRADAY_SIGNAL_ENGINE_ENABLED', 'true').lower() in ('true', '1', 'yes', 'on')
 
 
 def observe_frames(frames):

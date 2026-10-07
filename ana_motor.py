@@ -117,6 +117,7 @@ class AnaMotor:
         self.stop = threading.Event()
         self.executor = ThreadPoolExecutor(max_workers=max_workers, thread_name_prefix='bist-task')
         self.tasks = {}
+        self._intraday_closed_log_due=0
         for name, callback in callbacks.items():
             interval = (intervals or {}).get(name, float(os.environ.get(ENV_NAMES[name]+'_INTERVAL_SECONDS', DEFAULTS[name])))
             if not 1 <= interval <= 86400:
@@ -205,7 +206,13 @@ class AnaMotor:
                     continue
                 if name == 'bootstrap' and (self.directory/'public_bootstrap_complete.json').exists():
                     continue
+                if name=='intraday_signals':
+                    from gunluk_al_sat import enabled
+                    if not enabled():continue
                 if name in ('intraday_top10','full_scan','market_context','intraday_signals') and not market_open(current,self.holiday):
+                    if name=='intraday_signals' and mono>=self._intraday_closed_log_due:
+                        logging.info('[INTRADAY_SIGNAL] market_closed skip')
+                        self._intraday_closed_log_due=mono+max(INTRADAY_SIGNAL_INTERVAL,task.interval)
                     continue
                 if name == 'yarin_top10':
                     day=current.date().isoformat()

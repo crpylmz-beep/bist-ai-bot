@@ -7,10 +7,16 @@ yeniden hesaplanmaz veya değiştirilmez. Öğrenme ağırlığı uygulanmaz.
 ## Etkinleştirme ve zamanlama
 
 `INTRADAY_SIGNAL_ENGINE_ENABLED=true` worker başlangıcında yeni
-`intraday_signals` görevini kaydeder. Varsayılan **false**: mevcut uygulama
-davranışı korunur, veri çekilmez veya yeni geçmiş yazılmaz. Ortam değişikliği
+`intraday_signals` görevini kaydeder. Varsayılan **true**: ortam değişkeni
+yoksa motor devrededir. Açık `false` ayarında veri çekilmez veya yeni geçmiş
+yazılmaz; eski davranış korunur. Ortam değişikliği
 sonrasında worker yeniden başlatılır. Görev mevcut scheduler, technical lane,
 single-flight, hata sınıflandırması ve backoff sistemini kullanır.
+
+Başlangıçta bir kez `[INTRADAY_SIGNAL] enabled=true timeframe=5m market_gate=enabled`
+veya `[INTRADAY_SIGNAL] enabled=false` loglanır. Açık flag ile piyasa kapalıysa
+`[INTRADAY_SIGNAL] market_closed skip` en fazla görev periyodunda bir kez
+loglanır; her worker tick'inde tekrar edilmez.
 
 Varsayılan periyot 300 saniyedir. `INTRADAY_SIGNALS_INTERVAL_SECONDS=600`
 ile on dakikaya çıkarılabilir; 300 saniyeden daha agresif ayar reddedilir.

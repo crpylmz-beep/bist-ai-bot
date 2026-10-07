@@ -187,6 +187,63 @@ class IntradayTests(unittest.TestCase):
         self.engine().one_round()
         with patch('ana_motor.istanbul_now',return_value=self.now):
             self.assertEqual(module.stock_signal('THYAO',self.location)['signal'],'AL_ADAYI')
+    def test_flag_missing_default_enabled(self):
+        with patch.dict(os.environ):
+            os.environ.pop('INTRADAY_SIGNAL_ENGINE_ENABLED',None)
+            self.assertTrue(module.enabled())
+    def test_flag_explicit_true(self):
+        with patch.dict(os.environ,{'INTRADAY_SIGNAL_ENGINE_ENABLED':'true'}):self.assertTrue(module.enabled())
+    def test_flag_explicit_false(self):
+        with patch.dict(os.environ,{'INTRADAY_SIGNAL_ENGINE_ENABLED':'false'}):self.assertFalse(module.enabled())
+    def worker_callbacks(self):
+        from ana_motor_gorevleri import WorkerTasks
+        worker=WorkerTasks.__new__(WorkerTasks)
+        worker.directory=self.location.runtime;worker.stop=Mock();worker.bot=Mock()
+        with patch('sirket_site_motoru.SirketSiteMotoru'):
+            return worker,worker.callbacks()
+    def test_worker_registration_missing_env(self):
+        with patch.dict(os.environ):
+            os.environ.pop('INTRADAY_SIGNAL_ENGINE_ENABLED',None)
+            worker,jobs=self.worker_callbacks()
+            self.assertEqual(jobs['intraday_signals'],worker.daily_intraday.one_round)
+    def test_worker_registration_false(self):
+        with patch.dict(os.environ,{'INTRADAY_SIGNAL_ENGINE_ENABLED':'false'}):
+            _,jobs=self.worker_callbacks();self.assertNotIn('intraday_signals',jobs)
+    def test_startup_log_once_enabled(self):
+        with self.assertLogs(level='INFO') as captured:
+            worker,_=self.worker_callbacks()
+            with patch('sirket_site_motoru.SirketSiteMotoru'):worker.callbacks()
+        self.assertEqual(sum('[INTRADAY_SIGNAL] enabled=true timeframe=5m market_gate=enabled' in text for text in captured.output),1)
+    def test_startup_log_disabled(self):
+        with patch.dict(os.environ,{'INTRADAY_SIGNAL_ENGINE_ENABLED':'false'}),self.assertLogs(level='INFO') as captured:
+            self.worker_callbacks()
+        self.assertTrue(any('[INTRADAY_SIGNAL] enabled=false' in text for text in captured.output))
+    def test_closed_market_log_throttled(self):
+        from ana_motor import AnaMotor
+        self.now=self.now.replace(hour=20);mono=[0];callback=Mock()
+        motor=AnaMotor({'intraday_signals':callback},self.location.runtime,clock=lambda:self.now,monotonic=lambda:mono[0])
+        try:
+            with self.assertLogs(level='INFO') as captured:
+                motor.tick();motor.tick();mono[0]=299;motor.tick();mono[0]=300;motor.tick()
+            self.assertEqual(sum('[INTRADAY_SIGNAL] market_closed skip' in text for text in captured.output),2)
+            callback.assert_not_called()
+        finally:motor.shutdown()
+    def test_open_market_scheduler_runs(self):
+        from ana_motor import AnaMotor
+        callback=Mock(return_value={});motor=AnaMotor({'intraday_signals':callback},self.location.runtime,clock=lambda:self.now,monotonic=lambda:0)
+        try:
+            motor.tick();motor.tasks['intraday_signals'].future.result(timeout=2);self.assertEqual(callback.call_count,1)
+        finally:motor.shutdown()
+    def test_registered_job_respects_runtime_false(self):
+        from ana_motor import AnaMotor
+        callback=Mock();motor=AnaMotor({'intraday_signals':callback},self.location.runtime,clock=lambda:self.now,monotonic=lambda:0)
+        try:
+            with patch.dict(os.environ,{'INTRADAY_SIGNAL_ENGINE_ENABLED':'false'}):motor.tick()
+            callback.assert_not_called()
+        finally:motor.shutdown()
+    def test_disabled_api_and_stock_no_cache_reads(self):
+        with patch.dict(os.environ,{'INTRADAY_SIGNAL_ENGINE_ENABLED':'false'}),patch.object(module,'read_report') as reader:
+            self.assertFalse(module.api_report({},self.location)['enabled']);self.assertIsNone(module.stock_signal('THYAO',self.location));reader.assert_not_called()
 
 
 def load_history(location,current):
