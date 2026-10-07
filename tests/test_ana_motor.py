@@ -146,7 +146,7 @@ motor.run()
 class AdapterTests(unittest.TestCase):
     def setUp(self):
         self.temp=tempfile.TemporaryDirectory();self.addCleanup(self.temp.cleanup);self.root=Path(self.temp.name)
-        self.enterContext(patch.dict('os.environ',{'BIST_RUNTIME_DIR':str(self.root)}))
+        self.enterContext(patch.dict('os.environ',{'BIST_RUNTIME_DIR':str(self.root/'data/runtime'),'BIST_DATA_DIR':str(self.root/'data')}))
         self.ai = self.enterContext(patch('ai_karar_motoru.ai_batch_guncelle',return_value={'hisseler':{},'hatalar':{}}))
 
     def adapter(self):
@@ -218,13 +218,16 @@ class AdapterTests(unittest.TestCase):
         adapter=self.adapter();adapter.batch_size=2
         path=self.root/'live.json';path.write_text(json.dumps({'hisseler':[{'sembol':'KEEP','fiyat':10}]}))
         with patch.object(adapter.bot,'DATA_FILE',str(path)),patch.object(adapter.bot,'bist_hisseleri_getir',return_value=['AAA','BBB','CCC']), \
-             patch.object(adapter.live,'tek_hisse_guncelle',side_effect=lambda stock:(stock,{'sembol':stock,'fiyat':100}) if stock!='BBB' else (stock,None)), \
+             patch.object(adapter.live,'tek_hisse_guncelle',side_effect=lambda stock:(stock,{'sembol':stock,'fiyat':100,'karar':'AL'}) if stock!='BBB' else (stock,None)), \
              patch.object(adapter.bot,'web_verisi_kaydet') as write,patch.object(adapter,'market_context',return_value={}) as market:
             from gorev_hatalari import TaskIssue
             with self.assertRaises(TaskIssue) as failure:adapter.full_scan()
             self.assertEqual(failure.exception.completed,1)
             self.assertEqual({row['sembol'] for row in write.call_args.args[0]},{'AAA','KEEP'})
             self.assertEqual(adapter.cursor,2);self.assertIn('BBB',adapter.events)
+            history=json.loads((self.root/'data/runtime/tahmin_gecmisi.json').read_text())
+            self.assertEqual([r['sembol'] for r in history['tahminler']],['AAA'])
+            self.assertEqual(history['tahminler'][0]['kaynak'],'GUNLUK_TARAMA')
             market.assert_called_once_with()
 
     def test_incomplete_closing_scan_does_not_freeze(self):

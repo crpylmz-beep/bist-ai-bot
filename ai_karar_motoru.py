@@ -626,7 +626,7 @@ class AIKararMotoru:
                         signal_id = 'ORTAK_AI_'+hashlib.sha256(json.dumps(identity,sort_keys=True).encode()).hexdigest()[:24]
                         result['sinyal_id'] = signal_id
                         public['hisseler'][stock] = result;results[stock] = result
-                        if signal_id not in ids:
+                        if signal_id not in ids and result['karar'] not in ('IZLE','BEKLE','NOTR','NÖTR'):
                             trainable = current.weekday()<5 and 600<=current.hour*60+current.minute<=1090 and result['confidence']>=50 and number(row.get('fiyat'),0)>0
                             record = {'kayit_id':signal_id,'model':'ORTAK_AI','sembol':stock,'zaman':result['updated_at'],
                                 'karar':result['karar'],'ai_score':result['ai_score'],'confidence':result['confidence'],

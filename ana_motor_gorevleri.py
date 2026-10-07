@@ -160,6 +160,10 @@ class WorkerTasks:
             row['canli_guncelleme']=self.live.simdi()
             merged[row['sembol']]=row
         self.bot.web_verisi_kaydet(list(merged.values()),self.symbols)
+        from veri_yollari import paths
+        if not self.bot.tahminleri_kaydet(successful,len(self.symbols),kaynak='GUNLUK_TARAMA',
+                liste_kaydet=False,dosya_yolu=paths().runtime_file('tahmin_gecmisi.json'),strict=True):
+            raise RuntimeError('Anlamlı tahmin kaydı yazılamadı; mevcut veri korundu')
         self.cycle_successful=getattr(self,'cycle_successful',0)+len(successful)
         self.market_context()
         self.ai_context(successful)

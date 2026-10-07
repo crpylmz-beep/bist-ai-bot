@@ -306,7 +306,9 @@ class MarketTests(unittest.TestCase):
 
     def test_common_ai_history_freezes_context(self):
         atomic_json(self.engine.file,self.strong_relative());engine=AIKararMotoru(self.location,clock=lambda:self.current)
-        engine.batch(['S000'],[self.rows()[0]])
+        row=dict(self.rows()[0],teknik_puan=90,rsi=55,macd=1,signal=.5,hacim_orani=160,karar_rr=2,canli_guncelleme=self.current.isoformat())
+        result=engine.batch(['S000'],[row])
+        self.assertNotEqual(result['hisseler']['S000']['karar'],'IZLE')
         first=json.loads(engine.history_path.read_text())['kayitlar'][0]
         atomic_json(self.engine.file,self.context(-3));self.current+=timedelta(minutes=5);engine.batch(['S000'],[self.rows()[0]])
         self.assertEqual(json.loads(engine.history_path.read_text())['kayitlar'][0],first)

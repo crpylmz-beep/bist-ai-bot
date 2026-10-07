@@ -82,40 +82,24 @@ def guvenli_float(x, varsayilan=0.0):
         return varsayilan
 
 
-def tahmin_gecmisi_oku():
-    try:
-        if not os.path.exists(TAHMIN_GECMISI_FILE):
-            return {"surum": 1, "tahminler": [], "ogrenme_gecmisi": []}
-
-        with open(TAHMIN_GECMISI_FILE, "r", encoding="utf-8") as f:
-            veri = json.load(f)
-
-        if not isinstance(veri, dict):
-            raise ValueError("Tahmin geçmişi geçersiz formatta")
-
-        veri.setdefault("surum", 1)
-        veri.setdefault("tahminler", [])
-        veri.setdefault("ogrenme_gecmisi", [])
-        return veri
-
-    except Exception as e:
-        print("TAHMIN GECMISI OKUMA HATASI:", e)
-        return {"surum": 1, "tahminler": [], "ogrenme_gecmisi": []}
+def tahmin_gecmisi_oku(dosya_yolu=None):
+    hedef=dosya_yolu or TAHMIN_GECMISI_FILE
+    if not os.path.exists(hedef):
+        return {"surum":1,"tahminler":[],"ogrenme_gecmisi":[]}
+    with open(hedef,encoding='utf-8') as handle:veri=json.load(handle)
+    if not isinstance(veri,dict) or not isinstance(veri.get('tahminler',[]),list):
+        raise ValueError('Tahmin geçmişi geçersiz formatta; korunuyor')
+    veri.setdefault('surum',1);veri.setdefault('tahminler',[]);veri.setdefault('ogrenme_gecmisi',[])
+    return veri
 
 
-def tahmin_gecmisi_yaz(veri):
-    try:
-        os.makedirs(os.path.dirname(TAHMIN_GECMISI_FILE), exist_ok=True)
-        gecici = TAHMIN_GECMISI_FILE + ".tmp"
-
-        with open(gecici, "w", encoding="utf-8") as f:
-            json.dump(veri, f, ensure_ascii=False, indent=2)
-
-        os.replace(gecici, TAHMIN_GECMISI_FILE)
-        return True
-
-    except Exception as e:
-        print("TAHMIN GECMISI YAZMA HATASI:", e)
+def tahmin_gecmisi_yaz(veri,dosya_yolu=None,strict=False):
+    from pathlib import Path
+    from kullanici_kayitlari import atomic_json
+    try:atomic_json(Path(dosya_yolu or TAHMIN_GECMISI_FILE),veri);return True
+    except Exception as error:
+        print('TAHMIN GECMISI YAZMA HATASI:',type(error).__name__)
+        if strict:raise
         return False
 
 
@@ -2054,51 +2038,11 @@ def tahmin_sonrasi_fiyatlarini_bul(sembol, tahmin_tarihi, veri_cache=None):
 
 
 def tahmin_sonuclarini_guncelle():
-    try:
-        veri = tahmin_gecmisi_oku()
-        tahminler = veri.get("tahminler", [])
-
-        if not tahminler:
-            print("TAHMIN SONUCLARI: Guncellenecek kayit yok")
-            return True
-
-        guncellenen = 0
-        veri_cache = {}
-
-        for kayit in tahminler:
-            if not kayit.get("sembol") or not kayit.get("tarih"):
-                continue
-
-            sonuclar = tahmin_sonrasi_fiyatlarini_bul(
-                kayit["sembol"],
-                kayit["tarih"],
-                veri_cache
-            )
-
-            if not sonuclar:
-                continue
-
-            degisti = False
-
-            for vade in ["1g", "3g", "5g", "10g", "20g", "60g"]:
-                alan = "sonuc_" + vade
-                yeni_sonuc = sonuclar.get(vade)
-
-                if yeni_sonuc is not None and kayit.get(alan) != yeni_sonuc:
-                    kayit[alan] = yeni_sonuc
-                    degisti = True
-
-            if degisti:
-                guncellenen += 1
-
-        veri["son_guncelleme"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        tahmin_gecmisi_yaz(veri)
-
-        print(f"TAHMIN SONUCLARI: {guncellenen} kayit guncellendi")
-        return True
-
-    except Exception as e:
-        print("TAHMIN SONUCLARI GUNCELLEME HATASI:", e)
+    # One existing outcome engine for both history formats; no shifted-row evaluator.
+    from performans_motoru import bekleyen_sonuclari_guncelle
+    try:return not bool(bekleyen_sonuclari_guncelle().get('hatalar'))
+    except Exception as error:
+        print('TAHMIN SONUCLARI GUNCELLEME HATASI:',type(error).__name__)
         return False
 
 
@@ -2487,19 +2431,27 @@ def yarin_top10_canli_guncelle(analiz, gecmis):
         print("YARIN TOP10 CANLI KAYIT HATASI:", e)
 
 
-def tahminleri_kaydet(sonuclar, toplam_hisse):
+def tahminleri_kaydet(sonuclar,toplam_hisse,kaynak='GUNLUK_TARAMA',liste_kaydet=True,dosya_yolu=None,strict=False):
+    from ai_karar_motoru import locked
+    hedef=dosya_yolu or TAHMIN_GECMISI_FILE
+    with locked(hedef):
+        return _tahminleri_kaydet_kilitli(sonuclar,toplam_hisse,kaynak,liste_kaydet,hedef,strict)
+
+
+def _tahminleri_kaydet_kilitli(sonuclar,toplam_hisse,kaynak,liste_kaydet,hedef,strict):
+    from ai_karar_motoru import number
     try:
-        veri = tahmin_gecmisi_oku()
-        simdi = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        veri = tahmin_gecmisi_oku(hedef)
+        simdi = datetime.now(ZoneInfo("Europe/Istanbul")).isoformat(timespec="seconds")
         tahminler = veri.setdefault("tahminler", [])
 
-        yarin_top10 = yarin_top10_listesi(sonuclar)
+        yarin_top10 = yarin_top10_listesi(sonuclar) if liste_kaydet else []
         yarin_top10_map = {
             a.get("sembol"): {"sira": i + 1, "puan": skor}
             for i, (skor, a) in enumerate(yarin_top10)
         }
 
-        tepki_top10_liste = tepki_top10(sonuclar)
+        tepki_top10_liste = tepki_top10(sonuclar) if liste_kaydet else []
         tepki_top10_map = {
             a.get("sembol"): {"sira": i + 1, "puan": tepki_puani(a)}
             for i, a in enumerate(tepki_top10_liste)
@@ -2512,13 +2464,16 @@ def tahminleri_kaydet(sonuclar, toplam_hisse):
                 continue
 
             sinyal = sinyal_sinifi(a)
+            if sinyal in ("NOTR","NÖTR") and a.get("karar") in ("AL","SAT"):
+                sinyal=a["karar"]  # Existing daily decision, no new scoring.
             guclu_tepki = guclu_tepki_mi(a)
 
             sembol = a.get("sembol")
             yarin_top10_bilgi = yarin_top10_map.get(sembol)
             tepki_top10_bilgi = tepki_top10_map.get(sembol)
+            kayit_kaynagi="YARIN_TOP10" if yarin_top10_bilgi else "TEPKI_TOP10" if tepki_top10_bilgi else kaynak
 
-            if sinyal == "NÖTR" and not guclu_tepki and not yarin_top10_bilgi and not tepki_top10_bilgi:
+            if sinyal in ("NÖTR","NOTR","NEUTRAL") and not guclu_tepki and not yarin_top10_bilgi and not tepki_top10_bilgi:
                 continue
 
             bugun = simdi[:10]
@@ -2526,6 +2481,7 @@ def tahminleri_kaydet(sonuclar, toplam_hisse):
                 str(k.get("tarih", ""))[:10] == bugun
                 and k.get("sembol") == a.get("sembol")
                 and k.get("sinyal") == sinyal
+                and k.get("kaynak","GUNLUK_TARAMA")==kayit_kaynagi
                 and bool(k.get("guclu_tepki", False)) == guclu_tepki
                 for k in tahminler
             )
@@ -2533,8 +2489,16 @@ def tahminleri_kaydet(sonuclar, toplam_hisse):
             if tekrar_var:
                 continue
 
+            import hashlib
+            identity=json.dumps([bugun,sembol,sinyal,guclu_tepki,kayit_kaynagi],ensure_ascii=False)
             kayit = {
-                "id": f"{simdi}_{a.get('sembol')}",
+                "id": 'TAHMIN_'+hashlib.sha256(identity.encode()).hexdigest()[:24],
+                "kaynak":kayit_kaynagi,"sinyal_sinifi":sinyal,
+                "performance_source":"LIVE",
+                "model_version":(a.get("nihai_karar") or {}).get("model_version","DAILY_SIGNAL_V1"),
+                "teknik_skor":a.get('teknik_puan',a.get('puan')),
+                "guven":a.get('guven_skoru',a.get('confidence')),
+                "karar":a.get('karar'),
                 "tarih": simdi,
                 "sembol": a.get("sembol"),
                 "sinyal": sinyal,
@@ -2547,7 +2511,7 @@ def tahminleri_kaydet(sonuclar, toplam_hisse):
                 "tepki_top10_sira": tepki_top10_bilgi.get("sira") if tepki_top10_bilgi else None,
                 "tepki_top10_puani": tepki_top10_bilgi.get("puan") if tepki_top10_bilgi else None,
                 "puan": guvenli_float(a.get("puan")),
-                "fiyat": guvenli_float(a.get("fiyat")),
+                "fiyat": number(a.get("fiyat")),
                 "degisim": guvenli_float(a.get("degisim")),
                 "rsi": guvenli_float(a.get("rsi")),
                 "rsi_onceki": guvenli_float(a.get("rsi_onceki")),
@@ -2580,16 +2544,20 @@ def tahminleri_kaydet(sonuclar, toplam_hisse):
                 "degerlendirme": None
             }
 
+            from performans_motoru import legacy_slots
+            legacy_slots(kayit)
             tahminler.append(kayit)
             eklenen += 1
 
+        if eklenen==0 and os.path.exists(hedef):return True
         veri["son_guncelleme"] = simdi
-        tahmin_gecmisi_yaz(veri)
+        if not tahmin_gecmisi_yaz(veri,hedef,strict=strict):return False
         print(f"TAHMIN HAFIZASI: {eklenen} anlamli sinyal kaydi eklendi")
         return True
 
     except Exception as e:
-        print("TAHMIN KAYIT HATASI:", e)
+        print("TAHMIN KAYIT HATASI:", type(e).__name__)
+        if strict:raise
         return False
 
 

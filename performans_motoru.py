@@ -132,6 +132,8 @@ def outcome(record, bars, horizon, current, holiday=None, require_ohlc=True):
         'risk_yuzde':risk,'risk_getiri':reward/risk if risk else None,
         'ertesi_gun_acilis':window[0]['open'],'ertesi_gun_kapanis':window[0]['close'],
         'ertesi_gun_yuksek':window[0]['high'],'ertesi_gun_dusuk':window[0]['low'],
+        'status':'COMPLETED','hedef_tarih':days[-1].isoformat(),
+        'degerlendirme_tarihi':current.date().isoformat(),
         'tarih':days[-1].isoformat(),'observed_at':current.isoformat(),
         'kalite_uyarilari':(['TEMAS_SIRASI_BELIRSIZ'] if first=='BELIRSIZ' else [])+([] if full else ['OHLC_EKSIK'])+([] if valid_levels else ['SEVIYELER_EKSIK_VEYA_GECERSIZ'])}
 
@@ -280,6 +282,46 @@ def provider_history(stock):
     return rows
 
 
+def legacy_signal(row):
+    signal=str(row.get('sinyal','')).upper()
+    return signal in ('AGRESIF_ALIS','AGRESIF_SATIS','ASIRI_ALIM','ASIRI_SATIM','AL','SAT','GUCLU_AL','GUCLU_SAT') or any(
+        row.get(key) for key in ('yarin_top10','tepki_top10','guclu_tepki'))
+
+
+def legacy_record(row):
+    identity=[row.get('id'),row.get('tarih'),row.get('sembol'),row.get('sinyal'),
+              row.get('guclu_tepki'),row.get('kaynak','GUNLUK_TARAMA')]
+    rid='TAHMIN_'+hashlib.sha256(json.dumps(identity,ensure_ascii=False).encode()).hexdigest()[:24]
+    decision=row.get('karar')
+    if decision not in ('AL','GUCLU_AL','SAT','GUCLU_SAT'):
+        decision='SAT' if row.get('sinyal') in ('AGRESIF_SATIS','SAT','GUCLU_SAT') else 'AL'
+    record=dict(row,kayit_id=rid,sinyal_id=rid,model='TAHMIN_HAFIZASI',
+        zaman=row.get('tarih'),referans_fiyat=row.get('fiyat'),karar=decision,
+        hedef=row.get('hedef1'),kaynak=row.get('kaynak','GUNLUK_TARAMA'))
+    for h in HORIZONS:
+        key='sonuc_'+str(h)+'g';old=record.get(key)
+        if isinstance(old,dict) and 'degerlendirme_tamamlandi' not in old:
+            record[key]=dict(old,degerlendirme_tamamlandi=False,legacy_unverified=True)
+    return record
+
+
+def legacy_slots(row,holiday=None):
+    start=stamp(row.get('tarih'))
+    if not start:return False
+    before=json.dumps(row.get('takip',{}),sort_keys=True)
+    days=sessions_after(start.date(),max(HORIZONS),holiday)
+    slots=row.setdefault('takip',{})
+    for h in HORIZONS:
+        previous=row.get('sonuc_'+str(h)+'g')
+        completed=isinstance(previous,dict) and previous.get('degerlendirme_tamamlandi',True) and number(previous.get('fiyat')) is not None
+        slot=slots.setdefault(str(h),{})
+        slot.update(status='COMPLETED' if completed else 'PENDING',hedef_islem_gunu=h,hedef_tarih=days[h-1].isoformat())
+        if completed:
+            slot.update(degerlendirme_tarihi=previous.get('degerlendirme_tarihi',previous.get('tarih')),fiyat=previous.get('fiyat'),getiri_yuzde=previous.get('getiri_yuzde'))
+            if 'degerlendirme_tamamlandi' not in previous:slot['legacy_unverified']=True
+    return json.dumps(slots,sort_keys=True)!=before
+
+
 class PerformansMotoru:
     def __init__(self,location=None,clock=None,history_provider=None,holiday=None,batch_size=None):
         self.location=location or paths();self.clock=clock or (lambda:datetime.now(ISTANBUL))
@@ -290,6 +332,7 @@ class PerformansMotoru:
         self.state_path=self.location.runtime/'performans_durum.json'
         self.cache_path=self.location.runtime/'performans_fiyat_cache.json'
         self.result_path=self.location.runtime/'yarin_top10_sonuclar.json'
+        self.legacy_path=self.location.runtime_file('tahmin_gecmisi.json')
 
     def snapshot_records(self,state):
         records=[]
@@ -405,7 +448,7 @@ class PerformansMotoru:
         recent=[r for r in forecasts if usable(r) and r['sonuc_1g'].get('tarih') in complete_dates and daily[r['snapshot_tarihi']]['tamamlandi']]
         report={'updated_at':current.isoformat(),'vadeler':{str(h):summarize(eligible,h) for h in DAILY_HORIZONS},
             'modeller':grouping('model',eligible),'sektorler':grouping('sektor',eligible),'rejimler':grouping('piyasa_rejimi',eligible),
-            'yarin_top10':summarize(forecasts),'son20_gun':summarize(recent),
+            'yarin_top10':summarize(forecasts),'yarin_top10_vadeler':{str(h):summarize(forecasts,h) for h in HORIZONS},'son20_gun':summarize(recent),
             'kriter_performansi':criterion_report(eligible),'yarin_kriter_performansi':criterion_report(forecasts),
             'sinirlamalar':['TATIL_TAKVIMI_ENJEKSIYONLA_DESTEKLENIR','YANLIS_NEGATIF_YALNIZCA_KAYITLI_SINYALLER','KRITER_ILISKISI_NEDENSELLIK_DEGIL']}
         report['sektor_kriterleri']={sector:criterion_report([r for r in eligible if (r.get('sektor') or 'BILINMIYOR')==sector]) for sector in report['sektorler']}
@@ -421,6 +464,13 @@ class PerformansMotoru:
         from ai_karar_motoru import final_decision_report
         report['nihai_karar_performansi']=final_decision_report(eligible,current)
         report['kriter_vadeleri']={str(h):criterion_report(eligible,h) for h in (3,5)}
+        with locked(self.legacy_path):legacy=load(self.legacy_path,{'tahminler':[]})
+        tracked=[legacy_record(r) for r in legacy['tahminler'] if isinstance(r,dict) and legacy_signal(r)]
+        report['tahmin_hafizasi']={'legacy_unverified':sum(bool(r.get('sonuc_'+str(h)+'g',{}).get('legacy_unverified')) for r in tracked for h in HORIZONS if isinstance(r.get('sonuc_'+str(h)+'g'),dict)), 'vadeler':{str(h):summarize(tracked,h) for h in HORIZONS},
+            'kaynaklar':{source:{str(h):summarize([r for r in tracked if r.get('kaynak')==source],h) for h in HORIZONS}
+                         for source in sorted({str(r.get('kaynak','GUNLUK_TARAMA')) for r in tracked})},
+            'sinyaller':{signal:{str(h):summarize([r for r in tracked if r.get('sinyal')==signal],h) for h in HORIZONS}
+                        for signal in sorted({str(r.get('sinyal','BILINMIYOR')) for r in tracked})}}
         current_weights=load(self.location.runtime/'ai_agirliklari.json',{}).get('agirliklar',DEFAULT_WEIGHTS)
         current_weights=normalize_weights(current_weights)
         proposal=weight_proposals(report['yarin_kriter_performansi'],current_weights)
@@ -456,11 +506,30 @@ class PerformansMotoru:
                     retry=stamp(state['tekrar'].get(record['sinyal_id']))
                     if retry and retry>current:continue
                     model=record.get('model','')
-                    horizons=POSITIVE_HORIZONS if model=='POSITIVE_CANDIDATE' else (1,3,5) if model in ('HABER','MAKRO') else DAILY_HORIZONS if model.startswith('YARIN') else HORIZONS
+                    horizons=POSITIVE_HORIZONS if model=='POSITIVE_CANDIDATE' else HORIZONS if model in ('HABER','MAKRO') else DAILY_HORIZONS if model.startswith('YARIN') else HORIZONS
                     due=[h for h in horizons if not (isinstance(record.get('sonuc_'+str(h)+'g'),dict) and record['sonuc_'+str(h)+'g'].get('degerlendirme_tamamlandi',True))
                          and session_closed(sessions_after(start.date(),h,self.holiday)[-1],current)]
                     if due:pending.append((dict(record),due))
                 atomic_json(self.history_path,history)
+            # Existing legacy history is evaluated in place with the SAME outcome,
+            # provider/cache and retry state; never copy it into a second history.
+            legacy_dirty=False
+            with locked(self.legacy_path):
+                legacy=load(self.legacy_path,{'tahminler':[]})
+                if not isinstance(legacy,dict) or not isinstance(legacy.get('tahminler'),list):
+                    raise ValueError('Tahmin geçmişi geçersiz; korundu')
+                legacy_dirty=False
+                for row in legacy['tahminler']:
+                    if not isinstance(row,dict) or not legacy_signal(row):continue
+                    record=legacy_record(row);start=stamp(record.get('zaman'))
+                    if not start or not record.get('sembol'):continue
+                    legacy_dirty=legacy_slots(row,self.holiday) or legacy_dirty
+                    retry=stamp(state['tekrar'].get(record['sinyal_id']))
+                    if retry and retry>current:continue
+                    due=[h for h in HORIZONS if row['takip'][str(h)]['status']=='PENDING'
+                        and session_closed(sessions_after(start.date(),h,self.holiday)[-1],current)]
+                    if due:pending.append((record,due))
+                if legacy_dirty:atomic_json(self.legacy_path,legacy)
             symbols=list(dict.fromkeys(r['sembol'] for r,hs in pending))[:self.batch_size]
             per_symbol=max(1,100//len(symbols)) if symbols else 0
             selected=[pair for stock in symbols for pair in [(r,hs) for r,hs in pending if r['sembol']==stock][:per_symbol]]
@@ -500,9 +569,20 @@ class PerformansMotoru:
                 atomic_json(self.history_path,history)
                 last_report=stamp(state.get('last_report'))
                 need_report=updates or len(history['kayitlar'])!=original_count or not last_report or (current-last_report).total_seconds()>=3600
+            with locked(self.legacy_path):
+                legacy=load(self.legacy_path,{'tahminler':[]});legacy_dirty=False
+                for row in legacy['tahminler']:
+                    if not isinstance(row,dict) or not legacy_signal(row):continue
+                    rid=legacy_record(row)['sinyal_id']
+                    for key,result in updates.get(rid,{}).items():
+                        existing=row.get(key)
+                        if isinstance(existing,dict) and existing.get('degerlendirme_tamamlandi',True):continue
+                        row[key]=result;legacy_dirty=True;changed+=int(result['degerlendirme_tamamlandi'])
+                    legacy_dirty=legacy_slots(row,self.holiday) or legacy_dirty
+                if legacy_dirty:atomic_json(self.legacy_path,legacy)
             # Calibration locks history while holding its model lock: release history
             # before taking model/report locks to avoid an inverse lock order.
-            if need_report:
+            if need_report or updates:
                 self.reports(history['kayitlar'],current);state['last_report']=current.isoformat()
             from disk_koruma import trim_price_cache,save_price_cache
             cache=trim_price_cache(cache,current.date())
