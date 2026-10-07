@@ -17,7 +17,7 @@ import errno
 
 from kullanici_kayitlari import atomic_json
 from veri_yollari import paths
-from gorev_hatalari import describe,public_issue,TaskIssue
+from gorev_hatalari import describe,public_issue,TaskIssue,log_source
 
 ROOT = Path(__file__).resolve().parent
 ISTANBUL = ZoneInfo('Europe/Istanbul')
@@ -164,6 +164,7 @@ class AnaMotor:
                     status=('DEGRADED' if isinstance(error,TaskIssue) and error.completed else 'RETRYING') if issue['category'] in ('REMOTE','SOURCE_DATA') else 'ERROR'
                     self.state['tasks'][name] = {'status':status, 'failures':task.failures, 'retry_in_seconds':delay, **detail}
                     logging.warning('[%s] %s %s code=%s category=%s retry=%ss',current.strftime('%H:%M:%S'),name.upper(),status,issue['code'],issue['category'],delay)
+                    if not isinstance(error,TaskIssue):log_source(error,'TASK')
                     # Stack locations only: never format exception args or source lines containing secrets.
                     import traceback
                     frames=traceback.extract_tb(error.__traceback__)[-4:]

@@ -33,3 +33,11 @@ Borsapy 0.11.0 `Ticker.history` TradingView providerını kullanır. Provider We
 `[SOURCE_TRACE]` alt analiz/sağlayıcı fonksiyonunda yakalanan hatanın türünü, aşamasını ve son beş dosya/line/function konumunu kaydeder. Ham mesajlar, kaynak satırları, locals ve URL/token yazılmaz. Böylece TaskIssue üst katmanda yalnız adapter konumunu göstermiş olsa bile asıl hata konumu bulunabilir.
 
 Company site NETWORK_CONNECTION requests bağlantı hatasıdır; geçici olup olmadığı veya hangi domain'in erişilemediği production logları olmadan belirlenemez. DNS ve TLS hataları ayrı kodlanır. Site başına backoff ve checkpoint değişmez. Bu güncelleme bağlantı sağlayıcısını, analiz skorlarını, snapshotları veya disk temizleme mekanizmasını değiştirmez.
+
+## Maskelenmiş kaynak mesajı
+
+Production kullanıcısının paylaştığı priority satır 100 ve full_scan satır 141 trace'leri `TaskIssue` toplama/yükseltme konumlarıdır. Full scan satır 141'e ulaşılması bu batch'te en az bir başarılı sonuç ile en az bir başarısız sonuç olduğunu gösterir; başarısız hissenin alt exception türü veya mesajı bu trace'ten çıkarılamaz. Bu gözlem yeni sağlayıcı sınıflandırmasıyla da kesin kök neden olarak sunulmaz.
+
+`[SOURCE_TRACE]` artık yalnız Railway operasyon loguna 240 karaktere kadar maskelenmiş `message` ekler. Environment secret bağları, URL'ler, credential alanları, bearer/basic değerleri, uzun anahtar benzeri değerler, private dosya yolları, e-posta ve payload/header gövdeleri maskelenir. Mesaj tek satırdır; cause/context zinciri en fazla üç hata ile sınırlıdır. Public health ve runtime task state ham/maskelenmiş exception mesajını almaz, sabit sözlükten mesaj üretmeye devam eder. Kaynak satırları, locals ve ham traceback exception args yazılmaz. Uygulama düzeyi hata ile dış kaynak hatası ayrımı tahmin edilmez; UNKNOWN gerektiğinde kalır.
+
+Company collector site başına yakalanan bağlantı hatasına da SOURCE_TRACE ekler. Scheduler'ın TaskIssue olmayan hataları aynı mekanizmayla loglanır; TaskIssue için önceki alt kaynak kaydı esas alınır. Retry, checkpoint, filtre, skor, tarama boyutu, primary data ve disk cleanup mantığı değişmez. Production'da deploy sonrası SOURCE_TRACE mesajı/türü/konumu görülmeden priority/full_scan arızasının giderildiği söylenemez.

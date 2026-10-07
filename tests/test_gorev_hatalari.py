@@ -120,3 +120,32 @@ class TaskDiagnosticsTests(unittest.TestCase):
   import socket
   self.assertEqual(describe(socket.gaierror('secret'))['code'],'NETWORK_DNS')
   self.assertEqual(describe(requests.exceptions.SSLError('secret'))['code'],'NETWORK_TLS')
+ def test_message_keeps_useful_reason_but_masks_credentials_and_urls(self):
+  from gorev_hatalari import safe_message
+  error=RuntimeError('TradingView error: Handshake status 403 https://host/private?token=ABC password=foo Bearer bar')
+  message=safe_message(error)
+  self.assertIn('Handshake status 403',message)
+  for secret in ('host','ABC','foo','bar','https://'):self.assertNotIn(secret,message)
+ def test_message_masks_injected_secret_and_private_paths(self):
+  from gorev_hatalari import safe_message
+  with patch.dict(os.environ,{'VAPID_PRIVATE_KEY':'short-secret-value'}):
+   text=safe_message(RuntimeError('failed short-secret-value /data/private/user123/file.json'))
+  self.assertNotIn('short-secret-value',text);self.assertNotIn('user123',text)
+ def test_message_is_bounded_one_line_and_omits_payload(self):
+  from gorev_hatalari import safe_message
+  self.assertLessEqual(len(safe_message(RuntimeError('a '*2000))),240)
+  text=safe_message(RuntimeError('Connection refused\n headers={"authorization":"hidden"}'))
+  self.assertNotIn('hidden',text);self.assertNotIn('\n',text);self.assertIn('Connection refused',text)
+ def test_nested_exception_log_is_bounded_and_preserves_reason(self):
+  from gorev_hatalari import log_source
+  from borsapy.exceptions import APIError
+  try:
+   try:raise requests.Timeout('provider read timed out')
+   except requests.Timeout as cause:raise APIError('provider request failed') from cause
+  except APIError as error:
+   with self.assertLogs(level='WARNING') as logs:log_source(error,'PROVIDER')
+  self.assertEqual(len(logs.output),2);self.assertIn('provider read timed out',' '.join(logs.output))
+ def test_private_diagnostic_message_never_enters_health(self):
+  motor=self.fail_task(RuntimeError('unique diagnostic sentence'))
+  with patch('ana_motor.istanbul_now',return_value=self.now):value=health_snapshot(self.location.runtime)
+  self.assertNotIn('unique diagnostic sentence',json.dumps(value));self.assertEqual(value['tasks']['kap']['last_error']['code'],'TASK_ERROR')

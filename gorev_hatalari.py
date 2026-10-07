@@ -5,6 +5,8 @@ from contextlib import contextmanager
 import requests
 import socket
 import logging
+import os
+import re
 import traceback
 from pathlib import Path
 import httpx
@@ -93,14 +95,44 @@ def capture():
     finally:CAPTURE.reset(token)
 
 
+def safe_message(error):
+    """Bounded operational message for private logs, never for health/state."""
+    try:text=str(error)
+    except Exception:return '[message unavailable]'
+    # Mask injected secrets before processing or truncating a message.
+    for name,value in os.environ.items():
+        if value and re.search(r'TOKEN|SECRET|PASSWORD|PRIVATE|AUTH|KEY|COOKIE',name,re.I):
+            text=text.replace(value,'[redacted]')
+    text=re.sub(r'-----BEGIN [^-]+-----.*?(?:-----END [^-]+-----|$)','[redacted]',text,flags=re.S)
+    text=re.sub(r'(?i)\b(?:https?|wss?|ftp)://[^\s\"\'<>]+','[url]',text)
+    text=re.sub(r'(?i)\b(?:bearer|basic)\s+[^\s,;]+','[redacted]',text)
+    text=re.sub(r"(?i)\b(?:authorization|cookie|password|passwd|token|secret|api[_-]?key|auth|p256dh|endpoint|user[_-]?id)\b[\"']?\s*[:=]\s*(?:\"[^\"]*\"|'[^']*'|[^\s,;]+)",'[redacted]',text)
+    # Payloads/headers are not needed to identify a failure.
+    text=re.sub(r'[\{<].*','[payload omitted]',text,flags=re.S)
+    text=re.sub(r'(?i)\b(?:TOKEN|SECRET)\b','[redacted]',text)
+    text=re.sub(r'(?<!\w)[A-Za-z0-9_+/=-]{24,}(?!\w)','[redacted]',text)
+    text=re.sub(r'(?:[A-Za-z]:\\|/)(?:[^\s\"\']+)','[path]',text)
+    text=re.sub(r'[^\s@]+@[^\s@]+','[redacted]',text)
+    text=' '.join(text.split())
+    return text[:240] or '[empty message]'
+
+
+def log_source(error,stage=None):
+    # Never log exception args, locals or traceback source lines directly.
+    safe_stage=stage if stage in ('PROVIDER','ANALYSIS','COMPANY_SITE','TASK') else 'ADAPTER'
+    seen=set();current=error
+    for depth in range(3):
+        if current is None or id(current) in seen:break
+        seen.add(id(current))
+        frames=traceback.extract_tb(current.__traceback__)[-5:]
+        logging.warning('[SOURCE_TRACE] stage=%s depth=%s error=%s code=%s message=%s frames=%s',
+            safe_stage,depth,type(current).__name__,describe(current,safe_stage)['code'],safe_message(current),
+            [(Path(f.filename).name,f.lineno,f.name) for f in frames])
+        current=current.__cause__ or (None if current.__suppress_context__ else current.__context__)
+
+
 def remember(error,stage=None):
     issues=CAPTURE.get()
     if issues is not None and not issues:
         issue=describe(error,stage);issues.append(issue)
-        # Swallowed analysis errors otherwise lose their original traceback at TaskIssue.
-        # Only source locations and exception types: no args, values, URLs or source lines.
-        frames=traceback.extract_tb(error.__traceback__)[-5:]
-        safe_stage=stage if stage in ('PROVIDER','ANALYSIS') else 'ADAPTER'
-        logging.warning('[SOURCE_TRACE] stage=%s error=%s code=%s frames=%s',
-            safe_stage,type(error).__name__,issue['code'],
-            [(Path(f.filename).name,f.lineno,f.name) for f in frames])
+        log_source(error,stage)

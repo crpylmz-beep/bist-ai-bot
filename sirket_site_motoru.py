@@ -270,8 +270,9 @@ class SirketSiteMotoru:
             except Deferred:
                 site.update(checked_at=self.stamp(),status='KESIF_DEVAM_EDIYOR',next_check_at=self.clock()+60)
             except Exception as error:
-                from gorev_hatalari import describe,strongest
+                from gorev_hatalari import describe,strongest,log_source
                 self.last_round_issue=strongest([self.last_round_issue,describe(error)]) if self.last_round_issue else describe(error)
+                log_source(error,'COMPANY_SITE')
                 failures=site.get('failures',0)+1
                 status=getattr(error,'status',getattr(getattr(error,'response',None),'status_code',None))
                 delay=min(86400,300*2**min(failures-1,8))
