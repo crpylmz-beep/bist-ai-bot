@@ -249,7 +249,9 @@ class WorkerTasks:
         details=getattr(self.company,'last_round_details',None)
         if getattr(self.company,'last_round_issue',None):
             progress=details['successful'] if isinstance(details,dict) else completed
-            raise TaskIssue(self.company.last_round_issue,progress,details)
+            raise TaskIssue(self.company.last_round_issue,progress,details,
+                isolated=getattr(self.company,'last_round_isolated',False) is True,
+                systemic=getattr(self.company,'last_round_systemic',False) is True)
         return {'updated':completed,'diagnostics':details} if isinstance(details,dict) else completed
 
     def intraday_performance(self):

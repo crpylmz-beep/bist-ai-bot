@@ -155,25 +155,31 @@ class AnaMotor:
                     elif isinstance(result,dict) and name=='push':
                         summary=f" {result.get('sent',0)} gönderildi / {result.get('failed',0)} hata"
                     if report:
-                        summary+=' '+ ' '.join(f'{key}={report.get(key,0)}' for key in ('processed','successful','skipped','unsupported','failed'))
+                        summary+=' '+ ' '.join(f'{key}={report.get(key,0)}' for key in ('processed','successful','skipped','unsupported','failed','tls_errors','http_errors','response_too_large','systemic_errors'))
                     if name != 'priority' or (result.get('diagnostics',{}).get('processed',0) if isinstance(result,dict) else result):
                         logging.info('[%s] %s %s%s', current.strftime('%H:%M:%S'), name.upper(),task_status, summary)
                     task.next_due = mono + task.interval
                 except Exception as error:
                     issue=describe(error)
-                    progressed=(isinstance(error,TaskIssue) and error.completed>0
+                    site_isolated=(name=='company_site' and isinstance(error,TaskIssue) and error.isolated
+                        and (issue['code'] in ('NETWORK_TLS','NETWORK_DNS','NETWORK_CONNECTION','NETWORK_TIMEOUT',
+                             'HTTP_UNAVAILABLE','HTTP_RATE_LIMIT','HTTP_BLOCKED','SOURCE_RESPONSE_TOO_LARGE','SOURCE_URL_INVALID')
+                             or (issue['code']=='HTTP_REQUEST' and issue.get('http_status') in (404,410))))
+                    systemic=(name=='company_site' and isinstance(error,TaskIssue) and error.systemic
+                        and issue['code'] in ('NETWORK_TLS','NETWORK_DNS','NETWORK_CONNECTION','NETWORK_TIMEOUT','HTTP_UNAVAILABLE','HTTP_RATE_LIMIT'))
+                    progressed=(not systemic and isinstance(error,TaskIssue) and error.completed>0
                                 and (issue['category'] in ('REMOTE','SOURCE_DATA')
                                      or (name=='company_site' and issue['code']=='NETWORK_TLS')))
                     # Keep partial progress moving, but retain the failure counter
                     # and DEGRADED issue; never treat the failed stocks as successful.
                     task.failures += 1
-                    exponent=0 if progressed else min(task.failures-1,6)
+                    exponent=0 if progressed or site_isolated else min(task.failures-1,6)
                     delay = min(900, max(5,task.interval) * 2 ** exponent)
-                    if progressed and name=='company_site':delay=min(delay,30)
+                    if (progressed or site_isolated) and name=='company_site':delay=min(delay,30)
                     task.next_due = mono + delay
                     detail = {'task':name, 'error':type(error).__name__, 'at':current.isoformat(timespec='seconds'),'last_error':issue}
                     self.state['son_hata'] = detail
-                    status='DEGRADED' if progressed else 'RETRYING' if issue['category'] in ('REMOTE','SOURCE_DATA') else 'ERROR'
+                    status='DEGRADED' if progressed or site_isolated or (systemic and error.completed>0) else 'RETRYING' if issue['category'] in ('REMOTE','SOURCE_DATA') else 'ERROR'
                     self.state['tasks'][name] = {'status':status, 'failures':task.failures, 'retry_in_seconds':delay, 'completed':error.completed if isinstance(error,TaskIssue) else 0, **detail,**({'diagnostics':error.details} if isinstance(error,TaskIssue) and error.details else {})}
                     logging.warning('[%s] %s %s code=%s category=%s retry=%ss',current.strftime('%H:%M:%S'),name.upper(),status,issue['code'],issue['category'],delay)
                     if not isinstance(error,TaskIssue):log_source(error,'TASK')

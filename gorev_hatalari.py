@@ -26,6 +26,7 @@ ERRORS={
  'HTTP_REQUEST':('CONFIG','Dış kaynak isteği veya endpoint doğrulanmalı.',False),
  'OUTSIDE_EQUITY_UNIVERSE':('SOURCE_DATA','Sembol resmî XUTUM pay tarama evreninde değil.',True),
  'PROVIDER_UNSUPPORTED':('SOURCE_DATA','TradingView bu sembolü desteklemiyor (invalid symbol).',True),
+ 'SOURCE_URL_INVALID':('SOURCE_DATA','Şirket kaynağı URL/yönlendirme güvenlik kuralını karşılamıyor.',True),
  'SOURCE_RESPONSE_TOO_LARGE':('SOURCE_DATA','Dış kaynak yanıtı güvenli boyut sınırını aştı; indirme durduruldu.',True),
  'PROVIDER_API_ERROR':('REMOTE','Fiyat sağlayıcısı isteği başarısız; kaynak hata konumu loglarda.',True),
  'NETWORK_TLS':('CONFIG','Dış kaynak TLS bağlantısı doğrulanamadı.',False),
@@ -53,7 +54,7 @@ def public_issue(value):
 def diagnostics(value):
     if not isinstance(value,dict):return {}
     result={k:max(0,min(v,100000)) for k,v in value.items()
-            if k in ('processed','successful','skipped','unsupported','failed')
+            if k in ('processed','successful','skipped','unsupported','failed','tls_errors','http_errors','response_too_large','systemic_errors')
             and isinstance(v,int) and not isinstance(v,bool)}
     rows=value.get('reasons',[])
     if not isinstance(rows,list):rows=[]
@@ -72,7 +73,9 @@ def describe(error,stage=None):
     if isinstance(error,TaskIssue):return public_issue(error.issue)
     status=getattr(error,'status',None) or getattr(error,'status_code',None) or getattr(getattr(error,'response',None),'status_code',None)
     code='TASK_ERROR'
-    if isinstance(error,ResponseLimitError):code='SOURCE_RESPONSE_TOO_LARGE'
+    if stage=='COMPANY_SITE' and isinstance(error,(requests.exceptions.InvalidURL,requests.exceptions.TooManyRedirects)):code='SOURCE_URL_INVALID'
+    elif isinstance(error,SiteUrlError):code='SOURCE_URL_INVALID'
+    elif isinstance(error,ResponseLimitError):code='SOURCE_RESPONSE_TOO_LARGE'
     elif isinstance(error,OSError) and error.errno in (errno.ENOSPC,errno.EDQUOT):code='DISK_FULL'
     elif isinstance(error,OSError) and error.errno in (errno.EACCES,errno.EPERM):code='STORAGE_PERMISSION'
     elif isinstance(error,requests.exceptions.SSLError):code='NETWORK_TLS'
@@ -102,13 +105,18 @@ def describe(error,stage=None):
     return public_issue({'code':code,'http_status':status})
 
 
+class SiteUrlError(ValueError):
+    pass
+
+
 class ResponseLimitError(Exception):
     pass
 
 
 class TaskIssue(RuntimeError):
-    def __init__(self,issue,completed=0,details=None):
+    def __init__(self,issue,completed=0,details=None,isolated=False,systemic=False):
         self.issue=public_issue(issue);self.completed=completed;self.details=diagnostics(details)
+        self.isolated=isolated;self.systemic=systemic
         super().__init__(self.issue['code'])
 
 
