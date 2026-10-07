@@ -149,3 +149,23 @@ class TaskDiagnosticsTests(unittest.TestCase):
   motor=self.fail_task(RuntimeError('unique diagnostic sentence'))
   with patch('ana_motor.istanbul_now',return_value=self.now):value=health_snapshot(self.location.runtime)
   self.assertNotIn('unique diagnostic sentence',json.dumps(value));self.assertEqual(value['tasks']['kap']['last_error']['code'],'TASK_ERROR')
+
+ def test_repeated_partial_provider_errors_do_not_starve_other_batches(self):
+  error=TaskIssue({'code':'PROVIDER_UNSUPPORTED'},completed=2)
+  motor=self.fail_task(error,name='full_scan');motor.stop.set()
+  for attempt in range(2,8):
+   future=Future();future.set_exception(error);motor.tasks['full_scan'].future=future;motor.tick()
+   task=motor.state['tasks']['full_scan']
+   self.assertEqual(task['status'],'DEGRADED');self.assertEqual(task['failures'],attempt)
+   self.assertEqual(task['retry_in_seconds'],30);self.assertEqual(task['completed'],2)
+   self.assertEqual(task['last_error']['code'],'PROVIDER_UNSUPPORTED')
+ def test_total_provider_outage_keeps_exponential_backoff(self):
+  error=TaskIssue({'code':'PROVIDER_API_ERROR'})
+  motor=self.fail_task(error,name='priority');motor.stop.set()
+  future=Future();future.set_exception(error);motor.tasks['priority'].future=future;motor.tick()
+  task=motor.state['tasks']['priority'];self.assertEqual(task['failures'],2);self.assertEqual(task['retry_in_seconds'],10);self.assertEqual(task['status'],'RETRYING')
+ def test_partial_progress_does_not_hide_critical_storage_or_code_failure(self):
+  for code in ('DISK_FULL','CODE_ERROR'):
+   motor=self.fail_task(TaskIssue({'code':code},completed=1),name='full_scan');motor.stop.set()
+   future=Future();future.set_exception(TaskIssue({'code':code},completed=1));motor.tasks['full_scan'].future=future;motor.tick()
+   task=motor.state['tasks']['full_scan'];self.assertEqual(task['status'],'ERROR');self.assertEqual(task['failures'],2);self.assertEqual(task['retry_in_seconds'],60)

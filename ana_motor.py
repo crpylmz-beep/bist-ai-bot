@@ -155,14 +155,19 @@ class AnaMotor:
                         logging.info('[%s] %s OK%s', current.strftime('%H:%M:%S'), name.upper(), summary)
                     task.next_due = mono + task.interval
                 except Exception as error:
-                    task.failures += 1
-                    delay = min(900, max(5,task.interval) * 2 ** min(task.failures-1,6))
-                    task.next_due = mono + delay
                     issue=describe(error)
+                    progressed=(isinstance(error,TaskIssue) and error.completed>0
+                                and issue['category'] in ('REMOTE','SOURCE_DATA'))
+                    # Keep partial progress moving, but retain the failure counter
+                    # and DEGRADED issue; never treat the failed stocks as successful.
+                    task.failures += 1
+                    exponent=0 if progressed else min(task.failures-1,6)
+                    delay = min(900, max(5,task.interval) * 2 ** exponent)
+                    task.next_due = mono + delay
                     detail = {'task':name, 'error':type(error).__name__, 'at':current.isoformat(timespec='seconds'),'last_error':issue}
                     self.state['son_hata'] = detail
                     status=('DEGRADED' if isinstance(error,TaskIssue) and error.completed else 'RETRYING') if issue['category'] in ('REMOTE','SOURCE_DATA') else 'ERROR'
-                    self.state['tasks'][name] = {'status':status, 'failures':task.failures, 'retry_in_seconds':delay, **detail}
+                    self.state['tasks'][name] = {'status':status, 'failures':task.failures, 'retry_in_seconds':delay, 'completed':error.completed if isinstance(error,TaskIssue) else 0, **detail}
                     logging.warning('[%s] %s %s code=%s category=%s retry=%ss',current.strftime('%H:%M:%S'),name.upper(),status,issue['code'],issue['category'],delay)
                     if not isinstance(error,TaskIssue):log_source(error,'TASK')
                     # Stack locations only: never format exception args or source lines containing secrets.
