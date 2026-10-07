@@ -23,3 +23,13 @@ Yeni dosya geçmişi/backup yok; capture context sadece çağrı süresince RAM'
 ## Production doğrulaması
 
 Yeni deploy sonrası her beş görev için /health `last_error.code` ve Logs code/category/stack konumu paylaşılmalı. DISK_FULL ise gerçek kalıcı dosyaları silmek yerine volume büyütülmelidir. REMOTE kodları provider erişim sorunudur; yeni retry ile düzelmesi beklenir. CODE_ERROR veya STORAGE_PERMISSION için stack konumu/ilgili kaynak ve konfigürasyon üzerinden ikinci hedefli düzeltme gerekir. Loglar görülmeden beş production hatasının tümünün giderildiği söylenemez.
+
+## 5 GB volume sonrası sağlayıcı teşhisi
+
+Kullanıcının production health gözleminde STORAGE hataları kalktı; bu ortam production mount veya Railway loglarına erişemiyor. priority/full_scan için TASK_ERROR tek başına TradingView arızasını kanıtlamaz.
+
+Borsapy 0.11.0 `Ticker.history` TradingView providerını kullanır. Provider WebSocket hatasını veya veri gelmemesini `APIError` ile yükseltir; önceki sınıflandırıcı bu özel sınıfı tanımadığından TASK_ERROR üretir. Artık APIError ve status_code, rate limit, authentication, missing data, invalid period/interval ile httpx timeout/network türleri açık sınıflandırılır. APIError'ın bilinen cause'u varsa korunur; mesaj üzerinden tahmin yapılmaz. Nedeni daha daraltılamayan APIError, PROVIDER_API_ERROR olarak retry edilir, OK sayılmaz. Generic RuntimeError UNKNOWN kalır.
+
+`[SOURCE_TRACE]` alt analiz/sağlayıcı fonksiyonunda yakalanan hatanın türünü, aşamasını ve son beş dosya/line/function konumunu kaydeder. Ham mesajlar, kaynak satırları, locals ve URL/token yazılmaz. Böylece TaskIssue üst katmanda yalnız adapter konumunu göstermiş olsa bile asıl hata konumu bulunabilir.
+
+Company site NETWORK_CONNECTION requests bağlantı hatasıdır; geçici olup olmadığı veya hangi domain'in erişilemediği production logları olmadan belirlenemez. DNS ve TLS hataları ayrı kodlanır. Site başına backoff ve checkpoint değişmez. Bu güncelleme bağlantı sağlayıcısını, analiz skorlarını, snapshotları veya disk temizleme mekanizmasını değiştirmez.

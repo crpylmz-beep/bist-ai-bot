@@ -86,3 +86,37 @@ class TaskDiagnosticsTests(unittest.TestCase):
   with patch.object(worker.live,'tek_hisse_guncelle',return_value=('BBB',None)):
    with self.assertRaises(TaskIssue):worker.bootstrap()
   marker=json.loads((worker.directory/'public_bootstrap_complete.json').read_text());self.assertEqual(marker['status'],'DEGRADED')
+ def test_borsapy_api_error_is_not_unknown_or_ok(self):
+  from borsapy.exceptions import APIError
+  motor=self.fail_task(TaskIssue(describe(APIError('secret URL TOKEN'))),name='priority')
+  task=motor.state['tasks']['priority'];self.assertEqual(task['status'],'RETRYING');self.assertEqual(task['last_error']['code'],'PROVIDER_API_ERROR');self.assertNotIn('TOKEN',json.dumps(task))
+ def test_borsapy_api_http_status_and_wrapped_timeout(self):
+  from borsapy.exceptions import APIError
+  import httpx
+  self.assertEqual(describe(APIError('secret',status_code=429))['code'],'HTTP_RATE_LIMIT')
+  try:
+   try:raise httpx.ConnectTimeout('secret')
+   except httpx.ConnectTimeout as cause:raise APIError('secret') from cause
+  except APIError as error:self.assertEqual(describe(error)['code'],'NETWORK_TIMEOUT')
+ def test_provider_missing_data_and_invalid_config_are_distinct(self):
+  from borsapy.exceptions import DataNotAvailableError,InvalidPeriodError
+  self.assertEqual(describe(DataNotAvailableError('secret'))['code'],'PROVIDER_DATA')
+  self.assertEqual(describe(InvalidPeriodError('secret'))['code'],'PROVIDER_CONFIG')
+ def test_source_trace_preserves_location_without_exception_contents(self):
+  def broken():raise RuntimeError('TOKEN https://private/?key=SECRET')
+  with self.assertLogs(level='WARNING') as logs:
+   with capture() as issues:
+    try:broken()
+    except RuntimeError as error:remember(error,'ANALYSIS')
+  output=' '.join(logs.output);self.assertIn('broken',output);self.assertIn('RuntimeError',output);self.assertNotIn('TOKEN',output);self.assertNotIn('SECRET',output)
+  self.assertEqual(issues[0]['code'],'TASK_ERROR')
+ def test_full_scan_provider_errors_retain_source_reason(self):
+  from borsapy.exceptions import APIError
+  worker=self.worker();worker.symbols=['AAA'];worker.batch_size=1
+  with patch.object(worker.live,'tek_hisse_guncelle',side_effect=APIError('secret')):
+   with self.assertRaises(TaskIssue) as error:worker.full_scan()
+  self.assertEqual(error.exception.issue['code'],'PROVIDER_API_ERROR');self.assertEqual(worker.cursor,1);self.assertIn('AAA',worker.events)
+ def test_dns_and_tls_are_not_generic_connection(self):
+  import socket
+  self.assertEqual(describe(socket.gaierror('secret'))['code'],'NETWORK_DNS')
+  self.assertEqual(describe(requests.exceptions.SSLError('secret'))['code'],'NETWORK_TLS')
