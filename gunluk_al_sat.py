@@ -308,7 +308,7 @@ def api_report(query,location=None,current=None):
     for row in rows:
         category='IZLE' if not row['live_signal'] else {'AL_ADAYI':'AL','SAT_ADAYI':'SAT'}.get(row['signal'],'IZLE')
         groups[category].append(row)
-    return dict(report,enabled=True,signals=rows,groups=groups)
+    return dict(report,enabled=True,market_open=market_open(current),signals=rows,groups=groups)
 
 
 def stock_signal(stock,location=None):

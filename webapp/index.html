@@ -424,6 +424,25 @@ body{height:100vh;height:100dvh;background:#111827;overflow:hidden;display:flex;
     #homePage .update-time{padding:6px 12px;overflow-wrap:anywhere}
 }
 @media(min-width:700px){.bottom-nav{left:auto;right:auto;transform:none;align-self:center}}
+
+:root{--daily-positive:#16a34a;--daily-negative:#dc2626;--daily-neutral:#687386;--daily-border:#d7dde5;--daily-warning:#854d0e}
+.bottom-nav{grid-template-columns:repeat(6,minmax(0,1fr))}
+#dailyPage{font-size:15px}
+.daily-toolbar,.daily-tabs{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}
+.daily-toolbar label{flex:1;min-width:120px}
+.daily-toolbar select,#dailyHorizon{display:block;width:100%;min-height:44px;border:1px solid var(--daily-border);border-radius:8px;background:white;color:inherit;font:inherit}
+.daily-tabs button{flex:1;min-height:48px;border:1px solid var(--daily-border);border-radius:10px;background:white;font:inherit}
+.daily-tabs button[aria-selected="true"]{font-weight:700;border:2px solid var(--daily-neutral)}
+.daily-card{border-left:4px solid var(--daily-neutral);overflow-wrap:anywhere}
+.daily-AL{border-left-color:var(--daily-positive)}.daily-SAT{border-left-color:var(--daily-negative)}
+.daily-card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.daily-card-head button{background:transparent;border:0;color:inherit;min-height:44px;font:inherit;font-weight:700;text-align:left}
+.daily-score{margin:12px 0}.daily-score progress{display:block;width:100%;height:10px;accent-color:var(--daily-neutral)}
+.daily-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.daily-metrics span,.daily-metrics strong{display:block}
+.daily-warning{color:var(--daily-warning);font-weight:600}.daily-badge{border:1px solid var(--daily-border);border-radius:8px;padding:8px}
+#dailyPage summary{cursor:pointer;min-height:44px;padding:12px 0}.daily-loading{padding:30px;background:white;border-radius:12px}
+#dailyCards{display:grid;gap:14px}#dailyCards .detail-card{margin:0}
+@media(min-width:900px){#dailyCards{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
 </head>
 
@@ -783,6 +802,16 @@ body{height:100vh;height:100dvh;background:#111827;overflow:hidden;display:flex;
 </div>
 
 
+<div id="dailyPage" class="page" style="display:none">
+ <div class="header"><h1>GÜNLÜK AL/SAT</h1><p>5 dakikalık gerçek piyasa verileriyle gün içi teknik fırsatlar</p></div>
+ <div class="section"><p id="dailyMarket" role="status"></p><p id="dailyUpdated"></p>
+ <div class="daily-toolbar">
+ <label>Minimum Güven<select id="dailyConfidence" onchange="gunlukGoster()"><option value="0">Tümü</option><option>50</option><option>60</option><option>70</option><option>80</option><option>90</option></select></label>
+ <label>Minimum Teknik Güç<select id="dailyTechnical" onchange="gunlukGoster()"><option value="0">Tümü</option><option>50</option><option>60</option><option>70</option><option>80</option><option>90</option></select></label>
+ <label>Teyit seviyesi<select id="dailyConfirmation" onchange="gunlukGoster()"><option value="0">Tümü</option><option value="4">Orta ve üzeri</option><option value="6">Güçlü ve üzeri</option><option value="8">Çok Güçlü</option></select></label></div>
+ <div class="daily-tabs" role="tablist" aria-label="Günlük AL/SAT adayları"><button role="tab" aria-controls="dailyCards" id="dailyTabAL" onclick="gunlukSekme('AL')">AL Adayları</button><button role="tab" aria-controls="dailyCards" id="dailyTabSAT" onclick="gunlukSekme('SAT')">SAT Adayları</button><button role="tab" aria-controls="dailyCards" id="dailyTabIZLE" onclick="gunlukSekme('IZLE')">İzle</button></div>
+ <div id="dailyCards" role="tabpanel" aria-live="polite"></div><section id="dailyPerformance" class="detail-card" aria-label="Günlük AL/SAT Performans"></section></div>
+</div>
 <!-- ALT MENÜ -->
 <div class="bottom-nav">
 
@@ -793,6 +822,7 @@ body{height:100vh;height:100dvh;background:#111827;overflow:hidden;display:flex;
         Ana Sayfa
     </button>
 
+    <button id="navDaily" class="nav-btn" onclick="showDaily()"><span class="nav-icon">↗</span>Günlük AL/SAT</button>
     <button id="navScanner"
             class="nav-btn"
             onclick="goScanner()">
@@ -1034,6 +1064,8 @@ function sayilariGuncelle(){
 /* SAYFA GİZLE */
 
 function tumSayfalariGizle(){
+    clearInterval(gunlukUI.timer);gunlukUI.timer=null;
+    document.getElementById("dailyPage").style.display="none";
 
     clearInterval(gunIciFreshnessTimer);
     clearInterval(fiyatAlarmTimer);
@@ -2647,6 +2679,80 @@ function hisseDetay(hisse){
 let seviyeContext = null;
 let fiyatAlarmTimer = null;
 
+/* Günlük AL/SAT: presentation only; backend order and values are preserved. */
+let gunlukUI={report:null,tab:'AL',busy:false,error:false,timer:null,performance:null,performanceError:false,horizon:'60m'};
+const gunlukStates={YENI_AL:'Yeni AL',AL_DEVAM:'AL Devam',ZAYIFLIYOR:'Zayıflıyor',SAT_DONUS:"SAT’a Döndü",YENI_SAT:'Yeni SAT',SAT_DEVAM:'SAT Devam',TOPARLANIYOR:'Toparlanıyor',IZLE:'İzle'};
+const gunlukBreakout={CONFIRMED:'Hacimli kırılım gerçekleşti',WEAK_CONFIRMATION:'Fiyat kırdı, hacim teyidi zayıf',WAITING:'Hacimli kırılım bekleniyor'};
+function gunlukNum(value,digits=2){return typeof value==='number' && Number.isFinite(value) ? value.toLocaleString('tr-TR',{maximumFractionDigits:digits,minimumFractionDigits:digits}) : '—';}
+function gunlukSaat(value){const d=new Date(value || '');return Number.isNaN(d.getTime())?'—':d.toLocaleTimeString('tr-TR',{timeZone:'Europe/Istanbul',hour:'2-digit',minute:'2-digit'});}
+function gunlukYas(value){if(typeof value!=='number'||!Number.isFinite(value)||value<0)return '—';const m=Math.floor(value);return m<60?m+' dk':Math.floor(m/60)+' sa '+m%60+' dk';}
+function gunlukKart(row,detail=false){
+ const esc=yarinMetin,side=row.signal==='AL_ADAYI'?'AL':row.signal==='SAT_ADAYI'?'SAT':'IZLE';
+ const level={ZAYIF:'Zayıf',ORTA:'Orta',GUCLU:'Güçlü',COK_GUCLU:'Çok Güçlü'}[row.confirmation_level]||'—';
+ const quality={GOOD:'İyi',LIMITED:'Sınırlı',INSUFFICIENT:'Yetersiz'}[row.data_quality]||'—';
+ const liquidity={GOOD:'İyi',LOW:'Düşük',INSUFFICIENT:'Yetersiz',LIMITED:'Sınırlı',UNKNOWN:'Bilinmiyor'}[row.liquidity_status]||'—';
+ const metric=(label,value)=>`<div><span>${esc(label)}</span><strong>${esc(value)}</strong></div>`;
+ const bar=(label,value)=>`<div class="daily-score">${esc(label)} <strong>${gunlukNum(value,0)}/100</strong><progress max="100" value="${typeof value==='number'&&Number.isFinite(value)?Math.min(100,Math.max(0,value)):0}" aria-label="${label}"></progress></div>`;
+ const texts=(title,values)=>Array.isArray(values)&&values.length?`<h4>${title}</h4><ul>${values.map(x=>'<li>'+esc(x)+'</li>').join('')}</ul>`:'';
+ const levels=side==='AL'?`<div class="daily-metrics">${metric('Alım Bölgesi',row.buy_zone_low!=null&&row.buy_zone_high!=null?gunlukNum(row.buy_zone_low)+' – '+gunlukNum(row.buy_zone_high):'Yeterli veri yok')}${metric('Kâr Al',row.take_profit==null?'Yeterli veri yok':gunlukNum(row.take_profit))}${metric('Stop',row.stop_loss==null?'Yeterli veri yok':gunlukNum(row.stop_loss))}${metric('Risk/Getiri',gunlukNum(row.risk_reward_ratio,1))}</div>`:'';
+ const boll=row.Bollinger||{};
+ return `<article class="detail-card daily-card daily-${side}" aria-label="${esc(row.symbol)} ${side}">
+ <div class="daily-card-head">${detail?'<b>'+esc(row.symbol)+'</b>':`<button type="button" data-daily-stock="${esc(row.symbol)}">${esc(row.symbol)} · Detay ›</button>`}<b>${side==='IZLE'?'İZLE':side+' ADAYI'}</b></div>
+ <p>Son gerçek fiyat: <strong>${gunlukNum(row.price)} TL</strong>${row.live_signal===false?' · Son kayıt / canlı sinyal değil':''}</p>
+ ${bar('Teknik Güç',row.technical_score)}${bar('Güven',row.confidence_score)}
+ <p>Teyit ${gunlukNum(row.confirmation_count,0)}/${gunlukNum(row.confirmation_total,0)} — ${level} Teyit</p>
+ <p>Sinyal: ${esc(gunlukStates[row.signal_state]||'—')} · Yaş: ${gunlukYas(row.signal_age_minutes)}<br>Son güncelleme: ${gunlukSaat(row.last_updated_at||row.data_timestamp)}</p>
+ <p>Veri kalitesi: ${quality}</p>
+ ${row.stale?'<p class="daily-warning">Eski veri — canlı fırsat değildir.</p>':''}
+ ${row.data_quality==='INSUFFICIENT'?'<p class="daily-warning">Yetersiz veri: fırsat olarak değerlendirilmemeli.</p>':''}
+ ${row.liquidity_status&&row.liquidity_status!=='GOOD'?'<p class="daily-warning">Likidite teyidi yetersiz.</p>':''}
+ ${row.extended_move_penalty>0?'<p class="daily-warning">Aşırı uzama riski</p>':''}
+ ${levels}<p class="daily-badge">${esc(gunlukBreakout[row.breakout_status]||'Kırılım verisi yok')}</p>
+ <details><summary>Teknik detay ve gerekçeler</summary><div class="daily-metrics">
+ ${[['VWAP',row.VWAP],['EMA9',row.EMA9],['EMA21',row.EMA21],['RSI',row.RSI],['MACD',row.MACD],['Hacim / ortalama',row.volume_ratio],['OBV',row.OBV],['Bollinger alt',boll.lower],['Bollinger orta',boll.middle],['Bollinger üst',boll.upper],['ATR',row.ATR]].map(([k,v])=>metric(k,gunlukNum(v))).join('')}
+ ${metric('Likidite',liquidity)}</div>${texts(side==='AL'?'Neden AL?':side==='SAT'?'Neden SAT?':'Teknik Durum',row.reasons)}${texts('Dikkat',row.warnings)}</details></article>`;
+}
+function gunlukFiltre(rows){const val=id=>Number(document.getElementById(id)?.value||0);return rows.filter(r=>r.confidence_score>=val('dailyConfidence')&&r.technical_score>=val('dailyTechnical')&&r.confirmation_count>=val('dailyConfirmation'));}
+function gunlukGoster(){
+ const report=gunlukUI.report,target=document.getElementById('dailyCards');
+ document.getElementById('dailyMarket').textContent=report?.market_open===true?'Piyasa Açık':report?.market_open===false?'Piyasa şu anda kapalı':'Piyasa durumu alınamadı';
+ document.getElementById('dailyUpdated').textContent='Son güncelleme: '+gunlukSaat(report?.updated_at);
+ if(gunlukUI.error){target.innerHTML='<p role="alert">Günlük AL/SAT verileri şu anda alınamıyor.</p>';return;}
+ if(!report){target.innerHTML='<p role="status" class="daily-loading">Günlük AL/SAT yükleniyor…</p>';return;}
+ if(report.enabled===false){target.innerHTML='<p>Günlük AL/SAT şu anda devre dışı.</p>';return;}
+ const groups={AL:[],SAT:[],IZLE:[]};
+ for(const r of gunlukFiltre(report.signals||[])){const key=r.signal==='AL_ADAYI'?'AL':r.signal==='SAT_ADAYI'?'SAT':'IZLE';groups[key].push(r);}
+ for(const key of Object.keys(groups)){const b=document.getElementById('dailyTab'+key);b.textContent=({AL:'AL Adayları',SAT:'SAT Adayları',IZLE:'İzle'})[key]+' ('+groups[key].length+')';b.setAttribute('aria-selected',String(key===gunlukUI.tab));}
+ const rows=groups[gunlukUI.tab];target.innerHTML=rows.length?rows.map(r=>gunlukKart(r)).join(''):'<p>'+ (report.market_open===false?'Piyasa şu anda kapalı. Son kayıtları İzle sekmesinde görebilirsiniz.':gunlukUI.tab==='IZLE'?'Şu anda izlenecek kayıt bulunmuyor.':'Şu anda kriterleri karşılayan '+gunlukUI.tab+' adayı bulunmuyor.')+'</p>';
+ target.querySelectorAll('[data-daily-stock]').forEach(b=>b.addEventListener('click',()=>gunlukDetay(b.dataset.dailyStock)));
+}
+function gunlukSekme(tab){if(!['AL','SAT','IZLE'].includes(tab))return;gunlukUI.tab=tab;gunlukGoster();}
+function gunlukDetay(symbol){const row=gunlukUI.report?.signals.find(r=>r.symbol===symbol);if(!row)return;oncekiSayfa='daily';const existing=tumVeriler.find(r=>(r.sembol||r.symbol||r.kod)===symbol);hisseDetay(existing||{sembol:symbol,fiyat:row.price});}
+function gunlukPerformansGoster(){
+ const target=document.getElementById('dailyPerformance');
+ if(gunlukUI.performanceError){target.textContent='Performans verileri şu anda alınamıyor.';return;}
+ const groups=gunlukUI.performance?.groups||[];const stats=groups.filter(g=>g.period==='all_time'&&g.horizon===gunlukUI.horizon&&g.min_confidence===0);
+ const horizons={'30m':'30 dk','60m':'60 dk','120m':'120 dk',SEANS:'Seans Sonu',D1:'D+1',D3:'D+3'};
+ target.innerHTML='<h3>Performans · Doğrulanmış sonuçlar</h3><label>Ölçüm ufku <select id="dailyHorizon">'+Object.entries(horizons).map(([k,v])=>`<option value="${k}" ${k===gunlukUI.horizon?'selected':''}>${v}</option>`).join('')+'</select></label>'+['AL','SAT'].map(side=>{
+ const entries=stats.filter(g=>g.signal===side);
+ return entries.length ? entries.map(g=>{const s=g.summary;const sideLabel=side+' · '+(gunlukStates[g.state]||'—');
+ if(!s)return '<p>'+side+': Performans için veri birikiyor.</p>';
+ const pct=v=>typeof v==='number'?gunlukNum(v*100)+'%':'—';
+ return '<h4>'+yarinMetin(sideLabel)+'</h4><p>Tamamlanan sinyal: '+gunlukNum(s.completed_count,0)+'</p>'+(s.sample_size>=30&&s.sufficient?'<p>Başarı oranı: '+pct(s.success_rate)+' · Ortalama yön getirisi: '+gunlukNum(s.mean_direction_return)+'%</p>':'<p>Performans için veri birikiyor.</p>')+'<details><summary>Ölçüm ayrıntıları</summary><p>Örnek: '+gunlukNum(s.sample_size,0)+' · Güvenilirlik: '+yarinMetin({LOW:'Düşük',MEDIUM:'Orta',HIGH:'Yüksek'}[s.reliability]||'Yetersiz')+' (30 / 100 / 300)</p><p>MFE: '+gunlukNum(s.mean_MFE)+'% · MAE: '+gunlukNum(s.mean_MAE)+'%</p><p>Hedef: '+pct(s.target_hit_rate)+' · Stop: '+pct(s.stop_hit_rate)+'</p></details>';
+ }).join('') : '<p>'+side+': Performans için veri birikiyor.</p>';
+ }).join('');
+ document.getElementById('dailyHorizon').addEventListener('change',e=>{gunlukUI.horizon=e.target.value;gunlukPerformansYukle();});
+}
+async function gunlukPerformansYukle(){try{gunlukUI.performance=await seviyeApi('/api/intraday-signal-performance?period=all_time&horizon='+encodeURIComponent(gunlukUI.horizon));gunlukUI.performanceError=false;}catch(_){gunlukUI.performanceError=true;}gunlukPerformansGoster();}
+async function gunlukYenile(){
+ if(gunlukUI.busy||document.hidden||document.getElementById('dailyPage').style.display==='none')return;
+ gunlukUI.busy=true;
+ try{const report=await seviyeApi('/api/intraday-signals?limit=1000');if(!Array.isArray(report.signals)||typeof report.enabled!=='boolean')throw new Error('contract');gunlukUI.report=report;gunlukUI.error=false;}catch(_){gunlukUI.error=true;}finally{gunlukUI.busy=false;gunlukGoster();}
+ if(gunlukUI.report?.enabled!==false){await gunlukPerformansYukle();}
+ else document.getElementById('dailyPerformance').textContent='';
+}
+function showDaily(){tumSayfalariGizle();document.getElementById('dailyPage').style.display='block';oncekiSayfa='daily';navAktif('navDaily');gunlukGoster();gunlukYenile();gunlukUI.timer=setInterval(gunlukYenile,60000);document.onvisibilitychange=()=>{if(!document.hidden)gunlukYenile();};}
+
 function kullaniciSeviyeBolumu(){
     const input = (key, label) => `<label>${label}<input id="${key}" type="number" min="0.01" step="any" inputmode="decimal" placeholder="--"></label>`;
     return `<section class="detail-card" id="userLevelsSection">
@@ -2896,6 +3002,9 @@ async function kullaniciSeviyeYukle(context){
     const data = await seviyeApi(`/api/stocks/${encodeURIComponent(context.stock)}?model=${context.model}`);
     if(context !== seviyeContext) return;
     context.otomatik = data.otomatik || {};
+    let daily=document.getElementById("stockDailySignal");
+    if(!daily){daily=document.createElement("section");daily.id="stockDailySignal";document.getElementById("stockDetail").appendChild(daily);}
+    daily.innerHTML=data.intraday_signal ? "<h3>Günlük AL/SAT</h3>"+gunlukKart(data.intraday_signal,true) : "";
     document.getElementById("automaticLevels").innerHTML = nihaiKararGoster(data.nihai_karar || context.otomatik.nihai_karar || data.ai_ozet?.nihai_karar) + otomatikSeviyeGoster(context.otomatik) + ortakAiGoster(data.ai_ozet);
     for(const field of ["manuel_al", "manuel_sat", "manuel_stop", "manuel_hedef"]){
         document.getElementById(field).value = data.manuel?.[field] ?? "";
@@ -3002,7 +3111,8 @@ function detayKutu(label,value){
 
 function stockBack(){
 
-    if(oncekiSayfa === "top10"){
+    if(oncekiSayfa === "daily"){showDaily();}
+    else if(oncekiSayfa === "top10"){
         showTop10();
     }
     else if(oncekiSayfa === "search"){

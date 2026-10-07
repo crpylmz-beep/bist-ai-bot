@@ -124,6 +124,14 @@ class IntradayTests(unittest.TestCase):
     def test_closed_market(self):
         self.now=self.now.replace(hour=20);provider=Mock();self.assertTrue(self.engine(provider=provider).one_round()['skipped']);provider.assert_not_called()
     def test_api_filters(self):self.engine().one_round();report=module.api_report({'signal':['AL'],'min_confidence':['60'],'limit':['1']},self.location,self.now);self.assertEqual(len(report['groups']['AL']),1)
+    def test_api_market_status_without_rows(self):
+        self.engine().one_round()
+        for opened in (True, False):
+            with patch('ana_motor.market_open', return_value=opened):
+                report=module.api_report({'min_confidence':['100']},self.location,self.now)
+            self.assertEqual(report['signals'],[])
+            self.assertEqual(report['market_open'],opened)
+
     def test_invalid_filters(self):
         for query in ({'signal':['BAD']},{'limit':['0']},{'min_confidence':['nan']},{'limit':['1','2']},{'path':['private']}):
             with self.assertRaises(RecordError) as error:module.api_report(query,self.location,self.now)
