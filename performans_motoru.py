@@ -502,7 +502,9 @@ class PerformansMotoru:
             # before taking model/report locks to avoid an inverse lock order.
             if need_report:
                 self.reports(history['kayitlar'],current);state['last_report']=current.isoformat()
-            state['updated_at']=current.isoformat();atomic_json(self.state_path,state);atomic_json(self.cache_path,cache)
+            from disk_koruma import trim_price_cache,save_price_cache
+            cache=trim_price_cache(cache,current.date())
+            state['updated_at']=current.isoformat();atomic_json(self.state_path,state);save_price_cache(self.cache_path,cache)
         return {'kontrol_edilen':processed,'tamamlanan_vade':changed,'sembol_sayisi':len(symbols),'hatalar':errors}
 
 

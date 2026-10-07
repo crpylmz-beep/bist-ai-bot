@@ -6,6 +6,8 @@ import os
 import re
 import shutil
 import tempfile
+import errno
+import logging
 
 ROOT = Path(__file__).resolve().parent
 PRIVATE_NAMES = {'kullanici_seviyeleri.json', 'fiyat_alarmlari.json',
@@ -90,9 +92,28 @@ def archive_dir(repo_root=None):
 
 def copy_new(source, target):
     """Byte-preserving atomic create, never overwrite a live file or archive."""
-    if source.is_symlink() or not source.is_file():return False
-    target.parent.mkdir(parents=True,exist_ok=True,mode=0o700)
-    fd,temporary=tempfile.mkstemp(prefix='.migration-',dir=target.parent)
+    source,target=Path(source),Path(target)
+    if target.exists() or target.is_symlink() or source.is_symlink() or not source.is_file():return False
+    try:
+        target.parent.mkdir(parents=True,exist_ok=True,mode=0o700)
+        # Serialize copies in this directory and recheck before allocating full file space.
+        with (target.parent/'.copy-new.lock').open('a') as lock:
+            fcntl.flock(lock,fcntl.LOCK_EX)
+            if target.exists() or target.is_symlink():return False
+            return _copy_new_locked(source,target)
+    except OSError as error:
+        if error.errno not in (errno.ENOSPC,errno.EDQUOT):raise
+        logging.warning('[DISK] Kopya hazırlığı ertelendi: boş alan yok; kaynak/hedef korunuyor')
+        return False
+
+
+def _copy_new_locked(source,target):
+    from disk_koruma import RESERVE
+    needed=source.stat().st_size+RESERVE
+    if shutil.disk_usage(target.parent).free<needed:
+        logging.warning('[DISK] Başlangıç kopyası ertelendi: required_bytes=%d; kalıcı hedef korunuyor',needed)
+        return False
+    fd,temporary=tempfile.mkstemp(prefix='.migration-'+target.name+'-',dir=target.parent)
     try:
         with os.fdopen(fd,'wb') as stream,source.open('rb') as original:
             shutil.copyfileobj(original,stream);stream.flush();os.fsync(stream.fileno())
@@ -102,7 +123,12 @@ def copy_new(source, target):
         try:os.fsync(directory)
         finally:os.close(directory)
         return True
-    finally:os.unlink(temporary)
+    except OSError as error:
+        if error.errno not in (errno.ENOSPC,errno.EDQUOT):raise
+        logging.warning('[DISK] Kopyalama sırasında alan tükendi; kaynak ve mevcut hedef korunuyor')
+        return False
+    finally:
+        if os.path.exists(temporary):os.unlink(temporary)
 
 
 def migrate(destination):

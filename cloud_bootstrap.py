@@ -3,6 +3,8 @@ import fcntl
 import json
 from pathlib import Path
 import re
+import errno
+import logging
 
 from veri_yollari import paths, copy_new
 
@@ -24,6 +26,14 @@ def valid_document(path):
 
 
 def bootstrap_public(location=None, seed=None):
+    try:return _bootstrap_public(location,seed)
+    except OSError as error:
+        if error.errno not in (errno.ENOSPC,errno.EDQUOT):raise
+        logging.warning('[DISK] Public bootstrap alan yetersizliği nedeniyle ertelendi; mevcut veri korunuyor')
+        return {'created':0,'storage_status':'INSUFFICIENT_SPACE'}
+
+
+def _bootstrap_public(location=None, seed=None):
     location=location or paths()
     location.ensure()
     # Deployed Docker seeds or existing local repo public data.

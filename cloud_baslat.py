@@ -66,6 +66,10 @@ def main():
     logging.basicConfig(level=logging.INFO, format='%(message)s')
     location = paths()
     location.ensure()
+    from disk_koruma import report,cleanup_startup
+    report(location)
+    cleanup_startup(location)
+    report(location)
     seed_reference_data(location)
     stop = threading.Event()
     def request_stop(signum, _):

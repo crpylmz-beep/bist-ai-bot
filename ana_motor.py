@@ -13,6 +13,7 @@ import os
 import signal
 import threading
 import time
+import errno
 
 from kullanici_kayitlari import atomic_json
 from veri_yollari import paths
@@ -124,7 +125,10 @@ class AnaMotor:
 
     def persist(self):
         self.state['updated_at'] = local_time(self.clock()).isoformat(timespec='seconds')
-        atomic_json(self.directory/'ana_motor_durum.json', self.state)
+        try:atomic_json(self.directory/'ana_motor_durum.json', self.state)
+        except OSError as error:
+            if error.errno not in (errno.ENOSPC,errno.EDQUOT):raise
+            logging.error('[DISK] Worker heartbeat kaydedilemedi: alan yetersiz; önceki state korundu. Volume kapasitesi artırılmalı.')
 
     def tick(self):
         current, mono = local_time(self.clock()), self.monotonic()

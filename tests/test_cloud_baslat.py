@@ -72,7 +72,7 @@ class LauncherTests(unittest.TestCase):
         for signum in (signal.SIGTERM,signal.SIGINT):
             with self.subTest(signal=signum),tempfile.TemporaryDirectory() as directory:
                 root=Path(directory)
-                for name in ('cloud_baslat.py','veri_yollari.py','cloud_bootstrap.py'):shutil.copyfile(source/name,root/name)
+                for name in ('cloud_baslat.py','veri_yollari.py','cloud_bootstrap.py','disk_koruma.py'):shutil.copyfile(source/name,root/name)
                 child_script='''import os,json,signal,time
 from pathlib import Path
 name=Path(__file__).stem
