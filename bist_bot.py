@@ -1362,6 +1362,8 @@ def hisse_analiz_hesapla(
         }
         from teknik_gostergeler import calculate
         sonuc['teknik_gostergeler']=calculate(veri,datetime.now(ZoneInfo('Europe/Istanbul')),'TOMORROW')
+        from ai_karar_motoru import attach_final_decision
+        attach_final_decision(sonuc,datetime.now(ZoneInfo('Europe/Istanbul')),'DAILY')
         # Kayit hatasi teknik analizin sonucunu etkilemez.
         yarin_top10_canli_guncelle(sonuc, veri)
         return sonuc
@@ -2149,6 +2151,8 @@ def yarin_top10_listesi(sonuclar, kalibrasyon=None, piyasa=None):
         a.update(shadow(a,ham,baglam_zamani,'TOMORROW'))
         a['kalibrasyon_sonrasi_puan'] = a['final_puan']
         a.update(effects(a,ham,baglam_zamani,'YARIN'))
+        from ai_karar_motoru import attach_final_decision
+        attach_final_decision(a,baglam_zamani,'DAILY')
         if ham >= 55:
             a['final_puan'] = max(0,min(95,a['final_puan']+a['piyasa_baglami_etkisi']))
             a['shadow_puan'] = max(0,min(95,a['shadow_puan']+a['piyasa_baglami_etkisi']))
@@ -2243,6 +2247,7 @@ def yarin_snapshot_modeli(veri, tahmin_zamani=None):
             "shadow_version": hisse.get('shadow_version'),
             "teknik_gostergeler":copy.deepcopy(hisse.get('teknik_gostergeler')),
             "teknik_katkilar":copy.deepcopy(hisse.get('teknik_katkilar')),
+            "nihai_karar":copy.deepcopy(hisse.get('nihai_karar')),
             "teknik_shadow_puan":hisse.get('teknik_shadow_puan'),
             "teknik_model_version":hisse.get('teknik_model_version'),
             "piyasa_baglami": hisse.get("piyasa_baglami"),
@@ -3583,7 +3588,7 @@ def gun_ici_analiz_hesapla(sembol, veri=None):
         bugun_close = bugun["Close"].astype(float)
         bugun_volume = bugun["Volume"].astype(float)
 
-        from teknik_gostergeler import vwap_series, obv_series, momentum_series, rsi as shared_rsi, macd as shared_macd, ema
+        from teknik_gostergeler import vwap_series, obv_series, momentum_series, rsi as shared_rsi, macd as shared_macd, ema, finite
         toplam_seans_hacmi=guvenli_float(bugun_volume.sum())
         seans_vwap=guvenli_float(vwap_series(bugun).iloc[-1]) if toplam_seans_hacmi>0 else float('nan')
 
@@ -3599,7 +3604,8 @@ def gun_ici_analiz_hesapla(sembol, veri=None):
         # RSI 14 - 5 DAKIKA
         # -------------------------------------------------
 
-        rsi5=guvenli_float(shared_rsi(close).iloc[-1])
+        rsi_seri=shared_rsi(close)
+        rsi5=guvenli_float(rsi_seri.iloc[-1])
         macd_seri,signal_seri,hist_seri=shared_macd(close)
         macd5=guvenli_float(macd_seri.iloc[-1]);signal5=guvenli_float(signal_seri.iloc[-1])
         hist5=guvenli_float(hist_seri.iloc[-1]);hist_onceki=guvenli_float(hist_seri.iloc[-2])
@@ -4367,6 +4373,7 @@ def gun_ici_analiz_hesapla(sembol, veri=None):
             "dipten_toparlanma": dipten_toparlanma,
             "zirveye_uzaklik": zirveye_uzaklik,
             "rsi5": rsi5,
+            "rsi_onceki":finite(rsi_seri.iloc[-2]),
             "macd5": macd5,
             "signal5": signal5,
             "hist5": hist5,
@@ -4408,6 +4415,8 @@ def gun_ici_analiz_hesapla(sembol, veri=None):
         if sonuc['seans_vwap'] is None:sonuc['seans_vwap_uzaklik']=None
         sonuc['teknik_gostergeler']=calculate(veri,sinyal_simdi,'INTRADAY')
         sonuc.update(shadow(sonuc,puan,sinyal_simdi,'INTRADAY'))
+        from ai_karar_motoru import attach_final_decision
+        attach_final_decision(sonuc,sinyal_simdi,'INTRADAY')
         return sonuc
 
     except Exception as e:

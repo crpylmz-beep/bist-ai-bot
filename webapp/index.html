@@ -2659,8 +2659,8 @@ function otomatikSeviyeGoster(a){
         ${field("Destek", yarinSayi(a.destek))}${field("Direnç", yarinSayi(a.direnc))}
         ${field("Hacimli Kırılım", yarinSayi(a.hacimli_kirilim))}
         ${field("Risk/Getiri", yarinSayi(a.risk_getiri))}
-        ${field("Karar", yarinMetin(a.karar))}
-        ${field("Nihai AI puanı", yarinSayi(a.nihai_ai_puan))}
+        ${field("Teknik karar", yarinMetin(a.karar))}
+        ${field("Analiz AI puanı", yarinSayi(a.nihai_ai_puan))}
         ${field("Güven", yarinSayi(a.guven))}
     </div>${standartGostergelerGoster(a.teknik_gostergeler)}<p style="font-size:12px">${a.model === "GUN_ICI" ? "Gün içi analiz" : "Günlük analiz"} ·
         Son analiz: ${a.updated_at ? yarinZaman(a.updated_at) : yarinMetin(a.eski_zaman_metni) + " (saat dilimi doğrulanamadı)"}.
@@ -2707,13 +2707,27 @@ async function teknikOlcumleriYukle(alan){
         teknikKriterRaporuGoster(results[1].status === 'fulfilled' ? results[1].value : null,'Yarın') + '</div>');
 }
 
+function nihaiKararGoster(final){
+    if(!final) return '<p>Nihai karar için güncel analiz bekleniyor.</p>';
+    const field=(label,value)=>detayKutu(label,value);
+    const reasons=(values)=> (values || []).slice(0,5).map(value=>'<li>'+yarinMetin(value)+'</li>').join('');
+    return '<h3>Nihai Karar</h3><div class="detail-grid">' +
+        field('Karar',yarinMetin(final.karar)) + field('Karar Puanı',yarinSayi(final.karar_puani,'/100')) +
+        field('Confidence / Güven',yarinSayi(final.confidence,'/100')) + field('Teknik Güç',yarinSayi(final.teknik_gucluluk,'/100')) +
+        field('Risk Puanı',yarinSayi(final.risk_puani,'/100')) +
+        field('Teyit',yarinMetin(final.teyit_sayisi)+'/'+yarinMetin(final.teyit_toplam)) +
+        '</div><p><strong>Ana Neden:</strong> '+yarinMetin(final.ana_secim_nedeni)+'</p><p><strong>Ana Risk:</strong> '+yarinMetin(final.ana_risk)+'</p>' +
+        '<details><summary>Kararın gerekçeleri</summary><ul>'+reasons(final.pozitif_gerekceler)+reasons(final.negatif_gerekceler)+'</ul></details>' +
+        '<p style="font-size:12px">'+(final.zaman_dilimi==='INTRADAY'?'Gün İçi':'Günlük')+' · Karar zamanı: '+yarinZaman(final.updated_at)+' · Veri zamanı: '+yarinZaman(final.veri_zamani)+'</p>';
+}
+
 function ortakAiGoster(ai){
     if(!ai) return '<p>Ortak AI özeti henüz yok.</p>';
     const field = (label,value) => detayKutu(label,value);
     const freshness = gunIciVeriYasi(ai.updated_at);
     const parts = ai.katkilar || {};
     return '<h3>Ortak AI Kararı</h3><div class="detail-grid">' +
-        field('Karar',yarinMetin(ai.karar)) + field('AI puanı',yarinSayi(ai.ai_score)) +
+        (ai.nihai_karar ? '' : field('Karar',yarinMetin(ai.karar))) + field('AI puanı',yarinSayi(ai.ai_score)) +
         field('Confidence / Güven',yarinSayi(ai.confidence)) +
         field('Piyasa rejimi',yarinMetin(ai.piyasa_rejimi)) +
         field('Piyasa breadth',yarinSayi(ai.piyasa_baglami?.breadth_score)) +
@@ -2769,7 +2783,7 @@ async function kullaniciSeviyeYukle(context){
     const data = await seviyeApi(`/api/stocks/${encodeURIComponent(context.stock)}?model=${context.model}`);
     if(context !== seviyeContext) return;
     context.otomatik = data.otomatik || {};
-    document.getElementById("automaticLevels").innerHTML = otomatikSeviyeGoster(context.otomatik) + ortakAiGoster(data.ai_ozet);
+    document.getElementById("automaticLevels").innerHTML = nihaiKararGoster(data.nihai_karar || context.otomatik.nihai_karar || data.ai_ozet?.nihai_karar) + otomatikSeviyeGoster(context.otomatik) + ortakAiGoster(data.ai_ozet);
     for(const field of ["manuel_al", "manuel_sat", "manuel_stop", "manuel_hedef"]){
         document.getElementById(field).value = data.manuel?.[field] ?? "";
     }
@@ -2797,7 +2811,7 @@ async function fiyatAlarmlariYenile(){
         if(context !== seviyeContext || context.busy || revision !== context.alarmRevision) return;
         // Update saved analysis and alarms without replacing unsaved manual input.
         context.otomatik = data.otomatik || {};
-        document.getElementById("automaticLevels").innerHTML = otomatikSeviyeGoster(context.otomatik) + ortakAiGoster(data.ai_ozet);
+        document.getElementById("automaticLevels").innerHTML = nihaiKararGoster(data.nihai_karar || context.otomatik.nihai_karar || data.ai_ozet?.nihai_karar) + otomatikSeviyeGoster(context.otomatik) + ortakAiGoster(data.ai_ozet);
         document.getElementById("priceAlarmList").innerHTML = fiyatAlarmListesi(data.alarmlar || []);
     }catch(error){
         if(context === seviyeContext) document.getElementById("levelsStatus").textContent = error.message;

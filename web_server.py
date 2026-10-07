@@ -137,9 +137,21 @@ class BistHandler(SimpleHTTPRequestHandler):
                 if self.command == 'GET' and action is None:
                     model = parse_qs(url.query).get('model', ['GUNLUK'])[0]
                     from ai_karar_motoru import ai_ozet_oku
+                    automatic=self.records.automatic(stock,model)
+                    summary=ai_ozet_oku(stock,self.data_paths)
+                    from ai_karar_motoru import decision_view,ISTANBUL,stamp
+                    from datetime import datetime
+                    final=automatic.get('nihai_karar') or {}
+                    shared=(summary or {}).get('nihai_karar') or {}
+                    target='INTRADAY' if model=='GUN_ICI' else 'DAILY'
+                    current=datetime.now(ISTANBUL)
+                    newer=stamp(shared.get('updated_at'));previous=stamp(final.get('updated_at'))
+                    if previous and previous>current:previous=None
+                    if shared.get('zaman_dilimi')==target and newer and newer<=current and (not previous or newer>=previous):
+                        final=decision_view(shared,current)
                     self.respond({'manuel': self.records.levels(user, stock),
-                                  'otomatik': self.records.automatic(stock, model),
-                                  'ai_ozet': ai_ozet_oku(stock, self.data_paths),
+                                  'otomatik': automatic,
+                                  'ai_ozet': summary,'nihai_karar':final,
                                   'alarmlar': self.records.alarms(user, stock)})
                     return
                 if self.command == 'PUT' and action == 'levels':

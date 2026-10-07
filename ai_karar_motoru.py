@@ -9,9 +9,10 @@ import hashlib
 import json
 import math
 import os
+import copy
 
 from haber_etki_motoru import haber_etki_sonumleme, fiyat_teyidi_hesapla
-from kullanici_kayitlari import atomic_json, symbol
+from kullanici_kayitlari import atomic_json, symbol, RecordError
 from veri_yollari import paths, data_file
 
 ISTANBUL = ZoneInfo('Europe/Istanbul')
@@ -100,6 +101,8 @@ def history_context(history, row, regime, current):
     eligible = []
     for record in history:
         if not isinstance(record,dict):continue
+        recorded=stamp(record.get('zaman') or record.get('sinyal_zamani'))
+        if recorded and recorded>current:continue
         if record.get('egitim_durumu') == 'REFERANS' or record.get('karar') not in ('AL','SAT','GUCLU_AL','GUCLU_SAT'):
             continue
         if record.get('sembol') != row.get('sembol') and (not row.get('makro_sektor') or record.get('sektor') != row['makro_sektor']):
@@ -128,13 +131,21 @@ def history_context(history, row, regime, current):
 def evaluate(row, news=None, macro=None, history=None, market=None, weights=None, current=None, baselines=None, thresholds=None):
     current = current or datetime.now(ISTANBUL)
     current = current.astimezone(ISTANBUL)
+    row=copy.deepcopy(row)
+    quote_at=stamp(row.get('canli_guncelleme') or row.get('updated_at'))
+    if quote_at and quote_at>current:
+        row={'sembol':row['sembol'],'updated_at':quote_at.isoformat()}
     weights = normalize_weights(weights or DEFAULT_WEIGHTS)
     thresholds = thresholds or THRESHOLDS
+    model_at=stamp(row.get('model_asof'))
+    if model_at and model_at>current:weights=normalize_weights(DEFAULT_WEIGHTS);thresholds=THRESHOLDS
     if set(thresholds)!=set(THRESHOLDS) or any(number(v) is None for v in thresholds.values()):
         raise ValueError('Karar eşikleri geçersiz')
     if not 10<=thresholds['GUCLU_SAT']<thresholds['SAT']<50<thresholds['AL']<thresholds['GUCLU_AL']<=95:
         raise ValueError('Karar eşikleri güvenli sırada olmalı')
     news, macro, market = news or [], macro or {}, market or {}
+    macro_at=stamp(macro.get('updated_at') or macro.get('guncelleme'))
+    if macro_at and macro_at>current:macro={}
     risks, positive, negative = [], [], []
     stock = symbol(row['sembol'])
     technical_time = row.get('canli_guncelleme') or row.get('updated_at')
@@ -146,7 +157,8 @@ def evaluate(row, news=None, macro=None, history=None, market=None, weights=None
         technical = clamp(50+(number(row['gun_ici_al_puani'],0)-number(row.get('gun_ici_sat_puani'),0))/2,0,100)
     indicators = {k: row.get(k) for k in ('trend','rsi','macd','signal','hist','hacim_orani',
         'vwap20_durum','obv_durum','boll_durum','karar_rr','risk_getiri','destek','direnc',
-        'gun_ici_sinyal_durumu','sma20','sma50')}
+        'gun_ici_sinyal_durumu','sma20','sma50','ema9_5','ema21_5','atr14','atr14_5',
+        'yarin_kirilim','gun_ici_hacimli_kirilim','hist_onceki','rsi_onceki','momentum15')}
     if indicators['trend'] is None and number(row.get('sma20')) is not None and number(row.get('sma50')) is not None:
         indicators['trend']='YUKARI' if float(row['sma20'])>float(row['sma50']) else 'ASAGI' if float(row['sma20'])<float(row['sma50']) else 'YATAY'
     if technical is None:
@@ -177,12 +189,17 @@ def evaluate(row, news=None, macro=None, history=None, market=None, weights=None
         event_id = str(event.get('canonical_id') or event.get('id') or hashlib.sha256(
             (stock+str(event.get('baslik'))+str(event.get('tarih'))).encode()).hexdigest())
         if event_id in seen: continue
-        seen.add(event_id)
         analysis = event.get('analiz', event)
+        knowledge=[stamp(event.get(k)) for k in ('ilk_gorulme','observed_at','updated_at')]
+        knowledge.extend(stamp(analysis.get(k)) for k in ('updated_at','analyzed_at'))
+        if any(at and at>current for at in knowledge):continue
         variants = event.get('variants') or [{}]
-        age = minutes(event.get('published_at') or variants[0].get('event_time') or event.get('ilk_gorulme') or event.get('tarih'), current)
+        published=event.get('published_at') or variants[0].get('event_time') or event.get('ilk_gorulme') or event.get('tarih')
+        if stamp(published) and stamp(published)>current:continue
+        age = minutes(published, current)
         if age is None:
             risks.append('HABER_ZAMANI_BILINMIYOR'); continue
+        seen.add(event_id)
         price = number(row.get('fiyat'),0)
         reference = number(event.get('reference_price'), number(analysis.get('ilk_fiyat')))
         key = stock+':'+event_id
@@ -227,6 +244,7 @@ def evaluate(row, news=None, macro=None, history=None, market=None, weights=None
     if not macro: risks.append('MAKRO_VERISI_YOK')
     if macro_age is None and (macro_value or sector_value):
         macro_value = sector_value = 0; risks.append('MAKRO_ZAMANI_BILINMIYOR')
+        macro={};macro_id=sector_id=None
     elif macro_age is not None:
         decay = .5**(macro_age/1440)
         macro_value *= decay; sector_value *= decay
@@ -250,9 +268,12 @@ def evaluate(row, news=None, macro=None, history=None, market=None, weights=None
         positive.extend(market_effects['piyasa_reasons_positive'])
         negative.extend(market_effects['piyasa_reasons_negative'])
     score = round(clamp(50+sum(contributions.values()),0,100),1)
+    group_labels={'teknik':'Teknik','haber':'Haber/KAP','makro':'Makro','sektor':'Sektör','fiyat_teyidi':'Fiyat teyidi',
+                  'gecmis_basari':'Geçmiş başarı','piyasa_rejimi':'Piyasa rejimi','breadth':'Piyasa genişliği','sektor_relatif_guc':'Sektör relatif gücü'}
     for group, amount in sorted(contributions.items(),key=lambda p:abs(p[1]),reverse=True):
-        if amount > .01: positive.append(f'{group}: +{amount:.2f} puan')
-        elif amount < -.01: negative.append(f'{group}: {amount:.2f} puan')
+        label=group_labels.get(group,group)
+        if amount > .01: positive.append(f'{label}: +{amount:.2f} puan')
+        elif amount < -.01: negative.append(f'{label}: {amount:.2f} puan')
     # Existing indicators explain the technical group; they are not rescored a second time.
     evidence = list(row.get('karar_nedenleri') or row.get('nedenler') or [])
     coverage = sum(number(row.get(k)) is not None for k in ('rsi','macd','hacim_orani','destek','direnc'))/5
@@ -276,7 +297,7 @@ def evaluate(row, news=None, macro=None, history=None, market=None, weights=None
         risks.append('STANDART_TEKNIK_VERI_ESKI')
         confidence=min(confidence,49)
         if decision in ('AL','GUCLU_AL'):decision='IZLE'
-    return {'sembol':stock,'model':'ORTAK_AI','ai_score':score,'karar':decision,'confidence':confidence,
+    result = {'sembol':stock,'model':'ORTAK_AI','ai_score':score,'karar':decision,'confidence':confidence,
         'kisa_gerekce':'; '.join((positive+negative)[:3]) or 'Yeterli doğrulanmış katkı yok.',
         'reasons_positive':positive,'reasons_negative':negative,'risk_flags':list(dict.fromkeys(risks)),
         'katkilar':contributions,'girdiler':indicators,'teknik_kriterler':evidence,
@@ -293,6 +314,203 @@ def evaluate(row, news=None, macro=None, history=None, market=None, weights=None
         'veri_tazeligi':{'teknik_timestamp':technical_time,'teknik_yas_dakika':technical_age,'makro_yas_dakika':macro_age,
             'haber_yaslari_dakika':[d['yas_dakika'] for d in details]},
         'agirliklar':weights,'seviye_politikasi':'MEVCUT_SEVIYELER_KORUNUR'}
+    result['karar_esikleri']=dict(thresholds)
+    result['nihai_karar']=final_decision(row,result,current)
+    # IZLE remains the legacy API alias; the new contract has exactly five decisions.
+    result['karar']='IZLE' if result['nihai_karar']['karar']=='BEKLE' else result['nihai_karar']['karar']
+    result['confidence']=result['nihai_karar']['confidence']
+    return result
+
+
+FINAL_MODEL='FINAL_DECISION_V1'
+FINAL_LABELS={'trend':'Trend','momentum':'Momentum','volume':'Hacim','price':'Fiyat konumu',
+              'obv':'OBV','bollinger':'Bollinger','risk':'Risk/getiri','market':'Piyasa/sektör','news':'Haber/KAP'}
+
+
+def final_decision(row,result,current):
+    """One decision policy on the existing score; evidence is never added as extra points."""
+    doc=result.get('teknik_gostergeler') or {};intraday=doc.get('mode')=='INTRADAY' or row.get('karar_zaman_dilimi')=='INTRADAY'
+    def n(*names):return next((number(row[k]) for k in names if number(row.get(k)) is not None),None)
+    def side(value,tolerance=0):return None if value is None else 1 if value>tolerance else -1 if value<-tolerance else 0
+    def difference(a,b):return side(a-b) if a is not None and b is not None else None
+    price=n('fiyat');stop=n('gun_ici_stop','stop') if intraday else n('karar_stop','yarin_stop','stop')
+    support=n('destek','gun_dusuk');rr=n('gun_ici_rr','risk_getiri') if intraday else n('karar_rr','risk_getiri')
+    rsi=n('rsi5','rsi') if intraday else n('rsi')
+    change=n('degisim','acilisa_gore_degisim')
+    trend=difference(n('ema9_5','sma20') if intraday else n('sma20'),n('ema21_5','sma50') if intraday else n('sma50'))
+    if trend is None and row.get('trend') in ('YUKARI','ASAGI'):trend=1 if row['trend']=='YUKARI' else -1
+    line=n('macd5','macd') if intraday else n('macd');signal=n('signal5','signal') if intraday else n('signal')
+    macd_side=difference(line,signal)
+    mom=doc.get('momentum',{});obv=doc.get('obv',{});bb=doc.get('bollinger',{});vw=doc.get('vwap',{})
+    valid=lambda g:g.get('status')=='OK' and not doc.get('stale') and number(g.get('confidence'),0)>=50
+    momentum=side(number(mom.get('short_pct')),.05) if valid(mom) else side(n('momentum15'),.05) if intraday and not doc else macd_side if not doc else None
+    if macd_side is not None and momentum is not None and macd_side*momentum<0:momentum=0
+    position=1 if vw.get('position')=='VWAP_USTU' else -1 if vw.get('position')=='VWAP_ALTI' else 0 if valid(vw) else None
+    if not valid(vw):position=difference(price,n('sma20','destek')) if not intraday else None
+    if support is not None and price is not None and price<support:position=-1
+    obv_side={'OBV_YUKSELEN':1,'OBV_DUSEN':-1,'OBV_YATAY':0}.get(obv.get('trend')) if valid(obv) else {'YUKSELEN':1,'DUSEN':-1,'YATAY':0}.get(row.get('obv_durum')) if not doc else None
+    if valid(obv) and obv.get('divergence')=='NEGATIF_UYUMSUZLUK':obv_side=-1
+    boll=1 if valid(bb) and bb.get('squeeze_volume_momentum_break') else -1 if valid(bb) and bb.get('lower_break') else 0 if valid(bb) else None
+    volume=n('hacim3_orani','hacim_orani') if intraday else n('hacim_orani')
+    volume_side=momentum if volume is not None and volume>=100 and momentum in (-1,1) else 0 if volume is not None else None
+    ctx=result.get('piyasa_baglami') or row.get('piyasa_baglami') or {}
+    context_at=stamp(ctx.get('updated_at'))
+    if context_at and context_at>current:ctx={}
+    market_side=side(number(ctx.get('rejim_score'))) if ctx and not ctx.get('stale') else {'POZITIF':1,'NEGATIF':-1,'YATAY':0}.get(result.get('piyasa_rejimi'))
+    breadth=number(ctx.get('breadth_score'));sector=number(ctx.get('sektor_rs_score'))
+    if sector is not None and market_side in (None,0):market_side=side(sector)
+    news_value=sum(number(e.get('etki'),0) for e in result.get('haber_katkilari',[]))
+    news_raw=n('haber_puani');news_direction=side(news_value) if result.get('haber_katkilari') else side(news_raw)
+    flags={'trend':trend,'momentum':momentum,'volume':volume_side,'price':position,'obv':obv_side,'bollinger':boll,
+           'risk':1 if rr is not None and rr>=(1.4 if intraday else 1.5) else -1 if rr is not None else None,
+           'market':market_side,'news':news_direction}
+    positive=[FINAL_LABELS[k]+' teyidi olumlu' for k,v in flags.items() if v==1]
+    negative=[FINAL_LABELS[k]+' teyidi olumsuz' for k,v in flags.items() if v==-1]
+    technical=number(result.get('girdiler',{}).get('teknik_puan'),n('teknik_puan'))
+    if technical is None:
+        al=n('gun_ici_al_puani') if intraday else n('al_puani');sat=n('gun_ici_sat_puani') if intraday else n('sat_puani')
+        technical=clamp(50+((al or 0)-(sat or 0))/2,0,100) if al is not None else None
+    confidence=number(result.get('confidence'),0);blocked=[]
+    labels={'SERT_DUSUS':'Günlük düşüş %7 veya daha fazla','ASIRI_YUKSELIS':'Aşırı yükseliş sonrası takip riski',
+            'KRITIK_HABER':'Kritik negatif haber','STOP':'Fiyat stop seviyesinde veya altında',
+            'RISK_GETIRI':'Risk/getiri yetersiz veya doğrulanamadı','ESKI_VERI':'Teknik veri eski veya zamanı doğrulanamadı',
+            'VERI_EKSIK':'Teknik veri yetersiz','MAKRO_NEGATIF':'Makro koşullar belirgin negatif','KARISIK':'Teknik teyitler çelişiyor',
+            'DUSUK_GUVEN':'Veri güveni karar için yetersiz','TEYIT_YETERSIZ':'Yön için yeterli bağımsız teyit yok','ASIRI_ALIM':'Aşırı alımda yeni alış teyidi yetersiz'}
+    if change is not None and change<=-7:blocked.append('SERT_DUSUS')
+    if change is not None and change>(5 if intraday else 4):blocked.append('ASIRI_YUKSELIS')
+    critical=any(number(e.get('ham_etki'),0)<=-5 for e in result.get('haber_katkilari',[])) or (news_raw is not None and news_raw<=-5)
+    if critical:blocked.append('KRITIK_HABER');confidence=min(confidence,49)
+    if price is not None and stop is not None and price<=stop:blocked.append('STOP')
+    atr=n('atr14_5','atr14') if intraday else n('atr14')
+    if atr is not None and atr<0:blocked.append('VERI_EKSIK');confidence=min(confidence,20)
+    if flags['risk']!=1:blocked.append('RISK_GETIRI')
+    freshness=result.get('veri_tazeligi',{}).get('teknik_yas_dakika')
+    if freshness is None or freshness>20 or doc.get('stale'):blocked.append('ESKI_VERI');confidence=min(confidence,35)
+    if technical is None or price is None or price<=0 or row.get('_durum'):blocked.append('VERI_EKSIK');confidence=min(confidence,20)
+    if number(result.get('katkilar',{}).get('makro'),0)<=-1.5:blocked.append('MAKRO_NEGATIF')
+    if rsi is not None and rsi>=75:blocked.append('ASIRI_ALIM')
+    tech_keys=('trend','momentum','volume','price','obv','bollinger')
+    ups=sum(flags[k]==1 for k in tech_keys);downs=sum(flags[k]==-1 for k in tech_keys)
+    conflict=(ups>=2 and downs>=2) or (macd_side==-1 and position==1 and obv_side==-1)
+    if conflict:blocked.append('KARISIK');confidence=min(confidence,49)
+    if confidence<50:blocked.append('DUSUK_GUVEN')
+    technical_floor=technical if technical is not None else 0
+    score=number(result.get('ai_score'),50);thresholds=result.get('karar_esikleri') or THRESHOLDS
+    weak_market=ctx.get('piyasa_rejimi')=='GUCLU_DUSUS' and breadth is not None and breadth<-20
+    buy_min=4 if intraday else 3;strong_min=6 if weak_market else 5
+    buy_ok=not blocked and ups>=buy_min and (trend==1 or momentum==1) and technical_floor>=65
+    sell_ok=confidence>=50 and not conflict and 'ESKI_VERI' not in blocked and 'VERI_EKSIK' not in blocked and downs>=2 and (trend==-1 or momentum==-1)
+    decision='BEKLE'
+    context_points=sum(number(result.get('katkilar',{}).get(k),0) for k in ('makro','sektor','piyasa_rejimi','breadth','sektor_relatif_guc'))
+    core_score=score-context_points
+    if buy_ok and score>=thresholds['AL'] and core_score>=thresholds['AL']:
+        decision='GUCLU_AL' if score>=thresholds['GUCLU_AL'] and core_score>=thresholds['GUCLU_AL'] and ups>=strong_min and trend==momentum==volume_side==1 and technical_floor>=85 else 'AL'
+    elif sell_ok and ((score<=thresholds['SAT'] and core_score<=thresholds['SAT']) or 'STOP' in blocked or (critical and downs>=3)):
+        decision='GUCLU_SAT' if score<=thresholds['GUCLU_SAT'] and downs>=4 and technical_floor<=25 else 'SAT'
+    if decision=='BEKLE' and not blocked:blocked.append('TEYIT_YETERSIZ')
+    if rsi is not None and rsi<30:
+        rebound=(n('dipten_toparlanma') or 0)>0 and mom.get('last_candle')=='POZITIF' and volume_side==1 and n('hist_onceki') is not None and n('hist','hist5') is not None and n('hist','hist5')>n('hist_onceki') and n('rsi_onceki') is not None and rsi>n('rsi_onceki')
+        positive.append('Aşırı satım sonrası tepki teyitli' if rebound else 'Aşırı satım tek başına alış teyidi değildir')
+        if not rebound and decision in ('AL','GUCLU_AL'):decision='BEKLE';blocked.append('TEYIT_YETERSIZ')
+    negative.extend(labels[k] for k in blocked)
+    if weak_market:negative.append('Piyasa güçlü düşüşte ve breadth negatif; güçlü alış teyidi artırıldı')
+    negative.extend(result.get('reasons_negative') or [])
+    quality_labels={'HABER_VERISI_YOK':'Haber/KAP verisi yok; güven katkısı sınırlı',
+                    'MAKRO_VERISI_YOK':'Makro verisi yok; güven katkısı sınırlı',
+                    'PIYASA_REJIMI_EKSIK':'Piyasa rejimi doğrulanamadı',
+                    'BENZER_SINYAL_ORNEGI_YETERSIZ':'Benzer geçmiş sinyal sayısı yetersiz',
+                    'TEKNIK_VERI_GECIKMIS':'Teknik veri gecikmiş; güven düşürüldü'}
+    quality=[quality_labels[k] for k in result.get('risk_flags',[]) if k in quality_labels]
+    negative.extend(quality)
+    positive.extend(result.get('reasons_positive') or [])
+    matched=ups if decision in ('AL','GUCLU_AL') else downs if decision in ('SAT','GUCLU_SAT') else max(ups,downs)
+    reasons=list(dict.fromkeys(positive));risks=list(dict.fromkeys(negative))
+    if flags['risk']==1 and atr is not None and atr>0:reasons.append('ATR ile risk aralığı izleniyor')
+    breakout=n('gun_ici_hacimli_kirilim') if intraday else n('yarin_kirilim')
+    if breakout is not None and price is not None and price>=breakout and volume_side==1:reasons.append('Hacimli kırılım seviyesi teyit edildi')
+    return {'karar':decision,'karar_puani':score,'confidence':round(confidence,1),'teknik_gucluluk':technical,
+            'risk_puani':min(100,len(blocked)*15+downs*8+len(quality)*3),'pozitif_gerekceler':reasons,'negatif_gerekceler':risks,
+            'ana_risk':labels[blocked[0]] if blocked else risks[0] if risks else 'Belirgin risk saptanmadı',
+            'ana_secim_nedeni':'; '.join(reasons[:3]) if decision in ('AL','GUCLU_AL') else '; '.join(risks[:3]) or 'Yeterli yön teyidi yok',
+            'teyit_sayisi':matched,'teyit_toplam':len(tech_keys),'minimum_al_teyidi':buy_min,'minimum_guclu_al_teyidi':strong_min,
+            'kullanilan_kriterler':flags,'safety_flags':blocked,'model_version':FINAL_MODEL,
+            'girdi_snapshot':{'fiyat':price,'stop':stop,'risk_getiri':rr,'rsi':rsi,'macd':line,'signal':signal,
+                             'hacim_orani':volume,'atr':atr,'breadth':breadth,'sektor_relatif_guc':sector,
+                             'teknik_puan':technical,'katkilar':copy.deepcopy(result.get('katkilar',{}))},
+            'zaman_dilimi':'INTRADAY' if intraday else 'DAILY','updated_at':current.isoformat(timespec='seconds'),
+            'veri_zamani':doc.get('data_time') or result.get('veri_tazeligi',{}).get('teknik_timestamp'),'learning_enabled':False}
+
+
+def attach_final_decision(row,current,mode):
+    """Reuse the existing analysis in memory; preserve every ranking/level field."""
+    source=copy.deepcopy(row);source['karar_zaman_dilimi']=mode
+    if mode=='INTRADAY':
+        source['teknik_puan']=clamp(50+(number(row.get('gun_ici_al_puani'),0)-number(row.get('gun_ici_sat_puani'),0))/2,0,100)
+        for old,new in (('rsi5','rsi'),('macd5','macd'),('signal5','signal'),('hist5','hist'),('hacim3_orani','hacim_orani'),('gun_ici_rr','karar_rr')):
+            if row.get(old) is not None:source[new]=row[old]
+        source.setdefault('destek',row.get('gun_dusuk'));source.setdefault('direnc',row.get('gun_yuksek'))
+    doc=source.get('teknik_gostergeler') or {}
+    source.setdefault('updated_at',doc.get('asof'))
+    market=source.get('piyasa_baglami') or {}
+    captured_at=source.get('canli_guncelleme') or source.get('updated_at')
+    news=[]
+    if number(source.get('haber_puani')) is not None and number(source.get('haber_puani'))!=0:
+        news=[{'sembol':source.get('sembol'),'canonical_id':'ANALIZ_OZETI','ilk_gorulme':captured_at,
+               'analiz':{'etki_puani':source['haber_puani'],'guven':number(source.get('haber_guven'),50)}}]
+    macro={k:source[k] for k in ('makro_puani','sektor_puani') if number(source.get(k)) is not None}
+    if macro:macro['updated_at']=captured_at
+    try:result=evaluate(source,news=news,macro=macro,current=current)
+    except RecordError:
+        result={'ai_score':50,'confidence':0,'veri_tazeligi':{},'girdiler':{},'katkilar':{},'piyasa_rejimi':'BILINMIYOR'}
+        result['nihai_karar']=final_decision(source,result,current)
+    # Context already attached by the existing market layer is used as evidence, not rescored.
+    if market:result['piyasa_baglami']=copy.deepcopy(market);result['nihai_karar']=final_decision(source,result,current)
+    row['nihai_karar']=copy.deepcopy(result['nihai_karar'])
+    return row['nihai_karar']
+
+
+def decision_view(document,current):
+    """Read-time stale protection without changing the frozen signal or alarm identity."""
+    result=copy.deepcopy(document or {})
+    if not result:return result
+    at=stamp(result.get('updated_at'));data=stamp(result.get('veri_zamani'))
+    stale=not at or at>current or not data or data>current or (current-data).total_seconds()>1200
+    if result.get('zaman_dilimi')=='DAILY' and data and at and at<=current:
+        from teknik_gostergeler import stale_at
+        stale=stale_at(data,current,'TOMORROW')
+    if stale:
+        result.update(karar='BEKLE',confidence=min(35,number(result.get('confidence'),0)),ana_risk='Teknik veri eski veya zamanı doğrulanamadı')
+        result['stale']=True
+    return result
+
+
+def final_decision_report(records,current,mode='DAILY'):
+    """Measure frozen decision/confidence/confirmation buckets; never adapt thresholds."""
+    from performans_motoru import robust
+    horizons=(5,15,30,60,'SEANS') if mode=='INTRADAY' else HORIZONS
+    report={}
+    for horizon in horizons:
+        groups={}
+        for record in records:
+            final=record.get('nihai_karar') or {}
+            if not final or final.get('zaman_dilimi')!=mode:continue
+            signal=stamp(record.get('sinyal_zamani') or record.get('zaman'))
+            frozen=stamp(final.get('updated_at'))
+            if not signal or signal>current or not frozen or frozen>signal:continue
+            outcome=(record.get('sonuclar') or {}).get(str(horizon),{}) if mode=='INTRADAY' else record.get('sonuc_'+str(horizon)+'g') or {}
+            observed=stamp(outcome.get('observed_at'))
+            complete=outcome.get('tamamlandi') if mode=='INTRADAY' else outcome.get('degerlendirme_tamamlandi')
+            if not complete or not observed or observed>current or observed<signal or number(outcome.get('getiri_yuzde')) is None:continue
+            if mode=='INTRADAY' and not outcome.get('egitime_uygun'):continue
+            if mode=='DAILY' and (record.get('egitim_durumu')=='REFERANS' or outcome.get('kalite_uyarilari')):continue
+            if outcome.get('durum') not in ('BASARILI','KISMEN_BASARILI','BASARISIZ','STOP'):continue
+            confidence=number(final.get('confidence'),0)
+            bucket='0-49' if confidence<50 else '50-69' if confidence<70 else '70-100'
+            for key in ('karar:'+str(final.get('karar')),'confidence:'+bucket,'teyit:'+str(final.get('teyit_sayisi'))):
+                groups.setdefault(key,[]).append(outcome)
+        report[str(horizon)]={key:{**robust([number(r['getiri_yuzde']) for r in rows]),'sample_count':len(rows),
+            'success_rate':sum(r['durum']=='BASARILI' for r in rows)/len(rows)} for key,rows in groups.items()}
+    return {'mode':mode,'vadeler':report,'learning_enabled':False,'thresholds_adapted':False,'updated_at':current.isoformat()}
 
 
 class AIKararMotoru:
@@ -345,8 +563,12 @@ class AIKararMotoru:
             for row in rows or []:
                 if not isinstance(row,dict) or not row.get('sembol'):continue
                 if 'gun_ici_al_puani' in row and row['sembol'] in row_map:
-                    merged=dict(row_map[row['sembol']])
-                    merged.update({k:v for k,v in row.items() if k.startswith('gun_ici_')})
+                    merged=dict(row)
+                    merged['karar_zaman_dilimi']='INTRADAY'
+                    merged['teknik_puan']=clamp(50+(number(row.get('gun_ici_al_puani'),0)-number(row.get('gun_ici_sat_puani'),0))/2,0,100)
+                    for old,new in (('rsi5','rsi'),('macd5','macd'),('signal5','signal'),('hacim3_orani','hacim_orani'),('gun_ici_rr','karar_rr')):
+                        if row.get(old) is not None:merged[new]=row[old]
+                    merged.setdefault('updated_at',(row.get('teknik_gostergeler') or {}).get('asof'))
                     row_map[row['sembol']]=merged
                 else:row_map[row['sembol']]=row
             def optional(path, default):
@@ -383,15 +605,21 @@ class AIKararMotoru:
                         if context:
                             for key in ('guncelleme','updated_at','event_id'):context.setdefault(key,macro.get(key))
                         config=load(self.weight_path,{}) if not weight_error else {}
+                        model_at=stamp(config.get('updated_at'))
+                        if model_at and model_at>current:weights=DEFAULT_WEIGHTS;config={}
                         result = evaluate(row,news,context,records,market,weights,current,baselines,config.get('esikler'))
                         if inherited:
                             result['risk_flags'].append('HISSE_BAZLI_ZAMAN_EKSIK');result['confidence']=round(result['confidence']*.8,1)
                         if weight_error:result['risk_flags'].append('AGIRLIK_DOSYASI_GECERSIZ')
                         if result['confidence'] < 50 and 'DUSUK_GUVEN' not in result['risk_flags']:result['risk_flags'].append('DUSUK_GUVEN')
-                        if result['confidence'] < 50 and result['karar'] in ('AL','GUCLU_AL'):result['karar']='IZLE'
+                        if result['confidence'] < 50 and result['karar'] in ('AL','GUCLU_AL','SAT','GUCLU_SAT'):result['karar']='IZLE'
+                        if result['confidence']<50:
+                            result['nihai_karar']['confidence']=result['confidence']
+                            if result['nihai_karar']['karar'] in ('AL','GUCLU_AL','SAT','GUCLU_SAT'):
+                                result['nihai_karar'].update(karar='BEKLE',ana_risk='Hisse bazlı veri güveni yetersiz')
                         signal_time=stamp(result['veri_tazeligi']['teknik_timestamp'])
                         signal_bucket=signal_time.replace(minute=(signal_time.minute//5)*5,second=0,microsecond=0).isoformat() if signal_time else None
-                        identity = [stock,signal_bucket,result['karar'],result['canonical_ids'],
+                        identity = [FINAL_MODEL,stock,signal_bucket,result['karar'],result['canonical_ids'],
                                     result['makro_event_id'],result['sektor_event_id'],result['piyasa_rejimi']]
                         signal_id = 'ORTAK_AI_'+hashlib.sha256(json.dumps(identity,sort_keys=True).encode()).hexdigest()[:24]
                         result['sinyal_id'] = signal_id
@@ -400,6 +628,7 @@ class AIKararMotoru:
                             trainable = current.weekday()<5 and 600<=current.hour*60+current.minute<=1090 and result['confidence']>=50 and number(row.get('fiyat'),0)>0
                             record = {'kayit_id':signal_id,'model':'ORTAK_AI','sembol':stock,'zaman':result['updated_at'],
                                 'karar':result['karar'],'ai_score':result['ai_score'],'confidence':result['confidence'],
+                                'nihai_karar':copy.deepcopy(result['nihai_karar']),
                                 'katkilar':result['katkilar'],'piyasa_rejimi':result['piyasa_rejimi'],'sektor':result['sektor'],
                                 'teknik_gostergeler':result['teknik_gostergeler'],
                                 'standart_teknik_kriterler':result['standart_teknik_kriterler'],

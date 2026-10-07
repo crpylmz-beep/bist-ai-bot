@@ -294,6 +294,7 @@ class PerformansMotoru:
                     'makro_etkisi':prediction.get('makro_puani',row.get('makro_puani')),'sektor':row.get('makro_sektor','BILINMIYOR'),
                     'piyasa_rejimi':row.get('piyasa_rejimi','BILINMIYOR'),'katkilar':row.get('katkilar',{}),'egitim_durumu':'EGITIM',
                     'teknik_gostergeler':prediction.get('teknik_gostergeler',row.get('teknik_gostergeler')),
+                    'nihai_karar':prediction.get('nihai_karar',row.get('nihai_karar')),
                     'teknik_katkilar':prediction.get('teknik_katkilar',row.get('teknik_katkilar')),
                     'teknik_shadow_puan':prediction.get('teknik_shadow_puan',row.get('teknik_shadow_puan')),
                     'piyasa_baglami':prediction.get('piyasa_baglami',row.get('piyasa_baglami')),
@@ -377,6 +378,8 @@ class PerformansMotoru:
         report['son20_gun']['skor_performans_iliskisi']=robust([v['skor_performans_korelasyonu'] for v in full_lists if v['skor_performans_korelasyonu'] is not None])
         from teknik_gostergeler import performance_report
         report['standart_teknik_kriterler']=performance_report(forecasts,current,'TOMORROW',minimum_samples())
+        from ai_karar_motoru import final_decision_report
+        report['nihai_karar_performansi']=final_decision_report(eligible,current)
         report['kriter_vadeleri']={str(h):criterion_report(eligible,h) for h in (3,5)}
         current_weights=load(self.location.runtime/'ai_agirliklari.json',{}).get('agirliklar',DEFAULT_WEIGHTS)
         current_weights=normalize_weights(current_weights)

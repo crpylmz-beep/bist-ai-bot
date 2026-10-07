@@ -152,6 +152,8 @@ class UserRecords:
         result['teknik_katkilar']=copy.deepcopy(row.get('teknik_katkilar'))
         result['teknik_shadow_puan']=row.get('teknik_shadow_puan')
         result['teknik_shadow_duzeltmesi']=row.get('teknik_shadow_duzeltmesi')
+        from ai_karar_motoru import decision_view,stamp
+        result['nihai_karar']=decision_view(row.get('nihai_karar'),stamp(now()))
         return result
 
     def alarms(self, user, stock):

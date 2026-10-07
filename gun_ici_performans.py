@@ -136,6 +136,8 @@ class GunIciPerformans:
             row.update(apply_score(row,model,current))
             row.update(shadow(row,row['gun_ici_ham_puan'],current,'INTRADAY'))
             row.update(effects(row,row['gun_ici_ham_puan'],current,'INTRADAY'))
+            from ai_karar_motoru import attach_final_decision
+            attach_final_decision(row,current,'INTRADAY')
             row['gun_ici_kalibrasyon_sonrasi_puan']=row['gun_ici_final_puan']
             row['gun_ici_final_puan']=clamp(row['gun_ici_final_puan']+row['piyasa_baglami_etkisi'],0,100)
             row['gun_ici_shadow_puan']=clamp(row['gun_ici_shadow_puan']+row['piyasa_baglami_etkisi'],0,100)
@@ -200,6 +202,7 @@ class GunIciPerformans:
                     'analiz':snapshot,'durum':'YENI_AL' if row.get('gun_ici_karar')=='AL' else 'SAT_DONDU' if row.get('gun_ici_karar')=='SAT' else 'ZAYIFLIYOR',
                     'ilk_sira':rank,'ana_liste_adayi':symbol in {x.get('sembol') for x in top10},
                     'teknik_gostergeler':snapshot.get('teknik_gostergeler'),
+                    'nihai_karar':snapshot.get('nihai_karar'),
                     'teknik_katkilar':snapshot.get('teknik_katkilar'),
                     'teknik_shadow_puan':snapshot.get('teknik_shadow_puan'),
                     'piyasa_baglami':snapshot.get('piyasa_baglami'),
@@ -339,9 +342,11 @@ class GunIciPerformans:
             return {k:summary(rs) for k,rs in groups.items()}
         from teknik_gostergeler import performance_report
         technical=performance_report(state['kayitlar'],current,'INTRADAY',minimum)
+        from ai_karar_motoru import final_decision_report
+        final_report=final_decision_report(list(reporting.values()),current,'INTRADAY')
         atomic_json(self.location.public/'gun_ici_performans.json',{'updated_at':current.isoformat(),'ana_vade_dk':60,'gunler':{d:summary(rs) for d,rs in daily.items()},
             'sektorler':grouped('sektor'),'rejimler':grouped('piyasa_rejimi'),
-            'kriterler':report,'standart_teknik_kriterler':technical,'shadow_karsilastirmasi':comparisons,'ornek_birimi':'HISSE_GUN','learning_enabled':os.environ.get('GUN_ICI_LEARNING_ENABLED','false').lower()=='true'})
+            'kriterler':report,'standart_teknik_kriterler':technical,'nihai_karar_performansi':final_report,'shadow_karsilastirmasi':comparisons,'ornek_birimi':'HISSE_GUN','learning_enabled':os.environ.get('GUN_ICI_LEARNING_ENABLED','false').lower()=='true'})
         atomic_json(self.location.public/'gun_ici_onerilen_agirliklar.json',{'updated_at':current.isoformat(),'version':model['version'],'oneriler':model['approved'],
             'minimum_her_grup':minimum,'minimum_islem_gunu':5,'otomatik_aktivasyon':False})
 
