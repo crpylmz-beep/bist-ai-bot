@@ -28,6 +28,10 @@ ENV_NAMES = {'bootstrap':'BOOTSTRAP', 'kap':'KAP', 'macro':'MACRO', 'alarm':'ALA
              'intraday_top10':'INTRADAY_TOP10', 'company_site':'COMPANY_SITE',
              'full_scan':'FULL_SCAN', 'priority':'PRIORITY', 'yarin_top10':'YARIN_TOP10', 'performance':'PERFORMANCE', 'intraday_performance':'INTRADAY_PERFORMANCE', 'market_context':'MARKET_CONTEXT'}
 TECHNICAL = {'bootstrap', 'full_scan', 'priority', 'intraday_top10', 'yarin_top10'}
+from gunluk_al_sat import INTERVAL_SECONDS as INTRADAY_SIGNAL_INTERVAL
+DEFAULTS['intraday_signals']=INTRADAY_SIGNAL_INTERVAL
+ENV_NAMES['intraday_signals']='INTRADAY_SIGNALS'
+TECHNICAL.add('intraday_signals')
 
 
 def istanbul_now():
@@ -117,6 +121,8 @@ class AnaMotor:
             interval = (intervals or {}).get(name, float(os.environ.get(ENV_NAMES[name]+'_INTERVAL_SECONDS', DEFAULTS[name])))
             if not 1 <= interval <= 86400:
                 raise ValueError('Geçersiz görev periyodu: '+name)
+            if name=='intraday_signals' and interval<INTRADAY_SIGNAL_INTERVAL:
+                raise ValueError('Günlük AL/SAT periyodu en az 300 saniye olmalı')
             self.tasks[name] = Task(callback, interval)
         self.state = {'motor_durumu':'RUNNING', 'tasks':{}, 'son_hata':None, 'yarin_completed_day':None}
         path = self.directory/'ana_motor_durum.json'
@@ -199,7 +205,7 @@ class AnaMotor:
                     continue
                 if name == 'bootstrap' and (self.directory/'public_bootstrap_complete.json').exists():
                     continue
-                if name in ('intraday_top10','full_scan','market_context') and not market_open(current,self.holiday):
+                if name in ('intraday_top10','full_scan','market_context','intraday_signals') and not market_open(current,self.holiday):
                     continue
                 if name == 'yarin_top10':
                     day=current.date().isoformat()

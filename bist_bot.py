@@ -3364,6 +3364,12 @@ def gun_ici_stream_verileri_getir(semboller, paket_boyutu=100, bekleme=10):
     # Tekrarlari temizle, sirayi koru.
     basarisiz = list(dict.fromkeys(basarisiz))
     print(f"STREAM SONUCU | BASARILI: {len(veri_map)} | BASARISIZ: {len(basarisiz)}")
+    # Optional read-only consumer; its failure cannot change the existing scan.
+    try:
+        from gunluk_al_sat import observe_frames
+        observe_frames(veri_map)
+    except Exception as error:
+        print('[GUNLUK_AL_SAT] stream cache paylaşımı başarısız:',type(error).__name__)
     return veri_map, basarisiz
 
 

@@ -236,12 +236,18 @@ class WorkerTasks:
         import makro_kaynak
         from sirket_site_motoru import SirketSiteMotoru
         self.company=SirketSiteMotoru(self.directory,enqueue=self.enqueue,stop=lambda:self.stop.is_set())
-        return {'bootstrap':self.bootstrap, 'kap':kap_canli.kap_kontrol, 'macro':makro_kaynak.yeni_haberleri_isle,
+        result={'bootstrap':self.bootstrap, 'kap':kap_canli.kap_kontrol, 'macro':makro_kaynak.yeni_haberleri_isle,
                 'alarm':self.alarm, 'push':self.push,
                 'priority':self.priority, 'full_scan':self.full_scan,
                 'intraday_top10':self.intraday, 'yarin_top10':self.tomorrow,
                 'company_site':self.company_site,'performance':self.performance,
                 'intraday_performance':self.intraday_performance,'market_context':self.market_context}
+        from gunluk_al_sat import enabled,GunlukAlSat
+        if enabled():
+            from veri_yollari import paths
+            self.daily_intraday=GunlukAlSat(location=paths(),universe=self.bot.bist_hisseleri_getir)
+            result['intraday_signals']=self.daily_intraday.one_round
+        return result
 
     def market_context(self):
         from piyasa_baglami import PiyasaBaglami

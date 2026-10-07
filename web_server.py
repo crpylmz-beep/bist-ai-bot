@@ -115,6 +115,10 @@ class BistHandler(SimpleHTTPRequestHandler):
                         or (origin and urlsplit(origin).netloc != self.headers.get('Host'))):
                     raise RecordError('Aynı uygulamadan yapılan istek gerekiyor.', 403)
             url = urlsplit(self.path)
+            if url.path == '/api/intraday-signals' and self.command == 'GET':
+                from gunluk_al_sat import api_report
+                self.respond(api_report(parse_qs(url.query,keep_blank_values=True),self.data_paths))
+                return
             if url.path == '/api/top10-learning-performance' and self.command == 'GET':
                 from top10_ogrenme_performansi import api_report
                 self.respond(api_report(parse_qs(url.query,keep_blank_values=True),self.data_paths))
@@ -161,7 +165,9 @@ class BistHandler(SimpleHTTPRequestHandler):
                     if previous and previous>current:previous=None
                     if shared.get('zaman_dilimi')==target and newer and newer<=current and (not previous or newer>=previous):
                         final=decision_view(shared,current)
-                    self.respond({'manuel': self.records.levels(user, stock),
+                    from gunluk_al_sat import stock_signal,enabled as intraday_engine_enabled
+                    intraday_extra={'intraday_signal':stock_signal(stock,self.data_paths)} if intraday_engine_enabled() else {}
+                    self.respond({'manuel': self.records.levels(user, stock),**intraday_extra,
                                   'otomatik': automatic,
                                   'ai_ozet': summary,'nihai_karar':final,
                                   'alarmlar': self.records.alarms(user, stock)})
