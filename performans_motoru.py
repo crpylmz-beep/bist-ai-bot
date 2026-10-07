@@ -484,6 +484,8 @@ class PerformansMotoru:
         controlled_publish(self.location,diagnostic_records,current,'DAILY')
         from pozitif_kapanis import publish_performance
         publish_performance(self.location,diagnostic_records,current)
+        from sinyal_performansi import publish
+        publish(self.location,diagnostic_records+legacy['tahminler'],current)
 
     def one_round(self):
         current=self.clock().astimezone(ISTANBUL);processed=changed=0;errors={};error_details={}

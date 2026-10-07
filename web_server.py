@@ -115,6 +115,10 @@ class BistHandler(SimpleHTTPRequestHandler):
                         or (origin and urlsplit(origin).netloc != self.headers.get('Host'))):
                     raise RecordError('Aynı uygulamadan yapılan istek gerekiyor.', 403)
             url = urlsplit(self.path)
+            if url.path == '/api/signal-performance' and self.command == 'GET':
+                from sinyal_performansi import read_report
+                self.respond(read_report(self.data_paths))
+                return
             if url.path == '/api/market-context' and self.command == 'GET':
                 from piyasa_baglami import PiyasaBaglami
                 self.respond(PiyasaBaglami(self.data_paths).context() or {
