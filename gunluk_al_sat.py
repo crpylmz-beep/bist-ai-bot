@@ -192,14 +192,15 @@ class GunlukAlSat:
     def persist(self,row,state):
         old=state['signals'].get(row['symbol'])
         transition=not old or old['signal_state']!=row['signal_state'] and row['signal_state'] not in ('AL_DEVAM','SAT_DEVAM')
-        important=row['data_quality']!='INSUFFICIENT' and row['signal_state']!='IZLE' and (transition or abs(row['technical_score']-old['technical_score'])>=SCORE_CHANGE)
+        important=row['data_quality']!='INSUFFICIENT' and row['signal_state']!='IZLE' and (transition or abs(row['technical_score']-old['technical_score'])>=SCORE_CHANGE or abs(row['confidence_score']-old['confidence_score'])>=SCORE_CHANGE)
         if important:
             identity=hashlib.sha256((row['symbol']+'|'+str(row['data_timestamp'])+'|'+row['signal_state']).encode()).hexdigest()
             target=self.location.runtime_file('gunluk_al_sat_gecmisi')/(stamp(row['timestamp']).date().isoformat()+'.json')
             with locked(target):
                 history=load(target,{'model':MODEL,'events':{}})
                 if identity not in history['events']:
-                    history['events'][identity]=copy.deepcopy(dict(row,event_id=identity,analysis_only=True))
+                    history['events'][identity]=copy.deepcopy(dict(row,event_id=identity,analysis_only=True,
+                        prediction_price=row['price'],engine_version=MODEL,snapshot_version=1))
                     atomic_json(target,history)
         state['signals'][row['symbol']]=row
 

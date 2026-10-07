@@ -2,13 +2,14 @@
 No tomorrow storage or calibration dependency. Pure statistics reuse is intentional.
 """
 from datetime import datetime, timedelta, time
+import copy
 import hashlib
 import json
 import os
 from statistics import mean
 
 from ai_karar_motoru import ISTANBUL, number, stamp, load, locked, clamp
-from performans_motoru import robust, criterion_report
+from performans_motoru import robust, criterion_report, session_closed
 from kullanici_kayitlari import atomic_json
 from veri_yollari import paths
 
@@ -235,6 +236,97 @@ class GunIciPerformans:
         # Existing project provider, same interval as gun_ici_analiz_hesapla.
         import bist_bot
         return bist_bot.bp.Ticker(symbol).history(period='5d',interval='5m')
+
+    def signal_round(self,holiday=None,daily_provider=None):
+        """Frozen V1 adapter on the existing driver/provider/calendar infrastructure."""
+        from intraday_sinyal_performansi import (load_sources,observations,fingerprint,due_at,
+            outcome as signal_outcome,HORIZONS as signal_horizons,publish)
+        from performans_motoru import provider_history
+        from gorev_hatalari import remember,describe,TaskIssue,strongest
+        current=self.clock().astimezone(ISTANBUL)
+        source,source_errors=load_sources(self.location,current)
+        observed,duplicates,malformed=observations(source,current)
+        result_root=self.location.runtime_file('intraday_signal_results')
+        control_path=self.location.runtime_file('intraday_signal_performance_state.json')
+        with locked(control_path):
+            control=load(control_path,{'cursor':0});results={};by_day={}
+            for index,(row,issue) in enumerate(observed):
+                at=stamp(row.get('timestamp'))
+                if not at:continue
+                day=at.date().isoformat()
+                if day not in by_day:
+                    try:
+                        by_day[day]=load(result_root/(day+'.json'),{'events':{}})
+                        if not isinstance(by_day[day],dict) or not isinstance(by_day[day].get('events'),dict):raise ValueError('Derived results')
+                    except Exception as error:
+                        by_day[day]=None;source_errors['RESULT_'+day]=type(error).__name__
+                if by_day[day] is None:
+                    observed[index]=(row,issue or 'DERIVED_FILE_INVALID');continue
+                saved=by_day[day]['events'].get(row['event_id'])
+                if saved and (not isinstance(saved,dict) or not isinstance(saved.get('outcomes'),dict)):
+                    observed[index]=(row,issue or 'DERIVED_RECORD_INVALID');continue
+                if saved:results[row['event_id']]=saved
+            pending=[]
+            for row,issue in observed:
+                if issue:continue
+                saved=results.get(row['event_id'],{})
+                if saved and saved.get('source_hash')!=fingerprint(row):continue
+                retry=stamp(saved.get('retry_at'))
+                if retry and retry>current:continue
+                due=[h for h in signal_horizons if due_at(row,h,holiday)<=current and not saved.get('outcomes',{}).get(h,{}).get('completed')]
+                if due:pending.append((row,due))
+            symbols=list(dict.fromkeys(row['symbol'] for row,_ in pending));batch=[]
+            if symbols:
+                cursor=control.get('cursor',0)%len(symbols)
+                batch=[symbols[(cursor+i)%len(symbols)] for i in range(min(10,len(symbols)))]
+                control['cursor']=(cursor+len(batch))%len(symbols)
+            cache=load(self.bars_file,{})
+            daily_cache=load(self.location.runtime_file('performans_fiyat_cache.json'),{})
+            failures=[];failed_symbols=set();updated=0;dirty=set()
+            for symbol in batch:
+                selected=[(r,hs) for r,hs in pending if r['symbol']==symbol][:50]
+                try:
+                    bars=cache.get(symbol,[])
+                    needs_fresh=any(signal_outcome(r,bars,[],'SEANS' if h in ('D1','D3') else h,current,holiday).get('reason')=='MISSING_5M_BAR'
+                        for r,hs in selected for h in hs)
+                    if needs_fresh:
+                        fresh=normalize_bars(self.prices(symbol),current)
+                        bars=normalize_bars(list(bars)+fresh,current)
+                    prices=[]
+                    if any(h in ('D1','D3') for _,hs in selected for h in hs):
+                        cached=daily_cache.get(symbol,{})
+                        if cached.get('day')==current.date().isoformat() and cached.get('closed')==session_closed(current.date(),current):prices=cached['bars']
+                        else:prices=list((daily_provider or provider_history)(symbol))
+                    for row,hs in selected:
+                        try:
+                            key=row['event_id'];saved=copy.deepcopy(results.get(key,{'source_hash':fingerprint(row),'outcomes':{}}))
+                            for horizon in hs:
+                                value=signal_outcome(row,bars,prices,horizon,current,holiday)
+                                saved['outcomes'][horizon]=value;updated+=int(value['completed'])
+                            age=current-stamp(row['timestamp'])
+                            saved['retry_at']=(current+(timedelta(hours=6) if age>timedelta(days=5) else timedelta(minutes=5))).isoformat()
+                            results[key]=saved;day=stamp(row['timestamp']).date().isoformat();by_day[day]['events'][key]=saved;dirty.add(day)
+                        except Exception as error:
+                            remember(error,'INTRADAY_SIGNAL_PERFORMANCE',symbol);failures.append(describe(error));failed_symbols.add(symbol)
+                except Exception as error:
+                    remember(error,'INTRADAY_SIGNAL_PERFORMANCE',symbol);failures.append(describe(error));failed_symbols.add(symbol)
+                    for row,_ in selected:
+                        key=row['event_id'];saved=copy.deepcopy(results.get(key,{'source_hash':fingerprint(row),'outcomes':{}}))
+                        saved['retry_at']=(current+timedelta(minutes=5)).isoformat();results[key]=saved
+                        day=stamp(row['timestamp']).date().isoformat();by_day[day]['events'][key]=saved;dirty.add(day)
+            for day in dirty:
+                target=result_root/(day+'.json')
+                with locked(target):atomic_json(target,by_day[day])
+            atomic_json(control_path,control)
+            diagnostics={'processed':len(batch),'successful':len(batch)-len(failed_symbols),'failed':len(failed_symbols)+len(source_errors),
+                         'updated_outcomes':updated,'source_errors':source_errors,'duplicates':duplicates,'malformed':malformed}
+            publish(self.location,observed,results,current,holiday,diagnostics)
+        if source_errors:
+            import logging
+            logging.warning('[INTRADAY_SIGNAL_PERFORMANCE] unreadable_source_files=%d',len(source_errors))
+            failures.append({'code':'STORAGE_IO'})
+        if failures:raise TaskIssue(strongest(failures),len(batch)-len(failed_symbols),diagnostics)
+        return {'diagnostics':diagnostics}
 
     def one_round(self):
         current=self.clock().astimezone(ISTANBUL);limit=max(1,min(25,int(os.environ.get('GUN_ICI_PERFORMANCE_BATCH_SIZE','10'))))

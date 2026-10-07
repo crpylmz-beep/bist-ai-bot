@@ -90,8 +90,9 @@ Geçmişte IZLE spam'i tutulmaz. Yön/durum geçişleri ve devam sinyalindeki en
 10 puanlık önemli teknik değişimler kaydedilir. Symbol + kapalı mum zamanı +
 state kimliği duplicate'ı engeller. Lock + atomic write kullanılır; var olan
 event değiştirilmez. Geçmiş önce, state sonra yazılır; restart tekrarında aynı
-event iki kez oluşmaz. Frozen events analysis_only olarak saklanır; bu görev
-1–3 günlük sonuç motorunu veya otomatik öğrenmeyi devreye almaz.
+event iki kez oluşmaz. Frozen events analysis_only olarak saklanır;
+gerçek sonuç takibi [INTRADAY_SIGNAL_PERFORMANCE.md](INTRADAY_SIGNAL_PERFORMANCE.md)
+belgesinde açıklanır. Otomatik öğrenme veya ağırlık değişimi devrede değildir.
 
 ## API
 

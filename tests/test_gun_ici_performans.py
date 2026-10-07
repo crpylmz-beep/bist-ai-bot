@@ -265,8 +265,10 @@ class IntradayTests(unittest.TestCase):
 
     def test_worker_task_independent_callback(self):
         from ana_motor_gorevleri import WorkerTasks
-        with patch('gun_ici_performans.bekleyen_gun_ici_sonuclari_guncelle',return_value={'ok':True}) as callback:
+        with patch('gun_ici_performans.bekleyen_gun_ici_sonuclari_guncelle',return_value={'ok':True}) as callback, \
+             patch('gun_ici_performans.GunIciPerformans.signal_round',return_value={}) as signal_callback:
             self.assertEqual(WorkerTasks.intraday_performance(None),{'ok':True});callback.assert_called_once_with()
+            signal_callback.assert_called_once_with()
 
     def test_real_scan_wires_capture_and_atomic_web_output(self):
         import bist_bot as bot

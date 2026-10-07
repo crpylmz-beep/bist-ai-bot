@@ -269,8 +269,10 @@ class WorkerTasks:
         return {'updated':completed,'diagnostics':details} if isinstance(details,dict) else completed
 
     def intraday_performance(self):
-        from gun_ici_performans import bekleyen_gun_ici_sonuclari_guncelle
-        return bekleyen_gun_ici_sonuclari_guncelle()
+        from gun_ici_performans import bekleyen_gun_ici_sonuclari_guncelle,GunIciPerformans
+        result=bekleyen_gun_ici_sonuclari_guncelle()
+        GunIciPerformans().signal_round()
+        return result
 
     def performance(self):
         from performans_motoru import bekleyen_sonuclari_guncelle
