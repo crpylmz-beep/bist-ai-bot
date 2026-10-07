@@ -1269,9 +1269,8 @@ async function showAiLearning(){
                     font-size:13px;
                     opacity:.70;
                 ">
-                    En az 30 gerçek tamamlanmış sinyal oluşmadan
-                    öğrenilmiş ağırlıklar teknik karar motoruna
-                    uygulanmaz.
+                    Bu ekrandaki sonuçlar ölçüm ve shadow önerisidir.
+                    Otomatik ağırlık ve karar eşiği değişimi kapalıdır.
                 </div>
 
             </div>
@@ -2728,13 +2727,39 @@ function modelPerformansiGoster(report){
     }).join('');
 }
 
+function algoritmaSaglikGoster(report, combinations){
+    if(!report?.modes) return '<div class="detail-card"><h3>Model Sağlığı</h3><p>Yetersiz veri · Learning: KAPALI</p></div>';
+    const percent=value=>yarinSayi(value == null ? null : value*100,'%');
+    return Object.entries(report.modes).map(([mode,health])=>{
+        const primary=mode==='INTRADAY'?'60':'1';
+        const all=combinations?.modes?.[mode]?.combinations?.[primary]?.LIVE || {};
+        const qualified=Object.entries(all).filter(([k,v])=>v.strong || (v.confidence==='YETERLI' && v.shadow_contribution_proposal<0));
+        const list=items=>items.length ? '<ul>'+items.map(([key,value])=>'<li>'+yarinMetin(key.replaceAll('!','ZAYIF ').replaceAll('_',' '))+' · '+percent(value.success_rate)+'</li>').join('')+'</ul>' : '<p>Yeterli ölçüm yok.</p>';
+        const best=qualified.filter(([k,v])=>v.shadow_contribution_proposal>0).sort((a,b)=>b[1].success_rate-a[1].success_rate).slice(0,3);
+        const worst=qualified.filter(([k,v])=>v.shadow_contribution_proposal<0).sort((a,b)=>a[1].success_rate-b[1].success_rate).slice(0,3);
+        const status={COK_IYI:'Çok iyi',IYI:'İyi',NORMAL:'Normal',ZAYIF:'Zayıf',YETERSIZ_VERI:'Yetersiz veri'};
+        const drift=health.model_drift?.assessed ? (health.model_drift.warning?'Var':'Yok') : 'Yetersiz veri';
+        return '<div class="detail-card"><h3>Model Sağlığı · '+(mode==='INTRADAY'?'Gün İçi':'Günlük')+'</h3>'+
+            '<p>'+yarinMetin(status[health.health_status] || 'Yetersiz veri')+' · Learning: KAPALI</p>'+
+            '<p>Ana Model: '+percent(health.main_model_success)+' · Shadow: '+percent(health.shadow_success)+'</p>'+
+            '<p>Canlı başarı: '+percent(health.sources?.LIVE?.success_rate)+' · LIVE '+yarinMetin(health.live_sample_count ?? 0)+' / BACKTEST '+yarinMetin(health.backtest_sample_count ?? 0)+' / SHADOW '+yarinMetin(health.shadow_sample_count ?? 0)+'</p>'+
+            '<p>En sık hata tipi: '+yarinMetin(health.most_common_error || '--')+' · Model Drift: '+yarinMetin(drift)+'</p>'+
+            '<details><summary>En iyi kombinasyonlar</summary>'+list(best)+'</details>'+
+            '<details><summary>En kötü kombinasyonlar</summary>'+list(worst)+'</details>'+
+            '<p>Confidence / teyit uyarısı: '+yarinMetin((health.calibration?.confidence_warnings?.length || 0)+' / '+(health.calibration?.confirmation_warnings?.length || 0))+'</p></div>';
+    }).join('');
+}
+
 async function modelPerformansiYukle(alan){
     try{
         const response=await fetch('data/kriter_performansi.json?t='+Date.now(),{cache:'no-store'});
         if(document.getElementById('aiLearningPage').style.display!=='block') return;
         alan.insertAdjacentHTML('beforeend',modelPerformansiGoster(response.ok ? await response.json() : null));
+        const loadReport=async name=>{try{const r=await fetch('data/'+name+'?t='+Date.now(),{cache:'no-store'});return r.ok ? await r.json() : null;}catch(error){return null;}};
+        const [health,combinations]=await Promise.all([loadReport('algoritma_saglik.json'),loadReport('kombinasyon_performansi.json')]);
+        if(document.getElementById('aiLearningPage').style.display==='block') alan.insertAdjacentHTML('beforeend',algoritmaSaglikGoster(health,combinations));
     }catch(error){
-        if(document.getElementById('aiLearningPage').style.display==='block') alan.insertAdjacentHTML('beforeend',modelPerformansiGoster(null));
+        if(document.getElementById('aiLearningPage').style.display==='block') alan.insertAdjacentHTML('beforeend',modelPerformansiGoster(null)+algoritmaSaglikGoster(null,null));
     }
 }
 

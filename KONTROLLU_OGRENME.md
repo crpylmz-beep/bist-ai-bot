@@ -72,3 +72,5 @@ Kapalı sonuç fingerprint'i değişmediyse istatistikler yeniden kurulmaz. Değ
 Mevcut AI Öğrenme ekranına Model Performansı eklenir: ayrı ana/shadow doğrulama başarısı, örnek sayısı, yeterli kanıtlı güçlü/zayıf beş kriter, son model güncellemesi, Learning KAPALI, Shadow AKTİF/PASİF. Yetersiz veri açıkça gösterilir. Hisse detayı değiştirilmedi; rapor JSON'ları mevcut web static veri API'sinden erişilir.
 
 Yeni testler `tests/test_kontrollu_ogrenme.py` ve `tests/test_model_performansi_ui.cjs`; tam Python ve JS/browser regresyonları ayrıca çalıştırılır. Gerçek piyasa veya push servisi kullanılmaz. Cloud başlatıcı/web/worker süreçleri, volume, VAPID, push ve /health değiştirilmedi. Eski opt-in kalibrasyon/rollback altyapısı korunur; yeni öneriler learning env'i açık olsa da otomatik ana modele uygulanmaz.
+
+19. adımın kombinasyon, kaynak ayrımı, hata günlüğü ve algoritma sağlık ölçümleri için [KARAR_TESHIS.md](KARAR_TESHIS.md) belgesine bakın. Mevcut kriter ve prospective shadow hattı korunur; yeni kombinasyon katkıları otomatik uygulanmaz.

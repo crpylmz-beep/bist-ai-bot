@@ -6,6 +6,7 @@ import hashlib
 import json
 import math
 import os
+from itertools import combinations
 
 from ai_karar_motoru import (HORIZONS, ISTANBUL, DEFAULT_WEIGHTS, LIMITS, number,
                              stamp, load, locked, normalize_weights)
@@ -97,7 +98,11 @@ def outcome(record, bars, horizon, current, holiday=None, require_ohlc=True):
     elif directional>=risk and (abs(min(0,drawdown or 0)) if not short else max(0,potential or 0))<risk:status='BASARILI'
     elif directional>0 and directional>=risk*.5:status='KISMEN_BASARILI'
     else:status='BASARISIZ'
+    excursions=excursion_metrics(window,base,target,stop,short)
     return {'durum':status,'degerlendirme_tamamlandi':True,'baslangic_fiyati':base,'fiyat':close,
+        **excursions,
+        'model_version':record.get('model_version') or (record.get('nihai_karar') or {}).get('model_version') or record.get('calibration_version') or 'LEGACY_UNKNOWN',
+        'performance_source':performance_source(record),
         'kapanis_fiyati':close,'getiri_yuzde':round(change,4),'yon_getirisi':round(directional,4),
         'maksimum_yukselis':round(potential,4) if potential is not None else None,
         'maksimum_dusus':round(drawdown,4) if drawdown is not None else None,
@@ -349,6 +354,8 @@ class PerformansMotoru:
             record['kayit_id']=record.get('id') or 'LEGACY_'+hashlib.sha256(json.dumps(
                 [record.get('model'),record.get('sembol'),record.get('zaman') or record.get('tarih'),record.get('fiyat')]).encode()).hexdigest()[:24]
         record.setdefault('sinyal_id',record.get('kayit_id'));record.setdefault('sinyal_turu',record.get('model','LEGACY'))
+        record.setdefault('performance_source',performance_source(record))
+        record.setdefault('model_version',(record.get('nihai_karar') or {}).get('model_version') or record.get('calibration_version') or 'LEGACY_UNKNOWN')
         record.setdefault('referans_fiyat',record.get('fiyat'));record.setdefault('confidence',record.get('guven'))
         record.setdefault('ai_score',record.get('nihai_ai_puan'));record.setdefault('sektor','BILINMIYOR');record.setdefault('piyasa_rejimi','BILINMIYOR')
         record.setdefault('katkilar',{});record.setdefault('kaynak',record.get('model','LEGACY'));record.setdefault('snapshot_id',None)
@@ -357,6 +364,8 @@ class PerformansMotoru:
         if number(record.get('referans_fiyat'),0)<=0:record['veri_kalitesi']='VERI_YETERSIZ'
 
     def reports(self,records,current):
+        diagnostic_records=records
+        records=[r for r in records if performance_source(r)=='LIVE']
         def grouping(field,rows):
             groups={}
             for r in rows:groups.setdefault(r.get(field) or 'BILINMIYOR',[]).append(r)
@@ -396,7 +405,7 @@ class PerformansMotoru:
             atomic_json(self.location.public/name,value)
         target=self.location.public/'onerilen_agirliklar.json'
         with locked(target):atomic_json(target,{**load(target,{}),**proposal})
-        controlled_publish(self.location,records,current,'DAILY')
+        controlled_publish(self.location,diagnostic_records,current,'DAILY')
 
     def one_round(self):
         current=self.clock().astimezone(ISTANBUL);processed=changed=0;errors={}
@@ -499,10 +508,17 @@ def evidence_features(record,mode):
     """Frozen inputs only; unknown is never converted into a negative observation."""
     from teknik_gostergeler import features as standard_features,snapshot,stale_at
     signal=stamp(record.get('sinyal_zamani') or record.get('zaman'))
+    frozen=record.get('criteria_snapshot') or (record.get('controlled_shadow') or {}).get('criteria_snapshot')
+    if frozen:
+        at=stamp(frozen.get('captured_at'));model_at=stamp(frozen.get('model_created_at'))
+        if not signal or not at or at>signal or frozen.get('mode')!=mode or (model_at and model_at>signal):return {key:None for key in CRITERION_FAMILIES}
+        return {key:value if isinstance(value,bool) else None for key in CRITERION_FAMILIES for value in [frozen.get('flags',{}).get(key)]}
     raw=dict(record.get('analiz') or record.get('kriterler') or {})
     raw.update({k:v for k,v in record.items() if k not in raw})
     doc=snapshot(record);unknown={key:None for key in CRITERION_FAMILIES}
     if not signal:return unknown
+    model_at=stamp(raw.get('model_created_at'))
+    if model_at and model_at>signal:return unknown
     quote=stamp(raw.get('canli_guncelleme') or raw.get('updated_at'))
     if quote and quote>signal:return unknown
     if doc and (doc.get('mode')!=('INTRADAY' if mode=='INTRADAY' else 'TOMORROW') or not stamp(doc.get('asof')) or stamp(doc['asof'])>signal or stale_at(doc.get('data_time'),signal,doc.get('mode')) or doc.get('stale')):return unknown
@@ -549,7 +565,11 @@ def evidence_features(record,mode):
         features['HABER_FIYAT_TEYIDI']=any(e.get('teyit_edildi') is True for e in valid)
     features['HABER_POZITIF']=value(('haber_puani','haber_etkisi'),lambda n:n>0)
     features['HABER_NEGATIF']=value(('haber_puani','haber_etkisi'),lambda n:n<0)
+    if news and not valid:
+        features['HABER_POZITIF']=features['HABER_NEGATIF']=None
     for key,test in (('MAKRO_POZITIF',lambda n:n>0),('MAKRO_NEGATIF',lambda n:n<0)):features[key]=value(('makro_puani','makro_etkisi'),test)
+    macro_at=stamp(raw.get('makro_updated_at') or raw.get('makro_asof'))
+    if macro_at and macro_at>signal:features['MAKRO_POZITIF']=features['MAKRO_NEGATIF']=None
     final=raw.get('nihai_karar') or {};at=stamp(final.get('updated_at'))
     if at and at<=signal and final.get('zaman_dilimi')==mode:
         for key in ('GUCLU_AL','AL','BEKLE','SAT','GUCLU_SAT'):features[key]=final.get('karar')==key
@@ -560,6 +580,7 @@ def evidence_rows(records,current,mode,horizon):
     """First stock/day sampling is fixed before inspecting outcomes."""
     chosen={}
     for record in sorted(records,key=lambda r:str(r.get('sinyal_zamani') or r.get('zaman') or '')):
+        if performance_source(record)!='LIVE':continue
         model=record.get('model')
         if mode=='DAILY' and model!='YARIN_TOP10':continue
         if mode=='INTRADAY' and (model in ('YARIN_TOP10','ORTAK_AI') or record.get('karar')!='AL'):continue
@@ -581,7 +602,7 @@ def evidence_rows(records,current,mode,horizon):
 def evidence_stats(pairs):
     minimum,days_min=evidence_limits();n=len(pairs)
     gains=[number(o.get('yon_getirisi'),number(o['getiri_yuzde'])) for r,o,f in pairs]
-    days={str(r.get('sinyal_zamani') or r.get('zaman'))[:10] for r,o,f in pairs}
+    days={signal_day(r) for r,o,f in pairs};days.discard(None)
     wins=sum(o['durum']=='BASARILI' for r,o,f in pairs);fail=sum(o['durum'] in ('STOP','BASARISIZ') for r,o,f in pairs)
     targets=[o.get('hedefe_ulasti',o.get('hedef_temasi')) for r,o,f in pairs];targets=[v for v in targets if isinstance(v,bool)]
     stops=[o.get('stop_oldu',o.get('stop_temasi')) for r,o,f in pairs];stops=[v for v in stops if isinstance(v,bool)]
@@ -680,9 +701,375 @@ def controlled_score(row,raw,current,mode,model):
     if unsafe or forbidden or not valid:delta=min(0,delta) if valid else 0
     if not any(v is not None for v in flags.values()):delta=0
     return {'score':max(0,min(100,raw+delta)),'correction':delta,'contributions':contributions,
+            'criteria_snapshot':{'flags':flags,'captured_at':current.isoformat(),'mode':mode,
+                                 'model_version':model.get('model_version','BASE') if valid else 'BASE','model_created_at':model.get('created_at') if valid else None},
             'model_version':model.get('model_version','BASE') if valid else 'BASE','created_at':current.isoformat(timespec='seconds'),
             'training_end':model.get('training_end') if valid else None,'mode':mode,'main_score_changed':False,
             'eligible_for_evaluation':bool(valid and not unsafe and not forbidden)}
+
+
+# Step 19: diagnostics in the existing outcome/evidence pipeline, never live weights.
+DIAGNOSTIC_VERSION='DECISION_DIAGNOSTICS_V1'
+PERFORMANCE_SOURCES=('LIVE','BACKTEST','SHADOW')
+ERROR_TYPES=('FALSE_AL','FALSE_SAT','STOP_TOO_TIGHT','TARGET_TOO_AGGRESSIVE','LATE_ENTRY','EARLY_ENTRY',
+             'VOLUME_FALSE_BREAKOUT','NEWS_FALSE_POSITIVE','MARKET_CONTEXT_MISSED','SECTOR_CONTEXT_MISSED','STALE_DATA_ERROR','UNKNOWN')
+
+
+def excursion_metrics(window,base,target,stop,short=False):
+    """Direction-aware excursions. Touch-bar order is unknown: exclude it from pre-contact metrics."""
+    empty=dict(mfe_pct=None,mae_pct=None,mfe_before_stop_pct=None,mae_before_target_pct=None,target_approach_ratio=None)
+    if not window or not base or base<=0 or any(number(b.get(k)) is None for b in window for k in ('high','low')):return empty
+    if target is not None and not ((target<base) if short else (target>base)):target=None
+    if stop is not None and not ((stop>base) if short else (stop<base)):stop=None
+    def excursions(bars):
+        if not bars:return 0.0,0.0
+        high=max(b['high'] for b in bars);low=min(b['low'] for b in bars)
+        return (max(0,(base-low)/base*100),min(0,(base-high)/base*100)) if short else (max(0,(high-base)/base*100),min(0,(low-base)/base*100))
+    mfe,mae=excursions(window)
+    target_at=next((i for i,b in enumerate(window) if target and (b['low']<=target if short else b['high']>=target)),None)
+    stop_at=next((i for i,b in enumerate(window) if stop and (b['high']>=stop if short else b['low']<=stop)),None)
+    reward=abs(target-base)/base*100 if target and ((target<base) if short else (target>base)) else None
+    return dict(mfe_pct=round(mfe,4),mae_pct=round(mae,4),
+        mfe_before_stop_pct=round(excursions(window[:stop_at])[0],4) if stop_at is not None else None,
+        mae_before_target_pct=round(excursions(window[:target_at])[1],4) if target_at is not None else None,
+        target_approach_ratio=round(mfe/reward,4) if reward else None,pre_contact_resolution='EXCLUDES_TOUCH_BAR',excursion_scope='FULL_EVALUATION_HORIZON')
+
+
+def performance_source(record):
+    explicit=record.get('performance_source') or record.get('result_source')
+    if explicit:return explicit if explicit in PERFORMANCE_SOURCES else 'UNKNOWN'
+    model=str(record.get('model',''))
+    if 'SHADOW' in model:return 'SHADOW'
+    if 'BACKTEST' in model:return 'BACKTEST'
+    if model in ('YARIN_TOP10','ORTAK_AI','HABER','MAKRO','GUN_ICI') or record.get('sinyal_zamani'):return 'LIVE'
+    return 'UNKNOWN'
+
+
+def signal_day(record):
+    at=stamp(record.get('sinyal_zamani') or record.get('zaman'))
+    return at.date().isoformat() if at else None
+
+
+def combination_limits():
+    n=int(os.environ.get('MIN_COMBINATION_SAMPLES','50'));days=int(os.environ.get('MIN_COMBINATION_DAYS','7'))
+    cap=int(os.environ.get('MAX_CRITERION_COMBINATIONS','64'))
+    if not 50<=n<=10000 or not 7<=days<=250 or not 1<=cap<=128:raise ValueError('Combination limits: samples >=50, days >=7, cap 1–128')
+    return n,days,cap
+
+
+def source_reliability():
+    weights={s:float(os.environ.get('PERFORMANCE_'+s+'_RELIABILITY',str(v))) for s,v in (('LIVE',1),('BACKTEST',.5),('SHADOW',.75))}
+    if any(not math.isfinite(v) or not 0<=v<=1 for v in weights.values()) or weights['LIVE']<=0 or any(weights['LIVE']<weights[s] for s in ('BACKTEST','SHADOW')):
+        raise ValueError('Source reliability: LIVE must have the highest nonzero trust, values 0–1')
+    return weights
+
+
+def diagnostic_rows(records,current,mode,horizon,source,include_invalid=False):
+    """First record per stock/day/model before outcome checks, isolated by source and horizon."""
+    chosen={}
+    candidates=list(records)
+    if source=='SHADOW' and mode=='INTRADAY':
+        for record in records:
+            shadow=record.get('controlled_shadow') or {};signal=stamp(record.get('sinyal_zamani'));captured=stamp(shadow.get('created_at'));cutoff=stamp(shadow.get('training_end'))
+            if performance_source(record)=='LIVE' and record.get('controlled_shadow_adayi') and shadow.get('eligible_for_evaluation') and signal and captured and cutoff and cutoff<signal and captured<=signal:
+                candidates.append(dict(record,performance_source='SHADOW',model='GUN_ICI_CONTROLLED_SHADOW'))
+    for original in sorted(candidates,key=lambda r:str(r.get('sinyal_zamani') or r.get('zaman') or '')):
+        if performance_source(original)!=source:continue
+        if mode=='DAILY' and original.get('model') not in ('YARIN_TOP10','YARIN_SHADOW','YARIN_CONTROLLED_SHADOW','ORTAK_AI','HABER','MAKRO','BACKTEST') and source!='BACKTEST':continue
+        if mode=='INTRADAY' and not original.get('sinyal_zamani'):continue
+        signal=stamp(original.get('sinyal_zamani') or original.get('zaman'))
+        if not signal or signal>current or not business_day(signal.date()) or original.get('egitim_durumu')=='REFERANS':continue
+        model_at=stamp(original.get('model_created_at'))
+        decision_at=stamp(original.get('decision_asof'))
+        if source=='BACKTEST' and (not model_at or not decision_at):continue
+        if (model_at and model_at>signal) or (decision_at and decision_at>signal):continue
+        recorded_mode=original.get('performance_mode')
+        if recorded_mode and recorded_mode!=mode:continue
+        key=(original.get('sembol'),signal.date(),original.get('model','GUN_ICI'))
+        chosen.setdefault(key,original)
+    result=[]
+    for r in chosen.values():
+        o=(r.get('sonuclar') or {}).get(str(horizon)) if mode=='INTRADAY' else r.get('sonuc_'+str(horizon)+'g')
+        o=o if isinstance(o,dict) else {};signal=stamp(r.get('sinyal_zamani') or r.get('zaman'));observed=stamp(o.get('observed_at'))
+        if not observed or observed<signal or observed>current:continue
+        complete=o.get('tamamlandi') if mode=='INTRADAY' else o.get('degerlendirme_tamamlandi')
+        valid=bool(complete and o.get('durum') in ('BASARILI','KISMEN_BASARILI','BASARISIZ','STOP') and number(o.get('getiri_yuzde')) is not None and o.get('ilk_temas')!='BELIRSIZ' and not o.get('kalite_uyarilari'))
+        if mode=='INTRADAY':valid=valid and bool(o.get('egitime_uygun'))
+        if not valid and not include_invalid:continue
+        raw,final,ctx=frozen_context(r)
+        if raw.get('piyasa_baglami') and not ctx:r=dict(r,piyasa_rejimi='BILINMIYOR',sektor='BILINMIYOR')
+        result.append((r,o,evidence_features(r,mode)))
+    return result
+
+
+def diagnostic_stats(pairs,minimum=None,days_min=None):
+    stats=evidence_stats(pairs);minimum=minimum or evidence_limits()[0];days_min=days_min or evidence_limits()[1]
+    enough=stats['sample_count']>=minimum and stats['different_days']>=days_min
+    stats['confidence']='YETERLI' if enough else 'DUSUK';stats['sufficient']=enough
+    # Small cohorts keep counts but cannot advertise precise percentages/returns.
+    if not enough:
+        for key in ('success_rate','median_return','trimmed_mean_return','average_return','target_hit_rate','stop_hit_rate','worst_return','best_return','adverse_excursion_pct'):stats[key]=None
+    stats['trimmed_mean']=stats['trimmed_mean_return']
+    return stats
+
+
+def combination_catalog(pairs):
+    """Bounded, outcome-blind combinations of observed criteria from different families."""
+    minimum,days,cap=combination_limits()
+    available=[k for k,family in CRITERION_FAMILIES.items() if family!='karar' and any(p[2].get(k) is not None for p in pairs)]
+    candidates=[]
+    for size in (2,3):
+        for keys in combinations(available,size):
+            families=[CRITERION_FAMILIES[k] for k in keys]
+            # Price confirmation is independent evidence from news polarity, despite the common news budget.
+            news_pair=set(keys)&{'HABER_POZITIF','HABER_NEGATIF','HABER_FIYAT_TEYIDI'}
+            special=len(news_pair)==2 and 'HABER_FIYAT_TEYIDI' in news_pair
+            if len(set(families))<len(families)-(1 if special else 0):continue
+            if ('PIYASA_POZITIF' in keys and 'PIYASA_NEGATIF' in keys) or ('SEKTOR_GUCLU' in keys and 'SEKTOR_ZAYIF' in keys):continue
+            coverage=sum(all(p[2].get(k) is not None for k in keys) for p in pairs)
+            if not coverage:continue
+            # Rank by known input coverage, not returns; sampling/validation gates apply later.
+            candidates.append((coverage,keys))
+    # Negative news with explicit bearish trend/momentum is not a bullish conjunction.
+    if 'HABER_NEGATIF' in available:
+        bearish=[k for k in ('MACD','SMA_TREND','EMA_TREND','MOMENTUM') if k in available]
+        for size in (1,2):
+            for technical in combinations(bearish,size):
+                if len({CRITERION_FAMILIES[k] for k in technical})!=size:continue
+                keys=tuple(sorted(('HABER_NEGATIF',)+tuple('!'+k for k in technical)))
+                coverage=sum(all(p[2].get(k.lstrip('!')) is not None for k in keys) for p in pairs)
+                if coverage:candidates.append((coverage,keys))
+    candidates.sort(key=lambda item:(-item[0],len(item[1]),item[1]))
+    # Reserve up to a quarter for triples; pair saturation cannot hide richer context.
+    triples=[k for n,k in candidates if len(k)==3][:cap//4]
+    pairs_only=[k for n,k in candidates if len(k)==2][:cap-len(triples)]
+    return pairs_only+triples
+
+
+def combination_report(pairs,catalog,source):
+    minimum,days,cap=combination_limits();report={};trust=source_reliability()[source]
+    for keys in catalog:
+        known=[p for p in pairs if all(isinstance(p[2].get(k.lstrip('!')),bool) for k in keys)]
+        def matches(p):return all(p[2][k.lstrip('!')] is (not k.startswith('!')) for k in keys)
+        yes=[p for p in known if matches(p)];no=[p for p in known if not matches(p)]
+        hit=diagnostic_stats(yes,minimum,days);other=diagnostic_stats(no,minimum,days)
+        enough=hit['sufficient'] and other['sufficient'];interval=[None,None];contribution=0
+        if enough:
+            interval=[hit['success_interval'][0]-other['success_interval'][1],hit['success_interval'][1]-other['success_interval'][0]]
+            contribution=.25 if interval[0]>0 and hit['median_return']>other['median_return']+.25 else -.25 if interval[1]<0 and hit['median_return']<other['median_return']-.25 else 0
+        # Recommendations cannot add to singleton bonuses: replace, never stack. Not automatically scored.
+        key='+'.join(keys)
+        report[key]={**hit,'criteria':list(keys),'families':sorted({CRITERION_FAMILIES[k.lstrip('!')] for k in keys}),'source':source,
+            'model_versions':distribution([(dict(r,measured_version=r.get('model_version') or (r.get('nihai_karar') or {}).get('model_version') or 'LEGACY_UNKNOWN'),o,f) for r,o,f in yes],'measured_version'),
+            'without':other,'difference_interval':interval,'unknown_count':len(pairs)-len(known),
+            'regime_distribution':distribution(yes,'piyasa_rejimi'),'sector_distribution':distribution(yes,'sektor'),
+            'shadow_contribution_proposal':contribution*trust,'proposal_only':True,
+            'double_count_policy':'REPLACE_SINGLETONS_NO_STACK','selection_policy':'AT_MOST_ONE_COMBINATION','applied':False,'strong':bool(enough and contribution>0)}
+    return report
+
+
+def distribution(pairs,field):
+    result={}
+    for r,o,f in pairs:
+        key=str(r.get(field) or 'BILINMIYOR');result[key]=result.get(key,0)+1
+    return result
+
+
+def frozen_context(record):
+    raw={**(record.get('analiz') or record.get('kriterler') or {}),**record};signal=stamp(record.get('sinyal_zamani') or record.get('zaman'))
+    final=raw.get('nihai_karar') or {};at=stamp(final.get('updated_at'))
+    if not at or not signal or at>signal:final={}
+    ctx=raw.get('piyasa_baglami') or {};at=stamp(ctx.get('updated_at'))
+    if not at or not signal or at>signal:ctx={}
+    return raw,final,ctx
+
+
+def news_kind(record):
+    raw,final,ctx=frozen_context(record);metadata=raw.get('haber_metadata') or {};signal=stamp(record.get('sinyal_zamani') or record.get('zaman'))
+    at=stamp(metadata.get('observed_at') or metadata.get('updated_at'))
+    if not at or not signal or at>signal or number(metadata.get('confidence'),0)<70:return 'OTHER'
+    kind=str(metadata.get('category','OTHER')).upper().translate(str.maketrans('İÇĞÖŞÜ','ICGOSU')).replace('/','_').replace(' ','_')
+    return kind if kind in NEWS_TYPES else 'OTHER'
+
+
+def signal_stale(record,mode):
+    from teknik_gostergeler import snapshot,stale_at
+    raw,final,ctx=frozen_context(record);doc=snapshot(record)
+    if doc.get('stale') or any('STALE' in str(flag) for flag in (final.get('safety_flags') or [])):return True
+    signal=stamp(record.get('sinyal_zamani') or record.get('zaman'))
+    quote=doc.get('data_time') or raw.get('canli_guncelleme') or record.get('kaynak_zamani')
+    at=stamp(quote)
+    return bool(signal and at and at<=signal and stale_at(quote,signal,'INTRADAY' if mode=='INTRADAY' else 'TOMORROW'))
+
+
+def decision_error(pair,mode,source,horizon):
+    r,o,flags=pair;raw,final,ctx=frozen_context(r)
+    decision=final.get('karar',r.get('karar'));failed=o.get('durum') in ('STOP','BASARISIZ')
+    stale=signal_stale(r,mode)
+    if not failed and not stale:return None
+    types=[];reasons=[];misleading=[]
+    def add(kind,reason,criteria=()):types.append(kind);reasons.append(reason);misleading.extend(criteria)
+    short=decision in ('SAT','GUCLU_SAT') and not str(r.get('model','')).startswith('YARIN')
+    if stale:add('STALE_DATA_ERROR','Sinyalde dondurulmuş veri bayat işaretliydi.')
+    if failed:add('FALSE_SAT' if short else 'FALSE_AL' if decision in ('AL','GUCLU_AL') else 'UNKNOWN','Kayıtlı yön/sonuç etiketinde sinyal başarısız oldu.')
+    if not short and flags.get('PIYASA_NEGATIF') is True:add('MARKET_CONTEXT_MISSED','AL sinyali sırasında piyasa bağlamı negatifti.',('PIYASA_NEGATIF',))
+    if not short and flags.get('SEKTOR_ZAYIF') is True:add('SECTOR_CONTEXT_MISSED','AL sinyali sırasında sektör relatif gücü zayıftı.',('SEKTOR_ZAYIF',))
+    if flags.get('HABER_POZITIF') is True and flags.get('HABER_FIYAT_TEYIDI') is False:add('NEWS_FALSE_POSITIVE','Pozitif haber fiyat tarafından teyit edilmemişti.',('HABER_POZITIF',))
+    breakout=flags.get('BOLLINGER_KIRILIM') is True or flags.get('HACIMLI_KIRILIM') is True
+    if breakout and flags.get('HACIM') is False:add('VOLUME_FALSE_BREAKOUT','Kırılım sinyalinde hacim desteği zayıftı.',('BOLLINGER_KIRILIM',))
+    base=number(r.get('giris_fiyati'),number(r.get('referans_fiyat'),number(r.get('fiyat'))));stop=number(r.get('stop'));target=number(r.get('hedef'))
+    atr=number(raw.get('atr14_5' if mode=='INTRADAY' else 'atr14'))
+    if base and stop and atr and abs(base-stop)<atr*.75:add('STOP_TOO_TIGHT','Stop mesafesi sinyal ATR değerinin %75’inden küçüktü.')
+    if base and target and atr and abs(target-base)>atr*4 and o.get('hedefe_ulasti',o.get('hedef_temasi')) is False:add('TARGET_TOO_AGGRESSIVE','Ulaşılmayan hedef sinyal ATR değerinin dört katından uzaktı.')
+    # Timing labels require explicit, pre-signal confirmation, never future context joins.
+    if number(raw.get('gun_ici_sinyal_yasi_dk'),0)>20:add('LATE_ENTRY','Sinyalde kayıtlı giriş yaşı 20 dakikayı aşmıştı.')
+    if raw.get('entry_confirmation') is False:add('EARLY_ENTRY','Sinyalde açık giriş teyidi henüz yoktu.')
+    identifier=str(r.get('id') or r.get('kayit_id'))+'|'+mode+'|'+source+'|'+str(horizon)
+    return {'id':identifier,'symbol':r.get('sembol'),'signal_time':r.get('sinyal_zamani') or r.get('zaman'),
+        'signal_type':r.get('sinyal_turu',r.get('model','GUN_ICI')),'decision':decision,'score':number(r.get('skor'),number(r.get('ai_score'))),
+        'confidence':number(final.get('confidence'),number(r.get('confidence'))),'target':target,'stop':stop,'actual_result':o,
+        'failure_type':types[-1] if len(types)>1 else types[0],'failure_types':types,'main_reason':reasons[-1],
+        'missed_risk':reasons,'misleading_criteria':sorted(set(misleading)),'market_regime':r.get('piyasa_rejimi'),'sector':r.get('sektor'),
+        'news_context':{'category':news_kind(r),'positive':flags.get('HABER_POZITIF'),'price_confirmed':flags.get('HABER_FIYAT_TEYIDI')},
+        'model_version':final.get('model_version') or r.get('model_version') or r.get('calibration_version') or 'LEGACY_UNKNOWN',
+        'source':source,'mode':mode,'horizon':horizon,'analysis_policy':'OBSERVED_DIAGNOSTIC_NOT_CAUSAL'}
+
+
+def error_rates(pairs):
+    stats=diagnostic_stats(pairs);longs=[];shorts=[]
+    for p in pairs:
+        raw,final,ctx=frozen_context(p[0]);decision=final.get('karar',p[0].get('karar'))
+        if decision in ('AL','GUCLU_AL'):longs.append(p)
+        elif decision in ('SAT','GUCLU_SAT') and not str(p[0].get('model','')).startswith('YARIN'):shorts.append(p)
+    def rate(group):
+        s=diagnostic_stats(group);return sum(o['durum'] in ('STOP','BASARISIZ') for r,o,f in group)/len(group) if s['sufficient'] else None
+    return {**stats,'false_al_rate':rate(longs),'false_sat_rate':rate(shorts),'error_rate':stats['failure_count']/stats['sample_count'] if stats['sufficient'] else None}
+
+
+def quality_report(pairs):
+    metrics={};minimum,days=evidence_limits();valid=diagnostic_stats(pairs)['sufficient']
+    for field in ('mfe_pct','mae_pct','mfe_before_stop_pct','mae_before_target_pct','target_approach_ratio'):
+        selected=[p for p in pairs if number(p[1].get(field)) is not None]
+        metrics[field]={'sample_count':len(selected),'median':median([p[1][field] for p in selected]) if diagnostic_stats(selected)['sufficient'] else None}
+    stops=[];targets=[]
+    for p in pairs:
+        r,o,f=p;raw,final,ctx=frozen_context(r)
+        mode=(raw.get('teknik_gostergeler') or {}).get('mode')
+        atr=number(raw.get('atr14_5' if mode=='INTRADAY' else 'atr14'));base=number(r.get('giris_fiyati'),number(r.get('referans_fiyat'),number(r.get('fiyat'))))
+        if not atr or atr<=0 or not base:continue
+        stop=number(r.get('stop'));target=number(r.get('hedef'))
+        if stop is not None:stops.append((p,abs(base-stop)/atr))
+        if target is not None:targets.append((p,abs(target-base)/atr))
+    stop_enough=diagnostic_stats([p for p,d in stops])['sufficient'];target_enough=diagnostic_stats([p for p,d in targets])['sufficient']
+    metrics.update(stop_too_tight_rate=sum(d<.75 for p,d in stops)/len(stops) if stop_enough else None,
+        target_too_aggressive_rate=sum(d>4 and p[1].get('hedefe_ulasti',p[1].get('hedef_temasi')) is False for p,d in targets)/len(targets) if target_enough else None,
+        stop_atr_sample_count=len(stops),target_atr_sample_count=len(targets),
+        median_stop_atr=median([d for p,d in stops]) if stop_enough else None,median_target_atr=median([d for p,d in targets]) if target_enough else None,
+        inference='DIAGNOSTIC_ONLY_NO_LEVEL_CHANGES',touch_bar_order='UNKNOWN_EXCLUDED_FROM_PRE_CONTACT')
+    return metrics
+
+
+def calibration_report(pairs):
+    confidence={};confirmations={}
+    for p in pairs:
+        r,o,f=p;raw,final,ctx=frozen_context(r);value=number(final.get('confidence'),number(r.get('confidence')))
+        if value is not None:
+            band='0-49' if value<50 else '50-60' if value<60 else '60-70' if value<70 else '70-80' if value<80 else '80+'
+            confidence.setdefault(band,[]).append(p)
+        count=number(final.get('teyit_sayisi'))
+        if count is not None:confirmations.setdefault('6+' if count>=6 else str(int(count)),[]).append(p)
+    cs={k:diagnostic_stats(v) for k,v in confidence.items()};ts={k:diagnostic_stats(v) for k,v in confirmations.items()}
+    def warnings(groups,order):
+        eligible=[(k,groups[k]) for k in order if k in groups and groups[k]['sufficient']]
+        return [{'lower_bucket':a,'higher_bucket':b,'warning':'NO_OBSERVED_IMPROVEMENT','statistically_clear':hi['success_interval'][1]<lo['success_interval'][0]} for (a,lo),(b,hi) in zip(eligible,eligible[1:]) if hi['success_rate']<=lo['success_rate']]
+    return {'confidence':cs,'confirmations':ts,'confidence_warnings':warnings(cs,('0-49','50-60','60-70','70-80','80+')),
+            'confirmation_warnings':warnings(ts,('3','4','5','6+')),'thresholds_changed':False}
+
+
+def algorithm_health(records,pairs,current,mode,model_version,comparisons):
+    all_live=pairs['LIVE'];live=[p for p in all_live if p[0].get('model') not in ('HABER','MAKRO')]
+    main=error_rates(live);backtest=diagnostic_stats(pairs['BACKTEST']);shadow=diagnostic_stats(pairs['SHADOW'])
+    # INTRADAY prospective shadow memberships share records with LIVE; use step 18's frozen comparisons.
+    if comparisons:shadow=list(comparisons.values())[-1]['shadow'];shadow={**shadow,'sufficient':shadow.get('confidence')=='YETERLI'}
+    cal=calibration_report(live);days=[];day=current.date()
+    while len(days)<80:
+        if business_day(day):days.append(day.isoformat())
+        day-=timedelta(days=1)
+    curve={}
+    for size in (5,20,60):
+        selected=[p for p in live if signal_day(p[0]) in days[:size]]
+        curve[str(size)]=diagnostic_stats(selected,days_min=max(evidence_limits()[1],5 if size==5 else 7))
+    recent=[p for p in live if signal_day(p[0]) in days[:20]]
+    older=[p for p in live if signal_day(p[0]) in days[20:80]]
+    rs=diagnostic_stats(recent);old=diagnostic_stats(older)
+    drift=bool(rs['sufficient'] and old['sufficient'] and rs['success_interval'][1]<old['success_interval'][0] and rs['median_return']<old['median_return']-.25)
+    primary=60 if mode=='INTRADAY' else 1
+    observed=diagnostic_rows(records,current,mode,primary,'LIVE',include_invalid=True)
+    observed=[p for p in observed if p[0].get('model') not in ('HABER','MAKRO')]
+    stale=sum(signal_stale(r,mode) for r,o,flags in observed)
+    missing=sum(o.get('durum')=='VERI_YETERSIZ' or bool(o.get('kalite_uyarilari')) or all(v is None for v in flags.values()) for r,o,flags in observed)
+    data_rate=missing/len(observed) if observed else None;stale_rate=stale/len(observed) if observed else None
+    success=main['success_rate'];stop=main['stop_hit_rate'];target=main['target_hit_rate']
+    # Multi-metric diagnostic score; cannot imply health without sufficient LIVE evidence and known risk.
+    score=None;status='YETERSIZ_VERI'
+    if main['sufficient'] and all(v is not None for v in (success,stop,target,data_rate,stale_rate)):
+        score=round(100*(.4*success+.2*(1-stop)+.15*target+.15*(1-data_rate)+.1*(1-stale_rate)),2)
+        if drift:score=max(0,score-15)
+        if cal['confidence_warnings'] or cal['confirmation_warnings']:score=max(0,score-5)
+        status='COK_IYI' if score>=85 else 'IYI' if score>=70 else 'NORMAL' if score>=50 else 'ZAYIF'
+    conf=[number(frozen_context(r)[1].get('confidence'),number(r.get('confidence'))) for r,o,f in live];conf=[v for v in conf if v is not None]
+    breakdown={}
+    for field in ('piyasa_rejimi','sektor'):
+        breakdown[field]={key:error_rates([p for p in live if str(p[0].get(field) or 'BILINMIYOR')==key]) for key in distribution(live,field)}
+    breakdown['news']={key:error_rates([p for p in all_live if news_kind(p[0])==key]) for key in {news_kind(p[0]) for p in all_live}}
+    for news in breakdown['news'].values():
+        news.update(false_positive_rate=news['false_al_rate'],false_negative_rate=news['false_sat_rate'],
+                    population='RECORDED_DIRECTIONAL_SIGNALS_ONLY')
+    return {'main_model_success':success,'shadow_success':shadow.get('success_rate') if shadow.get('sufficient') else None,
+        'live_sample_count':len(live),'backtest_sample_count':len(pairs['BACKTEST']),'shadow_sample_count':shadow['sample_count'],
+        'avg_confidence':mean(conf) if conf else None,'false_al_rate':main['false_al_rate'],'false_sat_rate':main['false_sat_rate'],
+        'stop_hit_rate':stop,'target_hit_rate':target,'stale_data_rate':stale_rate,'data_missing_rate':data_rate,
+        'last_update':current.isoformat(),'model_version':model_version,'health_status':status,'health_score':score,
+        'measured_model_versions':distribution([(dict(r,measured_version=r.get('model_version') or (r.get('nihai_karar') or {}).get('model_version') or 'LEGACY_UNKNOWN'),o,f) for r,o,f in live],'measured_version'),
+        'model_drift':{'warning':'MODEL_DRIFT' if drift else None,'assessed':rs['sufficient'] and old['sufficient'],'recent':rs,'previous':old},
+        'performance_curve':curve,'calibration':cal,'error_breakdown':breakdown,'level_quality':quality_report(live),
+        'sources':{'LIVE':main,'BACKTEST':backtest,'SHADOW':shadow},'learning_enabled':False,'automatic_changes':False}
+
+
+def decision_diagnostics(location,records,current,mode,model_version,comparisons):
+    horizons=(5,15,30,60,'SEANS') if mode=='INTRADAY' else HORIZONS;primary='60' if mode=='INTRADAY' else '1'
+    by_horizon={str(h):{source:diagnostic_rows(records,current,mode,h,source) for source in PERFORMANCE_SOURCES} for h in horizons}
+    # Vocabulary chosen exclusively from LIVE frozen inputs, with BACKTEST fallback for empty histories.
+    catalog=combination_catalog(by_horizon[primary]['LIVE'] or by_horizon[primary]['BACKTEST'])
+    combos={h:{source:combination_report(rows,catalog,source) for source,rows in groups.items()} for h,groups in by_horizon.items()}
+    errors=[]
+    for h,groups in by_horizon.items():
+        for source,rows in groups.items():
+            errors.extend(error for p in rows for error in [decision_error(p,mode,source,h)] if error)
+    # Bad-data outcomes never enter success metrics; retain explicit stale evidence in the private log.
+    known_error_ids={e['id'] for e in errors}
+    for source in PERFORMANCE_SOURCES:
+        for p in diagnostic_rows(records,current,mode,primary,source,include_invalid=True):
+            error=decision_error(p,mode,source,primary)
+            if error and error['id'] not in known_error_ids and 'STALE_DATA_ERROR' in error['failure_types']:
+                errors.append(error);known_error_ids.add(error['id'])
+    target=location.runtime/'karar_hata_gunlugu.json'
+    with locked(target):
+        document=load(target,{'schema_version':DIAGNOSTIC_VERSION,'modes':{}})
+        old=document.setdefault('modes',{}).get(mode,{})
+        old.update({error['id']:error for error in errors});document['modes'][mode]=old;document['updated_at']=current.isoformat();atomic_json(target,document)
+    counts={source:{kind:sum(kind in e['failure_types'] for e in errors if e['source']==source and e['horizon']==primary) for kind in ERROR_TYPES} for source in PERFORMANCE_SOURCES}
+    health=algorithm_health(records,by_horizon[primary],current,mode,model_version,comparisons)
+    health.update(error_counts=counts['LIVE'],most_common_error=max(counts['LIVE'],key=counts['LIVE'].get) if any(counts['LIVE'].values()) else None)
+    result={'schema_version':DIAGNOSTIC_VERSION,'model_version':model_version,'updated_at':current.isoformat(),'mode':mode,
+        'combination_count':len(catalog),'minimum_samples':combination_limits()[0],'minimum_days':combination_limits()[1],
+        'source_reliability':source_reliability(),'combinations':combos,'error_counts':counts,'health':health,'learning_enabled':False}
+    for name,value in (('algoritma_saglik.json',health),('kombinasyon_performansi.json',result)):
+        target=location.public/name
+        with locked(target):
+            document=load(target,{'modes':{}});document.setdefault('modes',{})[mode]=value
+            document.update(schema_version=DIAGNOSTIC_VERSION,updated_at=current.isoformat());atomic_json(target,document)
+    return result
 
 
 def controlled_publish(location,records,current,mode):
@@ -697,9 +1084,11 @@ def controlled_publish(location,records,current,mode):
         if not at or at>current:continue
         results=r.get('sonuclar') or {k:v for k,v in r.items() if k.startswith('sonuc_')}
         known={k:v for k,v in results.items() if isinstance(v,dict) and stamp(v.get('observed_at')) and stamp(v['observed_at'])<=current}
-        if known:closed.append((r.get('id') or r.get('kayit_id'),r.get('controlled_shadow'),known))
+        if known:closed.append((r.get('id') or r.get('kayit_id'),r.get('controlled_shadow'),known,
+                              performance_source(r),evidence_features(r,mode),r.get('piyasa_rejimi'),r.get('sektor'),
+                              r.get('nihai_karar'),r.get('haber_metadata'),r.get('model_version')))
     projection={h:[(r.get('id') or r.get('kayit_id'),o,f,r.get('sektor'),r.get('piyasa_rejimi'),r.get('nihai_karar')) for r,o,f in values] for h,values in all_pairs.items()}
-    fingerprint=hashlib.sha256(json.dumps([projection,closed,evidence_limits()],sort_keys=True,default=str).encode()).hexdigest()
+    fingerprint=hashlib.sha256(json.dumps([projection,closed,evidence_limits(),DIAGNOSTIC_VERSION,combination_limits(),source_reliability(),current.date().isoformat()],sort_keys=True,default=str).encode()).hexdigest()
     file=location.runtime/('gun_ici_agirliklari.json' if mode=='INTRADAY' else 'yarin_kalibrasyon.json')
     default={} if mode=='INTRADAY' else {'versions':{},'days':{},'active_version':'BASE','shadow_version':'BASE'}
     published=True;published_versions=[]
@@ -708,6 +1097,9 @@ def controlled_publish(location,records,current,mode):
             output=load(location.public/name,{}).get(key,{}).get(mode)
             published=published and isinstance(output,dict)
             published_versions.append((output or {}).get('model_version'))
+        except (OSError,ValueError,AttributeError):published=False
+    for name in ('algoritma_saglik.json','kombinasyon_performansi.json'):
+        try:published=published and isinstance(load(location.public/name,{}).get('modes',{}).get(mode),dict)
         except (OSError,ValueError,AttributeError):published=False
     with locked(file):
         store=load(file,default);state=store.setdefault('controlled_evidence',{'versions':{},'days':{}})
@@ -750,12 +1142,13 @@ def controlled_publish(location,records,current,mode):
         # A model's training cohort is never its validation cohort. Only frozen later rankings count.
         comparisons={}
         used_versions={(r.get('controlled_shadow') or {}).get('model_version') for r in records}
-        for old in available:
+        for old in sorted(available,key=lambda v:stamp(v['created_at'])):
             if old['model_version'] not in used_versions:continue
             old_id=old['model_version'];cohorts={'main':[],'shadow':[]}
             cutoff=stamp(old['training_end'])
             seen=set()
             for record in sorted(records,key=lambda r:str(r.get('sinyal_zamani') or r.get('zaman') or '')):
+                if performance_source(record) not in ('LIVE','SHADOW'):continue
                 observed_shadow=record.get('controlled_shadow') or {}
                 if observed_shadow.get('eligible_for_evaluation') is False:continue
                 signal=stamp(record.get('sinyal_zamani') or record.get('zaman'))
@@ -799,6 +1192,8 @@ def controlled_publish(location,records,current,mode):
                  'criteria':reports,'scopes':scopes,'decision_buckets':buckets,'news_types':news_types,
                  'comparisons':comparisons,'proposals':proposals,'overlaps':overlaps,'family_budgets':FAMILY_BUDGETS,
                  'training_sample_count':len(pairs),'automatic_application':False}
+        diagnostics=decision_diagnostics(location,records,current,mode,version,comparisons)
+        summary['diagnostics']={key:diagnostics[key] for key in ('schema_version','combination_count','minimum_samples','minimum_days','health')}
         state.update(fingerprint=fingerprint,summary=summary);atomic_json(file,store)
     for name,key,value in (('kriter_performansi.json','modes',summary),('shadow_model_ozeti.json','modes',{k:v for k,v in summary.items() if k not in ('criteria','scopes','news_types')}),
                            ('onerilen_agirliklar.json','kontrollu_olcum',{'model_version':version,'proposals':proposals,'weights':weights,'learning_enabled':False,'updated_at':current.isoformat()})):

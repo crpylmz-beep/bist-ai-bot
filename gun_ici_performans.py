@@ -84,7 +84,10 @@ def outcome(record,bars,horizon,current):
     # Not a short simulator: sell/reduced signals have descriptive results only.
     usable=record.get('karar')=='AL' and levels and rr>=1
     state='BELIRSIZ' if first=='BELIRSIZ' else 'STOP' if first=='STOP' else 'BASARILI' if usable and first=='HEDEF' else 'KISMEN_BASARILI' if usable and gain>=risk*.5 else 'BASARISIZ' if usable else 'REFERANS'
+    from performans_motoru import excursion_metrics
     return dict(durum=state,tamamlandi=True,vade=horizon,observed_at=current.isoformat(),sonuc_zamani=due.isoformat(),
+        **excursion_metrics(used,base,target,stop),
+        model_version=record.get('model_version','LEGACY_UNKNOWN'),performance_source=record.get('performance_source','LIVE'),
         getiri_yuzde=gain,maksimum_yukselis=(max(b['high'] for b in used)/base-1)*100,
         maksimum_dusus=(min(b['low'] for b in used)/base-1)*100,hedef_temasi=target_hit,stop_temasi=stop_hit,
         ilk_temas=first,risk_getiri=rr,kullanim_suresi_dk=(due-start).total_seconds()/60,
@@ -198,6 +201,7 @@ class GunIciPerformans:
                 identity=hashlib.sha256((symbol+'|'+source.isoformat()+'|'+json.dumps(snapshot,sort_keys=True)).encode()).hexdigest()[:24]
                 if any(r['id']==identity for r in state['kayitlar']):continue
                 record={'id':identity,'sembol':symbol,'sinyal_zamani':current.isoformat(),'kaynak_zamani':source.isoformat(),
+                    'performance_source':'LIVE',
                     'sinyal_yasi_dk':number(row.get('gun_ici_sinyal_yasi_dk'),0),'giris_fiyati':price,
                     'skor':number(row.get('gun_ici_puan'),0),'karar':row.get('gun_ici_karar','IZLE'),
                     'alim_alt':row.get('gun_ici_alim_alt'),'alim_ust':row.get('gun_ici_alim_ust'),
