@@ -1284,6 +1284,7 @@ async function showAiLearning(){
         alan.innerHTML =
             '<div class="empty">AI Öğrenme verileri y?klenemedi.</div>';
     }
+    await teknikOlcumleriYukle(alan);
 }
 
 
@@ -2661,9 +2662,49 @@ function otomatikSeviyeGoster(a){
         ${field("Karar", yarinMetin(a.karar))}
         ${field("Nihai AI puanı", yarinSayi(a.nihai_ai_puan))}
         ${field("Güven", yarinSayi(a.guven))}
-    </div><p style="font-size:12px">${a.model === "GUN_ICI" ? "Gün içi analiz" : "Günlük analiz"} ·
+    </div>${standartGostergelerGoster(a.teknik_gostergeler)}<p style="font-size:12px">${a.model === "GUN_ICI" ? "Gün içi analiz" : "Günlük analiz"} ·
         Son analiz: ${a.updated_at ? yarinZaman(a.updated_at) : yarinMetin(a.eski_zaman_metni) + " (saat dilimi doğrulanamadı)"}.
         Bunlar son kaydedilmiş analiz seviyeleridir.</p>`;
+}
+
+function standartGostergelerGoster(doc){
+    const names={VWAP_USTU:'Üstünde',VWAP_ALTI:'Altında',VWAP_YAKIN:'Yakın',OBV_YUKSELEN:'Güçlü',OBV_DUSEN:'Zayıf',OBV_YATAY:'Nötr',GUCLENIYOR:'Güçleniyor',ZAYIFLIYOR:'Zayıflıyor',NOTR:'Nötr'};
+    const text=(group,key) => group?.status === 'OK' ? yarinMetin(names[group[key]] || '--') : '--';
+    const bb=doc?.bollinger;
+    const bbState=bb?.status !== 'OK' ? '--' : bb.squeeze_volume_momentum_break ? 'Hacimli kırılım' : bb.upper_break ? 'Üst kırılım' : bb.lower_break ? 'Alt kırılım' : bb.return_inside ? 'Banda dönüş' : bb.squeeze ? 'Sıkışma' : 'Normal';
+    const vwap=doc?.vwap;
+    return '<h3>Teyit Göstergeleri</h3><div class="detail-grid">' +
+        detayKutu('Seans VWAP',vwap?.status === 'OK' ? yarinSayi(vwap.session_value,' TL') : '--') +
+        detayKutu('VWAP konumu',text(vwap,'position')) +
+        detayKutu('OBV',text(doc?.obv,'trend')) + detayKutu('Bollinger',bbState) +
+        detayKutu('Momentum',text(doc?.momentum,'state')) +
+        (vwap?.reference_20 != null && doc?.mode === 'TOMORROW' ? detayKutu('VWAP20 referansı',yarinSayi(vwap.reference_20,' TL')) : '') +
+        '</div><p style="font-size:12px">' +
+        (doc?.stale ? 'Eski teknik veri — teyit olarak kullanılmamalı. ' : '') +
+        'Gösterge zamanı: ' + yarinZaman(doc?.data_time) + ' · Güven: ' + yarinSayi(doc?.confidence,'%') + '</p>';
+}
+
+function teknikKriterRaporuGoster(report,label){
+    const names={VWAP_USTU:'VWAP üstü',VWAP_RECLAIM:'VWAP reclaim',OBV_POZITIF_TREND:'OBV yükselen',OBV_KIRILIM:'OBV kırılım',OBV_POZITIF_UYUMSUZLUK:'OBV pozitif uyumsuzluk',OBV_NEGATIF_UYUMSUZLUK:'OBV negatif uyumsuzluk',BOLLINGER_SIKISMA_KIRILIM:'Bollinger sıkışma kırılımı',BOLLINGER_BANDA_DONUS:'Bollinger banda dönüş',MOMENTUM_GUCLENME:'Momentum güçlenme',MOMENTUM_ZAYIFLAMA:'Momentum zayıflama'};
+    if(!report?.vadeler) return `<p>${yarinMetin(label)}: henüz tamamlanmış ölçüm yok.</p>`;
+    return Object.entries(report.vadeler).map(([horizon,criteria]) => {
+        const rows=Object.entries(criteria).map(([key,entry])=>{
+            const value=entry.varken || {};
+            return `<tr><td>${yarinMetin(names[key] || key)}</td><td>${yarinSayi(value.sample_count)}</td><td>${yarinSayi(value.success_rate == null ? null : value.success_rate*100,'%')}</td><td>${yarinSayi(value.median_return,'%')}</td><td>${yarinSayi(value.trimmed_mean,'%')}</td><td>${entry.confidence === 'YETERLI' ? 'Yeterli' : 'Düşük'}</td></tr>`;
+        }).join('');
+        return `<details><summary>${yarinMetin(label)} · ${horizon === 'SEANS' ? 'Seans sonu' : yarinMetin(horizon) + (report.unit === 'DAKIKA' ? ' dk' : ' işlem günü')}</summary><table style="width:100%;table-layout:fixed;font-size:11px;overflow-wrap:anywhere"><thead><tr><th>Kriter</th><th>Örnek</th><th>Başarı</th><th>Medyan</th><th>Trim</th><th>Güven</th></tr></thead><tbody>${rows}</tbody></table></details>`;
+    }).join('');
+}
+
+async function teknikOlcumleriYukle(alan){
+    const results=await Promise.allSettled(['data/gun_ici_performans.json','data/performans_ozeti.json'].map(async url=>{
+        const response=await fetch(url+'?t='+Date.now(),{cache:'no-store'});
+        return response.ok ? (await response.json()).standart_teknik_kriterler : null;
+    }));
+    if(document.getElementById('aiLearningPage').style.display !== 'block') return;
+    alan.insertAdjacentHTML('beforeend','<div class="detail-card"><h3>Teknik Kriter Ölçümleri</h3><p>Yeni kriterler ölçülüyor; otomatik ağırlık uygulaması kapalı.</p>' +
+        teknikKriterRaporuGoster(results[0].status === 'fulfilled' ? results[0].value : null,'Gün İçi') +
+        teknikKriterRaporuGoster(results[1].status === 'fulfilled' ? results[1].value : null,'Yarın') + '</div>');
 }
 
 function ortakAiGoster(ai){

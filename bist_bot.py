@@ -120,24 +120,9 @@ def tahmin_gecmisi_yaz(veri):
 
 
 def rsi_hesapla(close, periyot=14):
-    delta = close.diff()
-
-    kazanc = delta.clip(lower=0)
-    kayip = -delta.clip(upper=0)
-
-    ort_kazanc = kazanc.rolling(periyot).mean()
-    ort_kayip = kayip.rolling(periyot).mean()
-
-    rs = ort_kazanc / ort_kayip.replace(
-        0,
-        float("nan")
-    )
-
-    rsi = 100 - (
-        100 / (1 + rs)
-    )
-
-    return rsi
+    from teknik_gostergeler import rsi
+    # Retain historical daily zero-loss treatment for existing scores.
+    return rsi(close,periyot,zero_policy='LEGACY')
 
 
 def rsi_yorumu(rsi):
@@ -320,6 +305,12 @@ def hisse_analiz_hesapla(
         if len(veri) < 2:
             return None
 
+        # Reject future-dated provider rows before any historical scoring.
+        if isinstance(veri.index,pd.DatetimeIndex):
+            index=veri.index.tz_localize('Europe/Istanbul') if veri.index.tz is None else veri.index.tz_convert('Europe/Istanbul')
+            veri=veri.loc[index<=datetime.now(ZoneInfo('Europe/Istanbul'))]
+            if len(veri)<2:return None
+
         close = veri["Close"]
         volume = veri["Volume"]
 
@@ -330,24 +321,8 @@ def hisse_analiz_hesapla(
         # referans VWAP'tir. Gercek seans VWAP'i degildir.
         # Dakikalik veri geldiginde seans VWAP'i ayrica
         # hesaplanacaktir.
-        typical_price = (
-            veri["High"]
-            + veri["Low"]
-            + veri["Close"]
-        ) / 3
-
-        vwap_pv_20 = (
-            typical_price * volume
-        ).rolling(20).sum()
-
-        vwap_vol_20 = (
-            volume
-        ).rolling(20).sum()
-
-        vwap20_seri = (
-            vwap_pv_20
-            / vwap_vol_20.replace(0, float("nan"))
-        )
+        from teknik_gostergeler import vwap_series, bollinger_series, macd as shared_macd
+        vwap20_seri=vwap_series(veri,20)
 
         vwap20 = guvenli_float(
             vwap20_seri.iloc[-1]
@@ -414,18 +389,7 @@ def hisse_analiz_hesapla(
         # -------------------------------------------------
         # BOLLINGER BANTLARI (20, 2)
         # -------------------------------------------------
-        boll_orta_seri = close.rolling(20).mean()
-        boll_std_seri = close.rolling(20).std()
-
-        boll_ust_seri = (
-            boll_orta_seri
-            + 2 * boll_std_seri
-        )
-
-        boll_alt_seri = (
-            boll_orta_seri
-            - 2 * boll_std_seri
-        )
+        boll_orta_seri,boll_ust_seri,boll_alt_seri=bollinger_series(close)
 
         boll_orta = guvenli_float(
             boll_orta_seri.iloc[-1]
@@ -482,24 +446,7 @@ def hisse_analiz_hesapla(
             rsi.iloc[-2]
         )
 
-        ema12 = close.ewm(
-            span=12,
-            adjust=False
-        ).mean()
-
-        ema26 = close.ewm(
-            span=26,
-            adjust=False
-        ).mean()
-
-        macd = ema12 - ema26
-
-        signal = macd.ewm(
-            span=9,
-            adjust=False
-        ).mean()
-
-        histogram = macd - signal
+        macd,signal,histogram=shared_macd(close)
 
         macd_son = guvenli_float(
             macd.iloc[-1]
@@ -1413,6 +1360,8 @@ def hisse_analiz_hesapla(
             "puan": puan,
             "nedenler": nedenler,
         }
+        from teknik_gostergeler import calculate
+        sonuc['teknik_gostergeler']=calculate(veri,datetime.now(ZoneInfo('Europe/Istanbul')),'TOMORROW')
         # Kayit hatasi teknik analizin sonucunu etkilemez.
         yarin_top10_canli_guncelle(sonuc, veri)
         return sonuc
@@ -2196,6 +2145,8 @@ def yarin_top10_listesi(sonuclar, kalibrasyon=None, piyasa=None):
         except Exception:
             a.update(ham_puan=ham, kalibrasyon_duzeltmesi=0, final_puan=ham,
                      shadow_puan=ham, calibration_version="BASE", shadow_version="BASE")
+        from teknik_gostergeler import shadow
+        a.update(shadow(a,ham,baglam_zamani,'TOMORROW'))
         a['kalibrasyon_sonrasi_puan'] = a['final_puan']
         a.update(effects(a,ham,baglam_zamani,'YARIN'))
         if ham >= 55:
@@ -2290,6 +2241,10 @@ def yarin_snapshot_modeli(veri, tahmin_zamani=None):
             "shadow_puan": hisse.get('shadow_puan'),
             "calibration_version": hisse.get('calibration_version'),
             "shadow_version": hisse.get('shadow_version'),
+            "teknik_gostergeler":copy.deepcopy(hisse.get('teknik_gostergeler')),
+            "teknik_katkilar":copy.deepcopy(hisse.get('teknik_katkilar')),
+            "teknik_shadow_puan":hisse.get('teknik_shadow_puan'),
+            "teknik_model_version":hisse.get('teknik_model_version'),
             "piyasa_baglami": hisse.get("piyasa_baglami"),
             "piyasa_duzeltmesi": hisse.get("piyasa_duzeltmesi",0),
             "breadth_duzeltmesi": hisse.get("breadth_duzeltmesi",0),
@@ -3538,13 +3493,14 @@ def gun_ici_analiz_hesapla(sembol, veri=None):
         if veri is None or veri.empty:
             return None
 
+        sinyal_simdi=datetime.now(ZoneInfo('Europe/Istanbul'))
         # Intraday indicators must not include a still-open or future 5m candle.
         veri = veri.copy()
         zamanlar = pd.to_datetime(veri.index)
         if zamanlar.tz is None:
             zamanlar = zamanlar.tz_localize("Europe/Istanbul")
         veri.index = zamanlar.tz_convert("Europe/Istanbul")
-        veri = veri[veri.index + pd.Timedelta(minutes=5) <= datetime.now(ZoneInfo("Europe/Istanbul"))]
+        veri = veri[veri.index + pd.Timedelta(minutes=5) <= sinyal_simdi]
 
         if len(veri) < 30:
             return None
@@ -3627,21 +3583,9 @@ def gun_ici_analiz_hesapla(sembol, veri=None):
         bugun_close = bugun["Close"].astype(float)
         bugun_volume = bugun["Volume"].astype(float)
 
-        tipik_fiyat = (
-            bugun_high + bugun_low + bugun_close
-        ) / 3.0
-
-        toplam_seans_hacmi = guvenli_float(
-            bugun_volume.sum()
-        )
-
-        if toplam_seans_hacmi > 0:
-            seans_vwap = guvenli_float(
-                (tipik_fiyat * bugun_volume).sum()
-                / toplam_seans_hacmi
-            )
-        else:
-            seans_vwap = fiyat
+        from teknik_gostergeler import vwap_series, obv_series, momentum_series, rsi as shared_rsi, macd as shared_macd, ema
+        toplam_seans_hacmi=guvenli_float(bugun_volume.sum())
+        seans_vwap=guvenli_float(vwap_series(bugun).iloc[-1]) if toplam_seans_hacmi>0 else float('nan')
 
         if seans_vwap > 0:
             seans_vwap_uzaklik = (
@@ -3655,86 +3599,17 @@ def gun_ici_analiz_hesapla(sembol, veri=None):
         # RSI 14 - 5 DAKIKA
         # -------------------------------------------------
 
-        delta = close.diff()
-
-        kazanc = delta.clip(
-            lower=0
-        )
-
-        kayip = -delta.clip(
-            upper=0
-        )
-
-        ort_kazanc = kazanc.rolling(14).mean()
-        ort_kayip = kayip.rolling(14).mean()
-
-        son_kazanc = guvenli_float(
-            ort_kazanc.iloc[-1]
-        )
-
-        son_kayip = guvenli_float(
-            ort_kayip.iloc[-1]
-        )
-
-        if son_kayip == 0:
-            rsi5 = 100 if son_kazanc > 0 else 50
-        else:
-            rs = son_kazanc / son_kayip
-            rsi5 = 100 - (100 / (1 + rs))
-
-        # -------------------------------------------------
-        # MACD - 5 DAKIKA
-        # -------------------------------------------------
-
-        ema12 = close.ewm(
-            span=12,
-            adjust=False
-        ).mean()
-
-        ema26 = close.ewm(
-            span=26,
-            adjust=False
-        ).mean()
-
-        macd_seri = ema12 - ema26
-
-        signal_seri = macd_seri.ewm(
-            span=9,
-            adjust=False
-        ).mean()
-
-        hist_seri = macd_seri - signal_seri
-
-        macd5 = guvenli_float(
-            macd_seri.iloc[-1]
-        )
-
-        signal5 = guvenli_float(
-            signal_seri.iloc[-1]
-        )
-
-        hist5 = guvenli_float(
-            hist_seri.iloc[-1]
-        )
-
-        hist_onceki = guvenli_float(
-            hist_seri.iloc[-2]
-        )
+        rsi5=guvenli_float(shared_rsi(close).iloc[-1])
+        macd_seri,signal_seri,hist_seri=shared_macd(close)
+        macd5=guvenli_float(macd_seri.iloc[-1]);signal5=guvenli_float(signal_seri.iloc[-1])
+        hist5=guvenli_float(hist_seri.iloc[-1]);hist_onceki=guvenli_float(hist_seri.iloc[-2])
 
         # -------------------------------------------------
         # MADDE 33 - KISA EMA / OBV / ATR
         # -------------------------------------------------
 
         # EMA 9 ve EMA 21 - 5 dakika
-        ema9_seri = close.ewm(
-            span=9,
-            adjust=False
-        ).mean()
-
-        ema21_seri = close.ewm(
-            span=21,
-            adjust=False
-        ).mean()
+        ema9_seri=ema(close,9);ema21_seri=ema(close,21)
 
         ema9_5 = guvenli_float(
             ema9_seri.iloc[-1]
@@ -3753,13 +3628,7 @@ def gun_ici_analiz_hesapla(sembol, veri=None):
             ema_fark_yuzde = 0
 
         # OBV - On Balance Volume
-        yon = close.diff()
-
-        obv_hareket = volume.copy() * 0.0
-        obv_hareket[yon > 0] = volume[yon > 0]
-        obv_hareket[yon < 0] = -volume[yon < 0]
-
-        obv_seri = obv_hareket.cumsum()
+        obv_seri=obv_series(close,volume)
 
         obv5 = guvenli_float(
             obv_seri.iloc[-1]
@@ -3855,35 +3724,8 @@ def gun_ici_analiz_hesapla(sembol, veri=None):
         # KISA VADE MOMENTUM
         # -------------------------------------------------
 
-        if len(close) >= 4:
-            fiyat_15dk_once = guvenli_float(
-                close.iloc[-4]
-            )
-
-            if fiyat_15dk_once > 0:
-                momentum15 = (
-                    (fiyat - fiyat_15dk_once)
-                    / fiyat_15dk_once
-                ) * 100
-            else:
-                momentum15 = 0
-        else:
-            momentum15 = 0
-
-        if len(close) >= 7:
-            fiyat_30dk_once = guvenli_float(
-                close.iloc[-7]
-            )
-
-            if fiyat_30dk_once > 0:
-                momentum30 = (
-                    (fiyat - fiyat_30dk_once)
-                    / fiyat_30dk_once
-                ) * 100
-            else:
-                momentum30 = 0
-        else:
-            momentum30 = 0
+        momentum15=guvenli_float(momentum_series(close,3).iloc[-1])
+        momentum30=guvenli_float(momentum_series(close,6).iloc[-1])
 
         # -------------------------------------------------
         # YAKIN KIRILIM
@@ -4473,7 +4315,7 @@ def gun_ici_analiz_hesapla(sembol, veri=None):
         else:
             kirilim_durumu = "HACIMLI KIRILIM BEKLENIYOR"
 
-        return {
+        sonuc = {
             "sembol": sembol,
             "fiyat": fiyat,
             "gun_ici_puan": puan,
@@ -4560,6 +4402,13 @@ def gun_ici_analiz_hesapla(sembol, veri=None):
             "nedenler": nedenler,
             "veri_tarihi": str(veri.index[-1])
         }
+
+        from teknik_gostergeler import calculate, finite, shadow
+        sonuc['seans_vwap']=finite(sonuc['seans_vwap'])
+        if sonuc['seans_vwap'] is None:sonuc['seans_vwap_uzaklik']=None
+        sonuc['teknik_gostergeler']=calculate(veri,sinyal_simdi,'INTRADAY')
+        sonuc.update(shadow(sonuc,puan,sinyal_simdi,'INTRADAY'))
+        return sonuc
 
     except Exception as e:
         hata = str(e).lower()

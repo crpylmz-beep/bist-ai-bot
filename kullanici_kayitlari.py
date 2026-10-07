@@ -147,6 +147,11 @@ class UserRecords:
                   'eski_zaman_metni': data.get('guncelleme'), 'sembol': stock}
         result['analiz_kimligi'] = hashlib.sha256(
             json.dumps(result, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
+        from teknik_gostergeler import view
+        result['teknik_gostergeler']=view(row,now())
+        result['teknik_katkilar']=copy.deepcopy(row.get('teknik_katkilar'))
+        result['teknik_shadow_puan']=row.get('teknik_shadow_puan')
+        result['teknik_shadow_duzeltmesi']=row.get('teknik_shadow_duzeltmesi')
         return result
 
     def alarms(self, user, stock):

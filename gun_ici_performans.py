@@ -128,11 +128,13 @@ class GunIciPerformans:
 
     def rank(self,rows):
         from piyasa_baglami import PiyasaBaglami,annotate,effects
+        from teknik_gostergeler import shadow
         current=self.clock().astimezone(ISTANBUL);model=self.model()
         context=PiyasaBaglami(self.location,clock=self.clock).context('INTRADAY')
         if context:annotate(rows,context)
         for row in rows:
             row.update(apply_score(row,model,current))
+            row.update(shadow(row,row['gun_ici_ham_puan'],current,'INTRADAY'))
             row.update(effects(row,row['gun_ici_ham_puan'],current,'INTRADAY'))
             row['gun_ici_kalibrasyon_sonrasi_puan']=row['gun_ici_final_puan']
             row['gun_ici_final_puan']=clamp(row['gun_ici_final_puan']+row['piyasa_baglami_etkisi'],0,100)
@@ -197,6 +199,9 @@ class GunIciPerformans:
                     'ai_score':row.get('gun_ici_nihai_ai_puan'),'confidence':row.get('gun_ici_guven'),
                     'analiz':snapshot,'durum':'YENI_AL' if row.get('gun_ici_karar')=='AL' else 'SAT_DONDU' if row.get('gun_ici_karar')=='SAT' else 'ZAYIFLIYOR',
                     'ilk_sira':rank,'ana_liste_adayi':symbol in {x.get('sembol') for x in top10},
+                    'teknik_gostergeler':snapshot.get('teknik_gostergeler'),
+                    'teknik_katkilar':snapshot.get('teknik_katkilar'),
+                    'teknik_shadow_puan':snapshot.get('teknik_shadow_puan'),
                     'piyasa_baglami':snapshot.get('piyasa_baglami'),
                     'model_version':row.get('gun_ici_model_version',model.get('version','BASE') if not stamp(model.get('asof')) or stamp(model['asof'])<=current else 'BASE'),
                     'sonuclar':{}}
@@ -332,9 +337,11 @@ class GunIciPerformans:
             groups={}
             for r in reporting.values():groups.setdefault(r.get(field) or 'BILINMIYOR',[]).append(r)
             return {k:summary(rs) for k,rs in groups.items()}
+        from teknik_gostergeler import performance_report
+        technical=performance_report(state['kayitlar'],current,'INTRADAY',minimum)
         atomic_json(self.location.public/'gun_ici_performans.json',{'updated_at':current.isoformat(),'ana_vade_dk':60,'gunler':{d:summary(rs) for d,rs in daily.items()},
             'sektorler':grouped('sektor'),'rejimler':grouped('piyasa_rejimi'),
-            'kriterler':report,'shadow_karsilastirmasi':comparisons,'ornek_birimi':'HISSE_GUN','learning_enabled':os.environ.get('GUN_ICI_LEARNING_ENABLED','false').lower()=='true'})
+            'kriterler':report,'standart_teknik_kriterler':technical,'shadow_karsilastirmasi':comparisons,'ornek_birimi':'HISSE_GUN','learning_enabled':os.environ.get('GUN_ICI_LEARNING_ENABLED','false').lower()=='true'})
         atomic_json(self.location.public/'gun_ici_onerilen_agirliklar.json',{'updated_at':current.isoformat(),'version':model['version'],'oneriler':model['approved'],
             'minimum_her_grup':minimum,'minimum_islem_gunu':5,'otomatik_aktivasyon':False})
 

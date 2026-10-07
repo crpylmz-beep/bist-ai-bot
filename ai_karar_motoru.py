@@ -268,10 +268,20 @@ def evaluate(row, news=None, macro=None, history=None, market=None, weights=None
     if rich_market and ((decision in ('AL','GUCLU_AL') and baseline_score<thresholds['AL']) or (decision in ('SAT','GUCLU_SAT') and baseline_score>thresholds['SAT'])):
         decision='IZLE'
     if decision in ('AL','GUCLU_AL') and (confidence < 50 or news_value <= -5 or macro_value <= -5): decision = 'IZLE'
+    from teknik_gostergeler import reasons,view,features
+    technical_positive,technical_negative=reasons(row,current)
+    positive.extend(technical_positive);negative.extend(technical_negative)
+    standard=view(row,current)
+    if standard.get('stale'):
+        risks.append('STANDART_TEKNIK_VERI_ESKI')
+        confidence=min(confidence,49)
+        if decision in ('AL','GUCLU_AL'):decision='IZLE'
     return {'sembol':stock,'model':'ORTAK_AI','ai_score':score,'karar':decision,'confidence':confidence,
         'kisa_gerekce':'; '.join((positive+negative)[:3]) or 'Yeterli doğrulanmış katkı yok.',
         'reasons_positive':positive,'reasons_negative':negative,'risk_flags':list(dict.fromkeys(risks)),
         'katkilar':contributions,'girdiler':indicators,'teknik_kriterler':evidence,
+        'teknik_gostergeler':standard,'standart_teknik_kriterler':features(dict(row,zaman=current.isoformat())),
+        'teknik_katkilar':row.get('teknik_katkilar'),'teknik_ana_skor_etkisi':0,
         'indikator_katkilari':{k:{'deger':v,'grup':'teknik','ayri_ek_puan':0} for k,v in indicators.items()},
         'haber_katkilari':details,'canonical_ids':sorted(d['canonical_id'] for d in details),
         'makro_event_id':macro_id,'sektor_event_id':sector_id,'ayni_makro_sektor_olayi':bool(overlap),
@@ -391,6 +401,8 @@ class AIKararMotoru:
                             record = {'kayit_id':signal_id,'model':'ORTAK_AI','sembol':stock,'zaman':result['updated_at'],
                                 'karar':result['karar'],'ai_score':result['ai_score'],'confidence':result['confidence'],
                                 'katkilar':result['katkilar'],'piyasa_rejimi':result['piyasa_rejimi'],'sektor':result['sektor'],
+                                'teknik_gostergeler':result['teknik_gostergeler'],
+                                'standart_teknik_kriterler':result['standart_teknik_kriterler'],
                                 'piyasa_baglami':result['piyasa_baglami'],
                                 'fiyat':number(row.get('fiyat')),'reasons_positive':result['reasons_positive'],
                                 'reasons_negative':result['reasons_negative'],'risk_flags':result['risk_flags'],

@@ -293,6 +293,9 @@ class PerformansMotoru:
                     'teknik_skor':row.get('teknik_puan_yarin',row.get('al_puani')),'haber_etkisi':prediction.get('haber_puani',row.get('haber_puani')),
                     'makro_etkisi':prediction.get('makro_puani',row.get('makro_puani')),'sektor':row.get('makro_sektor','BILINMIYOR'),
                     'piyasa_rejimi':row.get('piyasa_rejimi','BILINMIYOR'),'katkilar':row.get('katkilar',{}),'egitim_durumu':'EGITIM',
+                    'teknik_gostergeler':prediction.get('teknik_gostergeler',row.get('teknik_gostergeler')),
+                    'teknik_katkilar':prediction.get('teknik_katkilar',row.get('teknik_katkilar')),
+                    'teknik_shadow_puan':prediction.get('teknik_shadow_puan',row.get('teknik_shadow_puan')),
                     'piyasa_baglami':prediction.get('piyasa_baglami',row.get('piyasa_baglami')),
                     'ham_puan':prediction.get('ham_puan',row.get('ham_puan')),
                     'kalibrasyon_duzeltmesi':prediction.get('kalibrasyon_duzeltmesi',row.get('kalibrasyon_duzeltmesi')),
@@ -372,6 +375,8 @@ class PerformansMotoru:
         report['son20_gun']['top3']=robust([v['top3']['ortalama'] for v in full_lists if v['top3']['ortalama'] is not None])
         report['son20_gun']['top10']=robust([v['top10']['ortalama'] for v in full_lists if v['top10']['ortalama'] is not None])
         report['son20_gun']['skor_performans_iliskisi']=robust([v['skor_performans_korelasyonu'] for v in full_lists if v['skor_performans_korelasyonu'] is not None])
+        from teknik_gostergeler import performance_report
+        report['standart_teknik_kriterler']=performance_report(forecasts,current,'TOMORROW',minimum_samples())
         report['kriter_vadeleri']={str(h):criterion_report(eligible,h) for h in (3,5)}
         current_weights=load(self.location.runtime/'ai_agirliklari.json',{}).get('agirliklar',DEFAULT_WEIGHTS)
         current_weights=normalize_weights(current_weights)
