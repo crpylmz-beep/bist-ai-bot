@@ -295,9 +295,12 @@ def hisse_analiz_hesapla(
     try:
         hisse = bp.Ticker(sembol)
 
-        veri = hisse.history(
-            period=period
-        )
+        try:
+            veri = hisse.history(period=period)
+        except Exception as error:
+            from gorev_hatalari import remember
+            remember(error,'PROVIDER')
+            raise
 
         if veri is None or veri.empty:
             return None
@@ -1372,7 +1375,9 @@ def hisse_analiz_hesapla(
         yarin_top10_canli_guncelle(sonuc, veri)
         return sonuc
 
-    except Exception:
+    except Exception as error:
+        from gorev_hatalari import remember
+        remember(error,'ANALYSIS')
         return None
 
 

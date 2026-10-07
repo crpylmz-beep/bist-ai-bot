@@ -220,8 +220,9 @@ class AdapterTests(unittest.TestCase):
         with patch.object(adapter.bot,'DATA_FILE',str(path)),patch.object(adapter.bot,'bist_hisseleri_getir',return_value=['AAA','BBB','CCC']), \
              patch.object(adapter.live,'tek_hisse_guncelle',side_effect=lambda stock:(stock,{'sembol':stock,'fiyat':100}) if stock!='BBB' else (stock,None)), \
              patch.object(adapter.bot,'web_verisi_kaydet') as write,patch.object(adapter,'market_context',return_value={}) as market:
-            result=adapter.full_scan()
-            self.assertEqual(result,{'updated':1,'cycle_complete':False})
+            from gorev_hatalari import TaskIssue
+            with self.assertRaises(TaskIssue) as failure:adapter.full_scan()
+            self.assertEqual(failure.exception.completed,1)
             self.assertEqual({row['sembol'] for row in write.call_args.args[0]},{'AAA','KEEP'})
             self.assertEqual(adapter.cursor,2);self.assertIn('BBB',adapter.events)
             market.assert_called_once_with()

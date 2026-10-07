@@ -240,7 +240,9 @@ class CalibrationTests(unittest.TestCase):
         worker=WorkerTasks()
         try:
             with patch('performans_motoru.bekleyen_sonuclari_guncelle',return_value={'tamamlanan_vade':1}),patch.object(YarinKalibrasyon,'refresh',side_effect=RuntimeError('fake')):
-                self.assertEqual(worker.performance()['kalibrasyon_hatasi'],'RuntimeError')
+                from gorev_hatalari import TaskIssue
+                with self.assertRaises(TaskIssue) as failure:worker.performance()
+                self.assertEqual(failure.exception.completed,1)
         finally:worker.close()
 
     def test_public_report_http_and_private_weights_not_exposed(self):

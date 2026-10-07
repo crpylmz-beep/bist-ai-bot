@@ -436,7 +436,7 @@ class PerformansMotoru:
         publish_performance(self.location,diagnostic_records,current)
 
     def one_round(self):
-        current=self.clock().astimezone(ISTANBUL);processed=changed=0;errors={}
+        current=self.clock().astimezone(ISTANBUL);processed=changed=0;errors={};error_details={}
         with locked(self.state_path):
             state=load(self.state_path,{'arsivler':{},'tekrar':{}});cache=load(self.cache_path,{})
             # Read/import under the shared history lock; provider calls never hold it.
@@ -474,7 +474,9 @@ class PerformansMotoru:
                     else:
                         prices[stock]=list(self.provider(stock))
                         cache[stock]={'day':current.date().isoformat(),'closed':session_closed(current.date(),current),'bars':prices[stock]}
-                except Exception as error:errors[stock]=type(error).__name__
+                except Exception as error:
+                    from gorev_hatalari import describe
+                    errors[stock]=type(error).__name__;error_details[stock]=describe(error,'PROVIDER')
             updates={}
             for record,hs in selected:
                 stock=record['sembol'];rid=record['sinyal_id'];processed+=1
@@ -505,7 +507,7 @@ class PerformansMotoru:
             from disk_koruma import trim_price_cache,save_price_cache
             cache=trim_price_cache(cache,current.date())
             state['updated_at']=current.isoformat();atomic_json(self.state_path,state);save_price_cache(self.cache_path,cache)
-        return {'kontrol_edilen':processed,'tamamlanan_vade':changed,'sembol_sayisi':len(symbols),'hatalar':errors}
+        return {'kontrol_edilen':processed,'tamamlanan_vade':changed,'sembol_sayisi':len(symbols),'hatalar':errors,'error_details':error_details}
 
 
 def bekleyen_sonuclari_guncelle(history_provider=None, **kwargs):

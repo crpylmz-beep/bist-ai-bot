@@ -17,6 +17,7 @@ import errno
 
 from kullanici_kayitlari import atomic_json
 from veri_yollari import paths
+from gorev_hatalari import describe,public_issue,TaskIssue
 
 ROOT = Path(__file__).resolve().parent
 ISTANBUL = ZoneInfo('Europe/Istanbul')
@@ -69,6 +70,7 @@ def health_snapshot(directory=None):
         for name, task in data.get('tasks', {}).items():
             if name in DEFAULTS and isinstance(task, dict):
                 tasks[name] = {key: task[key] for key in ('status', 'last_success', 'started_at', 'failures', 'retry_in_seconds') if key in task}
+                if task.get('last_error'):tasks[name]['last_error']=public_issue(task['last_error'])
         result = {'motor_durumu': data.get('motor_durumu', 'UNKNOWN'), 'healthy': healthy,
                   'worker_status': status, 'heartbeat_age_seconds': round(age, 1),
                   'updated_at': data['updated_at'], 'tasks': tasks}
@@ -156,10 +158,16 @@ class AnaMotor:
                     task.failures += 1
                     delay = min(900, max(5,task.interval) * 2 ** min(task.failures-1,6))
                     task.next_due = mono + delay
-                    detail = {'task':name, 'error':type(error).__name__, 'at':current.isoformat(timespec='seconds')}
+                    issue=describe(error)
+                    detail = {'task':name, 'error':type(error).__name__, 'at':current.isoformat(timespec='seconds'),'last_error':issue}
                     self.state['son_hata'] = detail
-                    self.state['tasks'][name] = {'status':'ERROR', 'failures':task.failures, 'retry_in_seconds':delay, **detail}
-                    logging.warning('[%s] %s ERROR %s retry=%ss',current.strftime('%H:%M:%S'),name.upper(),type(error).__name__,delay)
+                    status=('DEGRADED' if isinstance(error,TaskIssue) and error.completed else 'RETRYING') if issue['category'] in ('REMOTE','SOURCE_DATA') else 'ERROR'
+                    self.state['tasks'][name] = {'status':status, 'failures':task.failures, 'retry_in_seconds':delay, **detail}
+                    logging.warning('[%s] %s %s code=%s category=%s retry=%ss',current.strftime('%H:%M:%S'),name.upper(),status,issue['code'],issue['category'],delay)
+                    # Stack locations only: never format exception args or source lines containing secrets.
+                    import traceback
+                    frames=traceback.extract_tb(error.__traceback__)[-4:]
+                    logging.warning('[TASK_TRACE] %s %s',name,[(Path(f.filename).name,f.lineno,f.name) for f in frames])
                 task.future = None
         if not self.stop.is_set():
             # Priority queue gets the technical lane before another bulk batch.
@@ -181,8 +189,13 @@ class AnaMotor:
                     task.scheduled_day=day
                 if name in TECHNICAL and any(t.future for n,t in self.tasks.items() if n in TECHNICAL):
                     continue
-                self.state['tasks'][name]={'status':'RUNNING','started_at':current.isoformat(timespec='seconds')}
+                previous=self.state['tasks'].get(name,{})
+                self.state['tasks'][name]={'status':'RUNNING','started_at':current.isoformat(timespec='seconds'),**({'last_error':previous['last_error']} if previous.get('last_error') else {})}
                 task.future=self.executor.submit(task.callback)
+        for name,task in self.tasks.items():
+            state=self.state['tasks'].get(name,{})
+            if not task.future and state.get('status') in ('ERROR','RETRYING','DEGRADED'):
+                state['retry_in_seconds']=max(0,round(task.next_due-mono,1))
         self.persist()
 
     def request_stop(self, *_):

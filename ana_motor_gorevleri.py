@@ -9,6 +9,7 @@ import threading
 
 from ana_motor import ROOT, istanbul_now, market_open, after_close, runtime_dir
 from kullanici_kayitlari import atomic_json, symbol
+from gorev_hatalari import capture,public_issue,TaskIssue,strongest
 
 
 def check_configuration():
@@ -78,11 +79,15 @@ class WorkerTasks:
         with self.lock:
             batch=list(self.events.items())[:3]
         completed=0
-        failed=False
+        failed=[]
         for stock,version in batch:
-            result=self.original_priority(stock,gun_ici_yenile=False)
+            with capture() as issues:
+                try:result=self.original_priority(stock,gun_ici_yenile=False)
+                except Exception as error:
+                    from gorev_hatalari import remember
+                    remember(error);result=None
             if not result:
-                failed=True
+                failed.append(issues[0] if issues else public_issue({'code':'ANALYSIS_NO_RESULT'}))
                 with self.lock:
                     self.events.move_to_end(stock)
                     self.save_queue()
@@ -92,17 +97,29 @@ class WorkerTasks:
                 if self.events.get(stock)==version:self.events.pop(stock,None)
                 self.save_queue()
             completed+=1
-        if failed:raise RuntimeError('Bazı öncelikli fiyatlar alınamadı')
+        if failed:raise TaskIssue(strongest(failed),completed)
         return completed
+
+    def scan_one(self,stock):
+        with capture() as issues:
+            try:_,row=self.live.tek_hisse_guncelle(stock)
+            except Exception as error:
+                from gorev_hatalari import remember
+                remember(error);row=None
+        return stock,row,(issues[0] if issues else public_issue({'code':'ANALYSIS_NO_RESULT'})) if not row else None
 
     def full_scan(self):
         if not self.symbols or self.cursor>=len(self.symbols):
-            self.symbols=self.bot.bist_hisseleri_getir();self.cursor=0
-            if not self.symbols:raise RuntimeError('Sembol listesi boş')
+            self.symbols=self.bot.bist_hisseleri_getir();self.cursor=0;self.cycle_successful=0
+            if not self.symbols:raise TaskIssue({'code':'EMPTY_UNIVERSE'})
         batch=self.symbols[self.cursor:self.cursor+self.batch_size]
-        results=list(self.technical_pool.map(self.live.tek_hisse_guncelle,batch))
-        successful=[row for _,row in results if row]
-        if not successful:raise RuntimeError('Tarama batch fiyatları alınamadı')
+        results=list(self.technical_pool.map(self.scan_one,batch))
+        successful=[row for _,row,_ in results if row]
+        if not successful:
+            # One permanently invalid batch cannot starve the rest of the universe.
+            for stock,_,_ in results:self.enqueue(stock)
+            self.cursor+=len(batch)
+            raise TaskIssue(strongest(issue for _,_,issue in results))
         # Merge updated rows without replacing remaining live stocks with placeholders.
         path=Path(self.bot.DATA_FILE)
         current=json.loads(path.read_text()) if path.exists() else {'hisseler':[]}
@@ -114,18 +131,26 @@ class WorkerTasks:
             row['canli_guncelleme']=self.live.simdi()
             merged[row['sembol']]=row
         self.bot.web_verisi_kaydet(list(merged.values()),self.symbols)
+        self.cycle_successful=getattr(self,'cycle_successful',0)+len(successful)
         self.market_context()
         self.ai_context(successful)
         self.cursor+=len(batch)
         if len(successful)!=len(batch):
-            for stock,row in results:
+            for stock,row,_ in results:
                 if row is None:self.enqueue(stock)
+            raise TaskIssue(strongest(issue for _,_,issue in results if issue),len(successful))
         return {'updated':len(successful), 'cycle_complete':self.cursor>=len(self.symbols)}
 
     def bootstrap(self):
         # One bounded daily-analysis pass even outside the trading session.
         # Existing providers/analysis/write functions; no intraday/snapshot fabrication.
-        result=self.full_scan()
+        try:result=self.full_scan()
+        except TaskIssue:
+            # A degraded final batch must not restart the entire bootstrap forever.
+            if self.symbols and self.cursor>=len(self.symbols) and getattr(self,'cycle_successful',0)>0:
+                atomic_json(self.directory/'public_bootstrap_complete.json',
+                            {'completed_at':istanbul_now().isoformat(),'status':'DEGRADED'})
+            raise
         if result.get('cycle_complete'):
             atomic_json(self.directory/'public_bootstrap_complete.json',
                         {'completed_at':istanbul_now().isoformat()})
@@ -183,13 +208,18 @@ class WorkerTasks:
                 'alarm':self.alarm, 'push':self.push,
                 'priority':self.priority, 'full_scan':self.full_scan,
                 'intraday_top10':self.intraday, 'yarin_top10':self.tomorrow,
-                'company_site':self.company.tek_tur,'performance':self.performance,
+                'company_site':self.company_site,'performance':self.performance,
                 'intraday_performance':self.intraday_performance,'market_context':self.market_context}
 
     def market_context(self):
         from piyasa_baglami import PiyasaBaglami
         try:return PiyasaBaglami().refresh()
         except Exception as error:return {'hata':type(error).__name__}
+
+    def company_site(self):
+        completed=self.company.tek_tur()
+        if getattr(self.company,'last_round_issue',None):raise TaskIssue(self.company.last_round_issue,completed)
+        return completed
 
     def intraday_performance(self):
         from gun_ici_performans import bekleyen_gun_ici_sonuclari_guncelle
@@ -202,9 +232,11 @@ class WorkerTasks:
         try:
             YarinKalibrasyon().refresh()
         except Exception as error:
-            result['kalibrasyon_hatasi']=type(error).__name__
-        if result.get('hatalar') and not result.get('tamamlanan_vade'):
-            raise RuntimeError('Performans fiyat kaynakları alınamadı')
+            from gorev_hatalari import describe
+            raise TaskIssue(describe(error),result.get('tamamlanan_vade',0)) from None
+        if result.get('hatalar'):
+            details=result.get('error_details') or {}
+            raise TaskIssue(strongest(details.values()) if details else {'code':'ANALYSIS_NO_RESULT'},result.get('tamamlanan_vade',0))
         return result
 
     def alarm(self):

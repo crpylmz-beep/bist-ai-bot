@@ -245,6 +245,7 @@ class SirketSiteMotoru:
             return self._round()
 
     def _round(self):
+        self.last_round_issue=None
         mapping=json.loads(self.mapping.read_text())['hisseler']
         entries=sorted((stock,row['siteler'][0]) for stock,row in mapping.items() if row.get('siteler'))
         if not entries:return 0
@@ -269,6 +270,8 @@ class SirketSiteMotoru:
             except Deferred:
                 site.update(checked_at=self.stamp(),status='KESIF_DEVAM_EDIYOR',next_check_at=self.clock()+60)
             except Exception as error:
+                from gorev_hatalari import describe,strongest
+                self.last_round_issue=strongest([self.last_round_issue,describe(error)]) if self.last_round_issue else describe(error)
                 failures=site.get('failures',0)+1
                 status=getattr(error,'status',getattr(getattr(error,'response',None),'status_code',None))
                 delay=min(86400,300*2**min(failures-1,8))

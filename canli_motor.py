@@ -80,7 +80,9 @@ def tek_hisse_guncelle(sembol):
 
         return sembol, sonuc
 
-    except Exception:
+    except Exception as error:
+        from gorev_hatalari import remember
+        remember(error)
         return sembol, None
 
 
@@ -460,8 +462,7 @@ def oncelikli_hisse_guncelle(
         return sonuc
 
     except Exception as e:
-        print(
-            f"ONCELIKLI HISSE HATASI | {sembol}:",
-            e
-        )
+        from gorev_hatalari import remember,describe
+        remember(e)
+        print("ONCELIKLI HISSE HATASI:",describe(e)['code'])
         return None

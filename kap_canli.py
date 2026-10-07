@@ -235,17 +235,19 @@ def kap_kontrol():
 
     gorulen = durum_oku()
     tamamlanan = 0
-    hata = False
+    hata = None
     for kayit in yeniler[:30]:
         try:
             kap_bildirim_isle(kayit)
             gorulen.add(kayit_id(kayit))
             durum_yaz(gorulen)
             tamamlanan += 1
-        except Exception:
-            hata = True
-    if hata:
-        raise RuntimeError('Bazi KAP olaylari islenemedi; yeniden denenecek')
+        except Exception as error:
+            from gorev_hatalari import describe,strongest
+            hata = strongest([hata,describe(error)]) if hata else describe(error)
+    if hata is not None:
+        from gorev_hatalari import TaskIssue
+        raise TaskIssue(hata,tamamlanan)
     return tamamlanan
 
 
