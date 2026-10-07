@@ -24,6 +24,7 @@ ERRORS={
  'HTTP_AUTH':('CONFIG','Dış veri kaynağı yetkilendirmesi başarısız.',False),
  'HTTP_UNAVAILABLE':('REMOTE','Dış veri kaynağı geçici olarak kullanılamıyor.',True),
  'HTTP_REQUEST':('CONFIG','Dış kaynak isteği veya endpoint doğrulanmalı.',False),
+ 'OUTSIDE_EQUITY_UNIVERSE':('SOURCE_DATA','Sembol resmî XUTUM pay tarama evreninde değil.',True),
  'PROVIDER_UNSUPPORTED':('SOURCE_DATA','TradingView bu sembolü desteklemiyor (invalid symbol).',True),
  'SOURCE_RESPONSE_TOO_LARGE':('SOURCE_DATA','Dış kaynak yanıtı güvenli boyut sınırını aştı; indirme durduruldu.',True),
  'PROVIDER_API_ERROR':('REMOTE','Fiyat sağlayıcısı isteği başarısız; kaynak hata konumu loglarda.',True),
@@ -46,6 +47,19 @@ def public_issue(value):
     result={'code':code,'category':category,'message':message,'retryable':retryable}
     status=value.get('http_status') if isinstance(value,dict) else None
     if isinstance(status,int) and 400<=status<=599:result['http_status']=status
+    return result
+
+
+def diagnostics(value):
+    if not isinstance(value,dict):return {}
+    result={k:max(0,min(v,100000)) for k,v in value.items()
+            if k in ('processed','successful','skipped','unsupported','failed')
+            and isinstance(v,int) and not isinstance(v,bool)}
+    rows=value.get('reasons',[])
+    if not isinstance(rows,list):rows=[]
+    result['reasons']=[{'symbol':row['symbol'],'reason':public_issue(row.get('reason') if isinstance(row.get('reason'),dict) else row)}
+        for row in rows[:25] if isinstance(row,dict)
+        and isinstance(row.get('symbol'),str) and re.fullmatch(r'[A-Z0-9]{2,12}',row['symbol'])]
     return result
 
 
@@ -93,8 +107,8 @@ class ResponseLimitError(Exception):
 
 
 class TaskIssue(RuntimeError):
-    def __init__(self,issue,completed=0):
-        self.issue=public_issue(issue);self.completed=completed
+    def __init__(self,issue,completed=0,details=None):
+        self.issue=public_issue(issue);self.completed=completed;self.details=diagnostics(details)
         super().__init__(self.issue['code'])
 
 

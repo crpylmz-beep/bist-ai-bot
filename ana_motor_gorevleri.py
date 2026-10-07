@@ -6,6 +6,7 @@ import importlib
 import json
 import os
 import threading
+import logging
 
 from ana_motor import ROOT, istanbul_now, market_open, after_close, runtime_dir
 from kullanici_kayitlari import atomic_json, symbol
@@ -79,15 +80,26 @@ class WorkerTasks:
         with self.lock:
             batch=list(self.events.items())[:3]
         completed=0
-        failed=[]
+        failed=[];skips=[]
         for stock,version in batch:
             with capture() as issues:
-                try:result=self.original_priority(stock,gun_ici_yenile=False)
+                try:
+                    if self.symbols and stock not in self.symbols:
+                        issues.append(public_issue({'code':'OUTSIDE_EQUITY_UNIVERSE'}));result=None
+                    else:result=self.original_priority(stock,gun_ici_yenile=False)
                 except Exception as error:
                     from gorev_hatalari import remember
                     remember(error);result=None
             if not result:
-                failed.append(issues[0] if issues else public_issue({'code':'ANALYSIS_NO_RESULT'}))
+                issue=issues[0] if issues else public_issue({'code':'ANALYSIS_NO_RESULT'})
+                if issue['code'] in ('PROVIDER_UNSUPPORTED','OUTSIDE_EQUITY_UNIVERSE'):
+                    skips.append({'symbol':stock,**issue})
+                    self.record_unsupported(stock,issue['code'])
+                    with self.lock:
+                        if self.events.get(stock)==version:self.events.pop(stock,None)
+                        self.save_queue()
+                    continue
+                failed.append(issue)
                 with self.lock:
                     self.events.move_to_end(stock)
                     self.save_queue()
@@ -97,8 +109,20 @@ class WorkerTasks:
                 if self.events.get(stock)==version:self.events.pop(stock,None)
                 self.save_queue()
             completed+=1
-        if failed:raise TaskIssue(strongest(failed),completed)
-        return completed
+        details={'processed':len(batch),'successful':completed,'skipped':len(skips),'unsupported':sum(item['code']=='PROVIDER_UNSUPPORTED' for item in skips),'failed':len(failed),'reasons':skips}
+        if failed:raise TaskIssue(strongest(failed),completed,details)
+        return {'updated':completed,'diagnostics':details}
+
+    def record_unsupported(self,stock,code='PROVIDER_UNSUPPORTED'):
+        with self.lock:
+            path=self.directory/'provider_unsupported.json'
+            saved=json.loads(path.read_text()) if path.exists() else {}
+            saved[stock]={'code':code,'updated_at':istanbul_now().isoformat()}
+            # Diagnostic index only; no signals, users, snapshots or outcomes.
+            if len(saved)>2000:
+                oldest=min(saved,key=lambda s:saved[s]['updated_at']);saved.pop(oldest)
+            atomic_json(path,saved)
+        logging.warning('[PROVIDER_SKIP] symbol=%s reason=%s',stock,code)
 
     def scan_one(self,stock):
         with capture() as issues:
@@ -115,11 +139,16 @@ class WorkerTasks:
         batch=self.symbols[self.cursor:self.cursor+self.batch_size]
         results=list(self.technical_pool.map(self.scan_one,batch))
         successful=[row for _,row,_ in results if row]
+        skipped=[{'symbol':stock,**issue} for stock,row,issue in results if issue and issue['code']=='PROVIDER_UNSUPPORTED']
+        failures=[(stock,issue) for stock,row,issue in results if issue and issue['code']!='PROVIDER_UNSUPPORTED']
+        details={'processed':len(results),'successful':len(successful),'skipped':len(skipped),'unsupported':len(skipped),'failed':len(failures),'reasons':skipped}
+        for item in skipped:self.record_unsupported(item['symbol'])
         if not successful:
             # One permanently invalid batch cannot starve the rest of the universe.
-            for stock,_,_ in results:self.enqueue(stock)
+            for stock,_ in failures:self.enqueue(stock)
             self.cursor+=len(batch)
-            raise TaskIssue(strongest(issue for _,_,issue in results))
+            if failures:raise TaskIssue(strongest(issue for _,issue in failures),details=details)
+            return {'updated':0,'cycle_complete':self.cursor>=len(self.symbols),'diagnostics':details}
         # Merge updated rows without replacing remaining live stocks with placeholders.
         path=Path(self.bot.DATA_FILE)
         current=json.loads(path.read_text()) if path.exists() else {'hisseler':[]}
@@ -135,11 +164,10 @@ class WorkerTasks:
         self.market_context()
         self.ai_context(successful)
         self.cursor+=len(batch)
-        if len(successful)!=len(batch):
-            for stock,row,_ in results:
-                if row is None:self.enqueue(stock)
-            raise TaskIssue(strongest(issue for _,_,issue in results if issue),len(successful))
-        return {'updated':len(successful), 'cycle_complete':self.cursor>=len(self.symbols)}
+        if failures:
+            for stock,_ in failures:self.enqueue(stock)
+            raise TaskIssue(strongest(issue for _,issue in failures),len(successful),details)
+        return {'updated':len(successful), 'cycle_complete':self.cursor>=len(self.symbols),'diagnostics':details}
 
     def bootstrap(self):
         # One bounded daily-analysis pass even outside the trading session.
@@ -218,8 +246,11 @@ class WorkerTasks:
 
     def company_site(self):
         completed=self.company.tek_tur()
-        if getattr(self.company,'last_round_issue',None):raise TaskIssue(self.company.last_round_issue,completed)
-        return completed
+        details=getattr(self.company,'last_round_details',None)
+        if getattr(self.company,'last_round_issue',None):
+            progress=details['successful'] if isinstance(details,dict) else completed
+            raise TaskIssue(self.company.last_round_issue,progress,details)
+        return {'updated':completed,'diagnostics':details} if isinstance(details,dict) else completed
 
     def intraday_performance(self):
         from gun_ici_performans import bekleyen_gun_ici_sonuclari_guncelle

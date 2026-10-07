@@ -17,7 +17,7 @@ import errno
 
 from kullanici_kayitlari import atomic_json
 from veri_yollari import paths
-from gorev_hatalari import describe,public_issue,TaskIssue,log_source
+from gorev_hatalari import describe,public_issue,TaskIssue,log_source,diagnostics
 
 ROOT = Path(__file__).resolve().parent
 ISTANBUL = ZoneInfo('Europe/Istanbul')
@@ -71,6 +71,7 @@ def health_snapshot(directory=None):
             if name in DEFAULTS and isinstance(task, dict):
                 tasks[name] = {key: task[key] for key in ('status', 'last_success', 'started_at', 'failures', 'retry_in_seconds') if key in task}
                 if task.get('last_error'):tasks[name]['last_error']=public_issue(task['last_error'])
+                if task.get('diagnostics'):tasks[name]['diagnostics']=diagnostics(task['diagnostics'])
         result = {'motor_durumu': data.get('motor_durumu', 'UNKNOWN'), 'healthy': healthy,
                   'worker_status': status, 'heartbeat_age_seconds': round(age, 1),
                   'updated_at': data['updated_at'], 'tasks': tasks}
@@ -143,7 +144,9 @@ class AnaMotor:
                         self.state['last_'+name+('_check' if name in ('kap','macro','alarm','push','company_site') else '')] = current.isoformat(timespec='seconds')
                     if name == 'full_scan' and isinstance(result,dict):
                         self.state['last_full_scan_batch']=current.isoformat(timespec='seconds')
-                    self.state['tasks'][name] = {'status':'OK', 'last_success':current.isoformat(timespec='seconds')}
+                    report=diagnostics(result.get('diagnostics')) if isinstance(result,dict) else {}
+                    task_status=('OK_WITH_SKIPS' if report.get('successful') else 'SKIPPED') if report.get('skipped') else 'OK'
+                    self.state['tasks'][name] = {'status':task_status, 'last_success':current.isoformat(timespec='seconds'),**({'diagnostics':report} if report else {})}
                     if name == 'yarin_top10':
                         self.state['yarin_completed_day'] = task.scheduled_day
                     summary=' '+str(result) if isinstance(result,(int,float)) else ''
@@ -151,23 +154,27 @@ class AnaMotor:
                         summary=' piyasa kapalı - atlandı' if result.get('skipped') else f" {result.get('kontrol_edilen_alarm',0)} kontrol / {result.get('tetiklenen_alarm',0)} tetik"
                     elif isinstance(result,dict) and name=='push':
                         summary=f" {result.get('sent',0)} gönderildi / {result.get('failed',0)} hata"
-                    if name != 'priority' or result:
-                        logging.info('[%s] %s OK%s', current.strftime('%H:%M:%S'), name.upper(), summary)
+                    if report:
+                        summary+=' '+ ' '.join(f'{key}={report.get(key,0)}' for key in ('processed','successful','skipped','unsupported','failed'))
+                    if name != 'priority' or (result.get('diagnostics',{}).get('processed',0) if isinstance(result,dict) else result):
+                        logging.info('[%s] %s %s%s', current.strftime('%H:%M:%S'), name.upper(),task_status, summary)
                     task.next_due = mono + task.interval
                 except Exception as error:
                     issue=describe(error)
                     progressed=(isinstance(error,TaskIssue) and error.completed>0
-                                and issue['category'] in ('REMOTE','SOURCE_DATA'))
+                                and (issue['category'] in ('REMOTE','SOURCE_DATA')
+                                     or (name=='company_site' and issue['code']=='NETWORK_TLS')))
                     # Keep partial progress moving, but retain the failure counter
                     # and DEGRADED issue; never treat the failed stocks as successful.
                     task.failures += 1
                     exponent=0 if progressed else min(task.failures-1,6)
                     delay = min(900, max(5,task.interval) * 2 ** exponent)
+                    if progressed and name=='company_site':delay=min(delay,30)
                     task.next_due = mono + delay
                     detail = {'task':name, 'error':type(error).__name__, 'at':current.isoformat(timespec='seconds'),'last_error':issue}
                     self.state['son_hata'] = detail
-                    status=('DEGRADED' if isinstance(error,TaskIssue) and error.completed else 'RETRYING') if issue['category'] in ('REMOTE','SOURCE_DATA') else 'ERROR'
-                    self.state['tasks'][name] = {'status':status, 'failures':task.failures, 'retry_in_seconds':delay, 'completed':error.completed if isinstance(error,TaskIssue) else 0, **detail}
+                    status='DEGRADED' if progressed else 'RETRYING' if issue['category'] in ('REMOTE','SOURCE_DATA') else 'ERROR'
+                    self.state['tasks'][name] = {'status':status, 'failures':task.failures, 'retry_in_seconds':delay, 'completed':error.completed if isinstance(error,TaskIssue) else 0, **detail,**({'diagnostics':error.details} if isinstance(error,TaskIssue) and error.details else {})}
                     logging.warning('[%s] %s %s code=%s category=%s retry=%ss',current.strftime('%H:%M:%S'),name.upper(),status,issue['code'],issue['category'],delay)
                     if not isinstance(error,TaskIssue):log_source(error,'TASK')
                     # Stack locations only: never format exception args or source lines containing secrets.
@@ -196,7 +203,7 @@ class AnaMotor:
                 if name in TECHNICAL and any(t.future for n,t in self.tasks.items() if n in TECHNICAL):
                     continue
                 previous=self.state['tasks'].get(name,{})
-                self.state['tasks'][name]={'status':'RUNNING','started_at':current.isoformat(timespec='seconds'),**({'last_error':previous['last_error']} if previous.get('last_error') else {})}
+                self.state['tasks'][name]={'status':'RUNNING','started_at':current.isoformat(timespec='seconds'),**({k:previous[k] for k in ('last_error','diagnostics') if previous.get(k)})}
                 task.future=self.executor.submit(task.callback)
         for name,task in self.tasks.items():
             state=self.state['tasks'].get(name,{})

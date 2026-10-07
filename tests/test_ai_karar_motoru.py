@@ -254,7 +254,7 @@ class AICoreTests(unittest.TestCase):
             try:
                 worker.original_priority=Mock(return_value=self.row)
                 with patch('ai_karar_motoru.ai_batch_guncelle',side_effect=RuntimeError('fake')) as ai:
-                    worker.enqueue('XYZ');self.assertEqual(worker.priority(),1);ai.assert_called_once()
+                    worker.enqueue('XYZ');self.assertEqual(worker.priority()['diagnostics']['successful'],1);ai.assert_called_once()
                     self.assertFalse(worker.events)
             finally:
                 worker.original_priority=original;worker.close()

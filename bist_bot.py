@@ -1641,47 +1641,15 @@ def agresif_mi(a):
 # =========================================================
 
 def bist_hisseleri_getir():
-
+    # Official BIST All equity-index constituents, not KAP issuer membership.
+    from saglayici_sembolleri import bist_symbol
     try:
-        df = bp.companies()
-
-        if df is None or df.empty:
-            return []
-
-        if "ticker" in df.columns:
-
-            semboller = (
-                df["ticker"]
-                .dropna()
-                .tolist()
-            )
-
-        elif "symbol" in df.columns:
-
-            semboller = (
-                df["symbol"]
-                .dropna()
-                .tolist()
-            )
-
-        else:
-            return []
-
-        sonuc = []
-
-        for s in semboller:
-
-            from saglayici_sembolleri import bist_symbol
-            try:sonuc.append(bist_symbol(s))
-            except ValueError:
-                import logging
-                logging.warning('[UNIVERSE] Geçersiz BIST kod biçimi; sağlayıcıya gönderilmedi')
-
-        return sorted(
-            list(set(sonuc))
-        )
-
-    except Exception:
+        rows=bp.Index('XUTUM').components
+        if not rows:return []  # Never fall back to an untyped issuer universe.
+        return sorted({bist_symbol(row['symbol']) for row in rows})
+    except Exception as error:
+        from gorev_hatalari import remember
+        remember(error,'PROVIDER')
         return []
 
 

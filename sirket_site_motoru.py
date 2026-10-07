@@ -69,7 +69,7 @@ class SirketSiteMotoru:
             if allowed and not allowed(url):raise ValueError('Resmi domain dışına yönlendirme')
             addresses=socket.getaddrinfo(parsed.hostname,parsed.port or (443 if parsed.scheme=='https' else 80),type=socket.SOCK_STREAM)
             if not addresses or any(not ipaddress.ip_address(a[4][0]).is_global for a in addresses):raise ValueError('Özel ağ URL')
-            with requests.get(url,timeout=(5,15),stream=True,allow_redirects=False,headers={'User-Agent':AGENT+'/2.0'}) as response:
+            with requests.get(url,timeout=(5,15),stream=True,allow_redirects=False,verify=True,headers={'User-Agent':AGENT+'/2.0'}) as response:
                 if response.status_code in (403,429):raise AccessBlocked(response.status_code,response.headers.get('Retry-After'))
                 if response.is_redirect:
                     target=urljoin(url,response.headers['Location'])
@@ -254,6 +254,7 @@ class SirketSiteMotoru:
 
     def _round(self):
         self.last_round_issue=None
+        self.last_round_details={'processed':0,'successful':0,'skipped':0,'unsupported':0,'failed':0,'reasons':[]}
         mapping=json.loads(self.mapping.read_text())['hisseler']
         entries=sorted((stock,row['siteler'][0]) for stock,row in mapping.items() if row.get('siteler'))
         if not entries:return 0
@@ -264,7 +265,11 @@ class SirketSiteMotoru:
             if self.stop():break
             stock,home=entries[(start+offset)%len(entries)]
             site=state['sites'].setdefault(stock,{})
+            self.last_round_details['processed']+=1
             if self.clock()<site.get('next_check_at',0):
+                self.last_round_details['skipped']+=1
+                if site.get('error_code') and len(self.last_round_details['reasons'])<25:
+                    self.last_round_details['reasons'].append({'symbol':stock,'code':site['error_code']})
                 state.update(cursor=(start+offset+1)%len(entries),updated_at=self.stamp())
                 atomic_json(self.path,state)
                 continue
@@ -272,15 +277,20 @@ class SirketSiteMotoru:
                 site.setdefault(key,default)
             try:
                 count+=self._visit(stock,home,site,state,public)
+                self.last_round_details['successful']+=1
                 site.update(failures=0,checked_at=self.stamp(),next_check_at=self.clock()+900)
                 if not site.get('status','').startswith('dinamik_site'):site['status']='OK'
-                site.pop('error',None)
+                site.pop('error',None);site.pop('error_code',None)
             except Deferred:
+                self.last_round_details['skipped']+=1
                 site.update(checked_at=self.stamp(),status='KESIF_DEVAM_EDIYOR',next_check_at=self.clock()+60)
             except Exception as error:
                 from gorev_hatalari import describe,strongest,log_source
                 self.last_round_issue=strongest([self.last_round_issue,describe(error)]) if self.last_round_issue else describe(error)
                 log_source(error,'COMPANY_SITE')
+                self.last_round_details['failed']+=1
+                if len(self.last_round_details['reasons'])<25:
+                    self.last_round_details['reasons'].append({'symbol':stock,**describe(error)})
                 failures=site.get('failures',0)+1
                 status=getattr(error,'status',getattr(getattr(error,'response',None),'status_code',None))
                 delay=min(86400,300*2**min(failures-1,8))
@@ -291,7 +301,7 @@ class SirketSiteMotoru:
                     except ValueError:
                         try:delay=max(delay,min(86400,parsedate_to_datetime(retry).timestamp()-self.clock()))
                         except (ValueError,TypeError):pass
-                site.update(failures=failures,error=type(error).__name__,http_status=status,checked_at=self.stamp(),next_check_at=self.clock()+delay,status='BACKOFF')
+                site.update(failures=failures,error=type(error).__name__,error_code=describe(error)['code'],http_status=status,checked_at=self.stamp(),next_check_at=self.clock()+delay,status='BACKOFF')
                 if status in (403,429):
                     domain=urlsplit(site.get('home',home)).hostname.lower().removeprefix('www.')
                     state.setdefault('domains',{}).setdefault(domain,{})['next_request_at']=self.clock()+delay
