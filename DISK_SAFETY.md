@@ -33,3 +33,23 @@ Heartbeat atomic yazımında disk tükenirse worker sırf heartbeat yüzünden k
 Bu düzeltme gereksiz startup kopyalarını, aged public scratch ve günlük replay cache büyümesini önler. **Gerçek kalıcı geçmiş sınırsız korunacaksa 500 MB üzerinde sonsuza kadar çalışma garantisi yoktur.** Rapor `archives/runtime/private` toplamlarının kapasiteyi tükettiğini gösterirse Railway volume kapasitesi artırılmalıdır; uygulama bunları yer açmak için silmez. Full disk'te hiçbir güvenli temizlenebilir dosya yoksa kalıcı işlem yapılabilmesi kapasite artışına bağlıdır.
 
 Gerçek production volume'a bu geliştirme ortamından erişim yoktur; dosya bazında 500 MB dağılımı veya deploy sonrası health henüz doğrulanmış değildir. İlk yeni deployment Logs içindeki `[DISK]` raporu bu ayrımı görünür yapar.
+
+## DISK_ONCE_V1 production teşhis / tek seferlik alan açma
+
+Worker, kendi exclusive `ana_motor.lock` kilidini aldıktan sonra, collector'ları başlatmadan `reclaim_once(paths())` çağırır. Web process ayrı çalışmaya devam edebilir; private kullanıcı dizinine temizlik için girilmez. Başlangıç `[DISK]` raporuna insan tarafından okunabilen MiB dizin toplamları ve en büyük 30 dosya eklendi. İçerik/token/kullanıcı kimliği loglanmaz. Bu rapor production volume'un hangi korunmuş dosyalardan büyüdüğünü göstermek içindir; geliştirme volume boyutları production sonucu diye sunulmaz.
+
+İşlem `/data/runtime/disk_reclaim_v1.json` işaretini **silmeden önce** STARTED olarak atomik yazar. İşaret yazılamazsa hiçbir dosya silmez. İşaret mevcutsa, STARTED/COMPLETED fark etmeksizin sonraki başlangıçta tekrar temizlik yapmaz. Tek seferlik mutex ve mevcut worker kilidi birden fazla worker/cleanup turunu engeller. Sonuç küçük aynı marker'da saklanır; yeni bir backup/hata geçmişi dizisi oluşmaz.
+
+Güvenli adaylar:
+
+- Schema'sı doğrulanmış günlük `performans_fiyat_cache.json` provider replay cache'i; tahmin/outcome değil. Büyük cache dosyaları tümü RAM'e alınmadan, sembol başına en fazla yaklaşık 4 MiB tamponla streaming olarak doğrulanır. Beklenen fiyat cache şeması, tarih ve closed bayrağı doğrulanamazsa dosya korunur.
+- Public/runtime/archive içindeki 24 saatten eski `.migration-*`, `.user-*.tmp`, `.snapshot-*.tmp` dosyaları **yalnız aynı dizindeki korunmuş normal JSON dosyasıyla byte-identical ise**. SHA-256 stream ile hesaplanır, boyut/inode/mtime kopya ve kaynakta tekrar kontrol edilir. Eski hedefsiz temp de ancak bu exact-match kanıtıyla silinebilir; farklı/partial temp korunur.
+- `dosya.json.bak` / `dosya.json.backup` sadece aynı dizindeki `dosya.json` ile boyut ve SHA-256 birebir eşleşirse kaldırılır. Unique eski backup, isimlendirmesi belirsiz backup, symlink ve son 24 saatteki adaylar korunur.
+
+Asıl JSON, archive, tahmin geçmişi, tüm vadelerin performans/outcome kayıtları, model state'i, Gün İçi bar kanıtı ve private kullanıcı verisi silinmez. Yeniden üretilebilir olsa da `yarin_top10_sonuclar.json` takip raporunu silmek bu işlemde tercih edilmez. Kaynak dosyalar byte-identical temp/backup karşılaştırmasında sadece okunur; yeniden yazılmaz.
+
+Hedef boş alan yaklaşık 150 MiB'dir; yeterli alan varsa veya hedefe ulaşılınca daha fazla aday silinmez. `[DISK_ONCE] BEFORE` ve `AFTER` satırları gerçek filesystem used/free/freed MiB ve temizlenen dosya kategorilerini gösterir. Freed değeri silinen dosya boyutlarını toplamaktan değil, gerçek free alan farkından gelir; hard-link/açık inode gibi nedenlerle unlink hemen alan açmayabilir. Marker'ın küçük yazımı ölçümden sonra yapılır.
+
+150 MiB güvenli olarak açılamazsa explicit logla bildirilir; benzersiz kalıcı dosyalara genişletilmiş silme yapılmaz. Bu durumda volume kapasitesi artırılmalıdır. Normal 3 gün / ~4 MiB replay cache bütçesi ve eski startup disk koruması devam eder. Priority kodu/hata sınıflandırması bu adımda değiştirilmez; disk alanı açıldıktan sonraki loglarla ayrıca değerlendirilmelidir.
+
+Production kazanımı, yeni deploy'un `[DISK_ONCE] AFTER ... freed_MiB=...` satırından doğrulanır. Bu satır görülmeden gerçek production temizlenen dosya/MB sonucu iddia edilemez.

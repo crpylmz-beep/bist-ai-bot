@@ -232,6 +232,8 @@ def main():
         from ana_motor_gorevleri import check_configuration
         print(json.dumps(check_configuration(),ensure_ascii=False));return
     with worker_lock(runtime_dir()):
+        from disk_koruma import reclaim_once
+        reclaim_once(paths())
         from ana_motor_gorevleri import WorkerTasks
         from cloud_bootstrap import bootstrap_public
         bootstrap_public()
