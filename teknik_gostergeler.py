@@ -168,12 +168,21 @@ def calculate(data,asof,mode='INTRADAY'):
                      last_candle='POZITIF' if price is not None and opening is not None and price>opening else 'NEGATIF' if price is not None and opening is not None and price<opening else 'NOTR' if price is not None and opening is not None else 'UNKNOWN',close_position_pct=close_position)
     ratio=float(volume.iloc[-1]/volume.iloc[-21:-1].mean()*100) if count>=21 and volume.iloc[-21:].notna().all() and volume.iloc[-21:-1].mean()>0 else None
     combo=bool(prev_width<=5 and upper_break and ratio>=130 and short>0) if prev_width is not None and upper_break is not None and ratio is not None and short is not None else None
+    # Closing summary reuses this already filtered OHLCV window; no second provider call.
+    closing={}
+    if mode=='TOMORROW' and count>=2:
+        last_volume=finite(volume.iloc[-1]);previous_volume=finite(volume.iloc[-2])
+        closing={'turnover_tl':price*last_volume if price and last_volume is not None else None,
+                 'volume_acceleration':last_volume/previous_volume-1 if previous_volume and last_volume is not None else None,
+                 'return_3d':short,'ema9':finite(ema(close,9).iloc[-1]),'ema21':finite(ema(close,21).iloc[-1]),
+                 'open':opening,'high':high,'low':low_price,'close':price,
+                 'previous_close':finite(close.iloc[-2])}
     bb_result['squeeze_volume_momentum_break']=combo
     groups={'obv':obv_result,'vwap':vwap_result,'bollinger':bb_result,'momentum':mom_result}
     available=[g['confidence'] for g in groups.values() if g['status']=='OK']
     return dict(model=MODEL,mode=mode,asof=current.isoformat(),data_time=observed.isoformat() if observed else None,
                 stale=stale,confidence=sum(available)/len(available) if available else 0,bar_count=count,
-                volume_ratio=ratio,**groups)
+                volume_ratio=ratio,closing=closing,**groups)
 
 
 def snapshot(record):

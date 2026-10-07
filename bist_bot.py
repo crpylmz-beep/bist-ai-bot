@@ -1362,6 +1362,10 @@ def hisse_analiz_hesapla(
         }
         from teknik_gostergeler import calculate
         sonuc['teknik_gostergeler']=calculate(veri,datetime.now(ZoneInfo('Europe/Istanbul')),'TOMORROW')
+        if sonuc['teknik_gostergeler'].get('closing'):
+            sonuc['teknik_gostergeler']['closing']['macd_hist_improving']=hist_son>hist_onceki
+            sonuc['ema9_daily']=sonuc['teknik_gostergeler']['closing'].get('ema9')
+            sonuc['ema21_daily']=sonuc['teknik_gostergeler']['closing'].get('ema21')
         from ai_karar_motoru import attach_final_decision
         attach_final_decision(sonuc,datetime.now(ZoneInfo('Europe/Istanbul')),'DAILY')
         # Kayit hatasi teknik analizin sonucunu etkilemez.
@@ -2230,7 +2234,7 @@ def yarin_snapshot_modeli(veri, tahmin_zamani=None):
     snapshot["kayit_turu"] = "DONDURULMUS_TAHMIN"
     snapshot["tahmin_zamani"] = tahmin_zamani
     snapshot["zaman_kaynagi"] = "ISTANBUL" if tahmin_zamani else "LEGACY_BELIRSIZ"
-    for hisse in snapshot["top10"] + snapshot.get('ham_top10', []) + snapshot.get('shadow_top10', []) + snapshot.get('controlled_shadow_top10',[]):
+    for hisse in snapshot["top10"] + snapshot.get('ham_top10', []) + snapshot.get('shadow_top10', []) + snapshot.get('controlled_shadow_top10',[]) + (snapshot.get('pozitif_havuz') or {}).get('adaylar',[]):
         hisse["tahmin"] = {
             "sembol": hisse.get("sembol"),
             "tahmin_zamani": tahmin_zamani,
@@ -2252,6 +2256,8 @@ def yarin_snapshot_modeli(veri, tahmin_zamani=None):
             "teknik_katkilar":copy.deepcopy(hisse.get('teknik_katkilar')),
             "nihai_karar":copy.deepcopy(hisse.get('nihai_karar')),
             "controlled_shadow":copy.deepcopy(hisse.get('controlled_shadow')),
+            "positive_opportunity":copy.deepcopy(hisse.get('positive_opportunity')),
+            "criteria_snapshot":copy.deepcopy(hisse.get('criteria_snapshot')),
             "teknik_shadow_puan":hisse.get('teknik_shadow_puan'),
             "teknik_model_version":hisse.get('teknik_model_version'),
             "piyasa_baglami": hisse.get("piyasa_baglami"),
@@ -2272,7 +2278,7 @@ def yarin_snapshot_modeli(veri, tahmin_zamani=None):
     return snapshot
 
 
-def yarin_top10_kilitli_kaydet(sonuclar, toplam_hisse):
+def yarin_top10_kilitli_kaydet(sonuclar, toplam_hisse, pozitif_kapanis=False):
     """Gunluk arsiv ilk yazimda kilitlenir; canli verilerle degistirilmez."""
     import fcntl
 
@@ -2309,6 +2315,13 @@ def yarin_top10_kilitli_kaydet(sonuclar, toplam_hisse):
                 print("YARIN TOP10 ZATEN KILITLI - TAHMIN DEGISTIRILMEDI")
                 return veri
 
+            import copy
+            closing_source=copy.deepcopy(sonuclar)
+            if pozitif_kapanis:
+                from pozitif_kapanis import enrich_closing_sources
+                from datetime import time as day_time
+                from ai_karar_motoru import ISTANBUL
+                enrich_closing_sources(closing_source,paths(repo_root=os.path.dirname(__file__)),datetime.combine(simdi.date(),day_time(18,10),ISTANBUL))
             from yarin_kalibrasyon import YarinKalibrasyon
             from piyasa_baglami import PiyasaBaglami
             piyasa = PiyasaBaglami(paths(repo_root=os.path.dirname(__file__)),clock=lambda:simdi).refresh(
@@ -2325,6 +2338,15 @@ def yarin_top10_kilitli_kaydet(sonuclar, toplam_hisse):
             shadow_top10 = comparison_rows("shadow_puan")
             controlled_candidates=sorted(eligible,key=lambda a:(a.get('controlled_shadow') or {}).get('score',a['ham_puan']),reverse=True)[:10]
             controlled_top10=[dict(a,yarin_top10_sira=i+1,yarin_top10_puani=(a.get('controlled_shadow') or {}).get('score',a['ham_puan'])) for i,a in enumerate(controlled_candidates)]
+            pool=None
+            if pozitif_kapanis:
+                from pozitif_kapanis import build_pool
+                from ai_karar_motoru import load
+                history=load(paths(repo_root=os.path.dirname(__file__)).runtime_file('ai_ogrenme_gecmisi.json'),{}).get('kayitlar',[])
+                pool=build_pool(closing_source,simdi,toplam_hisse,yarin_potansiyel_hesapla,history)
+                if pool['positive_count'] and not pool['analyzed_count']:raise RuntimeError('Pozitif kapanış kalite verisi yetersiz; snapshot yazılmadı')
+                by_symbol={r['sembol']:r for r in pool['adaylar']}
+                top10=[(by_symbol[s]['positive_opportunity']['future_opportunity_score'],by_symbol[s]) for s in pool['eligible_symbols'][:10]]
             kayitlar = []
             for sira, (skor, a) in enumerate(top10, 1):
                 hisse = dict(a)
@@ -2344,6 +2366,7 @@ def yarin_top10_kilitli_kaydet(sonuclar, toplam_hisse):
                 "ham_top10": ham_top10,
                 "shadow_top10": shadow_top10,
                 "controlled_shadow_top10":controlled_top10,
+                **({'pozitif_havuz':pool} if pool is not None else {}),
                 "top10": kayitlar
             }, simdi.isoformat(timespec="seconds"))
             json_atomik_yaz(arsiv, veri, overwrite=False)

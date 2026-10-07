@@ -7,7 +7,7 @@ import json
 import os
 import threading
 
-from ana_motor import ROOT, istanbul_now, market_open, runtime_dir
+from ana_motor import ROOT, istanbul_now, market_open, after_close, runtime_dir
 from kullanici_kayitlari import atomic_json, symbol
 
 
@@ -143,21 +143,33 @@ class WorkerTasks:
         # Separate closing scan uses the same technical functions and selection.
         # This job owns the technical lane; unrelated collectors/alarms continue.
         day=istanbul_now().date()
+        if not after_close(istanbul_now()):raise RuntimeError('Kapanış seansı tamamlanmadı')
+        # Idempotent direct callback too: an immutable daily snapshot ends this scan.
+        from veri_yollari import paths
+        if (paths().archives/(day.isoformat()+'.json')).exists():return 0
         symbols=self.bot.bist_hisseleri_getir()
         if not symbols:raise RuntimeError('Kapanış sembol listesi boş')
-        rows=[]
-        for start in range(0,len(symbols),self.batch_size):
+        checkpoint=self.directory/'pozitif_kapanis_tarama.json'
+        saved=json.loads(checkpoint.read_text()) if checkpoint.exists() else {}
+        cached=saved.get('rows',{}) if saved.get('date')==day.isoformat() and saved.get('symbols')==symbols else {}
+        pending=[stock for stock in symbols if stock not in cached]
+        for start in range(0,len(pending),self.batch_size):
             if self.stop.is_set():raise InterruptedError('Kapanış taraması durduruldu')
-            for _,row in self.technical_pool.map(self.live.tek_hisse_guncelle,symbols[start:start+self.batch_size]):
+            for stock,row in self.technical_pool.map(self.live.tek_hisse_guncelle,pending[start:start+self.batch_size]):
                 if row:
+                    from ai_karar_motoru import stamp
+                    observed=stamp((row.get('teknik_gostergeler') or {}).get('data_time'))
+                    if not observed or observed.date()!=day or observed>istanbul_now():continue
                     row['canli_guncelleme']=self.live.simdi()
-                    rows.append(row)
+                    cached[stock]=row
+            atomic_json(checkpoint,{'date':day.isoformat(),'symbols':symbols,'rows':cached})
+        rows=list(cached.values())
         if self.stop.is_set() or istanbul_now().date()!=day:
             raise InterruptedError('Snapshot tarihi değişti veya motor durduruldu')
         # Avoid freezing an empty or severely incomplete provider outage result.
         if len(rows)<max(1,int(len(symbols)*0.8)):
             raise RuntimeError('Kapanış taraması eksik; snapshot üretilmedi')
-        if not self.bot.yarin_top10_kilitli_kaydet(rows,len(symbols)):
+        if not self.bot.yarin_top10_kilitli_kaydet(rows,len(symbols),pozitif_kapanis=True):
             raise RuntimeError('Snapshot kaydedilemedi')
         self.ai_context(rows)
         return len(rows)

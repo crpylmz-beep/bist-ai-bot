@@ -1453,7 +1453,7 @@ async function showTop10(refresh = false){
             ? veri.top10
             : [];
 
-        if(!liste.length){
+        if(!liste.length && !veri.pozitif_havuz){
 
             alan.innerHTML =
                 '<div class="empty">Geçerli geçmiş snapshot bulunamadı. İlk başarılı kapanış tahmini bekleniyor.</div>';
@@ -1461,9 +1461,13 @@ async function showTop10(refresh = false){
             return;
         }
 
-        alan.innerHTML = liste.map((hisse,index) =>
-            yarinTop10Karti(hisse, veri, canliMap.get(hisse.sembol), index + 1)
-        ).join("");
+        if(veri.pozitif_havuz){
+            pozitifYarinGorunumu={snapshot:veri,live:canliMap};pozitifYarinGoster();
+        }else{
+            alan.innerHTML = liste.map((hisse,index) =>
+                yarinTop10Karti(hisse, veri, canliMap.get(hisse.sembol), index + 1)
+            ).join("");
+        }
 
     }catch(e){
 
@@ -1528,6 +1532,7 @@ function yarinTop10Karti(hisse, snapshot, kayit = {}, sira = 1){
     return `
         <article class="detail-card">
             <h3>${sira}. ${yarinMetin(hisse.sembol)}</h3>
+            ${pozitifFirsatOzet(hisse)}
             <section style="padding:14px;border:1px solid #38bdf8;border-radius:10px;margin-bottom:14px">
                 <b>CANLI DURUM</b>
                 <p style="font-size:13px;color:#fbbf24">${durum}</p>
@@ -1570,6 +1575,49 @@ function yarinTop10Karti(hisse, snapshot, kayit = {}, sira = 1){
                 <p style="font-size:12px">${yarinMetin(performans.not || "Geçmiş fiyat verisi henüz doğrulanmadı.")}</p>
             </section>
         </article>`;
+}
+
+let pozitifYarinGorunumu=null;
+let pozitifListeLimiti=30;
+function pozitifFirsatOzet(row){
+    const f=row?.positive_opportunity;if(!f)return '';
+    return '<div class="detail-card"><p>Gelecek fırsat: '+yarinSayi(f.future_opportunity_score,'/100')+
+        ' · Beklenen getiri: '+yarinSayi(f.expected_return_next_session,'%')+' · Devam olasılığı: '+yarinSayi(f.continuation_probability,'%')+'</p>'+
+        '<p>Güven: '+yarinSayi(f.confidence,'/100')+' · Risk: '+yarinMetin(f.risk)+' · Karar: '+yarinMetin(row.nihai_karar?.karar)+'</p>'+
+        '<p>'+yarinMetin(f.neden_bu_sirada)+'</p><p>Ana risk: '+yarinMetin(f.risks?.[0])+'</p>'+
+        '<small>'+(f.probability_calibrated?'Benzer geçmiş sinyallerden istatistiksel beklenti.':'Teknik senaryo; istatistiksel kalibrasyon için yeterli örnek yok.')+'</small></div>';
+}
+function pozitifAdayKarti(row,live){
+    const f=row.positive_opportunity || {};
+    return '<article class="detail-card"><h3>'+yarinMetin(f.selection_rank ?? f.rank)+'. '+yarinMetin(row.sembol)+'</h3>'+
+        '<p>Kapanış / son seans fiyatı: '+yarinSayi(row.fiyat,' TL')+' · Tahmin gününün değişimi: '+yarinSayi(row.degisim,'%')+'</p>'+
+        (live?.fiyat != null ? '<p>Son alınan fiyat: '+yarinSayi(live.fiyat,' TL')+' · '+yarinZaman(live.updated_at)+'</p>' : '')+
+        pozitifFirsatOzet(row)+'</article>';
+}
+function pozitifListeSec(limit){if(![10,20,30,50].includes(limit))return;pozitifListeLimiti=limit;pozitifYarinGoster();}
+function pozitifYarinGoster(){
+    if(!pozitifYarinGorunumu)return;
+    const {snapshot,live}=pozitifYarinGorunumu;const pool=snapshot.pozitif_havuz;
+    const map=new Map((pool.adaylar || []).map(r=>[r.sembol,r]));
+    const rows=(pool.eligible_symbols || []).map(s=>map.get(s)).filter(Boolean);
+    const controls='<p>'+[10,20,30,50].map(n=>'<button onclick="pozitifListeSec('+n+')">TOP'+n+'</button>').join(' ')+'</p>';
+    let output='<p>Son kapanış analizi: '+yarinMetin(snapshot.analiz_tarihi)+' · Pozitif: '+yarinMetin(pool.positive_count)+' · Analiz: '+yarinMetin(pool.analyzed_count)+'</p>'+controls;
+    output+='<h3>Günün En Güçlü Adayı</h3>'+(rows[0]?pozitifAdayKarti(rows[0],live.get(rows[0].sembol)):'<p>Kalite ve hard-safety kontrollerini geçen aday yok.</p>');
+    output+='<h3>YARIN İÇİN TOP10</h3>'+(snapshot.top10 || []).map((row,i)=>yarinTop10Karti(row,snapshot,live.get(row.sembol),i+1)).join('');
+    if(pozitifListeLimiti>10)output+='<h3>DİĞER GÜÇLÜ ADAYLAR · 11–20</h3>'+rows.slice(10,20).map(r=>pozitifAdayKarti(r,live.get(r.sembol))).join('');
+    if(pozitifListeLimiti>20)output+='<h3>DİĞER GÜÇLÜ ADAYLAR · 21–30</h3>'+rows.slice(20,30).map(r=>pozitifAdayKarti(r,live.get(r.sembol))).join('');
+    if(pozitifListeLimiti>30)output+='<h3>Daha Fazla · TOP50</h3>'+rows.slice(30,50).map(r=>pozitifAdayKarti(r,live.get(r.sembol))).join('');
+    document.getElementById('top10List').innerHTML=output;
+}
+function pozitifOgrenmeGoster(report){
+    if(!report?.horizons)return '<div class="detail-card"><h3>Pozitif Hisselerden Öğrenme</h3><p>Henüz kapanış havuzu ölçümü yok. Learning: KAPALI</p></div>';
+    const h=report.horizons['1'] || {};const top=h.capture?.top || {};const pct=v=>yarinSayi(v == null ? null : v*100,'%');
+    const combos=Object.entries(h.patterns?.['60']?.combinations || {}).filter(([k,v])=>v.strong).sort((a,b)=>b[1].success_rate-a[1].success_rate).slice(0,3);
+    return '<div class="detail-card"><h3>Pozitif Hisselerden Öğrenme</h3><p>Analiz günü: '+yarinMetin(report.analysis_date)+' · Artı kapanan: '+yarinMetin(report.positive_count)+' · Analiz edilen: '+yarinMetin(report.analyzed_count)+'</p>'+
+        '<p>TOP10 / TOP30 / TOP50 başarı: '+[10,30,50].map(n=>pct(top[n]?.continuation_success_rate)).join(' / ')+'</p>'+
+        '<p>Devam başarısı: '+pct(h.stats?.success_rate)+' · Kaçırılan güçlü aday: '+yarinMetin(report.missed_winner_count)+'</p>'+
+        '<p>En sık başarısızlık nedeni: '+yarinMetin(report.most_common_failure)+'</p>'+
+        '<p>En güçlü continuation kriterleri: '+yarinMetin(combos.map(([k,v])=>k).join('; ') || 'Yetersiz veri')+'</p><p>Learning: KAPALI · Ölçüm kapsamı: pozitif kapanış havuzu</p></div>';
 }
 
 /* HİSSE SATIRI */
@@ -2756,8 +2804,8 @@ async function modelPerformansiYukle(alan){
         if(document.getElementById('aiLearningPage').style.display!=='block') return;
         alan.insertAdjacentHTML('beforeend',modelPerformansiGoster(response.ok ? await response.json() : null));
         const loadReport=async name=>{try{const r=await fetch('data/'+name+'?t='+Date.now(),{cache:'no-store'});return r.ok ? await r.json() : null;}catch(error){return null;}};
-        const [health,combinations]=await Promise.all([loadReport('algoritma_saglik.json'),loadReport('kombinasyon_performansi.json')]);
-        if(document.getElementById('aiLearningPage').style.display==='block') alan.insertAdjacentHTML('beforeend',algoritmaSaglikGoster(health,combinations));
+        const [health,combinations,positive]=await Promise.all([loadReport('algoritma_saglik.json'),loadReport('kombinasyon_performansi.json'),loadReport('pozitif_hisseler_performansi.json')]);
+        if(document.getElementById('aiLearningPage').style.display==='block') alan.insertAdjacentHTML('beforeend',algoritmaSaglikGoster(health,combinations)+pozitifOgrenmeGoster(positive));
     }catch(error){
         if(document.getElementById('aiLearningPage').style.display==='block') alan.insertAdjacentHTML('beforeend',modelPerformansiGoster(null)+algoritmaSaglikGoster(null,null));
     }

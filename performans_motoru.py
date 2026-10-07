@@ -280,6 +280,7 @@ class PerformansMotoru:
             raw=path.read_bytes();snapshot=json.loads(raw);day=snapshot.get('analiz_tarihi',path.stem)
             snapshot_id=day+'_'+hashlib.sha256(raw).hexdigest()[:16]
             lists=[('YARIN_TOP10',snapshot.get('top10',[])),('YARIN_BASELINE',snapshot.get('ham_top10',[])),('YARIN_SHADOW',snapshot.get('shadow_top10',[])),('YARIN_CONTROLLED_SHADOW',snapshot.get('controlled_shadow_top10',[]))]
+            lists.append(('POSITIVE_CANDIDATE',(snapshot.get('pozitif_havuz') or {}).get('adaylar',[])))
             entries=[(model,rank,row) for model,rows in lists for rank,row in enumerate(rows,1)]
             for model,rank,row in entries:
                 prediction=row.get('tahmin') or {}
@@ -301,6 +302,8 @@ class PerformansMotoru:
                     'teknik_gostergeler':prediction.get('teknik_gostergeler',row.get('teknik_gostergeler')),
                     'nihai_karar':prediction.get('nihai_karar',row.get('nihai_karar')),
                     'controlled_shadow':prediction.get('controlled_shadow',row.get('controlled_shadow')),
+                    'positive_opportunity':prediction.get('positive_opportunity',row.get('positive_opportunity')),
+                    'criteria_snapshot':prediction.get('criteria_snapshot',row.get('criteria_snapshot')),
                     'teknik_katkilar':prediction.get('teknik_katkilar',row.get('teknik_katkilar')),
                     'teknik_shadow_puan':prediction.get('teknik_shadow_puan',row.get('teknik_shadow_puan')),
                     'piyasa_baglami':prediction.get('piyasa_baglami',row.get('piyasa_baglami')),
@@ -310,6 +313,10 @@ class PerformansMotoru:
                     'calibration_version':prediction.get('calibration_version',row.get('calibration_version')),
                     'shadow_version':prediction.get('shadow_version',row.get('shadow_version')),
                     **{'sonuc_'+str(h)+'g':None for h in HORIZONS}}
+                if model=='POSITIVE_CANDIDATE':
+                    record['recorded_decision']=record['karar'];record['karar']='AL'
+                    record['model_version']=(record.get('positive_opportunity') or {}).get('model_version','LEGACY_UNKNOWN')
+                    record['analysis_only']=True
                 records.append(record)
             state.setdefault('arsivler',{})[name]=snapshot_id
         return records
@@ -374,7 +381,7 @@ class PerformansMotoru:
         days={}
         for row in forecasts:days.setdefault(row['snapshot_tarihi'],[]).append(row)
         daily={day:daily_report(rows) for day,rows in sorted(days.items())}
-        eligible=[r for r in records if r.get('egitim_durumu')!='REFERANS' and r.get('model') not in ('YARIN_BASELINE','YARIN_SHADOW','YARIN_CONTROLLED_SHADOW')]
+        eligible=[r for r in records if r.get('egitim_durumu')!='REFERANS' and r.get('model') not in ('YARIN_BASELINE','YARIN_SHADOW','YARIN_CONTROLLED_SHADOW','POSITIVE_CANDIDATE')]
         complete_dates=sorted({v['sonuc_tarihi'] for v in daily.values() if v['tamamlandi'] and v['sonuc_tarihi']})[-20:]
         recent=[r for r in forecasts if usable(r) and r['sonuc_1g'].get('tarih') in complete_dates and daily[r['snapshot_tarihi']]['tamamlandi']]
         report={'updated_at':current.isoformat(),'vadeler':{str(h):summarize(eligible,h) for h in HORIZONS},
@@ -406,6 +413,8 @@ class PerformansMotoru:
         target=self.location.public/'onerilen_agirliklar.json'
         with locked(target):atomic_json(target,{**load(target,{}),**proposal})
         controlled_publish(self.location,diagnostic_records,current,'DAILY')
+        from pozitif_kapanis import publish_performance
+        publish_performance(self.location,diagnostic_records,current)
 
     def one_round(self):
         current=self.clock().astimezone(ISTANBUL);processed=changed=0;errors={}
@@ -427,7 +436,7 @@ class PerformansMotoru:
                     if not start:continue
                     retry=stamp(state['tekrar'].get(record['sinyal_id']))
                     if retry and retry>current:continue
-                    horizons=(1,3,5) if record.get('model') in ('HABER','MAKRO') else HORIZONS
+                    horizons=(1,3,5) if record.get('model') in ('HABER','MAKRO','POSITIVE_CANDIDATE') else HORIZONS
                     due=[h for h in horizons if not (isinstance(record.get('sonuc_'+str(h)+'g'),dict) and record['sonuc_'+str(h)+'g'].get('degerlendirme_tamamlandi',True))
                          and session_closed(sessions_after(start.date(),h,self.holiday)[-1],current)]
                     if due:pending.append((dict(record),due))
@@ -542,6 +551,7 @@ def evidence_features(record,mode):
         DESTEK_DIRENC=bool(support<=price<resistance) if price and support and resistance else None,
         ATR_NORMAL=value(('atr14_5',) if intra else ('atr14',),lambda n:0<n/price*100<=5) if price and price>0 else None)
     breakout=number(raw.get('gun_ici_hacimli_kirilim' if intra else 'yarin_kirilim'))
+    if not intra and number(raw.get('ema9_daily')) is not None:features['EMA_TREND']=pair('ema9_daily','ema21_daily')
     features['HACIMLI_KIRILIM']=bool(price>=breakout and features['HACIM']) if price and breakout and features['HACIM'] is not None else None
     ctx=raw.get('piyasa_baglami') or {};at=stamp(ctx.get('updated_at'))
     if ctx and at and at<=signal and not ctx.get('stale'):
@@ -741,7 +751,7 @@ def performance_source(record):
     model=str(record.get('model',''))
     if 'SHADOW' in model:return 'SHADOW'
     if 'BACKTEST' in model:return 'BACKTEST'
-    if model in ('YARIN_TOP10','ORTAK_AI','HABER','MAKRO','GUN_ICI') or record.get('sinyal_zamani'):return 'LIVE'
+    if model in ('YARIN_TOP10','ORTAK_AI','HABER','MAKRO','GUN_ICI','POSITIVE_CANDIDATE') or record.get('sinyal_zamani'):return 'LIVE'
     return 'UNKNOWN'
 
 

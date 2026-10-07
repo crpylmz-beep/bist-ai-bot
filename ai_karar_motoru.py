@@ -101,6 +101,8 @@ def history_context(history, row, regime, current):
     eligible = []
     for record in history:
         if not isinstance(record,dict):continue
+        # Observational closing-pool controls cannot silently alter live history scoring.
+        if record.get('analysis_only') or record.get('model')=='POSITIVE_CANDIDATE':continue
         recorded=stamp(record.get('zaman') or record.get('sinyal_zamani'))
         if recorded and recorded>current:continue
         if record.get('egitim_durumu') == 'REFERANS' or record.get('karar') not in ('AL','SAT','GUCLU_AL','GUCLU_SAT'):

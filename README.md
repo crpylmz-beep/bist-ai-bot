@@ -10,3 +10,5 @@ Railway tek volume'u iki servise paylaşmaz; hazırlanmış kurulum bir serviste
 Veri yolu/migration: [DATA_PERSISTENCE.md](DATA_PERSISTENCE.md). Worker: [ANA_MOTOR_SETUP.md](ANA_MOTOR_SETUP.md). Push: [PUSH_SETUP.md](PUSH_SETUP.md).
 
 Testler: `python -m unittest discover -s tests`; JavaScript smoke testleri `tests/*.cjs`.
+
+Pozitif kapanış havuzu, Yarın TOP10/30/50 ve 1/3/5 günlük ölçüm: [POZITIF_KAPANIS.md](POZITIF_KAPANIS.md).
