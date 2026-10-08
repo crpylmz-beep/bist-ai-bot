@@ -17,7 +17,17 @@ def main(argv=None):
     restore=sub.add_parser('restore');restore.add_argument('manifest');restore.add_argument('target');restore.add_argument('--apply',action='store_true')
     export=sub.add_parser('export');export.add_argument('source');export.add_argument('target')
     sub.add_parser('usage')
+    inventory=sub.add_parser('inventory');inventory.add_argument('--root',required=True)
+    inventory.add_argument('--pg-factor-low',type=float,default=1.5);inventory.add_argument('--pg-factor-high',type=float,default=3.0)
+    inventory.add_argument('--r2-ratio-low',type=float,default=.25);inventory.add_argument('--r2-ratio-high',type=float,default=.75)
     args=parser.parse_args(argv)
+    if args.command=='inventory':
+        from .readonly_inventory import report
+        try:
+            value=report(args.root,pg_factor_low=args.pg_factor_low,pg_factor_high=args.pg_factor_high,r2_ratio_low=args.r2_ratio_low,r2_ratio_high=args.r2_ratio_high)
+        except (OSError,ValueError):
+            print(json.dumps({'mode':'READ_ONLY_METADATA','error':'INVENTORY_UNAVAILABLE_OR_INVALID_ARGUMENT','success':False}));return 2
+        print(json.dumps(value,ensure_ascii=False));return 0 if value['complete'] else 2
     from veri_yollari import paths
     location=paths();database=None
     try:
