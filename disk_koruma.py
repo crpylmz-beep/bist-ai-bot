@@ -14,6 +14,22 @@ CACHE_LIMIT=4*1024*1024
 PUBLIC_SCRATCH_NAMES=('bist_data.json','gun_ici_top10.json','gun_ici_tum.json','yarin_top10.json','sektor_haritasi.json','sirket_site_haritasi.json')
 
 
+def disk_health(location):
+    """Metadata only, never traverse private data or read payloads."""
+    usage=shutil.disk_usage(location.root)
+    percent=usage.used/usage.total*100 if usage.total else 100
+    status='CRITICAL' if percent>=90 else 'WARNING' if percent>=80 else 'WATCH' if percent>=75 else 'NORMAL'
+    count=size=0
+    for path in location.runtime.glob('.user-*'):
+        try:
+            if path.is_symlink() or not path.is_file():continue
+            count+=1;size+=path.stat().st_size
+        except OSError:continue
+    result=dict(capacity=usage.total,used=usage.used,free=usage.free,percent_used=round(percent,2),status=status,temp_count=count,temp_bytes=size)
+    logging.info('[DISK_HEALTH] %s',result)
+    return result
+
+
 def report(location):
     root=location.root
     if not root:return {}

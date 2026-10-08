@@ -294,9 +294,12 @@ def main():
         logging.info('[WORKER] başladı')
         signal.signal(signal.SIGTERM,motor.request_stop)
         signal.signal(signal.SIGINT,motor.request_stop)
+        from disk_bakimi import DiskMaintenance
+        maintenance=DiskMaintenance(paths(),motor.stop).start()
         try:
             motor.run()
         finally:
+            maintenance.close()
             adapter.close()
 
 

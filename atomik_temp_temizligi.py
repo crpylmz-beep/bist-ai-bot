@@ -6,8 +6,17 @@ records and every non-null historical outcome still exist unchanged in the final
 """
 import errno,fcntl,hashlib,json,logging,os,re,shutil,sqlite3,stat,tempfile,time
 from datetime import datetime
+from contextvars import ContextVar
 from pathlib import Path
 from atomik_depolama import target_lock_name
+
+inspection_stop=ContextVar('disk_inspection_stop',default=None)
+
+def check_deadline(deadline):
+    stop=inspection_stop.get()
+    if (stop is not None and stop.is_set()) or time.monotonic()>deadline:
+        raise TimeoutError('Inspection time limit')
+
 
 MIN_AGE=30*60
 SAFE_FINALS={'ai_ogrenme_gecmisi.json','tahmin_gecmisi.json','gun_ici_mumlar.json',
@@ -20,19 +29,21 @@ def fingerprint(fd):
     s=os.fstat(fd);return (s.st_dev,s.st_ino,s.st_size,s.st_mtime_ns)
 
 
-def digest_fd(fd):
+def digest_fd(fd,deadline=float("inf")):
     os.lseek(fd,0,os.SEEK_SET);h=hashlib.sha256()
     while True:
+        check_deadline(deadline)
         chunk=os.read(fd,1024*1024)
         if not chunk:break
         h.update(chunk)
     return h.digest()
 
 
-def prefix_matches(temp_fd,final_fd):
+def prefix_matches(temp_fd,final_fd,deadline=float("inf")):
     """Every byte of an incomplete temp must already exist in committed final."""
     os.lseek(temp_fd,0,0);os.lseek(final_fd,0,0)
     while True:
+        check_deadline(deadline)
         chunk=os.read(temp_fd,1024*1024)
         if not chunk:return True
         if os.read(final_fd,len(chunk))!=chunk:return False
@@ -75,10 +86,11 @@ def strict_object(pairs):
 
 class HistoryStream:
     """Bounded record-at-a-time JSON parser; incomplete/trailing files are rejected."""
-    def __init__(self,fd,deadline):
+    def __init__(self,fd,deadline,record_key='kayitlar'):
+        self.record_key=record_key
         os.lseek(fd,0,0);self.stream=os.fdopen(os.dup(fd),'r',encoding='utf-8',newline='');self.buffer='';self.ended=False;self.deadline=deadline;self.offset=0;self.last_span=None
     def fill(self):
-        if time.monotonic()>self.deadline:raise TimeoutError('Inspection time limit')
+        check_deadline(self.deadline)
         chunk=self.stream.read(65536);self.buffer+=chunk;self.ended=not chunk
     def consume(self,n):
         self.offset+=len(self.buffer[:n].encode('utf-8'));self.buffer=self.buffer[n:]
@@ -93,7 +105,7 @@ class HistoryStream:
     def value(self):
         self.white()
         while True:
-            if time.monotonic()>self.deadline:raise TimeoutError('Inspection time limit')
+            check_deadline(self.deadline)
             try:
                 value,end=json.JSONDecoder(object_pairs_hook=strict_object,parse_constant=lambda x: (_ for _ in ()).throw(ValueError('Nonfinite JSON'))).raw_decode(self.buffer)
                 if end==len(self.buffer) and not self.ended:
@@ -110,7 +122,7 @@ class HistoryStream:
             seen.add(key)
             if len(seen)>64:raise ValueError('Too many root fields')
             self.token(':')
-            if key=='kayitlar':
+            if key==self.record_key:
                 self.token('[');self.white()
                 if not self.buffer.startswith(']'):
                     while True:
@@ -126,7 +138,7 @@ class HistoryStream:
             if self.buffer.startswith('}'):break
             self.token(',')
         self.token('}');self.white()
-        if self.buffer or not self.ended or 'kayitlar' not in seen:raise ValueError('Trailing/incomplete history')
+        if self.buffer or not self.ended or self.record_key not in seen:raise ValueError('Trailing/incomplete history')
     def close(self):self.stream.close()
 
 
@@ -173,48 +185,68 @@ def history_time(value):
 
 
 class HistoryIndex:
-    def __init__(self,fd,deadline):
+    def __init__(self,fd,deadline,record_key='kayitlar',ai_legacy=True):
+        self.record_key=record_key;self.ai_legacy=ai_legacy;self.metrics={}
         self.temp=tempfile.TemporaryDirectory(prefix='bist-atomic-proof-',dir='/tmp');self.db=None;self.final_fd=None;self.metadata={};self.count=0
         try:
             self.final_fd=os.dup(fd)
             self.db=sqlite3.connect(str(Path(self.temp.name)/'proof.sqlite'))
             self.db.execute('PRAGMA journal_mode=OFF');self.db.execute('CREATE TABLE records(id TEXT PRIMARY KEY, frozen TEXT, outcomes TEXT, offset INTEGER, length INTEGER)')
-            stream=HistoryStream(fd,deadline)
+            stream=HistoryStream(fd,deadline,self.record_key)
             try:
                 for key,value in stream.entries():
                     if key is not None:self.metadata[key]=value;continue
-                    identity,frozen,outcomes=record_parts(value)
+                    identity,frozen,outcomes=self.parts(value)
                     self.db.execute('INSERT INTO records VALUES(?,?,?,?,?)',(identity,frozen,json.dumps(outcomes),*stream.last_span));self.count+=1
                 self.db.commit()
             finally:stream.close()
         except BaseException:self.close();raise
+    def values(self,row):
+        if self.ai_legacy:return record_values(row)
+        identity=next((row[k] for k in ('kayit_id','prediction_id','signal_id','result_id','id') if isinstance(row.get(k),str) and row[k]),None)
+        if identity is None:raise ValueError('Missing record identity')
+        outcomes={k:v for k,v in row.items() if re.fullmatch(r'sonuc_\d+g',k)}
+        # Only documented null horizon placeholders may advance. Empty arbitrary
+        # dictionaries and partial/completed results remain meaningful values.
+        return identity,{k:v for k,v in row.items() if k not in outcomes},{k:v for k,v in outcomes.items() if v is not None}
+    def parts(self,row):
+        identity,frozen,outcomes=self.values(row)
+        return identity,canonical(frozen),{k:canonical(v) for k,v in outcomes.items()}
     def assess(self,fd,deadline):
-        stream=HistoryStream(fd,deadline);count=0;metadata={};unique=False
+        stream=HistoryStream(fd,deadline,self.record_key);count=0;metadata={};unique=False
+        self.metrics={'unique_record_count':0,'changed_record_count':0,'missing_record_count':0,'final_extra_record_count':0};change_reason=None
         self.db.execute('CREATE TABLE IF NOT EXISTS seen(id TEXT PRIMARY KEY)');self.db.execute('DELETE FROM seen')
         try:
             for key,value in stream.entries():
                 if key is not None:metadata[key]=value;continue
-                identity,frozen,outcomes=record_parts(value)
+                identity,frozen,outcomes=self.parts(value)
                 try:self.db.execute('INSERT INTO seen VALUES(?)',(identity,))
                 except sqlite3.IntegrityError:raise ValueError('Duplicate record identity')
                 count+=1
                 current=self.db.execute('SELECT frozen,outcomes,offset,length FROM records WHERE id=?',(identity,)).fetchone()
-                if not current:unique=True;continue
+                if not current:
+                    unique=True;self.metrics['unique_record_count']+=1;self.metrics['missing_record_count']+=1;continue
                 if current[0]!=frozen:
                     # Indexed byte ranges refer to the held final descriptor; no
                     # second full history copy or per-field megabyte index.
                     final_row=json.loads(os.pread(self.final_fd,current[3],current[2]),object_pairs_hook=strict_object)
                     from disk_forensik import contained
-                    if not contained(record_values(value)[1],record_values(final_row)[1]):unique=True;continue
+                    if not contained(self.values(value)[1],self.values(final_row)[1]):
+                        unique=True;self.metrics['changed_record_count']+=1;change_reason='CHANGED_FROZEN_FIELD';continue
                 target_outcomes=json.loads(current[1])
-                if any(target_outcomes.get(k)!=v for k,v in outcomes.items()):unique=True
+                if any(target_outcomes.get(k)!=v for k,v in outcomes.items()):
+                    final_row=json.loads(os.pread(self.final_fd,current[3],current[2]),object_pairs_hook=strict_object)
+                    from disk_forensik import contained
+                    if not contained(self.values(value)[2],self.values(final_row)[2]):
+                        unique=True;self.metrics['changed_record_count']+=1;change_reason=change_reason or 'CHANGED_RESULT'
             # Finish parsing before calling anything unique: invalid/truncated
             # files are UNKNOWN, not valid complete recovery records.
-            if unique:return 'UNIQUE_RECOVERY_CANDIDATE','RECORD_OR_RESULT_NOT_IN_FINAL'
+            self.metrics['final_extra_record_count']=self.db.execute('SELECT COUNT(*) FROM records WHERE id NOT IN (SELECT id FROM seen)').fetchone()[0]
+            if unique:return 'UNIQUE_RECOVERY_CANDIDATE',change_reason or 'UNIQUE_RECORD'
             for key,value in metadata.items():
                 if key not in self.metadata:return 'UNIQUE_RECOVERY_CANDIDATE','ROOT_METADATA_NOT_IN_FINAL'
                 target=self.metadata[key]
-                if key=='guncelleme':
+                if (key=='guncelleme' and self.ai_legacy) or (key=='son_guncelleme' and self.record_key=='tahminler'):
                     if history_time(value)>history_time(target):return 'UNKNOWN','FUTURE_HISTORY_TIMESTAMP'
                 elif key=='toplam_kayit':
                     if type(value) is not int or type(target) is not int or value!=count or target!=self.count:return 'UNKNOWN','INVALID_RECORD_COUNT'
