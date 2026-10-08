@@ -1,0 +1,7 @@
+# Checkpoint metadata sınırı düzeltmesi
+
+Koddan doğrulanan neden: `ResumableProof.save()` yalnız dosya sayısını 128'e indiriyordu. Değişken boyutlu parser, root metadata ve recovery sayaçları ile pretty JSON envelope toplamı 256 KiB'ı aşınca `ValueError('Checkpoint size limit')` yükseliyordu; çağıran bunu `DISK_CHECKPOINT save_failed type=ValueError` olarak logluyordu. 100 dosyanın metadata'sıyla sınırın aşılması, dosya sayısı 128'den az olmasına rağmen yerel testte yeniden üretildi. Production volume veya loglarına bu çalışmada erişilmedi; diğer ValueError sebepleri bununla özdeş kabul edilmedi.
+
+Yeni save, dosya sayısı ve gerçek serialized byte boyutunu birlikte sınırlar. Önce tamamlanmış, sonra en eski yeniden üretilebilir proof checkpoint metadata'sı bırakılır. Tutulan parser offset/count/recovery ilerlemesi aynen korunur ve checksum ile yeniden açılır. Kaynak JSON, temp payload, recovery journal, tahmin veya kullanıcı kaydı silinmez. Checkpoint bir silme yetkisi değildir; tüm proof/lease/inode kontrolleri devam eder.
+
+Tek bir metadata kaydı bile sınıra sığmazsa önceki diskteki checkpoint değiştirilmez. `CHECKPOINT_CAPACITY_DEFERRED` açıkça loglanır; inspector sonucu `checkpoint_deferred=true` ve hata sayısı ile durumu korur. Böylece limit kontrolü kaldırılmaz ve ertelenen kayıt başarılı sayılmaz. Tanınmayan/bozuk/symlink checkpoint'lerin korunması için mevcut doğrulama hataları aynen bırakıldı.

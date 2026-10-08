@@ -9,6 +9,7 @@ from haber_tekillestirme import prepare
 
 
 class FeedTests(unittest.TestCase):
+    def setUp(self):self.enterContext(patch.object(EconomyNews,'_health'))
     def feed(self, host, title='THYAO yeni yatırım açıkladı'):
         date=format_datetime(datetime.now(timezone.utc))
         return f'<rss><channel><item><title>{title}</title><link>https://{host}/haber</link><pubDate>{date}</pubDate><description>THYAO yatırım</description></item></channel></rss>'.encode()
@@ -52,6 +53,7 @@ class FeedTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError,'SOURCE_RESPONSE_TOO_LARGE'):read_bounded('https://example.org/feed')
 
 class CanonicalFeedTests(unittest.TestCase):
+    def setUp(self):self.enterContext(patch.object(EconomyNews,'_health'))
     def test_repeat_no_disk_write_and_kap_primary(self):
         import tempfile
         from pathlib import Path

@@ -271,7 +271,7 @@ class StorageV4Tests(unittest.TestCase):
         finally:session.close()
     def test_checkpoint_size_bound_rejects_growth(self):
         session=ResumableProof(self.location);session.data['files']={'x':{'completed':False,'touched':0,'metadata':'X'*MAX_BYTES}};session.dirty=True
-        self.assertRaises(ValueError,session.save);session.dirty=False;session.close();self.assertFalse((self.location.runtime/'disk_forensic_checkpoint.json').exists())
+        self.assertFalse(session.save());session.dirty=False;session.close();self.assertFalse((self.location.runtime/'disk_forensic_checkpoint.json').exists())
     def test_stale_sidecar_is_never_removed_without_payload_proof(self):
         temp=self.orphan(b'UNIQUE UNKNOWN');meta=self.location.runtime/trace.sidecar_name(temp.name);meta.write_text('{"version":4}');self.scan();self.assertTrue(temp.exists());self.assertTrue(meta.exists())
     def test_readonly_inspection_writes_no_checkpoint(self):

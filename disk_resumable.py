@@ -91,17 +91,27 @@ class ResumableProof:
             if active:db.execute('DELETE FROM seen WHERE temp NOT IN ('+','.join('?' for _ in active)+')',active)
             else:db.execute('DELETE FROM seen')
         for db in self.dbs.values():db.commit()
-        while len(self.data['files'])>MAX_FILES:
+        # File-count limits do not bound variable parser/recovery metadata bytes.
+        # Evict reproducible proof checkpoints only; never payloads or journals.
+        evicted=0
+        def envelope():
+            return {'checkpoint':self.data,'checksum':proof.canonical(self.data)}
+        value=envelope()
+        while (len(self.data['files'])>MAX_FILES or
+               len(json.dumps(value,ensure_ascii=False,indent=2).encode())>MAX_BYTES):
+            if len(self.data['files'])<=1:
+                logging.warning('[DISK_CHECKPOINT] code=CHECKPOINT_CAPACITY_DEFERRED files=%d finals=%d previous_checkpoint=preserved payload_deleted=false',len(self.data['files']),len(self.data['finals']))
+                return False
             key=min(self.data['files'],key=lambda k:(not self.data['files'][k].get('completed',False),self.data['files'][k].get('touched',0)))
-            self.data['files'].pop(key)
-        payload=self.data;envelope={'checkpoint':payload,'checksum':proof.canonical(payload)}
-        if len(json.dumps(envelope,ensure_ascii=False,indent=2).encode())>MAX_BYTES:
-            logging.warning('[DISK_CHECKPOINT] metadata bound reached; no unsafe deletion')
-            raise ValueError('Checkpoint size limit')
-        atomic_json(self.path,envelope);self.dirty=False
+            self.data['files'].pop(key);evicted+=1
+            value=envelope()
+        if evicted:
+            logging.info('[DISK_CHECKPOINT] code=PROOF_METADATA_REVALIDATE evicted=%d bytes=%d payload_deleted=false',evicted,len(json.dumps(value,ensure_ascii=False,indent=2).encode()))
+        atomic_json(self.path,value);self.dirty=False
+        return True
 
     def close(self):
-        try:self.save()
+        try:return self.save()
         finally:
             for db in self.dbs.values():db.close()
             live=set(self.data['finals'])

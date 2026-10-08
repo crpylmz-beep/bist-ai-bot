@@ -87,6 +87,21 @@ def health_snapshot(directory=None):
         result = {'motor_durumu': data.get('motor_durumu', 'UNKNOWN'), 'healthy': healthy,
                   'worker_status': status, 'heartbeat_age_seconds': round(age, 1),
                   'updated_at': data['updated_at'], 'tasks': tasks}
+        try:
+            with ((Path(directory) if directory else runtime_dir())/'economy_news_health.json').open('rb') as stream:
+                raw=stream.read(8193)
+            if len(raw)<=8192:
+                sources=json.loads(raw).get('sources',{})
+                from ekonomi_haberleri import SOURCES
+                result['news_sources']={}
+                for name,_,_ in SOURCES:
+                    row=sources.get(name,{})
+                    status=row.get('status')
+                    if status not in ('OK','RETRYING','BLOCKED','NOT_CHECKED'):continue
+                    result['news_sources'][name]={'status':status,'code':('NONE' if row.get('code')=='NONE' else public_issue(row)['code']),
+                        **{key:max(0,min(row[key],10000)) for key in ('processed','ignored') if type(row.get(key)) is int},
+                        'checked_at':str(row.get('checked_at',''))[:40]}
+        except (OSError,ValueError,TypeError,AttributeError):pass
         result.update({k:v for k,v in data.items() if k.startswith('last_') and isinstance(v,str) and k in {
             'last_'+name+suffix for name in DEFAULTS for suffix in ('','_check','_batch')}})
         return result

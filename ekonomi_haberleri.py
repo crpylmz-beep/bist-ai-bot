@@ -38,18 +38,33 @@ def read_bounded(url):
 
 
 class EconomyNews:
-    def __init__(self, universe, enqueue, fetch=read_bounded, news=None):
+    def __init__(self, universe, enqueue, fetch=read_bounded, news=None, health_writer=None):
         self.universe, self.enqueue, self.fetch = universe, enqueue, fetch
         self.news = news or CanonicalNews()
+        self.health_writer=health_writer
+
+    def _health(self, rows):
+        from kullanici_kayitlari import atomic_json
+        from veri_yollari import runtime_file
+        value={'updated_at':now(),'sources':rows}
+        if self.health_writer:self.health_writer(value)
+        else:atomic_json(runtime_file('economy_news_health.json'),value)
+        for source,row in rows.items():
+            logging.info('[NEWS_HEALTH] source=%s status=%s code=%s processed=%d ignored=%d',
+                         source,row['status'],row['code'],row['processed'],row['ignored'])
 
     def one_round(self):
         symbols = set(self.universe())
+        health={source:{'status':'NOT_CHECKED','code':'NONE','processed':0,'ignored':0,'checked_at':now()} for source,_,_ in SOURCES}
         if not symbols:
+            for row in health.values():row.update(status='BLOCKED',code='EMPTY_UNIVERSE')
+            self._health(health)
             from gorev_hatalari import TaskIssue
             raise TaskIssue({'code':'EMPTY_UNIVERSE'},0)
         result = {'processed': 0, 'ignored': 0, 'errors': {}}
         current = datetime.fromisoformat(now())
         for source, host, default_url in SOURCES:
+            before_processed,before_ignored=result['processed'],result['ignored']
             try:
                 url = os.environ.get(source + '_RSS_URL', default_url)
                 parts = urlsplit(url)
@@ -103,14 +118,19 @@ class EconomyNews:
                                            'published_at': published.isoformat()}, enqueue=self.enqueue,
                                           alarm_writer=web_alarm_kaydet)
                         result['processed'] += 1
+                health[source].update(status='OK',code='NONE')
             except Exception as error:
                 from gorev_hatalari import describe
                 issue = describe(error)
                 # Fixed short codes, never a response body or credential-bearing URL.
                 if isinstance(error, ValueError) and str(error).startswith('SOURCE_'):
                     issue = {'code': str(error), 'category': 'SOURCE_DATA', 'retryable': True}
+                health[source].update(status='RETRYING',code=issue.get('code','TASK_ERROR'))
                 result['errors'][source] = issue
                 logging.warning('[NEWS_SOURCE] source=%s code=%s', source, issue.get('code'))
+            finally:
+                health[source].update(processed=result['processed']-before_processed,ignored=result['ignored']-before_ignored,checked_at=now())
+        self._health(health)
         if result['errors']:
             from gorev_hatalari import TaskIssue, strongest
             raise TaskIssue(strongest(result['errors'].values()), result['processed'])

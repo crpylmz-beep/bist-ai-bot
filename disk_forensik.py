@@ -380,7 +380,9 @@ def inspect_atomic_temps(location,*,cleanup=False,clock=time.time,budget_seconds
         result['errors']+=1;logging.warning('[DISK_FORENSIC] inspection_error errno=%s',error.errno)
     finally:
         if resume_session is not None:
-            try:resume_session.close()
+            try:
+                if resume_session.close() is False:
+                    result['errors']+=1;result['checkpoint_deferred']=True
             except (OSError,ValueError,sqlite3.Error) as error:
                 result['errors']+=1;logging.warning('[DISK_CHECKPOINT] save_failed type=%s errno=%s',type(error).__name__,getattr(error,'errno',None))
         for index in indexes.values():index.close()
