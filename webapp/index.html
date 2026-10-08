@@ -2571,59 +2571,7 @@ function hisseDetay(hisse){
             : ""
         }
 
-        <div class="detail-card">
-
-            ${
-                yarinTop10Detayi
-                ? ""
-                : "<b>&#128197; SONRAK&#304; SEANS</b>"
-            }
-
-            <div class="detail-grid" style="margin-top:12px">
-
-                ${detayKutu(
-                    "🟢 Alım Bölgesi",
-                    fiyatYaz(yarinAlimAlt) + " - " + fiyatYaz(yarinAlimUst)
-                )}
-
-                ${detayKutu(
-                    "🔴 Satım Bölgesi",
-                    fiyatYaz(yarinSatimAlt) + " - " + fiyatYaz(yarinSatimUst)
-                )}
-
-                ${detayKutu(
-                    "🎯 Kısa Vade Kâr Al",
-                    fiyatYaz(yarinKarAl)
-                )}
-
-                ${detayKutu(
-                    "🛑 Kısa Vade Stop",
-                    fiyatYaz(yarinStop)
-                )}
-
-                ${detayKutu(
-                    "🚀 Hacimli Kırılım",
-                    fiyatYaz(yarinKirilim)
-                )}
-
-                ${detayKutu(
-                    "🎯 Kırılım Sonrası Hedef",
-                    fiyatYaz(yarinKirilimHedef)
-                )}
-
-                ${detayKutu(
-                    "📊 Kırılım Durumu",
-                    kirilimYazi
-                )}
-
-                ${detayKutu(
-                    "🕐 İlk Hacimli Kırılım",
-                    ilkHacimliKirilimSaati
-                )}
-
-            </div>
-
-        </div>
+        <section class="detail-card" id="tomorrowPlanSection" aria-label="Yarın İçin"><h3>Yarın İçin</h3><p role="status">Kapanış planı yükleniyor…</p></section>
 
         <div class="detail-card">
 
@@ -2752,6 +2700,24 @@ async function gunlukYenile(){
  else document.getElementById('dailyPerformance').textContent='';
 }
 function showDaily(){tumSayfalariGizle();document.getElementById('dailyPage').style.display='block';oncekiSayfa='daily';navAktif('navDaily');gunlukGoster();gunlukYenile();gunlukUI.timer=setInterval(gunlukYenile,60000);document.onvisibilitychange=()=>{if(!document.hidden)gunlukYenile();};}
+
+function tomorrowPlanGoster(plan){
+ const esc=yarinMetin;
+ if(!plan)return '<h3>Yarın İçin</h3><p>Yarın planı şu anda alınamıyor. Yeterli veri yok.</p>';
+ const num=value=>typeof value==='number'&&Number.isFinite(value)&&value>0 ? gunlukNum(value) : 'Yeterli veri yok';
+ const range=(low,high)=>low!=null&&high!=null ? num(low)+' – '+num(high) : 'Yeterli veri yok';
+ const field=(label,value)=>detayKutu(label,esc(value));
+ const states={UYGUN:'Uygun',TEMKINLI:'Temkinli',BEKLE:'Bekle',YETERSIZ_VERI:'Yetersiz Veri'};
+ const breakout={CONFIRMED:'Hacimli kırılım gerçekleşti',WEAK_CONFIRMATION:'Fiyat kırdı ama hacim teyidi zayıf',WAITING:'Hacimli kırılım bekleniyor'};
+ const date=new Date(plan.as_of||'');
+ const reference=Number.isNaN(date.getTime())?'Yeterli veri yok':date.toLocaleDateString('tr-TR',{timeZone:'Europe/Istanbul'})+' kapanışı';
+ const lists=(title,items)=>Array.isArray(items)&&items.length?'<h4>'+title+'</h4><ul>'+items.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>':'';
+ return '<h3>Yarın İçin</h3><p>Sonraki işlem günü planı · Orta/uzun vade seviyelerinden ayrıdır.</p><p>Veri: '+esc(reference)+' · Referans fiyat: '+num(plan.reference_price)+' TL</p><p>İşlem günü: '+esc(plan.plan_session||'—')+'</p>'+ (plan.is_current_reference===false?'<p class="daily-warning">Eski kapanış kaydı; güncel yarın fırsatı değildir.</p>':'')+
+ '<div class="detail-grid">'+field('Plan Durumu',states[plan.view_status||plan.plan_status]||'Yetersiz Veri')+field('Güven',gunlukNum(plan.confidence_score,0)+'/100')+field('Teyit',gunlukNum(plan.confirmation_count,0)+'/'+gunlukNum(plan.confirmation_total,0))+
+ field('Alım Bölgesi',range(plan.buy_zone_low,plan.buy_zone_high))+field('Kısa Vade Kâr Al',range(plan.take_profit_low,plan.take_profit_high))+field('Kısa Vade Stop-Loss',num(plan.stop_loss))+field('Risk/Getiri',num(plan.risk_reward_ratio))+
+ field('Hacimli Kırılım',breakout[plan.volume_breakout_status]||'Yeterli veri yok')+field('Kırılım Seviyesi',num(plan.volume_breakout_level))+field(plan.volume_breakout_status==='CONFIRMED'?'Kırılım Sonrası Olası Hedef':'Kırılım Gerçekleşirse Olası Hedef',num(plan.breakout_target))+field('Destek',num(plan.support))+field('Direnç',num(plan.resistance))+'</div>'+
+ '<details><summary>Teknik bağlam</summary><div class="detail-grid">'+field('ATR',num(plan.atr))+field('RSI',gunlukNum(plan.rsi))+field('Hacim / ortalama',gunlukNum(plan.volume_ratio)+'%')+field('Trend',({POSITIVE:'Pozitif',NEUTRAL:'Nötr',NEGATIVE:'Negatif'})[plan.trend_state]||'Yeterli veri yok')+field('MACD',({POSITIVE:'Pozitif',IMPROVING:'İyileşiyor',WEAKENING:'Zayıflıyor',NEGATIVE:'Negatif'})[plan.macd_state]||'Yeterli veri yok')+'</div></details><p>Risk/getiri: alım bölgesi orta noktası ve kâr al alt seviyesi esas alınır. Plan kesin getiri taahhüdü değildir.</p>'+lists('Nedenler',plan.reasons)+lists('Dikkat',plan.warnings);
+}
 
 function kullaniciSeviyeBolumu(){
     const input = (key, label) => `<label>${label}<input id="${key}" type="number" min="0.01" step="any" inputmode="decimal" placeholder="--"></label>`;
@@ -2994,6 +2960,7 @@ function kullaniciSeviyeAc(hisse){
     }).catch(error => {
         if(seviyeContext === context){
             document.getElementById("levelsStatus").textContent = error.message;
+            const tomorrow=document.getElementById("tomorrowPlanSection");if(tomorrow)tomorrow.innerHTML=tomorrowPlanGoster(null);
         }
     });
 }
@@ -3002,6 +2969,7 @@ async function kullaniciSeviyeYukle(context){
     const data = await seviyeApi(`/api/stocks/${encodeURIComponent(context.stock)}?model=${context.model}`);
     if(context !== seviyeContext) return;
     context.otomatik = data.otomatik || {};
+    document.getElementById("tomorrowPlanSection").innerHTML=tomorrowPlanGoster(data.tomorrow_plan);
     let daily=document.getElementById("stockDailySignal");
     if(!daily){daily=document.createElement("section");daily.id="stockDailySignal";document.getElementById("stockDetail").appendChild(daily);}
     daily.innerHTML=data.intraday_signal ? "<h3>Günlük AL/SAT</h3>"+gunlukKart(data.intraday_signal,true) : "";

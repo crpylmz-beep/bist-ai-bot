@@ -171,8 +171,10 @@ class BistHandler(SimpleHTTPRequestHandler):
                         final=decision_view(shared,current)
                     from gunluk_al_sat import stock_signal,enabled as intraday_engine_enabled
                     intraday_extra={'intraday_signal':stock_signal(stock,self.data_paths)} if intraday_engine_enabled() else {}
+                    from yarin_plani import get_plan
+                    tomorrow=get_plan(stock,self.data_paths,current)
                     self.respond({'manuel': self.records.levels(user, stock),**intraday_extra,
-                                  'otomatik': automatic,
+                                  'otomatik': automatic,'tomorrow_plan':tomorrow,
                                   'ai_ozet': summary,'nihai_karar':final,
                                   'alarmlar': self.records.alarms(user, stock)})
                     return
