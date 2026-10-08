@@ -1,4 +1,4 @@
-"""Explicit operator invocation only: one metadata scan, no startup/retry hooks."""
+"""One metadata scan: explicit CLI or opt-in launcher hook; no persistent state."""
 import json
 import os
 import stat

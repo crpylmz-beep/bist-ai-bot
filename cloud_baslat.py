@@ -10,6 +10,31 @@ import time
 from veri_yollari import paths, copy_new
 
 ROOT = Path(__file__).resolve().parent
+_inventory_attempted = False
+_inventory_lock = threading.Lock()
+
+
+def run_startup_inventory():
+    """Opt-in, at most once per launcher process; no persistent marker or retry."""
+    global _inventory_attempted
+    if os.environ.get('BIST_RUN_INVENTORY_ONCE') != '1':
+        return
+    with _inventory_lock:
+        if _inventory_attempted:
+            return
+        _inventory_attempted = True
+    previous_bytecode = sys.dont_write_bytecode
+    sys.dont_write_bytecode = True
+    try:
+        from v6_storage.inventory_log import run_once
+        status = run_once(railway_logs=True)
+        if status != 0:
+            logging.warning('[V6_INVENTORY] {"complete":false,"error":"STARTUP_INVENTORY_INCOMPLETE_OR_UNAVAILABLE"}')
+    except Exception:
+        # Diagnostic failure must not stop web/worker; never log exception payload.
+        logging.warning('[V6_INVENTORY] {"complete":false,"error":"STARTUP_INVENTORY_FAILED"}')
+    finally:
+        sys.dont_write_bytecode = previous_bytecode
 
 
 def seed_reference_data(location):
@@ -64,6 +89,7 @@ def supervise(launcher=None, stop=None):
 
 def main():
     logging.basicConfig(level=logging.INFO, format='%(message)s')
+    run_startup_inventory()
     location = paths()
     location.ensure()
     from disk_koruma import report,cleanup_startup

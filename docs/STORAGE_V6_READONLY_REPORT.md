@@ -58,7 +58,7 @@ python -B -m v6_storage inventory-log --railway-logs
 Komut `BIST_DATA_DIR` değerini kullanır (production `/data`); varsayılan yerel yol
 veya kullanıcıdan gelen dosya yolu yoktur. Bir turdan sonra çıkar, scheduler,
 başlangıç hook'u, otomatik retry, kalıcı marker veya rapor dosyası oluşturmaz.
-Her manuel çağrı yeni bir turdur; restart/deploy çağrıyı tekrarlamaz.
+Her manuel çağrı yeni bir turdur; CLI kendiliğinden restart/deploy ile çalışmaz.
 `--railway-logs` çıktıyı mevcut `/proc/1/fd/1` container stdout pipe'ına yazar:
 `[V6_INVENTORY]` satırı Railway servis loglarında aranabilir. stdout pipe değilse
 veya yazılamıyorsa exit 2 verir; diske fallback yoktur. Çıkış kodunu kontrol edin.
@@ -73,3 +73,19 @@ Symlinkler izlenmez. Tarama 200.000 girdi, 64 dizin derinliği ve kooperatif
 kesin kayıt sayısı değildir; canlı yazımlar nedeniyle atomik snapshot değildir.
 Hiçbir cleanup, migration, recovery veya kaynak değişikliği yapılmaz. Bu geliştirmede
 production üzerinde çağrı yapılmamış, gerçek volume kapasitesi ölçülmemiştir.
+
+## İsteğe bağlı başlangıç envanteri
+
+`BIST_RUN_INVENTORY_ONCE` varsayılan olarak kapalıdır. Yalnız tam olarak `1`
+olduğunda `cloud_baslat.py`, normal bootstrap/cleanup ve child processlerden önce
+bir metadata taraması çalıştırır. Aynı başlatıcı processinde ikinci çağrı veya
+web child restart'ı tekrar taramaz. Hata/eksik sonuç `[V6_INVENTORY]` ile, gizli
+ayrıntı olmadan belirtilir; web/worker normal başlangıcı devam eder.
+
+Kalıcı marker yazılmadığından, değişken `1` kalırsa her yeni servis restart/deploy
+başlangıcında bir tur çalışır. Tek bir production ölçümü için Railway Variables'da
+`BIST_RUN_INVENTORY_ONCE=1` ayarlayın; logu aldıktan sonra değişkeni kaldırın veya
+`0` yapın. `true`, `yes` veya diğer değerler etkinleştirmez. Bu değişiklik mevcut
+bootstrap, disk koruma veya iş mantığını değiştirmez; envanterin kendisi dosya
+oluşturmaz, silmez, taşımaz, recovery/migration çalıştırmaz. Geliştirme sırasında
+production taraması yapılmamıştır.
