@@ -13,6 +13,8 @@ class OneShotReclaimTests(unittest.TestCase):
   self.enterContext(patch('atomik_temp_temizligi.foreign_open',return_value=False))  # controlled synthetic orphan fixture
   self.temp=tempfile.TemporaryDirectory();self.addCleanup(self.temp.cleanup);self.root=Path(self.temp.name)
   self.location=DataPaths({'BIST_DATA_DIR':self.temp.name});self.location.ensure()
+  from ana_motor import worker_lock
+  self.enterContext(worker_lock(self.location.runtime))
   self.usage=shutil._ntuple_diskusage(500*1024**2,499*1024**2,1024**2)
   self.enterContext(patch('disk_koruma.shutil.disk_usage',return_value=self.usage))
  def file(self,folder,name,data,old=True):

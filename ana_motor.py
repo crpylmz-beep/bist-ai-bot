@@ -100,7 +100,9 @@ def worker_lock(directory):
             fcntl.flock(stream, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except BlockingIOError:
             raise RuntimeError('Ana motor zaten çalışıyor') from None
-        yield
+        from disk_forensik import worker_cleanup_scope
+        with worker_cleanup_scope(directory):
+            yield
 
 
 @dataclass

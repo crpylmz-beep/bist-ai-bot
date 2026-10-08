@@ -76,22 +76,29 @@ def strict_object(pairs):
 class HistoryStream:
     """Bounded record-at-a-time JSON parser; incomplete/trailing files are rejected."""
     def __init__(self,fd,deadline):
-        os.lseek(fd,0,0);self.stream=os.fdopen(os.dup(fd),'r',encoding='utf-8');self.buffer='';self.ended=False;self.deadline=deadline
+        os.lseek(fd,0,0);self.stream=os.fdopen(os.dup(fd),'r',encoding='utf-8',newline='');self.buffer='';self.ended=False;self.deadline=deadline;self.offset=0;self.last_span=None
     def fill(self):
         if time.monotonic()>self.deadline:raise TimeoutError('Inspection time limit')
         chunk=self.stream.read(65536);self.buffer+=chunk;self.ended=not chunk
+    def consume(self,n):
+        self.offset+=len(self.buffer[:n].encode('utf-8'));self.buffer=self.buffer[n:]
     def white(self):
-        self.buffer=self.buffer.lstrip()
-        while not self.buffer and not self.ended:self.fill();self.buffer=self.buffer.lstrip()
+        self.consume(len(self.buffer)-len(self.buffer.lstrip()))
+        while not self.buffer and not self.ended:
+            self.fill();self.consume(len(self.buffer)-len(self.buffer.lstrip()))
     def token(self,character):
         self.white()
         if not self.buffer.startswith(character):raise ValueError('Invalid history JSON')
-        self.buffer=self.buffer[1:]
+        self.consume(1)
     def value(self):
         self.white()
         while True:
             if time.monotonic()>self.deadline:raise TimeoutError('Inspection time limit')
-            try:value,end=json.JSONDecoder(object_pairs_hook=strict_object).raw_decode(self.buffer);self.buffer=self.buffer[end:];return value
+            try:
+                value,end=json.JSONDecoder(object_pairs_hook=strict_object,parse_constant=lambda x: (_ for _ in ()).throw(ValueError('Nonfinite JSON'))).raw_decode(self.buffer)
+                if end==len(self.buffer) and not self.ended:
+                    self.fill();continue
+                self.last_span=(self.offset,len(self.buffer[:end].encode('utf-8')));self.consume(end);return value
             except json.JSONDecodeError:
                 if self.ended or len(self.buffer)>8*1024*1024:raise ValueError('Incomplete/oversized history entry')
                 self.fill()
@@ -100,14 +107,16 @@ class HistoryStream:
         while not self.buffer.startswith('}'):
             key=self.value()
             if not isinstance(key,str) or key in seen:raise ValueError('Duplicate root key')
-            seen.add(key);self.token(':')
+            seen.add(key)
+            if len(seen)>64:raise ValueError('Too many root fields')
+            self.token(':')
             if key=='kayitlar':
                 self.token('[');self.white()
                 if not self.buffer.startswith(']'):
                     while True:
                         row=self.value()
                         if not isinstance(row,dict):raise ValueError('Invalid record')
-                        yield 'record',row
+                        yield None,row
                         self.white()
                         if self.buffer.startswith(']'):break
                         self.token(',')
@@ -121,126 +130,106 @@ class HistoryStream:
     def close(self):self.stream.close()
 
 
-def record_parts(row):
-    identity=row.get('kayit_id') or row.get('id')
-    if not isinstance(identity,str) or not identity:raise ValueError('Missing record identity')
+def canonical(value):
+    return hashlib.sha256(json.dumps(value,sort_keys=True,separators=(',',':'),ensure_ascii=False,allow_nan=False).encode()).hexdigest()
+
+
+def record_values(row):
+    identity=next((row[k] for k in ('kayit_id','prediction_id','signal_id','result_id','id') if isinstance(row.get(k),str) and row[k]),None)
+    if identity is None:raise ValueError('Missing record identity')
     outcomes={k:v for k,v in row.items() if re.fullmatch(r'sonuc_\d+g',k)}
     frozen={k:v for k,v in row.items() if k not in outcomes}
-    canonical=lambda v:hashlib.sha256(json.dumps(v,sort_keys=True,separators=(',',':'),ensure_ascii=False,allow_nan=False).encode()).hexdigest()
-    return identity,canonical(frozen),{k:canonical(v) for k,v in outcomes.items() if v is not None}
+    # Exact legacy schema: bist_bot.ai_ogrenme_kaydet / ai_sonuclari_guncelle.
+    # Only the empty pending bundle may advance. Completed bundles remain exact.
+    if row.get('model')=='GUN_ICI' and row.get('egitim_durumu') in ('EGITIM','TAMAMLANDI') and row.get('sonuc') in ('BEKLIYOR','BASARILI','BASARISIZ'):
+        fields=('sonuc','sonuc_fiyat','sonuc_zaman','getiri_yuzde','hedef_vurdu','stop_vurdu','sat_hedef','sat_stop')
+        bundle={k:row[k] for k in fields if k in row}
+        pending=row['sonuc']=='BEKLIYOR' and row['egitim_durumu']=='EGITIM'
+        if pending:
+            defaults={'sonuc':'BEKLIYOR','sonuc_fiyat':None,'sonuc_zaman':None,'getiri_yuzde':None,'hedef_vurdu':False,'stop_vurdu':False}
+            if not all(k in bundle and type(bundle[k]) is type(v) and bundle[k]==v for k,v in defaults.items()):raise ValueError('Nonempty legacy pending outcome')
+            if ('sat_hedef' in bundle)!=('sat_stop' in bundle):raise ValueError('Incomplete legacy levels')
+        else:
+            if row['egitim_durumu']!='TAMAMLANDI' or any(k not in bundle for k in fields[:6]):raise ValueError('Incomplete completed legacy outcome')
+            outcomes['legacy_result']=bundle
+        if 'sat_hedef' in bundle and 'sat_stop' in bundle:
+            outcomes['legacy_levels']={k:bundle[k] for k in fields[-2:]}
+        frozen={k:v for k,v in frozen.items() if k not in fields}
+        frozen['egitim_durumu']='EGITIM'
+    return identity,frozen,{k:v for k,v in outcomes.items() if v is not None}
+
+
+def record_parts(row):
+    identity,frozen,outcomes=record_values(row)
+    return identity,canonical(frozen),{k:canonical(v) for k,v in outcomes.items()}
+
+
+def history_time(value):
+    # This adapter is ONLY for the AI-history writer, whose naive timestamps
+    # are explicitly generated in Europe/Istanbul in the repository.
+    from zoneinfo import ZoneInfo
+    parsed=datetime.fromisoformat(str(value))
+    return parsed.replace(tzinfo=ZoneInfo('Europe/Istanbul')) if parsed.tzinfo is None else parsed
 
 
 class HistoryIndex:
     def __init__(self,fd,deadline):
-        self.temp=tempfile.TemporaryDirectory(prefix='bist-atomic-proof-',dir='/tmp');self.db=None;self.metadata={};self.count=0
+        self.temp=tempfile.TemporaryDirectory(prefix='bist-atomic-proof-',dir='/tmp');self.db=None;self.final_fd=None;self.metadata={};self.count=0
         try:
+            self.final_fd=os.dup(fd)
             self.db=sqlite3.connect(str(Path(self.temp.name)/'proof.sqlite'))
-            self.db.execute('PRAGMA journal_mode=OFF');self.db.execute('CREATE TABLE records(id TEXT PRIMARY KEY, frozen TEXT, outcomes TEXT)')
+            self.db.execute('PRAGMA journal_mode=OFF');self.db.execute('CREATE TABLE records(id TEXT PRIMARY KEY, frozen TEXT, outcomes TEXT, offset INTEGER, length INTEGER)')
             stream=HistoryStream(fd,deadline)
             try:
                 for key,value in stream.entries():
-                    if key!='record':self.metadata[key]=value;continue
+                    if key is not None:self.metadata[key]=value;continue
                     identity,frozen,outcomes=record_parts(value)
-                    self.db.execute('INSERT INTO records VALUES(?,?,?)',(identity,frozen,json.dumps(outcomes)));self.count+=1
+                    self.db.execute('INSERT INTO records VALUES(?,?,?,?,?)',(identity,frozen,json.dumps(outcomes),*stream.last_span));self.count+=1
                 self.db.commit()
             finally:stream.close()
         except BaseException:self.close();raise
-    def covers(self,fd,deadline):
-        stream=HistoryStream(fd,deadline);count=0;metadata={}
+    def assess(self,fd,deadline):
+        stream=HistoryStream(fd,deadline);count=0;metadata={};unique=False
         self.db.execute('CREATE TABLE IF NOT EXISTS seen(id TEXT PRIMARY KEY)');self.db.execute('DELETE FROM seen')
         try:
             for key,value in stream.entries():
-                if key!='record':metadata[key]=value;continue
+                if key is not None:metadata[key]=value;continue
                 identity,frozen,outcomes=record_parts(value)
                 try:self.db.execute('INSERT INTO seen VALUES(?)',(identity,))
-                except sqlite3.IntegrityError:return False
+                except sqlite3.IntegrityError:raise ValueError('Duplicate record identity')
                 count+=1
-                current=self.db.execute('SELECT frozen,outcomes FROM records WHERE id=?',(identity,)).fetchone()
-                if not current or current[0]!=frozen:return False
+                current=self.db.execute('SELECT frozen,outcomes,offset,length FROM records WHERE id=?',(identity,)).fetchone()
+                if not current:unique=True;continue
+                if current[0]!=frozen:
+                    # Indexed byte ranges refer to the held final descriptor; no
+                    # second full history copy or per-field megabyte index.
+                    final_row=json.loads(os.pread(self.final_fd,current[3],current[2]),object_pairs_hook=strict_object)
+                    from disk_forensik import contained
+                    if not contained(record_values(value)[1],record_values(final_row)[1]):unique=True;continue
                 target_outcomes=json.loads(current[1])
-                if any(target_outcomes.get(k)!=v for k,v in outcomes.items()):return False
+                if any(target_outcomes.get(k)!=v for k,v in outcomes.items()):unique=True
+            # Finish parsing before calling anything unique: invalid/truncated
+            # files are UNKNOWN, not valid complete recovery records.
+            if unique:return 'UNIQUE_RECOVERY_CANDIDATE','RECORD_OR_RESULT_NOT_IN_FINAL'
             for key,value in metadata.items():
-                if key not in self.metadata:return False
+                if key not in self.metadata:return 'UNIQUE_RECOVERY_CANDIDATE','ROOT_METADATA_NOT_IN_FINAL'
                 target=self.metadata[key]
                 if key=='guncelleme':
-                    old,new=datetime.fromisoformat(str(value)),datetime.fromisoformat(str(target))
-                    if old.tzinfo is None or new.tzinfo is None or old>new:return False
+                    if history_time(value)>history_time(target):return 'UNKNOWN','FUTURE_HISTORY_TIMESTAMP'
                 elif key=='toplam_kayit':
-                    if isinstance(value,bool) or not isinstance(value,int) or value!=count or target!=self.count:return False
-                elif value!=target:return False
-            return True
+                    if type(value) is not int or type(target) is not int or value!=count or target!=self.count:return 'UNKNOWN','INVALID_RECORD_COUNT'
+                elif canonical(value)!=canonical(target):return 'UNIQUE_RECOVERY_CANDIDATE','ROOT_METADATA_DIFFERS'
+            if self.count>count:return 'PROVEN_SUBSET_OF_FINAL','ALL_FROZEN_RECORDS_AND_RESULTS_CONTAINED'
+            return 'PROVEN_OLDER_COMPLETE_COPY','SAME_COMPLETE_RECORD_SET_NO_RESULT_LOSS'
         finally:stream.close()
+    def covers(self,fd,deadline):
+        return self.assess(fd,deadline)[0].startswith('PROVEN_')
     def close(self):
         if self.db is not None:self.db.close()
+        if self.final_fd is not None:os.close(self.final_fd)
         self.temp.cleanup()
 
 
-def cleanup_atomic_temps(location,clock=time.time,budget_seconds=90):
-    counters=dict(scanned=0,eligible=0,removed=0,freed_bytes=0,skipped_recent=0,skipped_unverified=0,skipped_active=0,errors=0)
-    if not location.root:return counters
-    deadline=time.monotonic()+budget_seconds;root_fd=folder_fd=None;indexes={}
-    before=shutil.disk_usage(location.root).free
-    try:
-        root_fd=os.open(location.root,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW)
-        # Anchored directly below /data: never scan private/public/archive or links.
-        folder_fd=os.open('runtime',os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW,dir_fd=root_fd)
-        names=sorted(entry.name for entry in os.scandir(folder_fd))
-        finals=[n for n in names if n in SAFE_FINALS]
-        for name in names:
-            if not name.startswith('.user-'):continue
-            counters['scanned']+=1;temp_fd=None
-            try:
-                if not TEMP_PATTERN.fullmatch(name) or time.monotonic()>deadline:
-                    counters['skipped_unverified']+=1;continue
-                temp_fd=open_regular(folder_fd,name);info=os.fstat(temp_fd)
-                if info.st_nlink!=1:counters['skipped_unverified']+=1;continue
-                if clock()-info.st_mtime<MIN_AGE:counters['skipped_recent']+=1;continue
-                try:fcntl.flock(temp_fd,fcntl.LOCK_EX|fcntl.LOCK_NB)
-                except BlockingIOError:counters['skipped_active']+=1;continue
-                opened=foreign_open(temp_fd)
-                if opened is not False:
-                    counters['skipped_active' if opened is True else 'skipped_unverified']+=1;continue
-                temp_stamp=fingerprint(temp_fd);temp_digest=None;proven=False
-                for final in finals:
-                    business=atomic=final_fd=None
-                    try:
-                        business=os.open(final+'.lock',os.O_CREAT|os.O_RDWR|os.O_NOFOLLOW,0o600,dir_fd=folder_fd)
-                        fcntl.flock(business,fcntl.LOCK_EX|fcntl.LOCK_NB)
-                        atomic=os.open(target_lock_name(final),os.O_CREAT|os.O_RDWR|os.O_NOFOLLOW,0o600,dir_fd=folder_fd)
-                        fcntl.flock(atomic,fcntl.LOCK_EX|fcntl.LOCK_NB)
-                        final_fd=open_regular(folder_fd,final);final_stamp=fingerprint(final_fd)
-                        if final_stamp[2]==temp_stamp[2]:
-                            temp_digest=temp_digest or digest_fd(temp_fd)
-                            proven=temp_digest==digest_fd(final_fd)
-                        if not proven and temp_stamp[2]<final_stamp[2]:proven=prefix_matches(temp_fd,final_fd)
-                        if not proven and final=='ai_ogrenme_gecmisi.json':
-                            key=(final,final_stamp)
-                            if key not in indexes:indexes[key]=HistoryIndex(final_fd,deadline)
-                            proven=indexes[key].covers(temp_fd,deadline)
-                        # Check both directory entries, not just held descriptors.
-                        current=os.stat(final,dir_fd=folder_fd,follow_symlinks=False)
-                        original=os.stat(name,dir_fd=folder_fd,follow_symlinks=False)
-                        unchanged=(current.st_dev,current.st_ino,current.st_size,current.st_mtime_ns)==final_stamp and (original.st_dev,original.st_ino,original.st_size,original.st_mtime_ns)==temp_stamp
-                        if not unchanged:proven=False
-                        if proven and unchanged:
-                            counters['eligible']+=1;os.unlink(name,dir_fd=folder_fd)
-                            counters['removed']+=1;counters['freed_bytes']+=temp_stamp[2];break
-                    except BlockingIOError:continue
-                    except (ValueError,UnicodeError,sqlite3.Error,TimeoutError):continue
-                    finally:
-                        for fd in (final_fd,atomic,business):
-                            if fd is not None:os.close(fd)
-                if not proven:counters['skipped_unverified']+=1
-            except (OSError,ValueError) as error:
-                if isinstance(error,OSError) and error.errno not in (errno.ELOOP,errno.ENOENT):counters['errors']+=1
-                counters['skipped_unverified']+=1
-            finally:
-                if temp_fd is not None:os.close(temp_fd)
-    except OSError:counters['errors']+=1
-    finally:
-        for index in indexes.values():index.close()
-        for fd in (folder_fd,root_fd):
-            if fd is not None:os.close(fd)
-    counters.update(before_free=before,after_free=shutil.disk_usage(location.root).free)
-    logging.info('[DISK_TEMP_CLEANUP] %s',counters)
-    return counters
+def cleanup_atomic_temps(location,clock=time.time,budget_seconds=180,require_worker_lock=True):
+    from disk_forensik import inspect_atomic_temps
+    return inspect_atomic_temps(location,cleanup=True,clock=clock,budget_seconds=budget_seconds,require_worker_lock=require_worker_lock)

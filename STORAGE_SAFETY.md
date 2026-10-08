@@ -101,3 +101,75 @@ no record contents, private filenames, subscription keys or tokens.
 Production checks belong to the operator after deployment: confirm inventory and
 cleanup counters, actual free space and task status. No Railway/volume operations
 are part of this patch, and no guarantee of production freed bytes is made.
+
+## V2 forensic recovery
+
+The old aggregate `skipped_unverified` counter did not identify whether a decision
+came from process auditing, a time limit, unsupported structure or a real mismatch.
+The repository exposes three concrete proof blockers: `ai_ogrenme_kaydet` writes
+naive Istanbul root clocks; `ai_sonuclari_guncelle` advances a flat legacy result
+bundle and `egitim_durumu`; and `PerformansMotoru.enrich` adds fields to existing
+records. Strict whole-record hashes and aware-only timestamps rejected safe
+supersets in those cases. Actual production files have not been read by this patch,
+so the individual reasons for all 104 files cannot be asserted in advance. The
+existing 100,000-record producer limit can also make an older scratch copy contain
+records absent from the current final: these are recovery candidates, never trash.
+No producer, limit, score or raw-history write is changed by this recovery patch.
+
+`disk_forensik.inspect_atomic_temps(cleanup=False)` is a read-only classifier for
+the persistent volume: it creates no volume locks or manifests and unlinks nothing.
+Small JSON is bounded to 8 MiB; huge histories use record-at-a-time parsing. A
+transient index in `/tmp` stores only stable IDs, hashes and byte offsets. On a hash
+mismatch, the corresponding final record is read by offset to verify that EVERY
+old frozen field is contained unchanged, allowing additional enrichment fields.
+The index does not store or copy whole history payloads. UTF-8/CRLF offsets are
+accounted for, and complete parsing rejects duplicate IDs/keys and malformed JSON.
+
+Six classifications are emitted:
+
+* PROVEN_REDUNDANT: size/SHA-256 equality, or every scratch byte already exists as
+  a complete prefix/suffix of a protected final. This can also prove a truncated
+  scratch contains no unique recovery bytes.
+* PROVEN_SUBSET_OF_FINAL: every old stable record, frozen value and non-null result
+  is contained; a growing AI history has additional current records. Generic
+  structural comparison is permitted only for a routed v2 destination; an
+  unrelated legacy JSON shape is not sufficient to identify its dataset.
+* PROVEN_OLDER_COMPLETE_COPY: the full AI record set is retained, root housekeeping
+  clocks/counts are valid, and outcomes are identical or documented pending values
+  have completed. Completed results must match exactly. Only the explicit legacy
+  GUN_ICI pending defaults can advance; observed partial or changed results survive.
+* ACTIVE_OR_RECENT: younger than 30 minutes, an active fd lease, or another process
+  has the scratch open.
+* UNIQUE_RECOVERY_CANDIDATE: fully parsed identified data has a missing/changed
+  record, frozen field, non-null outcome or non-housekeeping metadata value.
+* UNKNOWN: uncertain process audit, missing destination, unrecognized schema,
+  malformed unmatched data, locks/races, unsafe paths or exhausted budget.
+
+Only the three PROVEN classes can be unlinked. Age or extension alone never
+qualifies. An exact duplicate/prefix/suffix proves byte containment independently
+of JSON validity; other invalid/truncated files remain UNKNOWN. Legacy names do
+not encode a destination. New v2 destination hashes are routing hints, never sole
+proof. Unknown root clocks are not assumed to be expendable housekeeping.
+
+Cleanup is permitted only inside the actual exclusive worker-lock context. The
+same destination business/I/O locks and scratch leases remain held across proof
+and unlink, and inode/size/mtime are checked again. Inventory runs first; candidates
+are processed largest first, within a 180-second startup budget. Free space is
+measured after every successful removal, after closing the unlinked scratch
+descriptor so its blocks are released. The target is at least 1 GiB; all proven
+files can continue to be reclaimed within the budget. A target shortfall does not
+relax proof or remove unique/unknown files. The existing write-space guard remains
+unchanged and receives actual restored filesystem free space.
+
+`[DISK_FORENSIC]` provides six class counts, eligible bytes and safe reason codes,
+including PROCESS_AUDIT_UNCERTAIN and BUDGET_EXHAUSTED. `[DISK_TEMP_CLEANUP]` splits
+unique/unknown skips and records actual before/after free space. No payload, record
+ID or private filename is logged. `runtime/disk_cleanup_manifest.json` is a bounded
+last-run manifest with timestamp, class, size, hash prefix, reason and whitelisted
+logical dataset; at most 256 entries, total removed count/bytes, no content backups.
+If its write fails, the failure is logged and existing canonical data remains safe.
+
+The supplied 4,064,671,496 scratch bytes are a theoretical upper bound, NOT measured
+proven reclaimable bytes. Actual eligibility can be zero if old copies contain
+pruned records or another safety check is inconclusive. Production verification is
+left to the operator; no Railway/volume/manual production actions were performed.

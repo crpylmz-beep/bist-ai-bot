@@ -11,7 +11,7 @@ from atomik_temp_temizligi import cleanup_atomic_temps,MIN_AGE,HistoryIndex,fore
 class AtomicStorageTests(unittest.TestCase):
  def setUp(self):
   self.enterContext(patch('atomik_temp_temizligi.foreign_open',return_value=False))  # fixture has no external writer
-  self.temp=tempfile.TemporaryDirectory();self.addCleanup(self.temp.cleanup);self.location=DataPaths({'BIST_DATA_DIR':self.temp.name});self.location.ensure();self.path=self.location.runtime/'ai_ogrenme_gecmisi.json';self.path.write_text('{"original":true}')
+  self.temp=tempfile.TemporaryDirectory();self.addCleanup(self.temp.cleanup);self.location=DataPaths({'BIST_DATA_DIR':self.temp.name});self.location.ensure();from ana_motor import worker_lock;self.enterContext(worker_lock(self.location.runtime));self.path=self.location.runtime/'ai_ogrenme_gecmisi.json';self.path.write_text('{"original":true}')
  def temps(self):return list(self.location.runtime.glob('.user-*.tmp'))
  def old(self,name,data):
   path=self.location.runtime/name;path.write_bytes(data if isinstance(data,bytes) else json.dumps(data,ensure_ascii=False,indent=2).encode());os.utime(path,(0,0));return path
@@ -137,7 +137,7 @@ class AtomicStorageTests(unittest.TestCase):
   self.old('.user-old.tmp',b'abc');value=report(self.location)['atomic_temps'];self.assertEqual(value['count'],1);self.assertEqual(value['total_bytes'],3);self.assertGreater(value['oldest_age'],MIN_AGE)
  def test_startup_hook_before_tasks(self):
   import inspect,ana_motor
-  body=inspect.getsource(ana_motor.main);self.assertLess(body.index('cleanup_atomic_temps(paths())'),body.index('adapter=WorkerTasks()'))
+  body=inspect.getsource(ana_motor.main);self.assertLess(body.index('cleanup_atomic_temps('),body.index('adapter=WorkerTasks()'))
  def test_producer_reserved_namespace(self):
   with self.assertRaises(ValueError):atomic_json(self.location.runtime/'.user-final.tmp',{})
 
