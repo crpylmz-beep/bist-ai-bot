@@ -145,7 +145,8 @@ class CanonicalNews:
         event=prepare(event)
         with Path(str(self.path)+'.lock').open('a') as lock:
             fcntl.flock(lock,fcntl.LOCK_EX)
-            data=json.loads(self.path.read_text()) if self.path.exists() else {'surum':1,'haberler':[]}
+            from recovery_journal import read_document
+            data=read_document(self.path,{'surum':1,'haberler':[]})
             match=None;status='DIFFERENT_EVENT'
             for record in reversed(data['haberler']):
                 anchor=record['variants'][0]

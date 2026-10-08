@@ -35,7 +35,9 @@ class ForensicTests(unittest.TestCase):
     def clean(self,**kwargs):
         with worker_lock(self.location.runtime):return cleanup_atomic_temps(self.location,**kwargs)
     def finding(self,result):return result['findings'][0]
-    def test_six_classes(self):self.assertEqual(len(CLASSES),6);self.assertEqual(len(PROVEN),3)
+    def test_seven_classes_recovery_not_directly_deletable(self):
+        self.assertEqual(len(CLASSES),7);self.assertEqual(len(PROVEN),3)
+        self.assertIn('PROVEN_RECOVERED_REDUNDANT',CLASSES);self.assertNotIn('PROVEN_RECOVERED_REDUNDANT',PROVEN)
     def test_exact_duplicate_readonly(self):
         self.seed(self.history());p=self.temp(self.final.read_bytes());before=set(self.location.runtime.iterdir());r=self.scan()
         self.assertEqual(self.finding(r)['classification'],'PROVEN_REDUNDANT');self.assertEqual(set(self.location.runtime.iterdir()),before);self.assertTrue(p.exists());self.assertEqual(r['removed'],0)

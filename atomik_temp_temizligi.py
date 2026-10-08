@@ -86,8 +86,8 @@ def strict_object(pairs):
 
 class HistoryStream:
     """Bounded record-at-a-time JSON parser; incomplete/trailing files are rejected."""
-    def __init__(self,fd,deadline,record_key='kayitlar',resume=None):
-        self.record_key=record_key
+    def __init__(self,fd,deadline,record_key='kayitlar',resume=None,mapping=False):
+        self.record_key=record_key;self.mapping=mapping
         self.resume=resume;offset=resume['offset'] if resume else 0
         os.lseek(fd,offset,0);self.stream=os.fdopen(os.dup(fd),'r',encoding='utf-8',newline='');self.buffer='';self.ended=False;self.deadline=deadline;self.offset=offset;self.last_span=None;self.checkpoint=resume
     def fill(self):
@@ -128,7 +128,8 @@ class HistoryStream:
                 seen.add(canonical(key))
                 if len(seen)>64:raise ValueError('Too many root fields')
                 self.token(':')
-                if key==self.record_key:self.token('[');phase='ARRAY_FIRST'
+                if key==self.record_key:
+                    self.token('{' if self.mapping else '[');phase='MAP_FIRST' if self.mapping else 'ARRAY_FIRST'
                 else:
                     value=self.value();phase='ROOT_SEPARATOR'
                     self.checkpoint={'offset':self.offset,'seen':sorted(seen),'phase':phase}
@@ -142,6 +143,20 @@ class HistoryStream:
                 phase='ARRAY_SEPARATOR'
                 self.checkpoint={'offset':self.offset,'seen':sorted(seen),'phase':phase}
                 yield None,row
+            elif phase in ('MAP_FIRST','MAP_RECORD'):
+                self.white()
+                if phase=='MAP_FIRST' and self.buffer.startswith('}'):
+                    self.token('}');phase='ROOT_SEPARATOR';continue
+                identity=self.value()
+                if not isinstance(identity,str) or not identity or len(identity)>512:raise ValueError('Invalid mapping identity')
+                self.token(':');row=self.value()
+                if not isinstance(row,dict) or row.get('kayit_id')!=identity:raise ValueError('Mapping identity differs from record')
+                phase='MAP_SEPARATOR';self.checkpoint={'offset':self.offset,'seen':sorted(seen),'phase':phase}
+                yield None,row
+            elif phase=='MAP_SEPARATOR':
+                self.white()
+                if self.buffer.startswith('}'):self.token('}');phase='ROOT_SEPARATOR'
+                else:self.token(',');phase='MAP_RECORD'
             elif phase=='ARRAY_SEPARATOR':
                 self.white()
                 if self.buffer.startswith(']'):self.token(']');phase='ROOT_SEPARATOR'

@@ -16,10 +16,12 @@ import atomik_temp_temizligi as proof
 MAX_BYTES=256*1024
 MAX_FILES=128
 MAX_INDEX_BYTES=256*1024*1024
-SUPPORTED={'ai_ogrenme_gecmisi.json':'kayitlar','tahmin_gecmisi.json':'tahminler','gun_ici_sonuclar.json':'kayitlar'}
+from storage_schemas import SCHEMAS,stream as schema_stream,parts as schema_parts
+SUPPORTED={name:shape[0] for name,shape in SCHEMAS.items()}
 
 
 def values(row,dataset):
+    if dataset in ('haber_dedup.json','yarin_top10_sonuclar.json'):return schema_parts(row,dataset)
     if dataset=='ai_ogrenme_gecmisi.json':return proof.record_values(row)
     identity=next((row[k] for k in ('kayit_id','prediction_id','signal_id','result_id','id') if isinstance(row.get(k),str) and row[k]),None)
     if identity is None:raise ValueError('Missing record identity')
@@ -28,11 +30,11 @@ def values(row,dataset):
 
 
 def safe_field(key):
-    return key if key in ('guncelleme','son_guncelleme','toplam_kayit') else 'field:'+proof.canonical(key)
+    return key if key in ('guncelleme','son_guncelleme','toplam_kayit','updated_at') else 'field:'+proof.canonical(key)
 
 
 def metadata(key,value,dataset):
-    clock=(dataset=='ai_ogrenme_gecmisi.json' and key=='guncelleme') or (dataset=='tahmin_gecmisi.json' and key=='son_guncelleme')
+    clock=(dataset=='ai_ogrenme_gecmisi.json' and key=='guncelleme') or (dataset=='tahmin_gecmisi.json' and key=='son_guncelleme') or (dataset=='yarin_top10_sonuclar.json' and key=='updated_at')
     if clock:
         if not isinstance(value,str) or len(value)>128:raise ValueError('Invalid root clock')
         return {'kind':'clock','value':value}
@@ -43,7 +45,8 @@ def metadata(key,value,dataset):
 
 
 class ResumableProof:
-    def __init__(self,location):
+    def __init__(self,location,recover=False):
+        self.recover=recover
         self.location=location;self.path=location.runtime/'disk_forensic_checkpoint.json'
         self.data={'version':4,'files':{},'finals':{}};self.dbs={};self.dirty=False
         if self.path.exists() or self.path.is_symlink():
@@ -65,10 +68,17 @@ class ResumableProof:
                 logging.warning('[DISK_CHECKPOINT] invalid; progress will be revalidated from zero')
         root_hash=hashlib.sha256(str(location.runtime.absolute()).encode()).hexdigest()[:24]
         self.index_dir=Path('/tmp')/('bist-proof-v4-'+str(os.getuid())+'-'+root_hash)
-        self.index_dir.mkdir(mode=0o700,exist_ok=True)
-        stat=self.index_dir.lstat()
-        if self.index_dir.is_symlink() or stat.st_uid!=os.getuid():raise ValueError('Unsafe index directory')
-        os.chmod(self.index_dir,0o700)
+        self.workspace_error=None
+        try:
+            self.index_dir.mkdir(mode=0o700,exist_ok=True)
+            stat=self.index_dir.lstat()
+            if self.index_dir.is_symlink() or stat.st_uid!=os.getuid():raise ValueError('Unsafe index directory')
+            os.chmod(self.index_dir,0o700)
+        except OSError as error:
+            if not recover:raise
+            self.workspace_error=error
+            from proof_workspace import sqlite_issue
+            sqlite_issue(error,'INDEX_DIRECTORY')
 
     def save(self):
         if not self.dirty:return
@@ -95,7 +105,7 @@ class ResumableProof:
         finally:
             for db in self.dbs.values():db.close()
             live=set(self.data['finals'])
-            for path in self.index_dir.glob('*.sqlite'):
+            for path in (() if self.workspace_error is not None else self.index_dir.glob('*.sqlite')):
                 if re.fullmatch(r'[0-9a-f]{40}\.sqlite',path.name) and path.stem not in live and not path.is_symlink():
                     try:
                         check=sqlite3.connect('file:'+str(path)+'?mode=ro',uri=True)
@@ -116,15 +126,18 @@ class ResumableProof:
         # This database contains only indexes, never history payloads or backups.
         existed=path.exists()
         db=sqlite3.connect(path)
-        if existed:
-            try:
-                if db.execute('SELECT marker FROM ownership').fetchall()!=[('BIST_FORENSIC_HASH_INDEX_V4',)]:raise ValueError('Unowned proof index')
-            except (sqlite3.Error,ValueError):db.close();raise ValueError('Unowned proof index') from None
-        else:
-            db.execute('CREATE TABLE ownership(marker TEXT)');db.execute('INSERT INTO ownership VALUES(?)',('BIST_FORENSIC_HASH_INDEX_V4',));db.commit()
-        db.execute('PRAGMA journal_mode=DELETE');db.execute('PRAGMA synchronous=FULL');db.execute('PRAGMA max_page_count=16384')
-        db.execute('CREATE TABLE IF NOT EXISTS records(id TEXT PRIMARY KEY,frozen TEXT,outcomes TEXT,offset INTEGER,length INTEGER)')
-        db.execute('CREATE TABLE IF NOT EXISTS seen(temp TEXT,id TEXT,ordinal INTEGER,PRIMARY KEY(temp,id))')
+        try:
+            if existed:
+                try:
+                    if db.execute('SELECT marker FROM ownership').fetchall()!=[('BIST_FORENSIC_HASH_INDEX_V4',)]:raise ValueError('Unowned proof index')
+                except ValueError:raise ValueError('Unowned proof index') from None
+            else:
+                db.execute('CREATE TABLE ownership(marker TEXT)');db.execute('INSERT INTO ownership VALUES(?)',('BIST_FORENSIC_HASH_INDEX_V4',));db.commit()
+            db.execute('PRAGMA journal_mode=DELETE');db.execute('PRAGMA synchronous=FULL');db.execute('PRAGMA max_page_count=16384')
+            db.execute('CREATE TABLE IF NOT EXISTS records(id TEXT PRIMARY KEY,frozen TEXT,outcomes TEXT,offset INTEGER,length INTEGER)')
+            db.execute('CREATE TABLE IF NOT EXISTS seen(temp TEXT,id TEXT,ordinal INTEGER,PRIMARY KEY(temp,id))')
+        except BaseException:
+            db.close();raise
         self.dbs[key]=db
         return db
 
@@ -139,7 +152,7 @@ class ResumableProof:
             db.execute('DELETE FROM records');db.execute('DELETE FROM seen')
             # Dependent compare progress cannot survive loss of its index.
             for item in self.data['files'].values():
-                if item.get('index')==key:
+                if item.get('index')==key and (item.get('parser') or item.get('count')):
                     item.update(stage='SEMANTIC',parser=None,count=0,metadata={},metrics=self._metrics(),reason=None,completed=False)
             self.dirty=True
         if len(self.data['finals'])>8:
@@ -157,7 +170,7 @@ class ResumableProof:
                     if item.get('index')==key:item.update(stage='SEMANTIC',parser=None,count=0,metadata={},metrics=self._metrics(),reason=None,completed=False)
                 self.dirty=True
         if not state['completed']:
-            stream=proof.HistoryStream(fd,deadline,SUPPORTED[dataset],resume=state['parser'])
+            stream=schema_stream(fd,dataset,deadline,state['parser'])
             try:
                 for field,row in stream.entries():
                     if field is None:
@@ -181,7 +194,8 @@ class ResumableProof:
             self.data['files'][identifier]=state;self.dirty=True
         state['touched']=time.time()
         try:
-            if state['completed']:return state['classification'],state['reason'],self._details(state)
+            if state['completed'] and not (self.recover and dataset in SUPPORTED and state['classification'] not in ('PROVEN_REDUNDANT','PROVEN_SUBSET_OF_FINAL','PROVEN_OLDER_COMPLETE_COPY')):return state['classification'],state['reason'],self._details(state)
+            if state['completed']:state.update(completed=False,stage='SEMANTIC',parser=None,count=0,metadata={},recovery_version=0)
             while state['stage'] in ('EXACT','PREFIX','SUFFIX'):
                 offset=state['offset']
                 while offset<ts[2]:
@@ -196,6 +210,9 @@ class ResumableProof:
             if dataset not in SUPPORTED:
                 if ts[2]>8*1024**2:return self._complete(state,'UNKNOWN','STREAM_ADAPTER_REQUIRED')
                 return None
+            if self.recover:
+                from storage_recovery import recover
+                return recover(self,temp_fd,final_fd,dataset,identifier,state,deadline)
             state['index']=proof.canonical([dataset,fs])[:40];state['stage']='BUILD_FINAL'
             key,target,db=self._final(final_fd,dataset,deadline)
             state['index']=key;state['stage']='COMPARE_TEMP';self.dirty=True
@@ -204,11 +221,10 @@ class ResumableProof:
             if db.execute('SELECT COUNT(*) FROM seen WHERE temp=?',(identifier,)).fetchone()[0]!=state['count']:
                 state.update(parser=None,count=0,metadata={},metrics=self._metrics(),reason=None)
                 db.execute('DELETE FROM seen WHERE temp=?',(identifier,))
-            stream=proof.HistoryStream(temp_fd,deadline,SUPPORTED[dataset],resume=state['parser'])
+            stream=schema_stream(temp_fd,dataset,deadline,state['parser'])
             try:
                 for field,row in stream.entries():
                     if field is None:
-                        if state['count']%256==0:self._index_bound()
                         if state['count']%256==0:self._index_bound()
                         identity,frozen,outcomes=values(row,dataset);identity=proof.canonical(identity)
                         db.execute('INSERT INTO seen VALUES(?,?,?)',(identifier,identity,state['count']))
@@ -240,10 +256,14 @@ class ResumableProof:
             finally:stream.close();db.commit()
         except TimeoutError:
             self.dirty=True
-            progress=self.data['finals'].get(state.get('index'),{}) if state['stage']=='BUILD_FINAL' else state
+            progress=self.data['finals'].get(state.get('index'),{}) if state['stage'] in ('BUILD_FINAL','RECOVERY_BUILD_FINAL') else state
             logging.info('[DISK_CHECKPOINT] masked_file=%s stage=%s offset=%s records=%d completed=false',identifier,state['stage'],progress.get('parser',{}).get('offset') if progress.get('parser') else state['offset'],progress.get('count',0))
             raise
         except (ValueError,UnicodeError,sqlite3.IntegrityError) as error:
+            from proof_workspace import WorkspaceDeferred
+            if isinstance(error,WorkspaceDeferred):
+                state.update(completed=False,reason=str(error));self.dirty=True
+                return 'UNKNOWN',str(error),self._details(state)
             reason='PROOF_INDEX_CAPACITY' if str(error)=='PROOF_INDEX_CAPACITY' else 'PROOF_INDEX_UNVERIFIED' if str(error)=='Unowned proof index' else 'DUPLICATE_RECORD_ID' if isinstance(error,sqlite3.IntegrityError) else 'JSON_TRUNCATED_OR_UNSUPPORTED_SCHEMA'
             return self._complete(state,'UNKNOWN',reason)
 

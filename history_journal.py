@@ -103,8 +103,9 @@ class HistoryJournal:
                     line=stream.readline(MAX_TRANSACTION+1)
                     if not line:break
                     if len(line)>MAX_TRANSACTION or not line.endswith(b'\n'):raise JournalError('WAL_INCOMPLETE_TRANSACTION')
-                    try:entry=json.loads(line,object_pairs_hook=proof.strict_object)
+                    try:entry=json.loads(line,object_pairs_hook=proof.strict_object,parse_constant=lambda _: (_ for _ in ()).throw(ValueError('Nonfinite WAL JSON')))
                     except ValueError:raise JournalError('WAL_CORRUPT_JSON') from None
+                    if not isinstance(entry,dict):raise JournalError('WAL_INVALID_SCHEMA')
                     if entry.get('sequence')!=expected or entry.get('checksum')!=proof.canonical(entry.get('payload')):raise JournalError('WAL_CHECKSUM_OR_SEQUENCE')
                     payload=entry['payload']
                     if not isinstance(payload,dict) or not isinstance(payload.get('rows'),list) or not isinstance(payload.get('root'),list):raise JournalError('WAL_INVALID_SCHEMA')

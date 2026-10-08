@@ -4559,7 +4559,8 @@ def ai_ogrenme_kaydet(sonuclar, model="GUN_ICI"):
     if os.path.exists(dosya):
         try:
             with open(dosya, "r", encoding="utf-8") as f:
-                veri = json.load(f)
+                from recovery_journal import read_handle
+                veri = read_handle(f)
         except Exception:
             veri = {"kayitlar": []}
     else:
@@ -4759,7 +4760,8 @@ def ai_ogrenme_ozeti_yaz():
 
     try:
         with open(kaynak, "r", encoding="utf-8") as f:
-            veri = json.load(f)
+            from recovery_journal import read_handle
+            veri = read_handle(f)
     except Exception:
         return
 
@@ -4868,7 +4870,8 @@ def ai_ogrenilmis_agirliklari_hesapla():
 
     try:
         with open(kaynak, "r", encoding="utf-8") as f:
-            veri = json.load(f)
+            from recovery_journal import read_handle
+            veri = read_handle(f)
     except Exception:
         return None
 
@@ -5199,7 +5202,8 @@ def ai_sinyal_sonuc_guncelle(guncel_sonuclar):
 
     try:
         with open(dosya, "r", encoding="utf-8") as f:
-            veri = json.load(f)
+            from recovery_journal import read_handle
+            veri = read_handle(f)
     except Exception as e:
         print("AI SONUC OKUMA HATASI:", e)
         return 0

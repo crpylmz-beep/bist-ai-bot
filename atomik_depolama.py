@@ -67,6 +67,9 @@ def atomic_write_json(path,value,*,overwrite=True,prefix='.user-',default=None):
 
 def _atomic_write_json(path,value,*,trace,overwrite=True,prefix='.user-',default=None,lock_already_held=False,journal_merge=False):
     path=Path(path)
+    if isinstance(value,dict):
+        from recovery_journal import apply_overlay
+        value=apply_overlay(path,value)
     if path.name.startswith('.user-'):raise ValueError('Reserved atomic temporary namespace')
     options=dict(ensure_ascii=False,indent=2,allow_nan=False)
     if default is not None:options['default']=default

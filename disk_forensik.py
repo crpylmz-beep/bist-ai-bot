@@ -25,7 +25,8 @@ SAFE_FINALS=proof.SAFE_FINALS | {
     'ai_agirliklari.json','yarin_kalibrasyon.json','gun_ici_agirliklari.json',
     'ai_fiyat_teyit.json','haber_dedup.json','karar_hata_gunlugu.json'}
 PROVEN={'PROVEN_REDUNDANT','PROVEN_SUBSET_OF_FINAL','PROVEN_OLDER_COMPLETE_COPY'}
-CLASSES=PROVEN | {'ACTIVE_OR_RECENT','UNIQUE_RECOVERY_CANDIDATE','UNKNOWN'}
+from storage_recovery import RECOVERED,deletion_enabled
+CLASSES=PROVEN | {RECOVERED,'ACTIVE_OR_RECENT','UNIQUE_RECOVERY_CANDIDATE','UNKNOWN'}
 SMALL_LIMIT=8*1024*1024
 ROOT_WRITE_CLOCKS={'performans_durum.json','indicator_performance_state.json','intraday_signal_performance_state.json','canli_motor_durum.json','gun_ici_performans_durum.json'}
 TARGET_FREE=1024**3
@@ -111,12 +112,14 @@ def discover_legacy_target(fd):
     """Bounded schema routing hint, never deletion proof or a payload log."""
     try:
         head=os.pread(fd,65536,0).decode('utf-8')
-        match=re.search(r'"(kayitlar|tahminler)"\s*:\s*\[\s*(\{)',head)
+        match=re.search(r'"(kayitlar|tahminler|haberler)"\s*:\s*\[\s*(\{)',head)
         if match:
             row,_=json.JSONDecoder().raw_decode(head[match.start(2):])
+            if match[1]=='haberler' and isinstance(row.get('canonical_id'),str):return 'haber_dedup.json'
             if match[1]=='tahminler' and isinstance(row.get('id'),str):return 'tahmin_gecmisi.json'
             if isinstance(row.get('kayit_id'),str):return 'ai_ogrenme_gecmisi.json'
             if {'id','sembol','sinyal_zamani','giris_fiyati','sonuclar'}<=row.keys():return 'gun_ici_sonuclar.json'
+        if re.search(r'"sonuclar"\s*:\s*\{\s*"[^"]+"\s*:\s*\{',head):return 'yarin_top10_sonuclar.json'
     except (ValueError,UnicodeError,AttributeError):pass
     return None
 
@@ -149,6 +152,27 @@ def classify_locked(temp_fd,final_fd,dataset,indexes,hashes,deadline,identified=
         answer=indexes[key].assess(temp_fd,deadline)
         if details is not None:details.update(indexes[key].metrics,comparison_method='STREAM_SQLITE_FROZEN_OUTCOME',schema={'ai_ogrenme_gecmisi.json':'AI_HISTORY','tahmin_gecmisi.json':'PREDICTION_HISTORY','gun_ici_sonuclar.json':'INTRADAY_HISTORY'}[dataset])
         return answer
+    if dataset in ('haber_dedup.json','yarin_top10_sonuclar.json'):
+        from proof_workspace import MemoryIndex
+        from storage_schemas import stream,relation
+        target=MemoryIndex(final_fd,dataset,deadline);parser=stream(temp_fd,dataset,deadline);seen=set();unique=False;root_metadata={}
+        try:
+            for field,row in parser.entries():
+                if field is None:
+                    from storage_schemas import identity
+                    key=identity(row,dataset)
+                    if key in seen:raise ValueError('Duplicate record identity')
+                    if len(seen)>=180000:raise ValueError('PROOF_DEFERRED_LOW_WORKSPACE')
+                    seen.add(key);unique=unique or relation(row,target.lookup(key),dataset) not in ('IDENTICAL','FINAL_NEWER_SAFE')
+                else:
+                    from disk_resumable import safe_field,metadata
+                    root_metadata[safe_field(field)]=metadata(field,row,dataset)
+            for field,value in root_metadata.items():
+                other=target.metadata.get(field)
+                if other is None or (value['kind']=='clock' and proof.history_time(value['value'])>proof.history_time(other['value'])) or (value['kind']=='count' and (value['value']!=len(seen) or other['value']!=target.count)) or (value['kind']=='hash' and value!=other):unique=True
+            if details is not None:details.update(comparison_method='STREAM_RAM_OFFSETS',schema=dataset)
+            return ('UNIQUE_RECOVERY_CANDIDATE','UNIQUE_RECORD_OR_RESULT') if unique else ('PROVEN_SUBSET_OF_FINAL','COMPLETE_STREAM_CONTAINMENT')
+        finally:parser.close()
     if not identified:
         if dataset in ('indicator_performance_state.json','sinyal_performansi.json'):
             old,new=small_json(temp_fd),small_json(final_fd)
@@ -179,7 +203,7 @@ def inspect_atomic_temps(location,*,cleanup=False,clock=time.time,budget_seconds
     indexes={};hashes={};root_fd=folder_fd=None;resume_session=None
     if resumable and cleanup and location.root and worker_scope_matches(location):
         from disk_resumable import ResumableProof
-        try:resume_session=ResumableProof(location)
+        try:resume_session=ResumableProof(location,recover=True)
         except (OSError,ValueError) as error:
             result['errors']+=1;logging.warning('[DISK_CHECKPOINT] init_failed type=%s errno=%s resumable=false',type(error).__name__,getattr(error,'errno',None))
     if not location.root:return result
@@ -252,7 +276,7 @@ def inspect_atomic_temps(location,*,cleanup=False,clock=time.time,budget_seconds
                                 details['probable_target_final']=known[0] if len(known)==1 else None
                             best=None
                             for final in routed:
-                                business=atomic=final_fd=None
+                                business=atomic=final_fd=None;recovery_lock=None
                                 try:
                                     if time.monotonic()>deadline:raise TimeoutError('BUDGET_EXHAUSTED')
                                     for lock_name in (final+'.lock',target_lock_name(final)):
@@ -272,7 +296,7 @@ def inspect_atomic_temps(location,*,cleanup=False,clock=time.time,budget_seconds
                                             if fd is not None:os.close(fd)
                                         atomic=business=None
                                     candidate=classify_locked(temp_fd,final_fd,final,indexes,hashes,deadline,identified=bool(token),details=details,resume_session=resume_session)
-                                    if release_locks_during_proof and cleanup and candidate[0] in PROVEN:
+                                    if release_locks_during_proof and cleanup and candidate[0] in PROVEN|{RECOVERED}:
                                         if cleanup and ('temp',stamp) not in hashes:
                                             hashes[('temp',stamp)]=proof.digest_fd(temp_fd,deadline)
                                         for lock_name in (final+'.lock',target_lock_name(final)):
@@ -282,11 +306,20 @@ def inspect_atomic_temps(location,*,cleanup=False,clock=time.time,budget_seconds
                                             fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
                                     if not same_entry(folder_fd,final,final_stamp) or not same_entry(folder_fd,name,stamp):
                                         candidate=('UNKNOWN','FILE_CHANGED_DURING_PROOF')
-                                    if candidate[0] in PROVEN:
+                                    if candidate[0] in PROVEN|{RECOVERED}:
+                                        if candidate[0]==RECOVERED and cleanup and deletion_enabled():
+                                            from recovery_journal import RecoveryJournal
+                                            journal=RecoveryJournal(location.runtime/final);recovery_lock=journal.locked();recovery_lock.__enter__()
+                                            journal._operations_unlocked()
+                                            stamp_fd=proof.open_regular(folder_fd,journal.path.name)
+                                            try:wal_stamp=list(proof.fingerprint(stamp_fd))
+                                            finally:os.close(stamp_fd)
+                                            if wal_stamp!=resume_session.data['files'][masked].get('recovery_journal_stamp'):
+                                                candidate=('UNKNOWN','RECOVERY_JOURNAL_CHANGED');continue
                                         classification,reason=candidate;matched=final
                                         details['probable_target_final']=final
                                         eligible_bytes+=stamp[2];result['eligible']+=1
-                                        if cleanup:
+                                        if cleanup and (classification in PROVEN or deletion_enabled()):
                                             # All target locks and scratch lease are still held.
                                             digest=hashes.get(('temp',stamp)) or proof.digest_fd(temp_fd,deadline)
                                             if not same_entry(folder_fd,final,final_stamp) or not same_entry(folder_fd,name,stamp):
@@ -307,7 +340,7 @@ def inspect_atomic_temps(location,*,cleanup=False,clock=time.time,budget_seconds
                                         break
                                     # Unique classification only belongs to a known schema;
                                     # same-shape JSON from unrelated datasets is not sufficient.
-                                    if candidate[0]=='UNIQUE_RECOVERY_CANDIDATE' and (final in ('ai_ogrenme_gecmisi.json','tahmin_gecmisi.json','gun_ici_sonuclar.json','indicator_performance_state.json','sinyal_performansi.json') or token):best=(candidate,final,dict(details))
+                                    if candidate[0]=='UNIQUE_RECOVERY_CANDIDATE' and (final in ('ai_ogrenme_gecmisi.json','tahmin_gecmisi.json','gun_ici_sonuclar.json','indicator_performance_state.json','sinyal_performansi.json','haber_dedup.json','yarin_top10_sonuclar.json') or token):best=(candidate,final,dict(details))
                                     elif best is None and reason in ('FINAL_MISSING_OR_DATASET_UNKNOWN','LEGACY_DATASET_NOT_IDENTIFIED'):reason=candidate[1]
                                 except BlockingIOError:reason='FINAL_LOCK_BUSY'
                                 except TimeoutError:reason='BUDGET_EXHAUSTED';break
@@ -316,8 +349,10 @@ def inspect_atomic_temps(location,*,cleanup=False,clock=time.time,budget_seconds
                                 except Exception as error:
                                     # SQLite/index storage failure remains visible; no deletion.
                                     result['errors']+=1;reason='PROOF_IO_ERROR'
-                                    logging.warning('[DISK_FORENSIC] proof_error type=%s errno=%s',type(error).__name__,getattr(error,'errno',None))
+                                    from proof_workspace import sqlite_issue
+                                    reason=sqlite_issue(error,'CLASSIFY_OR_RECOVERY')
                                 finally:
+                                    if recovery_lock is not None:recovery_lock.__exit__(None,None,None)
                                     for fd in (final_fd,atomic,business):
                                         if fd is not None:os.close(fd)
                             if classification=='UNKNOWN' and best is not None and reason!='BUDGET_EXHAUSTED':
@@ -335,7 +370,9 @@ def inspect_atomic_temps(location,*,cleanup=False,clock=time.time,budget_seconds
             elif classification=='UNIQUE_RECOVERY_CANDIDATE':result['skipped_unique']+=1;result['skipped_unverified']+=1
             # Returned diagnostic records contain only whitelisted dataset labels,
             # never private filenames or payloads. Bounded optional read-only report.
-            details.update(classification=classification,reason=reason,reason_code=reason,size=size,dataset=matched,eligible_for_cleanup=classification in PROVEN)
+            details.update(classification=classification,reason=reason,reason_code=reason,size=size,dataset=matched,eligible_for_cleanup=classification in PROVEN or (classification==RECOVERED and deletion_enabled()))
+            if resume_session is not None and masked in resume_session.data['files']:
+                details['recovery']=resume_session.data['files'][masked].get('last_recovery',{})
             if matched:details['probable_target_final']=matched
             if len(findings)<256:findings.append(details)
             logging.info('[DISK_FORENSIC_FILE] %s',details)
@@ -344,7 +381,7 @@ def inspect_atomic_temps(location,*,cleanup=False,clock=time.time,budget_seconds
     finally:
         if resume_session is not None:
             try:resume_session.close()
-            except (OSError,ValueError) as error:
+            except (OSError,ValueError,sqlite3.Error) as error:
                 result['errors']+=1;logging.warning('[DISK_CHECKPOINT] save_failed type=%s errno=%s',type(error).__name__,getattr(error,'errno',None))
         for index in indexes.values():index.close()
         for fd in (folder_fd,root_fd):
@@ -359,5 +396,8 @@ def inspect_atomic_temps(location,*,cleanup=False,clock=time.time,budget_seconds
     result.update(classification_bytes=class_bytes,percent_used=health['percent_used'],target_1gib_reached=health['free']>=1024**3,target_2gib_reached=health['free']>=2*1024**3)
     logging.info('[DISK_FORENSIC_SUMMARY] %s',{k:{'file_count':counts[k],'total_bytes':class_bytes[k]} for k in sorted(CLASSES)})
     logging.info('[DISK_TEMP_CLEANUP] scanned=%d classified=%d proven_redundant=%d proven_subset=%d proven_older_complete=%d unique_recovery=%d unknown=%d recent=%d active=%d removed=%d freed_bytes=%d before_free=%d after_free=%d percent_used=%.2f target_1gib_reached=%s target_2gib_reached=%s',result['scanned'],sum(counts.values()),counts['PROVEN_REDUNDANT'],counts['PROVEN_SUBSET_OF_FINAL'],counts['PROVEN_OLDER_COMPLETE_COPY'],counts['UNIQUE_RECOVERY_CANDIDATE'],counts['UNKNOWN'],result['skipped_recent'],result['skipped_active'],result['removed'],result['freed_bytes'],before,result['after_free'],health['percent_used'],result['target_1gib_reached'],result['target_2gib_reached'])
+    recovery=[f['recovery'] for f in findings if f.get('recovery')]
+    result['recovery_summary']={'scanned_files':len(findings),'recovery_candidates':len(recovery),'records_recovered':sum(f.get('journal_added',0) for f in recovery),'duplicates_skipped':sum(f.get('journal_duplicate',0) for f in recovery),'conflicts':sum(f.get('conflicts',0) for f in recovery),'unresolved':sum(f.get('unresolved',0) for f in recovery),'files_became_redundant':counts[RECOVERED],'files_deleted':sum(e['classification']==RECOVERED for e in entries),'physical_bytes_freed':sum(max(0,e['free_after']-e['free_before']) for e in entries),'free_before':before,'free_after':result['after_free']}
+    logging.info('[STORAGE_RECOVERY_SUMMARY] %s',result['recovery_summary'])
     if cleanup and result['after_free']<TARGET_FREE:logging.warning('[DISK_FORENSIC] target_free_bytes=%d unmet; unique/unknown data preserved',TARGET_FREE)
     return result

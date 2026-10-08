@@ -51,7 +51,8 @@ def minutes(value, current):
 
 
 def load(path, default):
-    return json.loads(Path(path).read_text()) if Path(path).exists() else default
+    from recovery_journal import read_document
+    return read_document(path,default)
 
 
 @contextmanager
