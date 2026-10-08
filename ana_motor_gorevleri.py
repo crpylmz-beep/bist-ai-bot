@@ -242,8 +242,9 @@ class WorkerTasks:
                 'intraday_top10':self.intraday, 'yarin_top10':self.tomorrow,
                 'company_site':self.company_site,'performance':self.performance,
                 'intraday_performance':self.intraday_performance,'market_context':self.market_context}
-        from piyasa_baglami import regime_enabled
+        from piyasa_baglami import regime_enabled,sector_enabled
         if regime_enabled():result["market_regime"]=self.market_regime
+        if sector_enabled():result["sector_strength"]=self.sector_strength
         from gunluk_al_sat import enabled,GunlukAlSat
         intraday_enabled=enabled()
         if not getattr(self,'_intraday_flag_logged',False):
@@ -259,6 +260,10 @@ class WorkerTasks:
         from piyasa_baglami import PiyasaBaglami
         try:return PiyasaBaglami().refresh()
         except Exception as error:return {'hata':type(error).__name__}
+
+    def sector_strength(self):
+        from piyasa_baglami import PiyasaBaglami
+        return PiyasaBaglami().refresh_sectors()
 
     def market_regime(self):
         from piyasa_baglami import PiyasaBaglami

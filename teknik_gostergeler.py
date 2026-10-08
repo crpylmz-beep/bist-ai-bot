@@ -194,6 +194,21 @@ def calculate(data,asof,mode='INTRADAY'):
             atr_pct_baseline=finite(atr_percent.iloc[-61:-1].median()) if count>=40 else None,
             rsi=finite(rsi(close).iloc[-1]) if count>=15 else None,
             macd_histogram=finite(histogram.iloc[-1]) if count>=35 else None)
+    if mode=='TOMORROW' and count>=2:
+        # Session-based observation fields only; reject missing sessions rather than
+        # treating the next available bar as the requested trading-day horizon.
+        from performans_motoru import business_day
+        dates=[d.date() for d in frame.index]
+        expected=[];day=dates[-1]
+        while len(expected)<21:
+            if business_day(day):expected.append(day)
+            day-=timedelta(days=1)
+        expected.reverse()
+        for horizon in (1,5,20):
+            window=close.iloc[-horizon-1:]
+            good=(len(window)==horizon+1 and dates[-horizon-1:]==expected[-horizon-1:]
+                  and window.notna().all() and (window>0).all())
+            closing['return_'+str(horizon)+'d']=float((window.iloc[-1]/window.iloc[0]-1)*100) if good else None
     bb_result['squeeze_volume_momentum_break']=combo
     groups={'obv':obv_result,'vwap':vwap_result,'bollinger':bb_result,'momentum':mom_result}
     available=[g['confidence'] for g in groups.values() if g['status']=='OK']

@@ -446,6 +446,7 @@ body{height:100vh;height:100dvh;background:#111827;overflow:hidden;display:flex;
 .context-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:8px;font-size:13px;overflow-wrap:anywhere}
 .context-metrics span,.context-metrics strong{display:block}#marketContextCard summary{cursor:pointer;font-weight:600}
 #marketContextCard h4{margin-bottom:4px}#marketContextDetails{font-size:14px}
+.sector-card{border-top:1px solid #dce1e8;padding:10px 0;overflow-wrap:anywhere}.sector-warning{color:#935000}#sectorStrengthCard summary{cursor:pointer;font-weight:600}#sectorStrengthDetails{font-size:14px;min-width:0}
 </style>
 </head>
 
@@ -474,6 +475,7 @@ body{height:100vh;height:100dvh;background:#111827;overflow:hidden;display:flex;
     </div>
 
     <details class="market-card" id="marketContextCard"><summary id="marketContextSummary">Piyasa Durumu · Veriler bekleniyor</summary><div id="marketContextDetails"></div></details>
+    <details class="market-card" id="sectorStrengthCard"><summary id="sectorStrengthSummary">Sektör Gücü · Veriler bekleniyor</summary><div id="sectorStrengthDetails"></div></details>
     <div class="section">
         <div class="section-title">📡 Sinyaller</div>
 
@@ -2575,6 +2577,7 @@ function hisseDetay(hisse){
             : ""
         }
 
+        <section class="detail-card" id="stockSectorStrength"><h3>Sektör Gücü</h3><p>Yeterli sektör verisi yok</p></section>
         <section class="detail-card" id="tomorrowPlanSection" aria-label="Yarın İçin"><h3>Yarın İçin</h3><p role="status">Kapanış planı yükleniyor…</p></section>
 
         <div class="detail-card">
@@ -2973,6 +2976,7 @@ async function kullaniciSeviyeYukle(context){
     const data = await seviyeApi(`/api/stocks/${encodeURIComponent(context.stock)}?model=${context.model}`);
     if(context !== seviyeContext) return;
     context.otomatik = data.otomatik || {};
+    const sector=document.getElementById("stockSectorStrength");if(sector)sector.innerHTML=sektorHisseGoster(data.stock_sector_context);
     document.getElementById("tomorrowPlanSection").innerHTML=tomorrowPlanGoster(data.tomorrow_plan);
     let daily=document.getElementById("stockDailySignal");
     if(!daily){daily=document.createElement("section");daily.id="stockDailySignal";document.getElementById("stockDetail").appendChild(daily);}
@@ -3005,6 +3009,7 @@ async function fiyatAlarmlariYenile(){
         if(context !== seviyeContext || context.busy || revision !== context.alarmRevision) return;
         // Update saved analysis and alarms without replacing unsaved manual input.
         context.otomatik = data.otomatik || {};
+    const sector=document.getElementById("stockSectorStrength");if(sector)sector.innerHTML=sektorHisseGoster(data.stock_sector_context);
         document.getElementById("automaticLevels").innerHTML = nihaiKararGoster(data.nihai_karar || context.otomatik.nihai_karar || data.ai_ozet?.nihai_karar) + otomatikSeviyeGoster(context.otomatik) + ortakAiGoster(data.ai_ozet);
         document.getElementById("priceAlarmList").innerHTML = fiyatAlarmListesi(data.alarmlar || []);
     }catch(error){
@@ -3275,6 +3280,27 @@ function piyasaContextGoster(doc){
  const details='<p>'+(doc.market_open?'Piyasa Açık':'Piyasa Kapalı')+' · Tamamlanmış günlük veriler</p><div class="context-metrics">'+field('Geçerli hisse',gunlukNum(doc.valid_stock_count,0))+field('A/D oranı / net',gunlukNum(doc.advance_decline_ratio)+' / '+gunlukNum(doc.advance_decline_net,0))+field('Yukarı / aşağı hacim',percent(doc.up_volume_pct)+' / '+percent(doc.down_volume_pct))+field('Yeni yüksek / düşük',gunlukNum(doc.new_high_count,0)+' / '+gunlukNum(doc.new_low_count,0))+field('Endeks trend / momentum',(trend[doc.index_trend]||'—')+' / '+(trend[doc.index_momentum]||'—'))+field('Volatilite',risk[doc.index_volatility]||'—')+'</div><p>Veri zamanı: '+yarinZaman(doc.as_of)+' · Veri yaşı: '+gunlukYas(doc.data_age)+'</p>'+lists('Nedenler',doc.reasons)+lists('Dikkat',doc.warnings);
  return {summary:summary+main,details};
 }
+// Descriptive sector observations from the backend; no scores calculated here.
+function sektorEtiket(value){return ({LEADING:'Lider',STRONG:'Güçlü',NEUTRAL:'Nötr',WEAK:'Zayıf',LAGGING:'Geride',WEAKENING:'Güç Kaybediyor',IMPROVING:'Güçleniyor',STRONG_ALIGNMENT:'Güçlü Pozitif',POSITIVE_ALIGNMENT:'Pozitif',MIXED:'Karışık',NEGATIVE_ALIGNMENT:'Negatif',UNKNOWN:'Bilinmiyor',BULL:'Pozitif',STRONG_BULL:'Güçlü Pozitif',BEAR:'Negatif',STRONG_BEAR:'Güçlü Negatif'})[value] || value || '--';}
+function sektorSayi(value,suffix=''){return typeof value==='number' && Number.isFinite(value) ? gunlukNum(value)+suffix : '--';}
+function sektorHisseGoster(stock){
+ const title='<h3>Sektör Gücü</h3>';
+ if(!stock || stock.sector_name==='UNKNOWN' || stock.stock_relative_strength_score==null)return title+'<p>Yeterli sektör verisi yok</p>';
+ return title+`<p>${yarinMetin(stock.sector_name)} · ${yarinMetin(sektorEtiket(stock.sector_state))}</p><div class="context-metrics"><div>Sektör Gücü<strong>${sektorSayi(stock.sector_relative_strength_score,'/100')}</strong></div><div>Hissenin sektöre göre gücü<strong>${sektorSayi(stock.stock_relative_strength_score,'/100')}</strong></div><div>Uyum<strong>${yarinMetin(sektorEtiket(stock.alignment_state))}</strong></div></div><p>${yarinMetin((stock.warnings||[]).join(' · '))}</p>${stock.stale?'<p>Eski veri · Son seans</p>':''}`;
+}
+function sektorGoster(doc){
+ if(doc?.enabled===false)return {summary:'Sektör Gücü · Devre dışı',details:''};
+ if(!doc || !Array.isArray(doc.sectors))return {summary:'Sektör Gücü · Veriler bekleniyor',details:'Yeterli sektör verisi yok'};
+ const market=doc.market_context?.market_regime;
+ const list=doc.sectors.map(s=>`<article class="sector-card"><h4>${yarinMetin(s.sector_name)} · ${yarinMetin(sektorEtiket(s.sector_state))}</h4><div class="context-metrics"><div>Relatif Güç<strong>${sektorSayi(s.relative_strength_score,'/100')}</strong></div><div>Güven<strong>${sektorSayi(s.sector_confidence,'/100')}</strong></div><div>Güç / momentum<strong>${yarinMetin(sektorEtiket(s.rrg_quadrant))}</strong></div>${[1,5,20].map(h=>`<div>${h}G · XU100'e göre<strong>${sektorSayi(s['relative_strength_'+h+'d'],' puan')}</strong></div>`).join('')}<div>SMA20 üstü<strong>${sektorSayi(s.above_sma20_pct,'%')}</strong></div><div>SMA50 üstü<strong>${sektorSayi(s.above_sma50_pct,'%')}</strong></div><div>Yükselen / Düşen<strong>${yarinMetin(s.advancing_count??'--')} / ${yarinMetin(s.declining_count??'--')}</strong></div></div><p>${s.benchmark_source==='OFFICIAL_INDEX'?'Doğrulanmış endeks: '+yarinMetin(s.sector_benchmark):'Eşit ağırlıklı sektör üyeleri'}</p>${s.sector_confidence<50?'<p class="sector-warning">Düşük güven · Yetersiz kapsam</p>':''}<p>${yarinMetin((s.reasons||[]).join(' · '))}</p><p class="sector-warning">${yarinMetin((s.warnings||[]).join(' · '))}</p><details><summary>Sektör içi relatif güç</summary><p>Önde: ${yarinMetin((s.top_stocks||[]).map(v=>v.symbol+' ('+sektorSayi(v.score)+')').join(', ')||'--')}</p><p>Geride: ${yarinMetin((s.lagging_stocks||[]).map(v=>v.symbol+' ('+sektorSayi(v.score)+')').join(', ')||'--')}</p><p>Bu alan performans ölçümüdür; AL/SAT sinyali değildir.</p></details></article>`).join('');
+ return {summary:'Sektör Gücü · '+doc.sectors.length+' sektör'+(doc.stale?' · Eski veri':''),details:`<p>Piyasa Rejimi: ${yarinMetin(sektorEtiket(market))}</p><p>Relatif güç/momentum sınıflandırması: Lider, Güç Kaybediyor, Geride, Güçleniyor. Lisanslı JdK formülü değildir.</p>${doc.stale?'<p class="sector-warning">Snapshot eski · Son seans</p>':''}${list||'<p>Yeterli sektör verisi yok</p>'}<p>${yarinMetin((doc.warnings||[]).join(' · '))}</p><p>Veri zamanı: ${yarinMetin(gunlukSaat(doc.as_of))}</p>`};
+}
+async function sektorYenile(){
+ const summary=document.getElementById('sectorStrengthSummary'),details=document.getElementById('sectorStrengthDetails');if(!summary||!details)return;
+ try{const view=sektorGoster(await seviyeApi('/api/sector-strength'));summary.textContent=view.summary;details.innerHTML=view.details;}
+ catch(_){summary.textContent='Sektör Gücü · Veriler alınamıyor';details.textContent='Yeterli sektör verisi yok';}
+}
+
 async function piyasaContextYenile(){
  const summary=document.getElementById('marketContextSummary'),details=document.getElementById('marketContextDetails');
  try{const doc=await seviyeApi('/api/market-context');const view=piyasaContextGoster(doc);summary.innerHTML=view.summary;details.innerHTML=view.details;}
@@ -3295,6 +3321,7 @@ async function cloudDurumYenile(){
 if(typeof document.addEventListener === "function"){
     cloudDurumYenile();
     piyasaContextYenile();
+    sektorYenile();
     const standalone=Boolean(navigator.standalone || window.matchMedia('(display-mode: standalone)').matches);
     document.documentElement.dataset.displayMode=standalone ? 'standalone' : 'browser';
     pushDurumHazirla();
@@ -3304,7 +3331,7 @@ if(typeof document.addEventListener === "function"){
         refreshing = true;
         try {
             await cloudDurumYenile();
-            if(document.getElementById("homePage").style.display === "block") await piyasaContextYenile();
+            if(document.getElementById("homePage").style.display === "block"){await piyasaContextYenile();await sektorYenile();}
             if(document.getElementById("gunIciTop10Page").style.display === "block") await showGunIciTop10(true);
             else if(document.getElementById("top10Page").style.display === "block") await showTop10(true);
             else if(document.getElementById("kapAlarmPage").style.display === "block") await showKapAlarms();

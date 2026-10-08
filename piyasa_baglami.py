@@ -333,6 +333,81 @@ class PiyasaBaglami:
             return measurement_view(doc,completed,holiday)
 
 
+    def sectors(self,query=None):
+        from kullanici_kayitlari import RecordError
+        from saglayici_sembolleri import bist_symbol
+        query=query or {}
+        if set(query)-{'sector','symbol'} or len(query)>1 or any(not isinstance(v,list) or len(v)!=1 or not v[0].strip() or len(v[0])>100 for v in query.values()):
+            raise RecordError('Sektör sorgusu geçersiz.',400)
+        if 'symbol' in query:
+            try:stock=bist_symbol(query['symbol'][0])
+            except (ValueError,TypeError):raise RecordError('Hisse sorgusu geçersiz.',400) from None
+        if not sector_enabled():return {'enabled':False,'engine_version':SECTOR_VERSION,'sectors':[]}
+        try:
+            doc=sector_view(load(self.location.public/'sector_context.json',{}),self.clock().astimezone(ISTANBUL))
+        except (OSError,ValueError,TypeError,KeyError,AttributeError):raise RecordError('Sektör verisi henüz alınamıyor.',503) from None
+        if 'sector' in query:
+            rows=[v for v in doc['sectors'] if v['sector_code']==query['sector'][0] or v['sector_name']==query['sector'][0]]
+            if not rows:raise RecordError('Sektör bulunamadı.',400)
+            doc['sectors']=rows;doc.pop('stocks',None)
+        elif 'symbol' in query:
+            if stock not in doc['stocks']:raise RecordError('Hisse sektör verisi bulunamadı.',400)
+            return {'enabled':True,'as_of':doc['as_of'],'stale':doc['stale'],'stock_sector_context':doc['stocks'][stock]}
+        else:doc.pop('stocks',None)
+        return dict(doc,enabled=True)
+
+    def refresh_sectors(self,universe=None,index=None,official=None,holiday=None,discover=True):
+        """Reuse current closed summaries and XU100; no stock-history crawl."""
+        if not sector_enabled():return {'enabled':False}
+        from gorev_hatalari import TaskIssue,strongest
+        current=self.clock().astimezone(ISTANBUL);day=expected_session(current,holiday)
+        target=self.location.public/'sector_context.json';history=self.location.runtime/'sector_context'/f'{day.isoformat()}.json'
+        with locked(target):
+            issues=[];mapping=sektor_eslestirmesi(self.location)
+            if universe is None:
+                saved=load(self.location.runtime/'market_context_universe.json',{})
+                at=stamp(saved.get('created_at'))
+                if saved.get('source')=='XUTUM' and at and at<=current and at.date()==current.date():universe=saved.get('symbols')
+                else:
+                    import bist_bot
+                    universe=bist_bot.bist_hisseleri_getir()
+                    if universe:
+                        path=self.location.runtime/'market_context_universe.json'
+                        with locked(path):atomic_json(path,{'source':'XUTUM','created_at':current.isoformat(),'symbols':universe})
+                if not universe:raise TaskIssue({'code':'EMPTY_UNIVERSE'})
+            universe=sector_universe(universe)
+            if official is None:
+                official={}
+                if discover:official,issues=sector_indices(self.location,universe,mapping,current,holiday)
+            if history.exists():
+                doc=load(history,{})
+                sector_view(doc,current,holiday)
+                if not doc.get('final') or stamp(doc['as_of']).date()!=day:raise ValueError('Sector archive identity')
+                if load(target,{})!=doc:atomic_json(target,doc)
+            else:
+                data=load(self.location.public/'bist_data.json',{})
+                if not isinstance(data,dict) or not isinstance(data.get('hisseler',[]),list):raise ValueError('Sector source format')
+                index=index if index is not None else load(self.location.runtime/'market_context_index.json',{})
+                if index is None:index={}
+                market=load(self.location.public/'market_context.json',{})
+                doc=build_sectors(data.get('hisseler',[]),universe,mapping,index,current,official,market,holiday)
+                doc['created_at']=max(current,self.clock().astimezone(ISTANBUL)).isoformat()
+                if doc['final']:
+                    with locked(history):
+                        if history.exists():doc=load(history,{})
+                        else:atomic_json(history,doc)
+                before=load(target,{})
+                if {k:v for k,v in before.items() if k!='created_at'}!={k:v for k,v in doc.items() if k!='created_at'}:atomic_json(target,doc)
+                elif before:doc=before
+            if issues:
+                raise TaskIssue(strongest(issues),sum(v['valid_member_count'] for v in doc['sectors']),{'successful':sum(v['data_status']=='COMPLETE' for v in doc['sectors']),'failed':len(issues)},isolated=True)
+            if doc.get('failures'):
+                raise TaskIssue(strongest([v['issue'] for v in doc['failures']]),sum(v['valid_member_count'] for v in doc['sectors']),{'failed':len(doc['failures'])},isolated=True)
+            if not doc['final']:
+                raise TaskIssue({'code':'PROVIDER_DATA'},sum(v['valid_member_count'] for v in doc['sectors']),{'successful':sum(v['data_status']=='COMPLETE' for v in doc['sectors'])},isolated=True)
+            return sector_view(doc,self.clock().astimezone(ISTANBUL),holiday)
+
+
 def intraday_quotes(veri_map,analyses,current):
     """Reuse stream OHLC also for filtered stocks, without adding technical indicators."""
     output={r['sembol']:dict(r) for r in analyses if r.get('sembol')}
@@ -547,3 +622,297 @@ def frozen_market_context(doc,prediction_time):
     return {'market_regime':doc.get('regime'),'market_regime_score':doc.get('regime_score'),
         'market_breadth_score':doc.get('breadth_score'),'market_risk_state':doc.get('risk_state'),
         'market_context_as_of':doc['as_of'],'market_context_created_at':doc['created_at']}
+
+# Sector observations extend this central context only; never feed effects().
+SECTOR_VERSION='SECTOR_STRENGTH_V1'
+SECTOR_HORIZONS=(1,5,20)
+SECTOR_RS_WEIGHTS={1:.20,5:.35,20:.45}
+SECTOR_RS_SCALES={1:2,5:5,20:10}
+SECTOR_STATES=('LEADING','STRONG','NEUTRAL','WEAK','LAGGING')
+RRG_STRENGTH_CUT=50
+RRG_MOMENTUM_CUT=0
+SECTOR_MIN_MEMBERS=5
+SECTOR_MIN_COVERAGE=.60
+
+
+def sector_enabled():
+    return os.environ.get('SECTOR_STRENGTH_ENABLED','true').strip().lower() in ('true','1','yes','on')
+
+
+def sector_universe(universe):
+    from saglayici_sembolleri import bist_symbol
+    output=set()
+    for symbol in universe or []:
+        if not isinstance(symbol,str):continue
+        try:output.add(bist_symbol(symbol))
+        except ValueError:continue
+    return output
+
+
+def sector_returns(raw):
+    # Multi-session returns are calculated once from real, continuous closed bars.
+    return {h:number((raw or {}).get(f'return_{h}d')) for h in SECTOR_HORIZONS}
+
+
+def relative_score(values):
+    # Fixed weights: missing long horizons never increase the 1d weight.
+    # Null until both 5/20 session observations exist; 1d is at most 10 points.
+    if any(number(values.get(h)) is None for h in (5,20)):return None,{}
+    parts={str(h):SECTOR_RS_WEIGHTS[h]*clamp(values[h]/SECTOR_RS_SCALES[h],-1,1)*50
+           for h in SECTOR_HORIZONS if number(values.get(h)) is not None}
+    return round(clamp(50+sum(parts.values()),0,100),2),parts
+
+
+def rrg_quadrant(score,momentum):
+    if score is None or momentum is None:return None
+    if score>=RRG_STRENGTH_CUT:return 'LEADING' if momentum>=RRG_MOMENTUM_CUT else 'WEAKENING'
+    return 'IMPROVING' if momentum>=RRG_MOMENTUM_CUT else 'LAGGING'
+
+
+def alignment(stock_score,sector,market):
+    if stock_score is None or not sector or not market:return None
+    if stock_score>=60 and sector in ('LEADING','STRONG') and market in ('BULL','STRONG_BULL'):
+        return 'STRONG_ALIGNMENT' if stock_score>=80 and sector=='LEADING' and market=='STRONG_BULL' else 'POSITIVE_ALIGNMENT'
+    if stock_score<40 and sector in ('WEAK','LAGGING') and market in ('BEAR','STRONG_BEAR'):return 'NEGATIVE_ALIGNMENT'
+    return 'MIXED'
+
+
+def sector_metrics(name,members,expected,index,current,official=None,holiday=None):
+    n=len(members);coverage=n/expected if expected else 0
+    sample={h:[sector_returns(r)[h] for r in members if sector_returns(r)[h] is not None] for h in SECTOR_HORIZONS}
+    returns={h:mean(sample[h]) if len(sample[h])>=SECTOR_MIN_MEMBERS and len(sample[h])/max(expected,1)>=SECTOR_MIN_COVERAGE else None for h in SECTOR_HORIZONS}
+    source='SYNTHETIC_MEMBERS';sector_benchmark=None
+    if official:
+        returns=sector_returns(official);source='OFFICIAL_INDEX';sector_benchmark=official['symbol']
+    benchmark=sector_returns(index)
+    relative={h:returns[h]-benchmark[h] if returns[h] is not None and benchmark[h] is not None else None for h in SECTOR_HORIZONS}
+    score,components=relative_score(relative)
+    sma={h:[r for r in members if number(r.get('sma'+str(h))) is not None and r['sma'+str(h)]>0] for h in (20,50)}
+    above={h:100*sum(r['close']>r['sma'+str(h)] for r in sma[h])/len(sma[h]) if sma[h] else None for h in (20,50)}
+    daily=[r for r in members if sector_returns(r)[1] is not None]
+    up=sum(sector_returns(r)[1]>.01 for r in daily);down=sum(sector_returns(r)[1]<-.01 for r in daily)
+    breadth=100*(up+.5*(len(daily)-up-down))/len(daily) if daily else None
+    trend_samples=[index_observation(r)['index_trend'] for r in members]
+    trend_samples=[v for v in trend_samples if v]
+    trend_votes=[(1 if v=='POSITIVE' else -1 if v=='NEGATIVE' else 0) for v in trend_samples]
+    if relative[20] is not None:trend_votes.append(1 if relative[20]>0 else -1 if relative[20]<0 else 0)
+    trend_mean=mean(trend_votes) if len(trend_samples)>=2 else None
+    trend='POSITIVE' if trend_mean is not None and trend_mean>=.35 else 'NEGATIVE' if trend_mean is not None and trend_mean<=-.35 else 'NEUTRAL' if trend_mean is not None else None
+    # Per-session short vs long RS velocity. Independent SMA/breadth evidence
+    # confirms momentum without claiming licensed JdK ratios.
+    velocity=relative[5]/5-relative[20]/20 if relative[5] is not None and relative[20] is not None else None
+    slopes=[number(r.get('sma20_slope'))/r['close']*100 for r in members if number(r.get('sma20_slope')) is not None]
+    momentum_values=[]
+    if velocity is not None:momentum_values.append(clamp(velocity/1,-1,1))
+    if slopes:momentum_values.append(clamp(mean(slopes),-1,1))
+    if breadth is not None:momentum_values.append((breadth-50)/50)
+    momentum=mean(momentum_values) if velocity is not None and len(momentum_values)>=2 else None
+    momentum_state=('STRONG' if score is not None and score>=60 else 'IMPROVING') if momentum is not None and momentum>.1 else ('WEAK' if score is not None and score<40 else 'WEAKENING') if momentum is not None and momentum<-.1 else 'NEUTRAL' if momentum is not None else None
+    volume_rows=[r for r in daily if number(r.get('volume')) is not None and r['volume']>=0]
+    total_volume=sum(r['volume'] for r in volume_rows)
+    up_volume=sum(r['volume'] for r in volume_rows if sector_returns(r)[1]>.01)
+    down_volume=sum(r['volume'] for r in volume_rows if sector_returns(r)[1]<-.01)
+    volume_score=50+50*(up_volume-down_volume)/total_volume if total_volume>0 and len(volume_rows)>=SECTOR_MIN_MEMBERS and len(volume_rows)/max(expected,1)>=SECTOR_MIN_COVERAGE else None
+    volume='STRONG' if volume_score is not None and volume_score>=60 else 'WEAK' if volume_score is not None and volume_score<40 else 'NORMAL' if volume_score is not None else None
+    values={'rs':score,'trend':100 if trend=='POSITIVE' else 0 if trend=='NEGATIVE' else 50 if trend else None,
+            'momentum':50+50*momentum if momentum is not None else None,'breadth':breadth,'volume':volume_score}
+    state_score,state_components=weighted_observation(values,{'rs':.45,'trend':.20,'momentum':.15,'breadth':.15,'volume':.05})
+    sma_coverage=min(len(sma[20]),len(sma[50]))/max(expected,1)
+    horizon_coverage=min(len(sample[h]) for h in SECTOR_HORIZONS)/max(expected,1)
+    confidence=100*(.40*coverage+.20*sma_coverage+.15*len(volume_rows)/max(expected,1)+.15*horizon_coverage+.10*sum(v is not None for v in benchmark.values())/3)
+    conflict=score is not None and trend in ('POSITIVE','NEGATIVE') and ((score>=60 and trend=='NEGATIVE') or (score<40 and trend=='POSITIVE'))
+    if conflict:confidence*=.8
+    enough=n>=SECTOR_MIN_MEMBERS and coverage>=SECTOR_MIN_COVERAGE and horizon_coverage>=SECTOR_MIN_COVERAGE and name!='UNKNOWN' and score is not None and len(state_components)>=3
+    if not enough:confidence=min(confidence,40)
+    state=classification(state_score,SECTOR_STATES) if enough and confidence>=50 else None
+    reasons=[];warnings=[]
+    for h in SECTOR_HORIZONS:
+        if relative[h] is not None:reasons.append(f'Sektör son {h} seansta XU100\'e göre {relative[h]:+.2f} puan')
+    if above[20] is not None:reasons.append(f'Sektör üyelerinin %{above[20]:.1f}\'i SMA20 üzerinde')
+    if momentum_state in ('IMPROVING','STRONG'):reasons.append('Relatif momentum iyileşiyor')
+    if momentum_state in ('WEAKENING','WEAK'):warnings.append('Sektör momentumu zayıflıyor')
+    if not enough:warnings.append('Sektör ölçüm kapsamı yetersiz')
+    if any(v is None for v in benchmark.values()):warnings.append('Benchmark verisi eksik')
+    if volume is None:warnings.append('Hacim teyidi yetersiz')
+    if conflict:warnings.append('Trend ve relatif güç çelişiyor')
+    if name=='UNKNOWN':warnings.append('Sektör eşleşmesi bulunamadı')
+    result={'sector_code':sector_code(name),'sector_name':name,'benchmark':'XU100','sector_benchmark':sector_benchmark,
+        'benchmark_source':source,'as_of':datetime.combine(expected_session(current,holiday),time(18,15),ISTANBUL).isoformat(),
+        'data_status':'COMPLETE' if enough else 'INSUFFICIENT','member_count':expected,'valid_member_count':n,'coverage_pct':round(100*coverage,2),
+        'relative_strength_score':score,'relative_strength_components':components,'momentum_state':momentum_state,'relative_momentum':momentum,
+        'trend_state':trend,'breadth_state':classification(breadth,('VERY_STRONG','STRONG','NEUTRAL','WEAK','VERY_WEAK')),
+        'above_sma20_pct':above[20],'above_sma50_pct':above[50],'advancing_count':up if daily else None,
+        'declining_count':down if daily else None,'unchanged_count':len(daily)-up-down if daily else None,'volume_strength':volume,
+        'sector_state':state,'sector_state_score':state_score,'sector_state_components':state_components,'sector_confidence':round(min(100,confidence),2),
+        'rrg_quadrant':rrg_quadrant(score,momentum) if enough else None,'reasons':reasons,'warnings':warnings,'engine_version':SECTOR_VERSION,
+        'sample_counts':{'sma20':len(sma[20]),'sma50':len(sma[50]),'daily':len(daily),'volume':len(volume_rows),**{f'return_{h}d':len(sample[h]) for h in SECTOR_HORIZONS}}}
+    for h in SECTOR_HORIZONS:result.update({f'sector_return_{h}d':returns[h],f'benchmark_return_{h}d':benchmark[h],f'relative_strength_{h}d':relative[h]})
+    return result
+
+
+def sector_code(name):return 'UNKNOWN' if name=='UNKNOWN' else 'S_'+hashlib.sha256(name.encode('utf-8')).hexdigest()[:12].upper()
+
+
+def build_sectors(rows,universe,mapping,index,current,official=None,market=None,holiday=None):
+    current=current.astimezone(ISTANBUL);universe=sector_universe(universe);valid={};duplicates=set();groups={}
+    for symbol in sorted(universe):
+        name=mapping.get(symbol) or 'UNKNOWN'
+        if name in ('BILINMIYOR','UNKNOWN'):name='UNKNOWN'
+        groups.setdefault(name,[]).append(symbol)
+    for row in rows:
+        if not isinstance(row,dict):continue
+        raw=closed_observation(row,current,holiday)
+        if not raw or raw['symbol'] not in universe:continue
+        raw.update({k:number(raw.get(k)) for k in ('sma20','sma50','sma20_slope','volume','return_1d','return_5d','return_20d','return_3d','macd_histogram','rsi')})
+        symbol=raw['symbol']
+        if symbol in valid and raw!=valid[symbol]:duplicates.add(symbol)
+        valid[symbol]=raw
+    for symbol in duplicates:valid.pop(symbol,None)
+    idx=closed_observation(index or {},current,holiday) or {}
+    if idx.get('symbol')!='XU100':idx={}
+    market_ref=frozen_market_context(market or {},current)
+    sectors=[];stocks={};failures=[]
+    for name,symbols in sorted(groups.items()):
+        members=[valid[s] for s in symbols if s in valid]
+        try:
+            official_row=(official or {}).get(name) or {}
+            official_raw=closed_observation(official_row.get('observation',{}),current,holiday)
+            official_members=sector_universe(official_row.get('members',[]))
+            if not official_row.get('verified') or official_members!=set(symbols):official_raw=None
+            sector=sector_metrics(name,members,len(symbols),idx,current,official_raw,holiday)
+            sectors.append(sector)
+            for symbol in symbols:
+                raw=valid.get(symbol,{});returns=sector_returns(raw)
+                differences={h:returns[h]-sector[f'sector_return_{h}d'] if returns[h] is not None and sector[f'sector_return_{h}d'] is not None else None for h in SECTOR_HORIZONS}
+                score,components=relative_score(differences) if name!='UNKNOWN' else (None,{})
+                context={'symbol':symbol,'sector_code':sector['sector_code'],'sector_name':name,'as_of':sector['as_of'],
+                    'stock_relative_strength_score':score,'relative_strength_components':components,'sector_state':sector['sector_state'],
+                    'sector_relative_strength_score':sector['relative_strength_score'],'sector_rrg_quadrant':sector['rrg_quadrant'],
+                    'alignment_state':alignment(score,sector['sector_state'],market_ref.get('market_regime')),
+                    'reasons':[],'warnings':list(sector['warnings'])}
+                for h in SECTOR_HORIZONS:context.update({f'stock_return_{h}d':returns[h],f'sector_return_{h}d':sector[f'sector_return_{h}d'],f'vs_sector_{h}d':differences[h]})
+                if differences[5] is not None:context['reasons'].append(f'Hisse son 5 seansta sektörüne göre {differences[5]:+.2f} puan')
+                if score is not None and score<40 and sector['sector_state'] in ('LEADING','STRONG'):context['warnings'].append('Sektör güçlü ancak hisse sektörün gerisinde')
+                stocks[symbol]=context
+            ranked=sorted([stocks[s] for s in symbols if stocks[s]['stock_relative_strength_score'] is not None],key=lambda v:(-v['stock_relative_strength_score'],v['symbol']))
+            sector['top_stocks']=[{'symbol':v['symbol'],'score':v['stock_relative_strength_score']} for v in ranked[:5]]
+            sector['lagging_stocks']=[{'symbol':v['symbol'],'score':v['stock_relative_strength_score']} for v in sorted(ranked,key=lambda v:(v['stock_relative_strength_score'],v['symbol']))[:5]]
+        except Exception as error:
+            from gorev_hatalari import log_source,describe
+            log_source(error,'SECTOR_STRENGTH');failures.append({'sector_code':sector_code(name),'issue':describe(error,'SECTOR_STRENGTH')})
+    sectors.sort(key=lambda s:(s['relative_strength_score'] is None,-(s['relative_strength_score'] or 0),SECTOR_STATES.index(s['sector_state']) if s['sector_state'] in SECTOR_STATES else 5,-s['sector_confidence'],s['sector_code']))
+    return {'engine_version':SECTOR_VERSION,'as_of':datetime.combine(expected_session(current,holiday),time(18,15),ISTANBUL).isoformat(),
+        'created_at':current.isoformat(),'universe_source':'XUTUM','universe_count':len(universe),'sectors':sectors,'stocks':stocks,
+        'market_context':market_ref,'failures':failures,'warnings':['Bir veya daha fazla sektör ölçülemedi'] if failures else [],
+        'final':bool(sectors) and not failures and all(s['data_status']=='COMPLETE' for s in sectors if s['sector_name']!='UNKNOWN' and s['member_count']>=SECTOR_MIN_MEMBERS)
+                and any(s['data_status']=='COMPLETE' for s in sectors)}
+
+
+def sector_view(doc,current,holiday=None):
+    import copy
+    doc=copy.deepcopy(doc);at=stamp(doc.get('as_of'));created=stamp(doc.get('created_at'))
+    if doc.get('engine_version')!=SECTOR_VERSION or not at or not created or created<at or at>current or created>current:raise ValueError('Invalid sector cache time')
+    if not isinstance(doc.get('sectors'),list) or not isinstance(doc.get('stocks'),dict) or not isinstance(doc.get('warnings'),list):raise ValueError('Invalid sector cache structure')
+    for sector in doc['sectors']:
+        for key in ('sector_code','sector_name','data_status'):
+            if not isinstance(sector.get(key),str):raise ValueError('Invalid sector identity')
+        for key in ('member_count','valid_member_count'):
+            if type(sector.get(key)) is not int or sector[key]<0:raise ValueError('Invalid sector count')
+        for key in ('relative_strength_score','sector_confidence'):
+            if sector.get(key) is not None and (number(sector[key]) is None or not 0<=sector[key]<=100):raise ValueError('Invalid sector score')
+        if not isinstance(sector.get('warnings'),list) or not isinstance(sector.get('reasons'),list):raise ValueError('Invalid sector explanations')
+    codes={s['sector_code'] for s in doc['sectors']}
+    for symbol,stock in doc['stocks'].items():
+        if not isinstance(stock,dict) or stock.get('symbol')!=symbol or stock.get('sector_code') not in codes:raise ValueError('Invalid stock-sector cache')
+        if not isinstance(stock.get('warnings'),list) or not isinstance(stock.get('reasons'),list):raise ValueError('Invalid stock-sector explanations')
+        if stock.get('stock_relative_strength_score') is not None and (number(stock['stock_relative_strength_score']) is None or not 0<=stock['stock_relative_strength_score']<=100):raise ValueError('Invalid stock-sector score')
+    stale=at.date()!=expected_session(current,holiday);doc['stale']=stale
+    doc['data_age']=(current-at).total_seconds()/60
+    if stale:
+        doc['warnings'].append('Snapshot eski')
+        for s in doc['sectors']:s['sector_confidence']=0;s['warnings'].append('Snapshot eski')
+        for s in doc['stocks'].values():s['warnings'].append('Snapshot eski');s['alignment_state']=None
+    return doc
+
+
+def frozen_sector_context(doc,symbol,prediction_time):
+    current=stamp(prediction_time);at=stamp((doc or {}).get('as_of'));created=stamp((doc or {}).get('created_at'))
+    if not current or not at or not created or at>current or created>current or doc.get('engine_version')!=SECTOR_VERSION or not doc.get('final'):return {}
+    if at.date()!=expected_session(current):return {}
+    stock=doc.get('stocks',{}).get(symbol)
+    if not stock or stock['sector_name']=='UNKNOWN':return {}
+    return {'sector_code':stock['sector_code'],'sector_state':stock['sector_state'],
+        'sector_relative_strength_score':stock['sector_relative_strength_score'],'sector_rrg_quadrant':stock['sector_rrg_quadrant'],
+        'stock_vs_sector_score':stock['stock_relative_strength_score'],'market_sector_alignment':stock['alignment_state'],
+        'sector_context_as_of':doc['as_of'],'sector_context_created_at':doc['created_at']}
+
+
+def stock_sector_view(symbol,location=None,current=None):
+    if not sector_enabled():return None
+    from kullanici_kayitlari import RecordError
+    try:
+        doc=PiyasaBaglami(location,clock=(lambda:current) if current else None).sectors({'symbol':[symbol]})
+        return dict(doc['stock_sector_context'],stale=doc['stale'])
+    except RecordError:return None
+
+
+def sector_indices(location,universe,mapping,current,holiday=None):
+    """Bounded provider-catalogue discovery; verify exact equity membership.
+
+    Names are not guessed/translated into index codes. Broad metadata sectors
+    without an exact supported-index membership use synthetic returns.
+    Two component requests per five-minute round; each entry cached seven days.
+    Matched index history is read once per closed session, compact summary only.
+    """
+    from gorev_hatalari import log_source,describe
+    from saglayici_sembolleri import bist_symbol
+    from teknik_gostergeler import calculate
+    import bist_bot
+    target=location.runtime/'sector_index_discovery.json'
+    issues=[];official={}
+    with locked(target):
+        doc=load(target,{'cursor':0,'entries':{}})
+        if not isinstance(doc,dict) or not isinstance(doc.get('entries'),dict):raise ValueError('Sector index discovery format')
+        catalogue=sorted(set(bist_bot.bp.indices()))[:64]
+        # General equity indices are not sector benchmarks.
+        catalogue=[s for s in catalogue if s not in ('XU100','XU050','XU030','XUTUM')]
+        entries=doc['entries'];at=stamp(doc.get('checked_at'))
+        if at and at>current:raise ValueError('Future sector catalogue cache')
+        if len(entries)>64:raise ValueError('Sector catalogue bounds')
+        if not at or (current-at).total_seconds()>=300:
+            cursor=doc.get('cursor',0)
+            if type(cursor) is not int:raise ValueError('Sector index cursor')
+            for _ in range(min(2,len(catalogue))):
+                code=catalogue[cursor%len(catalogue)];cursor+=1;cached=entries.get(code,{})
+                checked=stamp(cached.get('verified_at'))
+                if checked and 0<=(current-checked).total_seconds()<7*86400:continue
+                try:
+                    components=bist_bot.bp.Index(code).components
+                    symbols=sorted({bist_symbol(r['symbol']) for r in components if isinstance(r,dict) and isinstance(r.get('symbol'),str)})
+                    if symbols:entries[code]={'members':symbols,'verified_at':current.isoformat()}
+                    else:issues.append({'code':'PROVIDER_DATA'})
+                except Exception as error:log_source(error,'PROVIDER');issues.append(describe(error,'PROVIDER'))
+            doc.update(cursor=cursor,checked_at=current.isoformat());atomic_json(target,doc)
+        groups={}
+        for symbol in universe:
+            name=mapping.get(symbol)
+            if name and name not in ('BILINMIYOR','UNKNOWN'):groups.setdefault(name,set()).add(symbol)
+        history_requests=0
+        for name,symbols in sorted(groups.items()):
+            matches=[(code,entry) for code,entry in entries.items() if code in catalogue and len(symbols)>=SECTOR_MIN_MEMBERS
+                and sector_universe(entry.get('members',[]))==symbols and stamp(entry.get('verified_at'))
+                and 0<=(current-stamp(entry['verified_at'])).total_seconds()<7*86400]
+            if not matches:continue
+            code,entry=sorted(matches)[0];observation=entry.get('observation',{})
+            if not closed_observation(observation,current,holiday):
+                if history_requests>=2:continue
+                history_requests+=1
+                try:
+                    frame=bist_bot.bp.Index(code).history(period='6mo')
+                    observation={'sembol':code,'teknik_gostergeler':calculate(frame,current,'TOMORROW')}
+                    if not closed_observation(observation,current,holiday):
+                        issues.append({'code':'PROVIDER_DATA'});continue
+                    entry['observation']=observation;atomic_json(target,doc)
+                except Exception as error:log_source(error,'PROVIDER');issues.append(describe(error,'PROVIDER'));continue
+            official[name]={'verified':True,'members':sorted(symbols),'observation':observation}
+    return official,issues

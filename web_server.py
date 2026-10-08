@@ -135,6 +135,10 @@ class BistHandler(SimpleHTTPRequestHandler):
                 from sinyal_performansi import read_report
                 self.respond(read_report(self.data_paths))
                 return
+            if url.path == '/api/sector-strength' and self.command == 'GET':
+                from piyasa_baglami import PiyasaBaglami
+                self.respond(PiyasaBaglami(self.data_paths).sectors(parse_qs(url.query,keep_blank_values=True)))
+                return
             if url.path == '/api/market-context' and self.command == 'GET':
                 from piyasa_baglami import PiyasaBaglami
                 self.respond(PiyasaBaglami(self.data_paths).measurement())
@@ -170,9 +174,11 @@ class BistHandler(SimpleHTTPRequestHandler):
                         final=decision_view(shared,current)
                     from gunluk_al_sat import stock_signal,enabled as intraday_engine_enabled
                     intraday_extra={'intraday_signal':stock_signal(stock,self.data_paths)} if intraday_engine_enabled() else {}
+                    from piyasa_baglami import stock_sector_view
+                    sector_extra={'stock_sector_context':stock_sector_view(stock,self.data_paths,current)}
                     from yarin_plani import get_plan
                     tomorrow=get_plan(stock,self.data_paths,current)
-                    self.respond({'manuel': self.records.levels(user, stock),**intraday_extra,
+                    self.respond({'manuel': self.records.levels(user, stock),**intraday_extra,**sector_extra,
                                   'otomatik': automatic,'tomorrow_plan':tomorrow,
                                   'ai_ozet': summary,'nihai_karar':final,
                                   'alarmlar': self.records.alarms(user, stock)})
