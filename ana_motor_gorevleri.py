@@ -263,7 +263,7 @@ class WorkerTasks:
 
     def sector_strength(self):
         from piyasa_baglami import PiyasaBaglami
-        return PiyasaBaglami().refresh_sectors()
+        return PiyasaBaglami().refresh_sectors(enqueue=self.enqueue)
 
     def market_regime(self):
         from piyasa_baglami import PiyasaBaglami

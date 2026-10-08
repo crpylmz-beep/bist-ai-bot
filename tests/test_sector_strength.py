@@ -191,7 +191,10 @@ class SectorTests(unittest.TestCase):
         with patch('bist_bot.bp.indices',return_value=['XAAA','XBBB']),patch('bist_bot.bp.Index') as provider:
             provider.return_value.components=[{'symbol':'OTHER'}]
             provider.side_effect=[ConnectionError('remote unavailable'),provider.return_value]
-            with self.assertRaises(TaskIssue):self.engine.refresh_sectors(self.symbols,self.row('XU100',0),holiday=self.holiday)
+            result=self.engine.refresh_sectors(self.symbols,self.row('XU100',0),holiday=self.holiday)
+            self.assertEqual(result['diagnostics']['successful'],2);self.assertEqual(result['diagnostics']['skipped'],1)
+            self.assertEqual(result['source_issues'][0]['code'],'NETWORK_CONNECTION')
+            self.assertEqual(result['source_issues'][0]['symbol'],'XAAA')
         self.assertEqual(len(json.loads((self.location.public/'sector_context.json').read_text())['sectors']),2)
     def test_discovery_official_membership(self):
         with patch('bist_bot.bp.indices',return_value=['XBANK']),patch('bist_bot.bp.Index') as provider,patch('teknik_gostergeler.calculate',return_value=self.row('XBANK')['teknik_gostergeler']):
@@ -276,6 +279,158 @@ class SectorTests(unittest.TestCase):
     def test_open_bar_excluded(self):
         from teknik_gostergeler import calculate
         frame=self.frame();doc=calculate(frame,self.now.replace(hour=14),'TOMORROW')['closing'];self.assertEqual(doc['close'],frame.Close.iloc[-2])
+    def legacy_rows(self):
+        rows=self.rows()
+        for row in rows:
+            for h in (1,5,20):row['teknik_gostergeler']['closing'].pop(f'return_{h}d')
+        return rows
+    def seed(self,rows=None):
+        atomic_json(self.location.public/'bist_data.json',{'hisseler':self.rows() if rows is None else rows})
+        atomic_json(self.location.public/'sektor_haritasi.json',{'hisseler':{s:{'sektor':n} for s,n in self.mapping.items()}})
+    def test_legacy_seed_reproduces_provider_data(self):
+        self.seed(self.legacy_rows())
+        with self.assertLogs(level='INFO') as logs:
+            with self.assertRaises(TaskIssue) as issue:self.engine.refresh_sectors(self.symbols,self.row('XU100',0),official={},holiday=self.holiday,discover=False)
+        self.assertEqual(issue.exception.issue['code'],'PROVIDER_DATA');self.assertTrue(any('usable_history_count=0' in line and 'valid_sector_count=0' in line for line in logs.output))
+    def test_valid_partial_not_final_is_usable(self):
+        rows=self.rows()
+        for r in rows[:3]:r['teknik_gostergeler']['closing']['return_20d']=None
+        result=self.publish(rows);self.assertFalse(result['final']);self.assertEqual(result['diagnostics']['successful'],1);self.assertEqual(result['diagnostics']['skipped'],1)
+        bank=next(s for s in result['sectors'] if s['sector_name']=='BANK');self.assertEqual(bank['sample_counts']['return_20d'],3);self.assertIsNone(bank['sector_state']);self.assertFalse((self.location.runtime/'sector_context/2026-10-08.json').exists())
+    def test_valid_partial_completes_later_without_overwrite(self):
+        rows=self.rows()
+        for r in rows[:3]:r['teknik_gostergeler']['closing']['return_20d']=None
+        self.publish(rows);self.publish();path=self.location.runtime/'sector_context/2026-10-08.json';before=path.read_bytes();self.publish(self.rows(-1));self.assertEqual(path.read_bytes(),before)
+    def test_no_usable_sector_still_degraded(self):
+        self.seed([])
+        with self.assertRaises(TaskIssue) as issue:self.engine.refresh_sectors(self.symbols,self.row('XU100',0),official={},holiday=self.holiday,discover=False)
+        self.assertEqual(issue.exception.issue['code'],'PROVIDER_DATA')
+    def test_benchmark_cache_upgrade(self):
+        old=self.row('XU100',0)
+        for h in (1,5,20):old['teknik_gostergeler']['closing'].pop(f'return_{h}d')
+        p=self.location.runtime/'market_context_index.json';atomic_json(p,old)
+        with patch('bist_bot.bp.Index') as provider,patch('teknik_gostergeler.calculate',return_value=self.row('XU100',0)['teknik_gostergeler']):
+            index,issue=m.sector_benchmark(self.location,self.now,self.holiday);self.assertIsNone(issue);self.assertEqual(index['teknik_gostergeler']['closing']['return_20d'],0)
+            m.sector_benchmark(self.location,self.now,self.holiday);self.assertEqual(provider.return_value.history.call_count,1)
+    def test_missing_benchmark_bootstraps_real_history(self):
+        with patch('bist_bot.bp.Index') as provider:
+            provider.return_value.history.return_value=self.frame()
+            index,issue=m.sector_benchmark(self.location,self.now,self.holiday)
+        self.assertIsNone(issue);self.assertTrue(m.sector_history_usable(m.closed_observation(index,self.now,self.holiday)))
+    def test_complete_benchmark_no_provider_call(self):
+        atomic_json(self.location.runtime/'market_context_index.json',self.row('XU100',0))
+        with patch('bist_bot.bp.Index') as provider:
+            index,issue=m.sector_benchmark(self.location,self.now,self.holiday);self.assertIsNone(issue);provider.assert_not_called()
+    def test_benchmark_failure_preserves_old_cache(self):
+        p=self.location.runtime/'market_context_index.json';atomic_json(p,self.row('XU100',0));before=p.read_bytes()
+        self.now+=timedelta(days=1)
+        with patch('bist_bot.bp.Index') as provider:
+            provider.return_value.history.side_effect=ConnectionError('source failure');index,issue=m.sector_benchmark(self.location,self.now,self.holiday)
+        self.assertEqual(index,{});self.assertEqual(issue['code'],'NETWORK_CONNECTION');self.assertEqual(p.read_bytes(),before)
+    def test_empty_benchmark_format(self):
+        import pandas as pd
+        with patch('bist_bot.bp.Index') as provider:
+            provider.return_value.history.return_value=pd.DataFrame();index,issue=m.sector_benchmark(self.location,self.now,self.holiday)
+        self.assertEqual(index,{});self.assertEqual(issue['code'],'PROVIDER_DATA')
+    def test_wrong_history_columns_not_fabricated(self):
+        f=self.frame().rename(columns=str.lower)
+        with patch('bist_bot.bp.Index') as provider:
+            provider.return_value.history.return_value=f;index,issue=m.sector_benchmark(self.location,self.now,self.holiday)
+        self.assertFalse(index);self.assertEqual(issue['code'],'PROVIDER_DATA')
+    def test_market_final_archive_unchanged_during_cache_upgrade(self):
+        symbols=['S'+str(i).zfill(3) for i in range(60)];rows=[self.row(s) for s in symbols]
+        old=self.row('XU100',0)
+        for h in (1,5,20):old['teknik_gostergeler']['closing'].pop(f'return_{h}d')
+        market=m.build_measurement(rows,symbols,old,self.now,self.holiday);self.assertTrue(market['final'])
+        p=self.location.runtime/'market_context/2026-10-08.json';p.parent.mkdir();atomic_json(p,market);before=p.read_bytes();atomic_json(self.location.runtime/'market_context_index.json',old)
+        with patch('bist_bot.bp.Index') as provider,patch('teknik_gostergeler.calculate',return_value=self.row('XU100',0)['teknik_gostergeler']):
+            self.engine.refresh_measurement(symbols,holiday=self.holiday);provider.assert_not_called()
+            m.sector_benchmark(self.location,self.now,self.holiday);self.assertEqual(provider.return_value.history.call_count,1)
+        self.assertEqual(p.read_bytes(),before)
+    def test_bootstrap_queue_bounded(self):
+        callback=Mock();count=m.sector_bootstrap(self.location,self.legacy_rows(),set(self.symbols),self.mapping,self.now,callback,self.holiday)
+        self.assertEqual(count,10);self.assertEqual(callback.call_count,10);self.assertEqual(callback.call_args_list[0].kwargs,{'gun_ici_yenile':False})
+    def test_bootstrap_queue_rotates(self):
+        callback=Mock();m.sector_bootstrap(self.location,self.legacy_rows(),set(self.symbols),self.mapping,self.now,callback,self.holiday);callback.reset_mock()
+        m.sector_bootstrap(self.location,self.legacy_rows(),set(self.symbols),self.mapping,self.now+timedelta(minutes=5),callback,self.holiday)
+        self.assertEqual(callback.call_args_list[0].args[0],'S010');self.assertEqual(callback.call_args_list[1].args[0],'S011')
+    def test_bootstrap_no_duplicate_within_round(self):
+        callback=Mock();m.sector_bootstrap(self.location,self.legacy_rows(),set(self.symbols),self.mapping,self.now,callback,self.holiday)
+        self.assertEqual(m.sector_bootstrap(self.location,self.legacy_rows(),set(self.symbols),self.mapping,self.now,callback,self.holiday),0);self.assertEqual(callback.call_count,10)
+    def test_bootstrap_unknown_not_queued(self):
+        callback=Mock();self.assertEqual(m.sector_bootstrap(self.location,self.legacy_rows(),set(self.symbols),{},self.now,callback,self.holiday),0);callback.assert_not_called()
+    def test_bootstrap_existing_fresh_data_not_queued(self):
+        callback=Mock();self.assertEqual(m.sector_bootstrap(self.location,self.rows(),set(self.symbols),self.mapping,self.now,callback,self.holiday),0)
+    def test_bootstrap_advances_to_real_worker_result(self):
+        self.seed(self.legacy_rows());callback=Mock()
+        with self.assertLogs(level='INFO') as logs:
+            with self.assertRaises(TaskIssue):self.engine.refresh_sectors(self.symbols,self.row('XU100',0),official={},holiday=self.holiday,discover=False,enqueue=callback)
+        self.assertEqual(callback.call_count,10);self.assertTrue(any('stage=MEMBER_HISTORY' in s and 'queued=10' in s for s in logs.output))
+        self.seed(self.rows());result=self.engine.refresh_sectors(self.symbols,self.row('XU100',0),official={},holiday=self.holiday,discover=False,enqueue=callback);self.assertEqual(result['diagnostics']['successful'],2)
+    def test_unmapped_source_logged_without_benchmark_fetch(self):
+        self.seed();atomic_json(self.location.public/'sektor_haritasi.json',{'hisseler':{}})
+        with patch('bist_bot.bp.Index') as provider,self.assertLogs(level='INFO') as logs:
+            with self.assertRaises(TaskIssue):self.engine.refresh_sectors(self.symbols,official={},holiday=self.holiday,discover=False)
+        provider.assert_not_called();self.assertTrue(any('stage=MAPPING' in line and 'mapped_member_count=0' in line for line in logs.output))
+    def test_official_incomplete_uses_valid_synthetic(self):
+        row=self.row('XBANK');row['teknik_gostergeler']['closing'].pop('return_20d')
+        official={'BANK':{'verified':True,'members':self.symbols[:6],'observation':row}}
+        self.assertEqual(next(s for s in self.build(official=official)['sectors'] if s['sector_name']=='BANK')['benchmark_source'],'SYNTHETIC_MEMBERS')
+    def test_optional_empty_catalogue_entry_fallback(self):
+        self.seed()
+        with patch('bist_bot.bp.indices',return_value=['XAAA']),patch('bist_bot.bp.Index') as provider:
+            provider.return_value.components=[];result=self.engine.refresh_sectors(self.symbols,self.row('XU100',0),holiday=self.holiday)
+        self.assertEqual(result['diagnostics']['successful'],2);self.assertEqual(result['source_issues'][0]['stage'],'INDEX_MEMBERSHIP');self.assertEqual(result['source_issues'][0]['code'],'PROVIDER_DATA')
+    def test_optional_empty_index_history_fallback(self):
+        import pandas as pd
+        self.seed()
+        with patch('bist_bot.bp.indices',return_value=['XBANK']),patch('bist_bot.bp.Index') as provider:
+            provider.return_value.components=[{'symbol':s} for s in self.symbols[:6]];provider.return_value.history.return_value=pd.DataFrame();result=self.engine.refresh_sectors(self.symbols,self.row('XU100',0),holiday=self.holiday)
+        self.assertEqual(result['diagnostics']['successful'],2);self.assertEqual(result['source_issues'][0]['stage'],'INDEX_HISTORY');self.assertTrue(all(s['benchmark_source']=='SYNTHETIC_MEMBERS' for s in result['sectors']))
+    def test_optional_critical_error_not_swallowed(self):
+        self.seed()
+        with patch('piyasa_baglami.sector_indices',return_value=({},[{'code':'CODE_ERROR','symbol':'XBANK'}])):
+            with self.assertRaises(TaskIssue) as issue:self.engine.refresh_sectors(self.symbols,self.row('XU100',0),holiday=self.holiday)
+        self.assertEqual(issue.exception.issue['code'],'CODE_ERROR')
+    def test_worker_forwards_existing_enqueue(self):
+        from ana_motor_gorevleri import WorkerTasks
+        adapter=WorkerTasks();self.addCleanup(adapter.close)
+        with patch('piyasa_baglami.PiyasaBaglami') as engine:
+            adapter.sector_strength();self.assertEqual(engine.return_value.refresh_sectors.call_args.kwargs['enqueue'],adapter.enqueue)
+    def test_scheduler_reports_successful_fallback_with_skips(self):
+        from ana_motor import AnaMotor
+        rows=self.rows()
+        for row in rows[:3]:row['teknik_gostergeler']['closing']['return_20d']=None
+        worker=AnaMotor({'sector_strength':lambda:self.publish(rows)},self.location.runtime,clock=lambda:self.now)
+        try:
+            worker.tick();worker.tasks['sector_strength'].future.result(timeout=10);worker.tick()
+            self.assertEqual(worker.state['tasks']['sector_strength']['status'],'OK_WITH_SKIPS')
+            self.assertEqual(worker.state['tasks']['sector_strength']['diagnostics']['successful'],1)
+        finally:worker.shutdown()
+    def test_scheduler_keeps_no_data_degraded(self):
+        from ana_motor import AnaMotor
+        worker=AnaMotor({'sector_strength':lambda:self.publish(self.legacy_rows())},self.location.runtime,clock=lambda:self.now)
+        try:
+            worker.tick()
+            with self.assertRaises(TaskIssue):worker.tasks['sector_strength'].future.result(timeout=10)
+            worker.tick();self.assertEqual(worker.state['tasks']['sector_strength']['status'],'DEGRADED');self.assertEqual(worker.state['tasks']['sector_strength']['last_error']['code'],'PROVIDER_DATA')
+        finally:worker.shutdown()
+    def test_low_confidence_sector_counted_as_skip(self):
+        self.symbols=['S'+str(i).zfill(3) for i in range(14)];self.mapping={s:'BANK' if i<8 else 'TECH' for i,s in enumerate(self.symbols)}
+        rows=self.rows()[:5]+self.rows()[8:]
+        for r in rows[:5]:r['teknik_gostergeler']['closing'].update(sma20=None,sma50=None,volume=None)
+        result=self.publish(rows);self.assertEqual(result['diagnostics']['successful'],1);self.assertEqual(result['diagnostics']['skipped'],1)
+        bank=next(s for s in result['sectors'] if s['sector_name']=='BANK');self.assertIsNone(bank['sector_state']);self.assertLess(bank['sector_confidence'],50)
+    def test_unusable_states_not_frozen(self):
+        self.symbols=self.symbols[:8];self.mapping={s:'BANK' for s in self.symbols};rows=self.rows()[:5]
+        for r in rows:r['teknik_gostergeler']['closing'].update(sma20=None,sma50=None,volume=None)
+        with self.assertRaises(TaskIssue):self.publish(rows)
+        doc=json.loads((self.location.public/'sector_context.json').read_text());self.assertFalse(doc['final']);self.assertFalse((self.location.runtime/'sector_context/2026-10-08.json').exists())
+    def test_sector_trace_has_safe_counts_and_codes(self):
+        with self.assertLogs(level='INFO') as logs:m.sector_trace('PARTIAL_FALLBACK',self.build(),set(self.symbols),self.mapping,{'code':'PROVIDER_DATA','secret':'NEVER_LOG'})
+        line=logs.output[0]
+        for field in ('benchmark_source=','valid_sector_count=2','xutum_member_count=12','mapped_member_count=12','usable_history_count=12','code=PROVIDER_DATA'):self.assertIn(field,line)
+        self.assertNotIn('NEVER_LOG',line)
     def test_legacy_formula_unchanged(self):
         before=m.build_context([],[],{}, {},self.now);self.publish();self.assertEqual(m.build_context([],[],{}, {},self.now),before)
     def test_old_prediction_history_untouched(self):

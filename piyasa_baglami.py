@@ -356,10 +356,10 @@ class PiyasaBaglami:
         else:doc.pop('stocks',None)
         return dict(doc,enabled=True)
 
-    def refresh_sectors(self,universe=None,index=None,official=None,holiday=None,discover=True):
-        """Reuse current closed summaries and XU100; no stock-history crawl."""
+    def refresh_sectors(self,universe=None,index=None,official=None,holiday=None,discover=True,enqueue=None):
+        """Bootstrap missing observations via the normal queue; retain real failures."""
         if not sector_enabled():return {'enabled':False}
-        from gorev_hatalari import TaskIssue,strongest
+        from gorev_hatalari import TaskIssue,strongest,public_issue
         current=self.clock().astimezone(ISTANBUL);day=expected_session(current,holiday)
         target=self.location.public/'sector_context.json';history=self.location.runtime/'sector_context'/f'{day.isoformat()}.json'
         with locked(target):
@@ -374,38 +374,61 @@ class PiyasaBaglami:
                     if universe:
                         path=self.location.runtime/'market_context_universe.json'
                         with locked(path):atomic_json(path,{'source':'XUTUM','created_at':current.isoformat(),'symbols':universe})
-                if not universe:raise TaskIssue({'code':'EMPTY_UNIVERSE'})
+                if not universe:
+                    sector_trace('UNIVERSE',{},universe or [],mapping,{'code':'EMPTY_UNIVERSE'})
+                    raise TaskIssue({'code':'EMPTY_UNIVERSE'})
             universe=sector_universe(universe)
             if official is None:
                 official={}
                 if discover:official,issues=sector_indices(self.location,universe,mapping,current,holiday)
+            bootstrap_count=0;benchmark_issue=None
             if history.exists():
                 doc=load(history,{})
                 sector_view(doc,current,holiday)
                 if not doc.get('final') or stamp(doc['as_of']).date()!=day:raise ValueError('Sector archive identity')
-                if load(target,{})!=doc:atomic_json(target,doc)
             else:
                 data=load(self.location.public/'bist_data.json',{})
                 if not isinstance(data,dict) or not isinstance(data.get('hisseler',[]),list):raise ValueError('Sector source format')
-                index=index if index is not None else load(self.location.runtime/'market_context_index.json',{})
-                if index is None:index={}
+                if index is None:
+                    if any(mapping.get(s) not in (None,'','UNKNOWN','BILINMIYOR') for s in universe):index,benchmark_issue=sector_benchmark(self.location,current,holiday)
+                    else:index=load(self.location.runtime/'market_context_index.json',{})
                 market=load(self.location.public/'market_context.json',{})
                 doc=build_sectors(data.get('hisseler',[]),universe,mapping,index,current,official,market,holiday)
+                if enqueue is not None:
+                    bootstrap_count=sector_bootstrap(self.location,data.get('hisseler',[]),universe,mapping,current,enqueue,holiday)
                 doc['created_at']=max(current,self.clock().astimezone(ISTANBUL)).isoformat()
+                doc['final']=doc['final'] and any(v['data_status']=='COMPLETE' and v['sector_state'] is not None for v in doc['sectors'])
                 if doc['final']:
                     with locked(history):
                         if history.exists():doc=load(history,{})
                         else:atomic_json(history,doc)
-                before=load(target,{})
-                if {k:v for k,v in before.items() if k!='created_at'}!={k:v for k,v in doc.items() if k!='created_at'}:atomic_json(target,doc)
-                elif before:doc=before
-            if issues:
-                raise TaskIssue(strongest(issues),sum(v['valid_member_count'] for v in doc['sectors']),{'successful':sum(v['data_status']=='COMPLETE' for v in doc['sectors']),'failed':len(issues)},isolated=True)
-            if doc.get('failures'):
-                raise TaskIssue(strongest([v['issue'] for v in doc['failures']]),sum(v['valid_member_count'] for v in doc['sectors']),{'failed':len(doc['failures'])},isolated=True)
-            if not doc['final']:
-                raise TaskIssue({'code':'PROVIDER_DATA'},sum(v['valid_member_count'] for v in doc['sectors']),{'successful':sum(v['data_status']=='COMPLETE' for v in doc['sectors'])},isolated=True)
-            return sector_view(doc,self.clock().astimezone(ISTANBUL),holiday)
+            # Optional discovery failures remain explicit, but working synthetic
+            # measurements are a successful fallback, not a failed batch.
+            source_issues=[dict(v,**public_issue(v)) for v in issues]
+            if benchmark_issue:source_issues.append(dict(benchmark_issue,**public_issue(benchmark_issue)))
+            public=dict(doc,source_issues=source_issues)
+            if source_issues:public['warnings']=list(doc['warnings'])+['Kaynak: '+v['message'] for v in source_issues]
+            before=load(target,{})
+            if {k:v for k,v in before.items() if k!='created_at'}!={k:v for k,v in public.items() if k!='created_at'}:atomic_json(target,public)
+            elif before:public=before
+            valid=sum(v['data_status']=='COMPLETE' and v['sector_state'] is not None for v in doc['sectors'])
+            unavailable=len(doc['sectors'])-valid
+            code_issues=[v for v in source_issues if v.get('category') in ('CODE','STORAGE','CONFIG','UNKNOWN')]
+            code_issues.extend(v['issue'] for v in doc.get('failures',[]))
+            if code_issues:
+                issue=strongest(code_issues);sector_trace('SYSTEM_ERROR',doc,universe,mapping,issue)
+                raise TaskIssue(issue,sum(v['valid_member_count'] for v in doc['sectors']),{'successful':valid,'failed':len(code_issues)},isolated=True)
+            if not valid:
+                issue=benchmark_issue or {'code':'PROVIDER_DATA'}
+                stage='BENCHMARK_HISTORY' if benchmark_issue else 'MAPPING' if not any(mapping.get(s) not in (None,'','UNKNOWN','BILINMIYOR') for s in universe) else 'MEMBER_HISTORY' if bootstrap_count else 'COVERAGE'
+                sector_trace(stage,doc,universe,mapping,issue,bootstrap_count)
+                raise TaskIssue(issue,sum(v['valid_member_count'] for v in doc['sectors']),{'successful':0,'failed':len(source_issues)},isolated=True)
+            result=sector_view(public,self.clock().astimezone(ISTANBUL),holiday)
+            result['diagnostics']={'successful':valid,'skipped':unavailable+len(source_issues),'failed':0,
+                'reasons':[{'symbol':v['symbol'],'reason':v} for v in source_issues if v.get('symbol')]}
+            sector_trace('PARTIAL_FALLBACK' if source_issues or unavailable else 'COMPLETE',doc,universe,mapping,
+                         strongest(source_issues) if source_issues else {'code':'PROVIDER_DATA'} if unavailable else None,bootstrap_count)
+            return result
 
 
 def intraday_quotes(veri_map,analyses,current):
@@ -778,7 +801,7 @@ def build_sectors(rows,universe,mapping,index,current,official=None,market=None,
             official_row=(official or {}).get(name) or {}
             official_raw=closed_observation(official_row.get('observation',{}),current,holiday)
             official_members=sector_universe(official_row.get('members',[]))
-            if not official_row.get('verified') or official_members!=set(symbols):official_raw=None
+            if not official_row.get('verified') or official_members!=set(symbols) or not sector_history_usable(official_raw):official_raw=None
             sector=sector_metrics(name,members,len(symbols),idx,current,official_raw,holiday)
             sectors.append(sector)
             for symbol in symbols:
@@ -890,8 +913,8 @@ def sector_indices(location,universe,mapping,current,holiday=None):
                     components=bist_bot.bp.Index(code).components
                     symbols=sorted({bist_symbol(r['symbol']) for r in components if isinstance(r,dict) and isinstance(r.get('symbol'),str)})
                     if symbols:entries[code]={'members':symbols,'verified_at':current.isoformat()}
-                    else:issues.append({'code':'PROVIDER_DATA'})
-                except Exception as error:log_source(error,'PROVIDER');issues.append(describe(error,'PROVIDER'))
+                    else:issues.append({'code':'PROVIDER_DATA','symbol':code,'stage':'INDEX_MEMBERSHIP'})
+                except Exception as error:log_source(error,'PROVIDER');issues.append(dict(describe(error,'PROVIDER'),symbol=code,stage='INDEX_MEMBERSHIP'))
             doc.update(cursor=cursor,checked_at=current.isoformat());atomic_json(target,doc)
         groups={}
         for symbol in universe:
@@ -904,15 +927,85 @@ def sector_indices(location,universe,mapping,current,holiday=None):
                 and 0<=(current-stamp(entry['verified_at'])).total_seconds()<7*86400]
             if not matches:continue
             code,entry=sorted(matches)[0];observation=entry.get('observation',{})
-            if not closed_observation(observation,current,holiday):
+            if not sector_history_usable(closed_observation(observation,current,holiday)):
                 if history_requests>=2:continue
                 history_requests+=1
                 try:
                     frame=bist_bot.bp.Index(code).history(period='6mo')
                     observation={'sembol':code,'teknik_gostergeler':calculate(frame,current,'TOMORROW')}
-                    if not closed_observation(observation,current,holiday):
-                        issues.append({'code':'PROVIDER_DATA'});continue
+                    if not sector_history_usable(closed_observation(observation,current,holiday)):
+                        issues.append({'code':'PROVIDER_DATA','symbol':code,'stage':'INDEX_HISTORY'});continue
                     entry['observation']=observation;atomic_json(target,doc)
-                except Exception as error:log_source(error,'PROVIDER');issues.append(describe(error,'PROVIDER'));continue
+                except Exception as error:log_source(error,'PROVIDER');issues.append(dict(describe(error,'PROVIDER'),symbol=code,stage='INDEX_HISTORY'));continue
             official[name]={'verified':True,'members':sorted(symbols),'observation':observation}
     return official,issues
+
+
+def sector_history_usable(raw):
+    return bool(raw) and all(number(raw.get(f'return_{h}d')) is not None for h in SECTOR_HORIZONS)
+
+
+def sector_benchmark(location,current,holiday=None):
+    """Upgrade legacy/missing XU100 summary once; reuse the same compact cache.
+
+    Market Regime's final archive may already exist and therefore deliberately
+    bypass its refresh path. This cache upgrade never touches that archive.
+    """
+    from gorev_hatalari import describe,log_source
+    from teknik_gostergeler import calculate
+    target=location.runtime/'market_context_index.json'
+    with locked(target):
+        index=load(target,{})
+        raw=closed_observation(index,current,holiday)
+        if raw and raw['symbol']=='XU100' and sector_history_usable(raw):return index,None
+        import bist_bot
+        try:
+            frame=bist_bot.bp.Index('XU100').history(period='6mo')
+            index={'sembol':'XU100','teknik_gostergeler':calculate(frame,current,'TOMORROW')}
+            if not sector_history_usable(closed_observation(index,current,holiday)):
+                return {},{'code':'PROVIDER_DATA','symbol':'XU100','stage':'BENCHMARK_HISTORY'}
+        except Exception as error:
+            log_source(error,'PROVIDER')
+            return {},dict(describe(error,'PROVIDER'),symbol='XU100',stage='BENCHMARK_HISTORY')
+        atomic_json(target,index)
+        return index,None
+
+
+def sector_bootstrap(location,rows,universe,mapping,current,enqueue,holiday=None):
+    """At most ten rotating symbols, through existing priority queue/providers.
+
+    No direct stock history request and no fabricated update of public analyses.
+    The normal priority callback writes real analysis results. Recheck every round
+    so permanent provider/data failures stay visible rather than becoming fake OK.
+    """
+    observations={}
+    for row in rows:
+        if not isinstance(row,dict):continue
+        raw=closed_observation(row,current,holiday)
+        if raw:observations[raw['symbol']]=raw
+    missing=sorted(s for s in universe if mapping.get(s) not in (None,'','UNKNOWN','BILINMIYOR')
+                   and not sector_history_usable(observations.get(s)))
+    if not missing:return 0
+    path=location.runtime/'sector_bootstrap_state.json'
+    with locked(path):
+        state=load(path,{'cursor':None})
+        if not isinstance(state,dict):raise ValueError('Sector bootstrap state format')
+        cursor=state.get('cursor');at=stamp(state.get('queued_at'))
+        if at and at>current:raise ValueError('Future sector bootstrap state')
+        if at and (current-at).total_seconds()<300:return 0
+        if cursor is not None and not isinstance(cursor,str):raise ValueError('Sector bootstrap cursor')
+        after=[s for s in missing if cursor is None or s>cursor]
+        selected=(after+[s for s in missing if cursor is not None and s<=cursor])[:10]
+        for symbol in selected:enqueue(symbol,gun_ici_yenile=False)
+        atomic_json(path,{'cursor':selected[-1],'queued_at':current.isoformat()})
+    return len(selected)
+
+
+def sector_trace(stage,doc,universe,mapping,issue=None,queued=0):
+    import logging
+    sectors=doc.get('sectors',[])
+    sources=','.join(sorted({v.get('benchmark_source','UNKNOWN') for v in sectors})) or 'NONE'
+    logging.info('[SECTOR_TRACE] stage=%s benchmark_source=%s valid_sector_count=%d xutum_member_count=%d mapped_member_count=%d usable_history_count=%d code=%s queued=%d',
+        stage,sources,sum(v.get('data_status')=='COMPLETE' and v.get('sector_state') is not None for v in sectors),len(universe),
+        sum(mapping.get(s) not in (None,'','UNKNOWN','BILINMIYOR') for s in universe),
+        sum(all(number(stock.get(f'stock_return_{h}d')) is not None for h in SECTOR_HORIZONS) for stock in doc.get('stocks',{}).values()),issue.get('code','NONE') if issue else 'NONE',queued)
