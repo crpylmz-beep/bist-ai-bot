@@ -443,6 +443,9 @@ body{height:100vh;height:100dvh;background:#111827;overflow:hidden;display:flex;
 #dailyPage summary{cursor:pointer;min-height:44px;padding:12px 0}.daily-loading{padding:30px;background:white;border-radius:12px}
 #dailyCards{display:grid;gap:14px}#dailyCards .detail-card{margin:0}
 @media(min-width:900px){#dailyCards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.context-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:8px;font-size:13px;overflow-wrap:anywhere}
+.context-metrics span,.context-metrics strong{display:block}#marketContextCard summary{cursor:pointer;font-weight:600}
+#marketContextCard h4{margin-bottom:4px}#marketContextDetails{font-size:14px}
 </style>
 </head>
 
@@ -470,6 +473,7 @@ body{height:100vh;height:100dvh;background:#111827;overflow:hidden;display:flex;
         <div id="bistChange" class="market-change">--</div>
     </div>
 
+    <details class="market-card" id="marketContextCard"><summary id="marketContextSummary">Piyasa Durumu · Veriler bekleniyor</summary><div id="marketContextDetails"></div></details>
     <div class="section">
         <div class="section-title">📡 Sinyaller</div>
 
@@ -3256,6 +3260,26 @@ function haberListesiniBirlestir(canonical, legacy) {
 
 /* BAŞLAT */
 
+function piyasaContextGoster(doc){
+ const esc=yarinMetin,percent=n=>typeof n==='number'&&Number.isFinite(n)?gunlukNum(n,1)+'%':'—';
+ const regime={STRONG_BULL:'Güçlü Pozitif',BULL:'Pozitif',NEUTRAL:'Nötr',BEAR:'Negatif',STRONG_BEAR:'Güçlü Negatif'};
+ const breadth={VERY_STRONG:'Çok Güçlü',STRONG:'Güçlü',NEUTRAL:'Nötr',WEAK:'Zayıf',VERY_WEAK:'Çok Zayıf'};
+ const risk={LOW:'Düşük',NORMAL:'Normal',HIGH:'Yüksek',EXTREME:'Çok Yüksek'};
+ const trend={POSITIVE:'Pozitif',NEUTRAL:'Nötr',NEGATIVE:'Negatif'};
+ if(doc?.enabled===false)return {summary:'Piyasa Durumu · Devre dışı',details:''};
+ if(doc?.engine_version!=='MARKET_REGIME_V1')return {summary:'Piyasa Durumu · Veriler şu anda alınamıyor',details:''};
+ const field=(k,v)=>'<div><span>'+k+'</span><strong>'+esc(v)+'</strong></div>';
+ const summary='Piyasa Durumu · '+(doc.stale?'Eski veri':regime[doc.regime]||'Veri sınırlı');
+ const main='<div class="context-metrics">'+field('Rejim',gunlukNum(doc.regime_score,0)+'/100')+field('Güven',gunlukNum(doc.regime_confidence,0)+'/100')+field('Genişlik',breadth[doc.breadth_state]||'—')+field('Yükselen / Düşen',gunlukNum(doc.advancing_count,0)+' / '+gunlukNum(doc.declining_count,0))+field('SMA20 / SMA50 üstü',percent(doc.above_sma20_pct)+' / '+percent(doc.above_sma50_pct))+field('Risk',risk[doc.risk_state]||'—')+'</div>';
+ const lists=(name,items)=>Array.isArray(items)&&items.length?'<h4>'+name+'</h4><ul>'+items.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>':'';
+ const details='<p>'+(doc.market_open?'Piyasa Açık':'Piyasa Kapalı')+' · Tamamlanmış günlük veriler</p><div class="context-metrics">'+field('Geçerli hisse',gunlukNum(doc.valid_stock_count,0))+field('A/D oranı / net',gunlukNum(doc.advance_decline_ratio)+' / '+gunlukNum(doc.advance_decline_net,0))+field('Yukarı / aşağı hacim',percent(doc.up_volume_pct)+' / '+percent(doc.down_volume_pct))+field('Yeni yüksek / düşük',gunlukNum(doc.new_high_count,0)+' / '+gunlukNum(doc.new_low_count,0))+field('Endeks trend / momentum',(trend[doc.index_trend]||'—')+' / '+(trend[doc.index_momentum]||'—'))+field('Volatilite',risk[doc.index_volatility]||'—')+'</div><p>Veri zamanı: '+yarinZaman(doc.as_of)+' · Veri yaşı: '+gunlukYas(doc.data_age)+'</p>'+lists('Nedenler',doc.reasons)+lists('Dikkat',doc.warnings);
+ return {summary:summary+main,details};
+}
+async function piyasaContextYenile(){
+ const summary=document.getElementById('marketContextSummary'),details=document.getElementById('marketContextDetails');
+ try{const doc=await seviyeApi('/api/market-context');const view=piyasaContextGoster(doc);summary.innerHTML=view.summary;details.innerHTML=view.details;}
+ catch(_){summary.textContent='Piyasa Durumu · Veriler şu anda alınamıyor';details.textContent='';}
+}
 async function cloudDurumYenile(){
     try {
         const response = await fetch('/health', {cache:'no-store'});
@@ -3270,6 +3294,7 @@ async function cloudDurumYenile(){
 
 if(typeof document.addEventListener === "function"){
     cloudDurumYenile();
+    piyasaContextYenile();
     const standalone=Boolean(navigator.standalone || window.matchMedia('(display-mode: standalone)').matches);
     document.documentElement.dataset.displayMode=standalone ? 'standalone' : 'browser';
     pushDurumHazirla();
@@ -3279,6 +3304,7 @@ if(typeof document.addEventListener === "function"){
         refreshing = true;
         try {
             await cloudDurumYenile();
+            if(document.getElementById("homePage").style.display === "block") await piyasaContextYenile();
             if(document.getElementById("gunIciTop10Page").style.display === "block") await showGunIciTop10(true);
             else if(document.getElementById("top10Page").style.display === "block") await showTop10(true);
             else if(document.getElementById("kapAlarmPage").style.display === "block") await showKapAlarms();

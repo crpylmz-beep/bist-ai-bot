@@ -137,8 +137,7 @@ class BistHandler(SimpleHTTPRequestHandler):
                 return
             if url.path == '/api/market-context' and self.command == 'GET':
                 from piyasa_baglami import PiyasaBaglami
-                self.respond(PiyasaBaglami(self.data_paths).context() or {
-                    'piyasa_rejimi':'BELIRSIZ','rejim_confidence':0,'stale':True,'updated_at':None})
+                self.respond(PiyasaBaglami(self.data_paths).measurement())
                 return
             user = self.session()
             if url.path == '/api/push/config' and self.command == 'GET':

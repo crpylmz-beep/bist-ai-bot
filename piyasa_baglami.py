@@ -258,6 +258,81 @@ class PiyasaBaglami:
             return usable_context(result,current)
 
 
+    def measurement(self):
+        from kullanici_kayitlari import RecordError
+        current=self.clock().astimezone(ISTANBUL)
+        if not regime_enabled():return {'enabled':False,'engine_version':MEASUREMENT_VERSION}
+        try:
+            raw=json.loads((self.location.public/'market_context.json').read_text(encoding='utf-8'))
+            return dict(self.context(),**measurement_view(raw,current),enabled=True)
+        except (OSError,ValueError,TypeError,KeyError):
+            raise RecordError('Piyasa durumu henüz alınamıyor.',503) from None
+
+    def refresh_measurement(self,universe=None,index=None,holiday=None):
+        if not regime_enabled():return {'enabled':False}
+        from performans_motoru import bist_holiday
+        from teknik_gostergeler import calculate
+        current=self.clock().astimezone(ISTANBUL);holiday=holiday or bist_holiday
+        target=self.location.public/'market_context.json'
+        with locked(target):
+            data=load(self.location.public/'bist_data.json',{})
+            if not isinstance(data,dict) or not isinstance(data.get('hisseler',[]),list):raise ValueError('Market source format')
+            universe_path=self.location.runtime/'market_context_universe.json'
+            if universe is None:
+                saved=load(universe_path,{})
+                at=stamp(saved.get('created_at'))
+                if saved.get('source')=='XUTUM' and at and at<=current and at.date()==current.date():universe=saved['symbols']
+                else:
+                    import bist_bot
+                    universe=bist_bot.bist_hisseleri_getir()
+                    if not universe:
+                        from gorev_hatalari import TaskIssue
+                        raise TaskIssue({'code':'EMPTY_UNIVERSE'})
+                    with locked(universe_path):atomic_json(universe_path,{'source':'XUTUM','created_at':current.isoformat(),'symbols':universe})
+            day=expected_session(current,holiday)
+            history=self.location.runtime/'market_context'/f'{day.isoformat()}.json'
+            if history.exists():
+                doc=json.loads(history.read_text(encoding='utf-8'))
+                measurement_view(doc,current,holiday)
+                if not doc.get('final') or stamp(doc.get('as_of')).date()!=day:raise ValueError('Market archive identity')
+                old=load(target,{})
+                if old!=doc:atomic_json(target,doc)
+                return measurement_view(doc,current,holiday)
+            # Reuse a compact index observation once per reference session, not a history copy.
+            index_issue=None
+            if index is None:
+                idx_path=self.location.runtime/'market_context_index.json';index=load(idx_path,{})
+                if not closed_observation(index,current,holiday):
+                    import bist_bot
+                    try:
+                        daily=bist_bot.bp.Index('XU100').history(period='6mo')
+                        index={'sembol':'XU100','teknik_gostergeler':calculate(daily,current,'TOMORROW')}
+                        if closed_observation(index,current,holiday):
+                            with locked(idx_path):atomic_json(idx_path,index)
+                        else:index_issue={'code':'PROVIDER_DATA'}
+                    except Exception as error:
+                        from gorev_hatalari import describe,log_source
+                        log_source(error,'PROVIDER');index_issue=describe(error,'PROVIDER');index={}
+            doc=build_measurement(data.get('hisseler',[]),universe,index,current,holiday)
+            # Knowledge time is after provider/calculation completion, not request start.
+            completed=max(current,self.clock().astimezone(ISTANBUL))
+            doc['created_at']=completed.isoformat()
+            if doc['final']:
+                history.parent.mkdir(parents=True,exist_ok=True,mode=0o700)
+                with locked(history):
+                    if history.exists():doc=json.loads(history.read_text(encoding='utf-8'))
+                    else:atomic_json(history,doc)
+            previous=load(target,{})
+            # No repeated write of identical observations while the market is closed.
+            def content(value):return {k:v for k,v in value.items() if k not in ('created_at','market_open')}
+            if content(previous)!=content(doc):atomic_json(target,doc)
+            elif previous:doc=previous
+            if index_issue:
+                from gorev_hatalari import TaskIssue
+                raise TaskIssue(index_issue,doc['valid_stock_count'],{'index_unavailable':True,'valid_stock_count':doc['valid_stock_count']})
+            return measurement_view(doc,completed,holiday)
+
+
 def intraday_quotes(veri_map,analyses,current):
     """Reuse stream OHLC also for filtered stocks, without adding technical indicators."""
     output={r['sembol']:dict(r) for r in analyses if r.get('sembol')}
@@ -272,3 +347,203 @@ def intraday_quotes(veri_map,analyses,current):
         row=output.setdefault(symbol,{'sembol':symbol})
         row.update(fiyat=price,acilisa_gore_degisim=(price/opening-1)*100,veri_tarihi=str(closed.index[-1]))
     return list(output.values())
+# Closed-daily observation layer of the existing central engine. Legacy effects
+# above retain their original vocabulary, weights and cache; these fields never
+# enter investment scores.
+MEASUREMENT_VERSION='MARKET_REGIME_V1'
+BREADTH_WEIGHTS={'advances':.30,'sma20':.20,'sma50':.20,'high_low':.15,'volume':.15}
+REGIME_WEIGHTS={'breadth':.50,'index_trend':.25,'index_momentum':.15,'volatility':.10}
+STATE_CUTS=(80,60,40,20)
+MIN_OBSERVATION_STOCKS=30
+MIN_OBSERVATION_COVERAGE=.60
+MIN_VOLUME_COVERAGE=.60
+VOLATILITY_CUTS=(.75,1.5,2.5)
+
+
+def regime_enabled():
+    return os.environ.get('MARKET_REGIME_ENABLED','true').strip().lower() in ('true','1','yes','on')
+
+
+def expected_session(current,holiday=None):
+    from performans_motoru import business_day,session_closed
+    day=current.date()
+    if not session_closed(day,current):day-=timedelta(days=1)
+    while not business_day(day,holiday):day-=timedelta(days=1)
+    return day
+
+
+def classification(score,labels):
+    if score is None:return None
+    return next((label for cut,label in zip(STATE_CUTS,labels) if score>=cut),labels[-1])
+
+
+def weighted_observation(values,weights):
+    available={k:v for k,v in values.items() if number(v) is not None}
+    denominator=sum(weights[k] for k in available)
+    if not denominator:return None,{}
+    contributions={k:{'value':v,'weight':weights[k]/denominator,'contribution':v*weights[k]/denominator} for k,v in available.items()}
+    return sum(v['contribution'] for v in contributions.values()),contributions
+
+
+def closed_observation(row,current,holiday=None):
+    """Reject open/future candles, mismatched provenance and invalid actual OHLC."""
+    from performans_motoru import business_day,session_closed
+    from saglayici_sembolleri import bist_symbol
+    try:
+        if not isinstance(row.get('sembol'),str) or not row['sembol'].strip():return None
+        stock=bist_symbol(row['sembol'])
+        doc=row.get('teknik_gostergeler') or {}
+        at=stamp(doc.get('data_time'));observed=stamp(doc.get('asof'))
+        raw=doc.get('closing') or {}
+        if doc.get('mode')!='TOMORROW' or not at or not observed or at>current or observed>current:return None
+        if not business_day(at.date(),holiday) or not session_closed(at.date(),current):return None
+        if at.time().replace(tzinfo=None)<time(18,10) or observed<at or observed<datetime.combine(at.date(),time(18,15),ISTANBUL):return None
+        if at.date()!=expected_session(current,holiday):return None
+        close,previous,opening,hi,lo=(number(raw.get(k)) for k in ('close','previous_close','open','high','low'))
+        if any(v is None or v<=0 for v in (close,previous,opening,hi,lo)) or not lo<=min(opening,close)<=max(opening,close)<=hi:return None
+        return dict(raw,symbol=stock,as_of=datetime.combine(at.date(),time(18,15),ISTANBUL).isoformat(),
+                    close=close,previous_close=previous,observed_at=observed.isoformat())
+    except (ValueError,TypeError,AttributeError):return None
+
+
+def index_observation(raw):
+    raw=raw or {};price=number(raw.get('close'));short=number(raw.get('sma20'));long=number(raw.get('sma50'))
+    trend='POSITIVE' if price and short and long and price>short>long else 'NEGATIVE' if price and short and long and price<short<long else 'NEUTRAL' if price and short and long else None
+    votes={}
+    for key in ('return_3d','sma20_slope','macd_histogram'):
+        value=number(raw.get(key))
+        if value is not None:votes[key]=1 if value>0 else -1 if value<0 else 0
+    strength=number(raw.get('rsi'))
+    if strength is not None:votes['rsi']=1 if strength>55 else -1 if strength<45 else 0
+    momentum=None
+    if len(votes)>=2:
+        score=mean(votes.values());momentum='POSITIVE' if score>=.5 else 'NEGATIVE' if score<=-.5 else 'NEUTRAL'
+    atr=number(raw.get('atr_pct'));baseline=number(raw.get('atr_pct_baseline'))
+    ratio=atr/baseline if atr is not None and baseline and baseline>0 and atr>=0 else None
+    volatility='LOW' if ratio is not None and ratio<VOLATILITY_CUTS[0] else 'NORMAL' if ratio is not None and ratio<=VOLATILITY_CUTS[1] else 'HIGH' if ratio is not None and ratio<=VOLATILITY_CUTS[2] else 'EXTREME' if ratio is not None else None
+    return {'index_trend':trend,'index_momentum':momentum,'index_volatility':volatility,
+            'index_atr_pct':atr,'index_volatility_ratio':ratio,'index_components':votes,'benchmark':'XU100'}
+
+
+def risk_class(volatility,breadth,declining_pct,momentum):
+    if volatility=='EXTREME' or (breadth is not None and breadth<20 and declining_pct is not None and declining_pct>=80):return 'EXTREME'
+    if volatility=='HIGH' or (breadth is not None and breadth<40) or (momentum=='NEGATIVE' and declining_pct is not None and declining_pct>=60):return 'HIGH'
+    if volatility=='LOW' and breadth is not None and breadth>=60 and momentum=='POSITIVE':return 'LOW'
+    return 'NORMAL' if any(v is not None for v in (volatility,breadth,declining_pct,momentum)) else None
+
+
+def build_measurement(rows,universe,index,current,holiday=None):
+    """XUTUM members only; no provider calls and no raw series in the output."""
+    from saglayici_sembolleri import bist_symbol
+    from performans_motoru import bist_holiday
+    holiday=holiday or bist_holiday
+    symbols=set()
+    for value in universe:
+        if not isinstance(value,str) or not value.strip():continue
+        try:symbols.add(bist_symbol(value))
+        except ValueError:continue
+    valid={};invalid=0;duplicates=set()
+    for row in rows:
+        observation=closed_observation(row,current,holiday)
+        if not observation or observation['symbol'] not in symbols:invalid+=1;continue
+        key=observation['symbol']
+        if key in valid and valid[key]!=observation:duplicates.add(key)
+        else:valid[key]=observation
+    for key in duplicates:valid.pop(key,None)
+    observations=list(valid.values());n=len(observations);coverage=n/len(symbols) if symbols else 0
+    advancing=sum(r['close']>r['previous_close'] for r in observations)
+    declining=sum(r['close']<r['previous_close'] for r in observations)
+    unchanged=n-advancing-declining
+    samples={};percent={};values={}
+    if n:values['advances']=100*(advancing+.5*unchanged)/n
+    for length in (20,50):
+        rows_with=[r for r in observations if number(r.get('sma'+str(length))) is not None and r['sma'+str(length)]>0]
+        samples['sma'+str(length)]=len(rows_with)
+        percent['above_sma'+str(length)+'_pct']=100*sum(r['close']>r['sma'+str(length)] for r in rows_with)/len(rows_with) if rows_with else None
+        if rows_with:values['sma'+str(length)]=percent['above_sma'+str(length)+'_pct']
+    highs=[r for r in observations if number(r.get('previous20_high')) is not None and number(r.get('previous20_low')) is not None and 0<r['previous20_low']<=r['previous20_high']]
+    new_high=sum(r['high']>r['previous20_high'] for r in highs) if highs else None
+    new_low=sum(r['low']<r['previous20_low'] for r in highs) if highs else None
+    samples['high_low']=len(highs)
+    if highs:values['high_low']=50+50*(new_high-new_low)/len(highs)
+    volumes=[r for r in observations if number(r.get('volume')) is not None and r['volume']>=0]
+    samples['volume']=len(volumes);volume_coverage=len(volumes)/n if n else 0
+    total_volume=sum(r['volume'] for r in volumes)
+    up_volume=sum(r['volume'] for r in volumes if r['close']>r['previous_close'])
+    down_volume=sum(r['volume'] for r in volumes if r['close']<r['previous_close'])
+    up_pct=100*up_volume/total_volume if total_volume else None;down_pct=100*down_volume/total_volume if total_volume else None
+    if total_volume and volume_coverage>=MIN_VOLUME_COVERAGE:values['volume']=50+50*(up_volume-down_volume)/total_volume
+    breadth,debug=weighted_observation(values,BREADTH_WEIGHTS)
+    enough=n>=MIN_OBSERVATION_STOCKS and coverage>=MIN_OBSERVATION_COVERAGE
+    index_valid=closed_observation(index,current,holiday) if index else None
+    idx=index_observation(index_valid)
+    regime_values={}
+    if breadth is not None:regime_values['breadth']=breadth
+    for field in ('index_trend','index_momentum'):
+        value=idx[field]
+        if value is not None:regime_values[field]={'POSITIVE':100,'NEUTRAL':50,'NEGATIVE':0}[value]
+    if idx['index_volatility'] is not None:regime_values['volatility']={'LOW':100,'NORMAL':75,'HIGH':25,'EXTREME':0}[idx['index_volatility']]
+    regime,regime_debug=weighted_observation(regime_values,REGIME_WEIGHTS)
+    warnings=[];reasons=[]
+    conflict=(idx['index_trend']=='POSITIVE' and breadth is not None and breadth<40) or (idx['index_trend']=='NEGATIVE' and breadth is not None and breadth>=60)
+    if conflict:warnings.append('Endeks pozitif ancak piyasa katılımı zayıf' if idx['index_trend']=='POSITIVE' else 'Endeks zayıf ancak piyasa genişliği toparlanıyor')
+    if not enough:warnings.append('Geçerli hisse coverage düşük')
+    if volume_coverage<MIN_VOLUME_COVERAGE:warnings.append('Hacim teyidi yetersiz')
+    if idx['index_volatility'] in ('HIGH','EXTREME'):warnings.append('Volatilite yüksek')
+    if not index_valid:warnings.append('Tamamlanmış endeks teknik verisi eksik')
+    if breadth is not None and breadth<40:warnings.append('Piyasa katılımı zayıf')
+    if n:reasons.append(f'Geçerli XUTUM hisselerinin %{100*advancing/n:.1f}\'i yükseliyor')
+    for length in (20,50):
+        value=percent['above_sma'+str(length)+'_pct']
+        if value is not None:reasons.append(f'Hisselerin %{value:.1f}\'i SMA{length} üzerinde')
+    if up_pct is not None:reasons.append(f'Yükselen hacim toplam hacmin %{up_pct:.1f}\'i')
+    if new_high is not None and new_high>new_low:reasons.append('Yeni yüksekler yeni düşüklerden fazla')
+    if idx['index_trend']=='POSITIVE':reasons.append('Endeks SMA20/SMA50 üzerinde')
+    component_coverage=sum(BREADTH_WEIGHTS[k]*(n if k=='advances' else samples.get(k,0))/max(n,1) for k in values)
+    index_coverage=sum(REGIME_WEIGHTS[k] for k in regime_values if k!='breadth')/(1-REGIME_WEIGHTS['breadth'])
+    confidence=100*coverage*component_coverage*(.5+.5*index_coverage)*( .75 if conflict else 1)
+    if not enough:confidence=min(confidence,35)
+    day=expected_session(current,holiday)
+    asof=datetime.combine(day,time(18,15),ISTANBUL).isoformat() if n else None
+    return dict(engine_version=MEASUREMENT_VERSION,as_of=asof,created_at=current.isoformat(),
+        market_open=market_open(current,holiday),data_status='GOOD' if enough and index_valid and len(values)==5 and component_coverage>=.8 else 'LIMITED' if n else 'INSUFFICIENT',
+        regime=classification(regime,('STRONG_BULL','BULL','NEUTRAL','BEAR','STRONG_BEAR')) if enough and len(values)>=2 and len(regime_values)>=2 and confidence>=50 else None,
+        regime_score=round(regime,2) if regime is not None else None,regime_confidence=round(confidence,2),
+        breadth_score=round(breadth,2) if breadth is not None else None,
+        breadth_state=classification(breadth,('VERY_STRONG','STRONG','NEUTRAL','WEAK','VERY_WEAK')) if enough and len(values)>=2 else None,
+        advancing_count=advancing,declining_count=declining,unchanged_count=unchanged,valid_stock_count=n,
+        universe_count=len(symbols),universe_source='XUTUM',coverage=coverage,
+        advance_decline_ratio=advancing/declining if declining else None,advance_decline_net=advancing-declining,
+        new_high_count=new_high,new_low_count=new_low,up_volume_pct=up_pct,down_volume_pct=down_pct,volume_coverage=volume_coverage,
+        **percent,**idx,sample_counts=samples,breadth_components=debug,regime_components=regime_debug,
+        risk_state=risk_class(idx['index_volatility'],breadth,100*declining/n if n else None,idx['index_momentum']) if enough else None,
+        reasons=reasons,warnings=warnings,excluded_count=invalid+len(duplicates),final=enough and len(values)>=2 and len(regime_values)>=2 and confidence>=50)
+
+
+def measurement_view(doc,current,holiday=None):
+    import copy
+    from performans_motoru import bist_holiday
+    holiday=holiday or bist_holiday
+    doc=copy.deepcopy(doc);at=stamp(doc.get('as_of'));created=stamp(doc.get('created_at'))
+    if doc.get('engine_version')!=MEASUREMENT_VERSION or not created or created>current or (at and at>current):raise ValueError('Invalid/future market cache')
+    if not isinstance(doc.get('warnings'),list) or not isinstance(doc.get('reasons'),list):raise ValueError('Market cache lists')
+    for field in ('valid_stock_count','advancing_count','declining_count','unchanged_count'):
+        if type(doc.get(field)) is not int or doc[field]<0:raise ValueError('Market cache counts')
+    for field in ('regime_score','regime_confidence','breadth_score'):
+        if doc.get(field) is not None and (number(doc[field]) is None or not 0<=doc[field]<=100):raise ValueError('Market cache score')
+    stale=not at or at.date()!=expected_session(current,holiday)
+    doc.update(market_open=market_open(current,holiday),stale=stale,data_age=(current-at).total_seconds()/60 if at else None)
+    if stale:
+        doc['regime_confidence']=0
+        doc['warnings'].append('Veri güncelliği sınırlı')
+    return doc
+
+
+def frozen_market_context(doc,prediction_time):
+    """Metadata only; refuse retrospectively constructed or future contexts."""
+    current=stamp(prediction_time);at=stamp((doc or {}).get('as_of'));created=stamp((doc or {}).get('created_at'))
+    if not current or not at or not created or at>current or created>current or doc.get('engine_version')!=MEASUREMENT_VERSION or not doc.get('final'):return {}
+    if at.date()!=expected_session(current):return {}
+    return {'market_regime':doc.get('regime'),'market_regime_score':doc.get('regime_score'),
+        'market_breadth_score':doc.get('breadth_score'),'market_risk_state':doc.get('risk_state'),
+        'market_context_as_of':doc['as_of'],'market_context_created_at':doc['created_at']}

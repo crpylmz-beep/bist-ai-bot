@@ -113,11 +113,15 @@ motor.run()
         child=subprocess.Popen([sys.executable,'-c',script],env=dict(os.environ,BIST_RUNTIME_DIR=str(directory)),stdout=subprocess.DEVNULL,stderr=subprocess.PIPE)
         self.addCleanup(lambda:child.poll() is None and child.kill())
         path=directory/'ana_motor_durum.json'
-        deadline=time.monotonic()+3
-        while time.monotonic()<deadline:
+        # Pandas/provider imports can exceed 3s under shared CI CPU contention.
+        # Wait for actual readiness; keep the existing strict 3s SIGTERM deadline.
+        deadline=time.monotonic()+15
+        while time.monotonic()<deadline and child.poll() is None:
             if path.exists() and json.loads(path.read_text()).get('tasks',{}):break
             time.sleep(.01)
-        self.assertTrue(path.exists());child.send_signal(signal.SIGTERM)
+        self.assertTrue(path.exists(), 'Worker readiness timed out or child exited')
+        self.assertTrue(json.loads(path.read_text()).get('tasks',{}))
+        child.send_signal(signal.SIGTERM)
         _,error=child.communicate(timeout=3)
         self.assertEqual(child.returncode,0,error.decode())
         self.assertEqual(json.loads(path.read_text())['motor_durumu'],'STOPPED')

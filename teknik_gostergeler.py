@@ -177,6 +177,23 @@ def calculate(data,asof,mode='INTRADAY'):
                  'return_3d':short,'ema9':finite(ema(close,9).iloc[-1]),'ema21':finite(ema(close,21).iloc[-1]),
                  'open':opening,'high':high,'low':low_price,'close':price,
                  'previous_close':finite(close.iloc[-2])}
+    # Additional closed-daily observations only: existing shadow/score groups unchanged.
+    if mode=='TOMORROW' and count>=2:
+        previous_highs=frame['High'].iloc[-21:-1];previous_lows=frame['Low'].iloc[-21:-1]
+        true_range=pd.concat([frame['High']-frame['Low'],(frame['High']-close.shift(1)).abs(),(frame['Low']-close.shift(1)).abs()],axis=1).max(axis=1)
+        atr_series=true_range.rolling(14,min_periods=14).mean()
+        atr_percent=atr_series/close*100
+        _,_,histogram=macd(close)
+        avg20=close.rolling(20,min_periods=20).mean()
+        closing.update(volume=finite(volume.iloc[-1]) if finite(volume.iloc[-1]) is not None and volume.iloc[-1]>=0 else None,
+            sma20=finite(avg20.iloc[-1]),sma50=finite(close.rolling(50,min_periods=50).mean().iloc[-1]),
+            sma20_slope=finite(avg20.iloc[-1]-avg20.iloc[-4]) if count>=23 else None,
+            previous20_high=finite(previous_highs.max()) if len(previous_highs)==20 and previous_highs.notna().all() else None,
+            previous20_low=finite(previous_lows.min()) if len(previous_lows)==20 and previous_lows.notna().all() else None,
+            atr14=finite(atr_series.iloc[-1]),atr_pct=finite(atr_percent.iloc[-1]),
+            atr_pct_baseline=finite(atr_percent.iloc[-61:-1].median()) if count>=40 else None,
+            rsi=finite(rsi(close).iloc[-1]) if count>=15 else None,
+            macd_histogram=finite(histogram.iloc[-1]) if count>=35 else None)
     bb_result['squeeze_volume_momentum_break']=combo
     groups={'obv':obv_result,'vwap':vwap_result,'bollinger':bb_result,'momentum':mom_result}
     available=[g['confidence'] for g in groups.values() if g['status']=='OK']

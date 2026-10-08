@@ -154,6 +154,8 @@ class MarketTests(unittest.TestCase):
         self.engine.refresh(rows=self.rows(),universe=self.map,index=self.index())
         server=create_server('127.0.0.1',0,data_paths=self.location)
         threading.Thread(target=server.serve_forever,daemon=True).start();self.addCleanup(server.server_close);self.addCleanup(server.shutdown)
+        from piyasa_baglami import build_measurement
+        atomic_json(self.location.public/'market_context.json',build_measurement([],[],{},self.current,lambda _:False))
         self.current=self.current.replace(hour=18,minute=16)
         with patch('piyasa_baglami.PiyasaBaglami',return_value=self.engine):
             with urllib.request.urlopen('http://127.0.0.1:'+str(server.server_port)+'/api/market-context') as response:

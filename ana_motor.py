@@ -29,6 +29,8 @@ ENV_NAMES = {'bootstrap':'BOOTSTRAP', 'kap':'KAP', 'macro':'MACRO', 'alarm':'ALA
              'full_scan':'FULL_SCAN', 'priority':'PRIORITY', 'yarin_top10':'YARIN_TOP10', 'performance':'PERFORMANCE', 'intraday_performance':'INTRADAY_PERFORMANCE', 'market_context':'MARKET_CONTEXT'}
 TECHNICAL = {'bootstrap', 'full_scan', 'priority', 'intraday_top10', 'yarin_top10'}
 from gunluk_al_sat import INTERVAL_SECONDS as INTRADAY_SIGNAL_INTERVAL
+DEFAULTS['market_regime']=300
+ENV_NAMES['market_regime']='MARKET_REGIME'
 DEFAULTS['intraday_signals']=INTRADAY_SIGNAL_INTERVAL
 ENV_NAMES['intraday_signals']='INTRADAY_SIGNALS'
 TECHNICAL.add('intraday_signals')
@@ -206,6 +208,9 @@ class AnaMotor:
                     continue
                 if name == 'bootstrap' and (self.directory/'public_bootstrap_complete.json').exists():
                     continue
+                if name=='market_regime':
+                    from piyasa_baglami import regime_enabled
+                    if not regime_enabled():continue
                 if name=='intraday_signals':
                     from gunluk_al_sat import enabled
                     if not enabled():continue
