@@ -45,36 +45,31 @@ Geçici fixture üzerinde sınıflandırma/hesap, içerik okuma yasağı, byte+m
 
 `STORAGE_V6_REPOSITORY_INVENTORY.json` eki yalnız yerel repo `webapp/data` metadata ölçümüdür; production veya tam `.local` envanteri değildir. Kaynak boyut/mtime değerleri değişmedi. Gerçek production kapasitesi ölçülmüş değildir.
 
-## Korunan production yönetici çağrısı
+## İnternete kapalı, tek seferlik Railway log envanteri
 
-Mevcut web sunucusunda `POST /api/admin/storage-inventory` uç noktası vardır.
-`BIST_STORAGE_ADMIN_TOKEN` en az 32 ASCII karakterlik ayrı, rastgele bir secret olarak
-Railway Variables üzerinden operatör tarafından tanımlanmalıdır. Tanımsız/kısa anahtar
-mekanizmayı kapalı tutar (503). Anahtarı repoya, URL'ye veya loglara yazmayın.
-Yalnız HTTPS üzerinden `Authorization: Bearer <secret>` başlığı gönderilir; istek
-parametresiz ve gövdesiz olmalıdır. Tarayıcı oturum çerezi yönetici yetkisi vermez.
-Yanıta CORS izni verilmez; Origin taşıyan tarayıcı çağrıları reddedilir.
+HTTP yönetici endpoint’i kaldırılmıştır; eski adres her API metodunda 404 verir.
+Yönetici anahtarı gerekmez. Mevcut Railway yönetici erişimiyle servisin çalışan
+container'ında (Railway SSH/exec oturumu, deployment build shell değil) yalnız bir kez:
 
-Operatör, anahtarı güvenli ortamına aldıktan sonra aşağıdaki Python istemcisiyle
-çağırabilir; komut satırına secret koymaz, yalnız toplu raporu standart çıktıya basar:
-
-```python
-import os, urllib.request
-request = urllib.request.Request(
-    os.environ['BIST_PUBLIC_HTTPS_URL'].rstrip('/') + '/api/admin/storage-inventory',
-    method='POST', headers={'Authorization': 'Bearer ' + os.environ['BIST_STORAGE_ADMIN_TOKEN']})
-with urllib.request.urlopen(request, timeout=30) as response:
-    print(response.read().decode('utf-8'))
+```sh
+python -B -m v6_storage inventory-log --railway-logs
 ```
 
-Sunucunun yapılandırılmış `BIST_DATA_DIR` kökü kullanılır (production için `/data`);
-istemde yol seçilemez. Envanter veri klasörü oluşturmaz, recovery/cleanup/migration
-çalıştırmaz ve rapor dosyası yazmaz. Tek tarama eşzamanlı çalışır; en az 60 saniye
-ara gerekir. En fazla 200.000 dizin girdisi, 64 dizin derinliği ve 20 saniyelik
-kooperatif tarama bütçesi uygulanır (tek bir filesystem çağrısı bloklanırsa bu süre
-katı bir wall-clock timeout değildir). Symlinkler izlenmez. Sonuç yalnız kategori
-sayı/boyutları, disk toplamları ve varsayımsal PostgreSQL/R2 aralıklarını içerir;
-dosya adları, yolları, içerikleri veya kullanıcı kimlikleri dönmez.
-`complete=false` durumunda 206 döner; kısmi toplamlar tüm volume ölçümü değildir.
-Canlı dosyalar eşzamanlı değişebilir, sonuç atomik snapshot değildir. Bu geliştirme
-sırasında production çağrısı yapılmamış ve gerçek `/data` kullanımı ölçülmemiştir.
+Komut `BIST_DATA_DIR` değerini kullanır (production `/data`); varsayılan yerel yol
+veya kullanıcıdan gelen dosya yolu yoktur. Bir turdan sonra çıkar, scheduler,
+başlangıç hook'u, otomatik retry, kalıcı marker veya rapor dosyası oluşturmaz.
+Her manuel çağrı yeni bir turdur; restart/deploy çağrıyı tekrarlamaz.
+`--railway-logs` çıktıyı mevcut `/proc/1/fd/1` container stdout pipe'ına yazar:
+`[V6_INVENTORY]` satırı Railway servis loglarında aranabilir. stdout pipe değilse
+veya yazılamıyorsa exit 2 verir; diske fallback yoktur. Çıkış kodunu kontrol edin.
+Yerel testte flagsiz çağrı yalnız çağıran terminale çıktı verir.
+
+Kategori bazlı adet/byte toplamları ve PG/R2 varsayımsal aralıkları loglanır;
+dosya adları, yolları, tokenlar, içerik veya kullanıcı kimlikleri loglanmaz.
+Raporlar özel Railway proje loglarında kalmalıdır. PG/R2 bağlantısı kurulmaz.
+Symlinkler izlenmez. Tarama 200.000 girdi, 64 dizin derinliği ve kooperatif
+20 saniyelik bütçeyle sınırlıdır; filesystem çağrısı bloklanırsa katı timeout yoktur.
+`complete=false`/exit 2, toplamların kısmi olduğunu gösterir. Metadata sınıflandırması
+kesin kayıt sayısı değildir; canlı yazımlar nedeniyle atomik snapshot değildir.
+Hiçbir cleanup, migration, recovery veya kaynak değişikliği yapılmaz. Bu geliştirmede
+production üzerinde çağrı yapılmamış, gerçek volume kapasitesi ölçülmemiştir.

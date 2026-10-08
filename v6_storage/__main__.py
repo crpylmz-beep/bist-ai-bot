@@ -17,10 +17,15 @@ def main(argv=None):
     restore=sub.add_parser('restore');restore.add_argument('manifest');restore.add_argument('target');restore.add_argument('--apply',action='store_true')
     export=sub.add_parser('export');export.add_argument('source');export.add_argument('target')
     sub.add_parser('usage')
+    log_inventory=sub.add_parser('inventory-log')
+    log_inventory.add_argument('--railway-logs',action='store_true')
     inventory=sub.add_parser('inventory');inventory.add_argument('--root',required=True)
     inventory.add_argument('--pg-factor-low',type=float,default=1.5);inventory.add_argument('--pg-factor-high',type=float,default=3.0)
     inventory.add_argument('--r2-ratio-low',type=float,default=.25);inventory.add_argument('--r2-ratio-high',type=float,default=.75)
     args=parser.parse_args(argv)
+    if args.command=='inventory-log':
+        from .inventory_log import run_once
+        return run_once(railway_logs=args.railway_logs)
     if args.command=='inventory':
         from .readonly_inventory import report
         try:

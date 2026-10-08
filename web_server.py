@@ -107,6 +107,9 @@ class BistHandler(SimpleHTTPRequestHandler):
         return value
 
     def api(self):
+        if urlsplit(self.path).path == '/api/admin/storage-inventory':
+            self.respond({'error': 'İşlem bulunamadı.'}, 404)
+            return
         try:
             # Same-origin JSON requests only; no CORS or cross-site form writes.
             if self.command != 'GET':
@@ -215,12 +218,7 @@ class BistHandler(SimpleHTTPRequestHandler):
         self.api()
 
     def do_POST(self):
-        if urlsplit(self.path).path == '/api/admin/storage-inventory':
-            from v6_storage.admin_inventory import handle
-            value, status = handle(self.headers, urlsplit(self.path), self.data_paths)
-            self.respond(value, status)
-        else:
-            self.api()
+        self.api()
 
     def do_PATCH(self):
         self.api()
