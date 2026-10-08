@@ -86,9 +86,10 @@ def strict_object(pairs):
 
 class HistoryStream:
     """Bounded record-at-a-time JSON parser; incomplete/trailing files are rejected."""
-    def __init__(self,fd,deadline,record_key='kayitlar'):
+    def __init__(self,fd,deadline,record_key='kayitlar',resume=None):
         self.record_key=record_key
-        os.lseek(fd,0,0);self.stream=os.fdopen(os.dup(fd),'r',encoding='utf-8',newline='');self.buffer='';self.ended=False;self.deadline=deadline;self.offset=0;self.last_span=None
+        self.resume=resume;offset=resume['offset'] if resume else 0
+        os.lseek(fd,offset,0);self.stream=os.fdopen(os.dup(fd),'r',encoding='utf-8',newline='');self.buffer='';self.ended=False;self.deadline=deadline;self.offset=offset;self.last_span=None;self.checkpoint=resume
     def fill(self):
         check_deadline(self.deadline)
         chunk=self.stream.read(65536);self.buffer+=chunk;self.ended=not chunk
@@ -115,30 +116,44 @@ class HistoryStream:
                 if self.ended or len(self.buffer)>8*1024*1024:raise ValueError('Incomplete/oversized history entry')
                 self.fill()
     def entries(self):
-        self.token('{');seen=set();self.white()
-        while not self.buffer.startswith('}'):
-            key=self.value()
-            if not isinstance(key,str) or key in seen:raise ValueError('Duplicate root key')
-            seen.add(key)
-            if len(seen)>64:raise ValueError('Too many root fields')
-            self.token(':')
-            if key==self.record_key:
-                self.token('[');self.white()
-                if not self.buffer.startswith(']'):
-                    while True:
-                        row=self.value()
-                        if not isinstance(row,dict):raise ValueError('Invalid record')
-                        yield None,row
-                        self.white()
-                        if self.buffer.startswith(']'):break
-                        self.token(',')
-                self.token(']')
-            else:yield key,self.value()
-            self.white()
-            if self.buffer.startswith('}'):break
-            self.token(',')
+        seen=set(self.resume['seen']) if self.resume else set()
+        phase=self.resume['phase'] if self.resume else 'ROOT_OPEN'
+        while True:
+            if phase=='ROOT_OPEN':self.token('{');phase='ROOT_KEY'
+            elif phase=='ROOT_KEY':
+                self.white()
+                if self.buffer.startswith('}'):break
+                key=self.value()
+                if not isinstance(key,str) or len(key)>256 or canonical(key) in seen:raise ValueError('Duplicate/invalid root key')
+                seen.add(canonical(key))
+                if len(seen)>64:raise ValueError('Too many root fields')
+                self.token(':')
+                if key==self.record_key:self.token('[');phase='ARRAY_FIRST'
+                else:
+                    value=self.value();phase='ROOT_SEPARATOR'
+                    self.checkpoint={'offset':self.offset,'seen':sorted(seen),'phase':phase}
+                    yield key,value
+            elif phase in ('ARRAY_FIRST','ARRAY_RECORD'):
+                self.white()
+                if phase=='ARRAY_FIRST' and self.buffer.startswith(']'):
+                    self.token(']');phase='ROOT_SEPARATOR';continue
+                row=self.value()
+                if not isinstance(row,dict):raise ValueError('Invalid record')
+                phase='ARRAY_SEPARATOR'
+                self.checkpoint={'offset':self.offset,'seen':sorted(seen),'phase':phase}
+                yield None,row
+            elif phase=='ARRAY_SEPARATOR':
+                self.white()
+                if self.buffer.startswith(']'):self.token(']');phase='ROOT_SEPARATOR'
+                else:self.token(',');phase='ARRAY_RECORD'
+            elif phase=='ROOT_SEPARATOR':
+                self.white()
+                if self.buffer.startswith('}'):break
+                self.token(',');phase='ROOT_KEY'
+            else:raise ValueError('Invalid parser checkpoint phase')
         self.token('}');self.white()
-        if self.buffer or not self.ended or self.record_key not in seen:raise ValueError('Trailing/incomplete history')
+        if self.buffer or not self.ended or canonical(self.record_key) not in seen:raise ValueError('Trailing/incomplete history')
+        self.checkpoint={'offset':self.offset,'seen':sorted(seen),'phase':'DONE'}
     def close(self):self.stream.close()
 
 
@@ -262,6 +277,6 @@ class HistoryIndex:
         self.temp.cleanup()
 
 
-def cleanup_atomic_temps(location,clock=time.time,budget_seconds=180,require_worker_lock=True):
+def cleanup_atomic_temps(location,clock=time.time,budget_seconds=180,require_worker_lock=True,resumable=False):
     from disk_forensik import inspect_atomic_temps
-    return inspect_atomic_temps(location,cleanup=True,clock=clock,budget_seconds=budget_seconds,require_worker_lock=require_worker_lock)
+    return inspect_atomic_temps(location,cleanup=True,clock=clock,budget_seconds=budget_seconds,require_worker_lock=require_worker_lock,resumable=resumable)

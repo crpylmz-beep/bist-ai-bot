@@ -194,7 +194,7 @@ class AnaMotor:
                     task.next_due = mono + delay
                     detail = {'task':name, 'error':type(error).__name__, 'at':current.isoformat(timespec='seconds'),'last_error':issue}
                     self.state['son_hata'] = detail
-                    status='DEGRADED' if progressed or site_isolated or (systemic and error.completed>0) else 'RETRYING' if issue['category'] in ('REMOTE','SOURCE_DATA') else 'ERROR'
+                    status='DEGRADED' if progressed or site_isolated or (systemic and error.completed>0) else 'RETRYING' if issue['category'] in ('REMOTE','SOURCE_DATA') or issue['code'] in ('STORAGE_PENDING','STORAGE_SHUTDOWN') else 'ERROR'
                     self.state['tasks'][name] = {'status':status, 'failures':task.failures, 'retry_in_seconds':delay, 'completed':error.completed if isinstance(error,TaskIssue) else 0, **detail,**({'diagnostics':error.details} if isinstance(error,TaskIssue) and error.details else {})}
                     logging.warning('[%s] %s %s code=%s category=%s retry=%ss',current.strftime('%H:%M:%S'),name.upper(),status,issue['code'],issue['category'],delay)
                     if not isinstance(error,TaskIssue):log_source(error,'TASK')
@@ -248,9 +248,13 @@ class AnaMotor:
         self.persist()
 
     def request_stop(self, *_):
+        from storage_izleme import shutdown_writes
+        shutdown_writes(self.stop)
         self.stop.set()
 
     def shutdown(self):
+        from storage_izleme import shutdown_writes
+        shutdown_writes(self.stop)
         self.stop.set()
         self.state['motor_durumu']='STOPPING';self.persist()
         self.executor.shutdown(wait=True, cancel_futures=True)
@@ -283,7 +287,7 @@ def main():
     with worker_lock(runtime_dir()):
         from disk_koruma import reclaim_once
         from atomik_temp_temizligi import cleanup_atomic_temps
-        cleanup_atomic_temps(paths())
+        cleanup_atomic_temps(paths(),resumable=True)
         reclaim_once(paths())
         from ana_motor_gorevleri import WorkerTasks
         from cloud_bootstrap import bootstrap_public
@@ -291,6 +295,8 @@ def main():
         adapter=WorkerTasks()
         motor=AnaMotor(adapter.callbacks())
         adapter.stop=motor.stop
+        from storage_izleme import bind_shutdown
+        bind_shutdown(motor.stop)
         logging.info('[WORKER] başladı')
         signal.signal(signal.SIGTERM,motor.request_stop)
         signal.signal(signal.SIGINT,motor.request_stop)

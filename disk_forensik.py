@@ -107,9 +107,28 @@ def semantic_small(temp_fd,final_fd,dataset):
     return 'UNIQUE_RECOVERY_CANDIDATE','VALUE_OR_RECORD_NOT_IN_FINAL'
 
 
-def classify_locked(temp_fd,final_fd,dataset,indexes,hashes,deadline,identified=False,details=None):
+def discover_legacy_target(fd):
+    """Bounded schema routing hint, never deletion proof or a payload log."""
+    try:
+        head=os.pread(fd,65536,0).decode('utf-8')
+        match=re.search(r'"(kayitlar|tahminler)"\s*:\s*\[\s*(\{)',head)
+        if match:
+            row,_=json.JSONDecoder().raw_decode(head[match.start(2):])
+            if match[1]=='tahminler' and isinstance(row.get('id'),str):return 'tahmin_gecmisi.json'
+            if isinstance(row.get('kayit_id'),str):return 'ai_ogrenme_gecmisi.json'
+            if {'id','sembol','sinyal_zamani','giris_fiyati','sonuclar'}<=row.keys():return 'gun_ici_sonuclar.json'
+    except (ValueError,UnicodeError,AttributeError):pass
+    return None
+
+
+def classify_locked(temp_fd,final_fd,dataset,indexes,hashes,deadline,identified=False,details=None,resume_session=None):
     """Both descriptors are read-only. Return class/reason without copying payloads."""
     if details is not None:details.update(comparison_method='BYTE_PROOF',schema='UNVERIFIED',unique_record_count=None,changed_record_count=None,missing_record_count=None,final_extra_record_count=None)
+    if resume_session is not None:
+        answer=resume_session.prove(temp_fd,final_fd,dataset,details['masked_file'],min(deadline,time.monotonic()+45))
+        if answer is not None:
+            classification,reason,progress=answer;details.update(progress)
+            return classification,reason
     ts,fs=proof.fingerprint(temp_fd),proof.fingerprint(final_fd)
     if ts[2]==fs[2]:
         tk=('temp',ts);fk=('final',fs)
@@ -153,11 +172,16 @@ def write_manifest(location,entries):
         logging.warning('[DISK_FORENSIC] manifest_write_failed errno=%s',error.errno);return False
 
 
-def inspect_atomic_temps(location,*,cleanup=False,clock=time.time,budget_seconds=180,require_worker_lock=True,skip_identifiers=None,release_locks_during_proof=False):
+def inspect_atomic_temps(location,*,cleanup=False,clock=time.time,budget_seconds=180,require_worker_lock=True,skip_identifiers=None,release_locks_during_proof=False,resumable=False):
     result=dict(scanned=0,eligible=0,removed=0,freed_bytes=0,skipped_recent=0,skipped_active=0,
                 skipped_unverified=0,skipped_unique=0,skipped_unknown=0,errors=0)
     class_bytes={key:0 for key in CLASSES};counts={key:0 for key in CLASSES};reasons={};eligible_bytes=0;entries=[];findings=[]
-    indexes={};hashes={};root_fd=folder_fd=None
+    indexes={};hashes={};root_fd=folder_fd=None;resume_session=None
+    if resumable and cleanup and location.root and worker_scope_matches(location):
+        from disk_resumable import ResumableProof
+        try:resume_session=ResumableProof(location)
+        except (OSError,ValueError) as error:
+            result['errors']+=1;logging.warning('[DISK_CHECKPOINT] init_failed type=%s errno=%s resumable=false',type(error).__name__,getattr(error,'errno',None))
     if not location.root:return result
     if cleanup and worker_scope_matches(location):
         from disk_koruma import report
@@ -170,13 +194,32 @@ def inspect_atomic_temps(location,*,cleanup=False,clock=time.time,budget_seconds
         finals=sorted(n for n in names if n in SAFE_FINALS)
         candidates=[]
         for name in names:
-            if not name.startswith('.user-'):continue
+            if not name.startswith('.user-') or name.endswith('.meta'):continue
             try:size=os.stat(name,dir_fd=folder_fd,follow_symlinks=False).st_size
             except OSError:size=0
             candidates.append((size,name))
-        for size,name in sorted(candidates,key=lambda v:(-v[0],v[1])):
+        ordered=sorted(candidates,key=lambda v:(-v[0],v[1]))
+        if resume_session is not None:
+            turn=resume_session.data.get('round',0)
+            if type(turn) is not int or turn<0:turn=0
+            resume_session.data['round']=(turn+1)%4;resume_session.dirty=True
+            if turn%4==1:
+                def continuation(item):
+                    masked=hashlib.sha256(item[1].encode()).hexdigest()[:16]
+                    state=resume_session.data['files'].get(masked,{})
+                    return (not (state and not state.get('completed',False)),state.get('touched',0),-item[0],item[1])
+                ordered.sort(key=continuation)
+            elif turn%4==2:
+                def age_order(item):
+                    try:age=os.stat(item[1],dir_fd=folder_fd,follow_symlinks=False).st_mtime
+                    except OSError:age=float('inf')
+                    return (age,-item[0],item[1])
+                ordered.sort(key=age_order)
+            elif turn%4==3:ordered.sort(key=lambda v:(v[0],v[1]))
+        for size,name in ordered:
             masked=hashlib.sha256(name.encode()).hexdigest()[:16]
-            if skip_identifiers and masked in skip_identifiers:continue
+            continuing=resume_session is not None and masked in resume_session.data['files'] and not resume_session.data['files'][masked].get('completed',False)
+            if skip_identifiers and masked in skip_identifiers and not continuing:continue
             details=dict(masked_file=masked,age_seconds=None,probable_target_final=None,schema='UNVERIFIED',comparison_method='NONE',unique_record_count=None,changed_record_count=None,missing_record_count=None,final_extra_record_count=None)
             result['scanned']+=1;temp_fd=None;classification='UNKNOWN';reason='UNRECOGNIZED_TEMP';matched=None
             try:
@@ -195,9 +238,14 @@ def inspect_atomic_temps(location,*,cleanup=False,clock=time.time,budget_seconds
                         elif opened is None:reason='PROCESS_AUDIT_UNCERTAIN'
                         elif cleanup and require_worker_lock and not worker_scope_matches(location):reason='WORKER_LOCK_REQUIRED'
                         else:
+                            details['lifecycle']='ORPHANED'
                             # v2 destination tokens are routing hints, not proof.
                             token=re.match(r'^\.user-v2-([0-9a-f]{24})-',name)
                             routed=[f for f in finals if not token or hashlib.sha256(f.encode()).hexdigest()[:24]==token[1]]
+                            hint=None if token else discover_legacy_target(temp_fd)
+                            if hint:
+                                details['probable_target_final']=hint
+                                routed=[hint] if hint in finals else []
                             reason='FINAL_MISSING_OR_DATASET_UNKNOWN'
                             if token:
                                 known=[f for f in SAFE_FINALS if hashlib.sha256(f.encode()).hexdigest()[:24]==token[1]]
@@ -223,7 +271,7 @@ def inspect_atomic_temps(location,*,cleanup=False,clock=time.time,budget_seconds
                                         for fd in (atomic,business):
                                             if fd is not None:os.close(fd)
                                         atomic=business=None
-                                    candidate=classify_locked(temp_fd,final_fd,final,indexes,hashes,deadline,identified=bool(token),details=details)
+                                    candidate=classify_locked(temp_fd,final_fd,final,indexes,hashes,deadline,identified=bool(token),details=details,resume_session=resume_session)
                                     if release_locks_during_proof and cleanup and candidate[0] in PROVEN:
                                         if cleanup and ('temp',stamp) not in hashes:
                                             hashes[('temp',stamp)]=proof.digest_fd(temp_fd,deadline)
@@ -252,6 +300,8 @@ def inspect_atomic_temps(location,*,cleanup=False,clock=time.time,budget_seconds
                                                     break
                                                 result['removed']+=1;result['freed_bytes']+=stamp[2]
                                                 os.close(temp_fd);temp_fd=None
+                                                from storage_izleme import cleanup_proven_sidecar
+                                                cleanup_proven_sidecar(folder_fd,name,stamp,matched)
                                                 entries.append({'timestamp':datetime.now(ZoneInfo('Europe/Istanbul')).isoformat(),'masked_file':masked,'classification':classification,'size':stamp[2],'hash_prefix':digest.hex()[:16],'reason':reason,'dataset':matched,'free_before':free_before,'free_after':shutil.disk_usage(location.root).free})  # release unlinked blocks before measuring space
                                                 logging.info('[DISK_FORENSIC] removed_class=%s size=%d free_bytes=%d',classification,stamp[2],shutil.disk_usage(location.root).free)
                                         break
@@ -292,6 +342,10 @@ def inspect_atomic_temps(location,*,cleanup=False,clock=time.time,budget_seconds
     except OSError as error:
         result['errors']+=1;logging.warning('[DISK_FORENSIC] inspection_error errno=%s',error.errno)
     finally:
+        if resume_session is not None:
+            try:resume_session.close()
+            except (OSError,ValueError) as error:
+                result['errors']+=1;logging.warning('[DISK_CHECKPOINT] save_failed type=%s errno=%s',type(error).__name__,getattr(error,'errno',None))
         for index in indexes.values():index.close()
         for fd in (folder_fd,root_fd):
             if fd is not None:os.close(fd)

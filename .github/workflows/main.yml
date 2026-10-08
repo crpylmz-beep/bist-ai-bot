@@ -6,7 +6,7 @@ on:
     - cron: "*/30 6-18 * * 1-5"
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   update:
@@ -28,10 +28,11 @@ jobs:
         run: |
           python -c "import bist_bot; s,t=bist_bot.bist_tara(); bist_bot.web_verisi_kaydet(s); print('WEB VERISI GUNCELLENDI')"
 
-      - name: Veriyi GitHub'a kaydet
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add webapp/data/bist_data.json
-          git diff --cached --quiet || git commit -m "BIST verisini otomatik güncelle"
-          git push
+      # Runtime data must never create a main commit/application redeployment.
+      - name: Veriyi ayrı çalışma çıktısı olarak sakla
+        uses: actions/upload-artifact@v4
+        with:
+          name: bist-runtime-data
+          path: webapp/data/bist_data.json
+          retention-days: 3
+          if-no-files-found: error

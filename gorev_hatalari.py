@@ -14,6 +14,10 @@ from borsapy.exceptions import (APIError, AuthenticationError, RateLimitError,
     DataNotAvailableError, TickerNotFoundError, InvalidPeriodError, InvalidIntervalError)
 
 ERRORS={
+ 'STORAGE_PENDING':('STORAGE','Değişiklikler güvenli WAL kaydında; JSON commit bekliyor.',True),
+ 'STORAGE_SHUTDOWN':('STORAGE','Kapanış sırasında büyük yazım güvenle iptal edildi.',True),
+ 'WAL_CONFLICT':('STORAGE','Kalıcı journal ile mevcut kayıt çakışıyor; iki kayıt korunuyor.',False),
+ 'WAL_CORRUPT':('STORAGE','Kalıcı journal doğrulanamadı; mevcut veriler korunuyor.',False),
  'DISK_FULL':('STORAGE','Kalıcı diskte boş alan yetersiz.',True),
  'STORAGE_PERMISSION':('STORAGE','Kalıcı veri yazma/okuma izni yok.',False),
  'STORAGE_IO':('STORAGE','Kalıcı veri dosyası okunamadı veya yazılamadı.',True),
@@ -73,7 +77,9 @@ def describe(error,stage=None):
     if isinstance(error,TaskIssue):return public_issue(error.issue)
     status=getattr(error,'status',None) or getattr(error,'status_code',None) or getattr(getattr(error,'response',None),'status_code',None)
     code='TASK_ERROR'
-    if stage=='COMPANY_SITE' and isinstance(error,(requests.exceptions.InvalidURL,requests.exceptions.TooManyRedirects)):code='SOURCE_URL_INVALID'
+    if getattr(error,'storage_code',None) in ('STORAGE_PENDING','WAL_CONFLICT','WAL_CORRUPT'):code=error.storage_code
+    elif isinstance(error,OSError) and error.errno==errno.ECANCELED:code='STORAGE_SHUTDOWN'
+    elif stage=='COMPANY_SITE' and isinstance(error,(requests.exceptions.InvalidURL,requests.exceptions.TooManyRedirects)):code='SOURCE_URL_INVALID'
     elif isinstance(error,SiteUrlError):code='SOURCE_URL_INVALID'
     elif isinstance(error,ResponseLimitError):code='SOURCE_RESPONSE_TOO_LARGE'
     elif isinstance(error,OSError) and error.errno in (errno.ENOSPC,errno.EDQUOT):code='DISK_FULL'

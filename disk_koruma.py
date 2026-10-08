@@ -22,7 +22,7 @@ def disk_health(location):
     count=size=0
     for path in location.runtime.glob('.user-*'):
         try:
-            if path.is_symlink() or not path.is_file():continue
+            if path.is_symlink() or not path.is_file() or path.name.endswith('.meta'):continue
             count+=1;size+=path.stat().st_size
         except OSError:continue
     result=dict(capacity=usage.total,used=usage.used,free=usage.free,percent_used=round(percent,2),status=status,temp_count=count,temp_bytes=size)
@@ -47,7 +47,7 @@ def report(location):
                 label=next((label for label,folder in folders if path.is_relative_to(folder)),'other')
                 groups[label]['files']+=1
                 if inode not in seen:groups[label]['bytes']+=stat.st_size;seen.add(inode)
-                if label=='runtime' and name.startswith('.user-'):
+                if label=='runtime' and name.startswith('.user-') and not name.endswith('.meta'):
                     age=max(0,time.time()-stat.st_mtime);temp_summary['count']+=1;temp_summary['total_bytes']+=stat.st_size
                     temp_summary['oldest_age']=max(temp_summary['oldest_age'] or 0,age)
                     temp_summary['newest_age']=min(temp_summary['newest_age'] if temp_summary['newest_age'] is not None else age,age)
@@ -80,6 +80,10 @@ def save_price_cache(path,cache):
     """Optional replay cache must not consume critical-write headroom."""
     from kullanici_kayitlari import atomic_json
     try:
+        from storage_izleme import critical_storage
+        if critical_storage(path.parent):
+            logging.warning('[CRITICAL_STORAGE_MODE] optional_cache_write=false')
+            return False
         needed=len(json.dumps(cache,ensure_ascii=False,indent=2).encode())+RESERVE
         if shutil.disk_usage(path.parent).free<needed:
             logging.warning('[DISK] Replay cache yazımı ertelendi; kalıcı işlemler için boş alan korunuyor')
