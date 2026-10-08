@@ -86,8 +86,8 @@ def strict_object(pairs):
 
 class HistoryStream:
     """Bounded record-at-a-time JSON parser; incomplete/trailing files are rejected."""
-    def __init__(self,fd,deadline,record_key='kayitlar',resume=None,mapping=False):
-        self.record_key=record_key;self.mapping=mapping
+    def __init__(self,fd,deadline,record_key='kayitlar',resume=None,mapping=False,mapping_identity='kayit_id'):
+        self.record_key=record_key;self.mapping=mapping;self.mapping_identity=mapping_identity;self.last_mapping_key=None
         self.resume=resume;offset=resume['offset'] if resume else 0
         os.lseek(fd,offset,0);self.stream=os.fdopen(os.dup(fd),'r',encoding='utf-8',newline='');self.buffer='';self.ended=False;self.deadline=deadline;self.offset=offset;self.last_span=None;self.checkpoint=resume
     def fill(self):
@@ -150,7 +150,8 @@ class HistoryStream:
                 identity=self.value()
                 if not isinstance(identity,str) or not identity or len(identity)>512:raise ValueError('Invalid mapping identity')
                 self.token(':');row=self.value()
-                if not isinstance(row,dict) or row.get('kayit_id')!=identity:raise ValueError('Mapping identity differs from record')
+                if not isinstance(row,dict) or self.mapping_identity is not None and row.get(self.mapping_identity)!=identity:raise ValueError('Mapping identity differs from record')
+                self.last_mapping_key=identity
                 phase='MAP_SEPARATOR';self.checkpoint={'offset':self.offset,'seen':sorted(seen),'phase':phase}
                 yield None,row
             elif phase=='MAP_SEPARATOR':

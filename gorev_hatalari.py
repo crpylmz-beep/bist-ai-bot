@@ -14,6 +14,10 @@ from borsapy.exceptions import (APIError, AuthenticationError, RateLimitError,
     DataNotAvailableError, TickerNotFoundError, InvalidPeriodError, InvalidIntervalError)
 
 ERRORS={
+ 'POSTGRES_UNAVAILABLE':('STORAGE','PostgreSQL bağlantısı/işlemi tamamlanamadı; kalıcı kaynak korunuyor.',True),
+ 'STORAGE_MIGRATION_REQUIRED':('CONFIG','Depolama migration veya doğrulanmış geçiş onayı gerekiyor.',False),
+ 'STORAGE_IMMUTABLE_CONFLICT':('STORAGE','Değiştirilemez kayıt çakışması; kaynaklar korunuyor.',False),
+ 'STORAGE_SHADOW_MISMATCH':('STORAGE','Legacy/PostgreSQL karşılaştırması farklı; geçiş yapılmamalı.',False),
  'STORAGE_PENDING':('STORAGE','Değişiklikler güvenli WAL kaydında; JSON commit bekliyor.',True),
  'STORAGE_SHUTDOWN':('STORAGE','Kapanış sırasında büyük yazım güvenle iptal edildi.',True),
  'WAL_CONFLICT':('STORAGE','Kalıcı journal ile mevcut kayıt çakışıyor; iki kayıt korunuyor.',False),
@@ -77,7 +81,12 @@ def describe(error,stage=None):
     if isinstance(error,TaskIssue):return public_issue(error.issue)
     status=getattr(error,'status',None) or getattr(error,'status_code',None) or getattr(getattr(error,'response',None),'status_code',None)
     code='TASK_ERROR'
-    if getattr(error,'storage_code',None) in ('STORAGE_PENDING','WAL_CONFLICT','WAL_CORRUPT'):code=error.storage_code
+    storage_code=getattr(error,'storage_code',None)
+    if storage_code in ('POSTGRES_OPERATION_FAILED','POSTGRES_UNAVAILABLE_NO_VERIFIED_BASELINE'):code='POSTGRES_UNAVAILABLE'
+    elif storage_code=='SHADOW_MISMATCH':code='STORAGE_SHADOW_MISMATCH'
+    elif storage_code in ('IMMUTABLE_RECORD_CONFLICT','IMMUTABLE_SNAPSHOT_METADATA_CONFLICT','IMMUTABLE_SNAPSHOT_MEMBERSHIP_CONFLICT','OUTBOX_IMMUTABLE_CONFLICT','OUTBOX_CHECKSUM_CONFLICT'):code='STORAGE_IMMUTABLE_CONFLICT'
+    elif storage_code in ('POSTGRES_CUTOVER_NOT_APPROVED','POSTGRES_SOURCE_NOT_VERIFIED','POSTGRES_DATASET_NOT_MIGRATED','POSTGRES_PROJECTION_NOT_VERIFIED','POSTGRES_PROJECTION_RECORD_MISSING','SCHEMA_MIGRATION_REQUIRED','SCHEMA_MIGRATION_CHECKSUM_MISMATCH','LEGACY_ROLLBACK_REQUIRES_VERIFIED_EXPORT','POSTGRES_NOT_CONFIGURED','POSTGRES_TLS_REQUIRED'):code='STORAGE_MIGRATION_REQUIRED'
+    elif getattr(error,'storage_code',None) in ('STORAGE_PENDING','WAL_CONFLICT','WAL_CORRUPT'):code=error.storage_code
     elif isinstance(error,OSError) and error.errno==errno.ECANCELED:code='STORAGE_SHUTDOWN'
     elif stage=='COMPANY_SITE' and isinstance(error,(requests.exceptions.InvalidURL,requests.exceptions.TooManyRedirects)):code='SOURCE_URL_INVALID'
     elif isinstance(error,SiteUrlError):code='SOURCE_URL_INVALID'

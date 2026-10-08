@@ -52,10 +52,13 @@ class BufferedJSON:
 
 
 def atomic_write_json(path,value,*,overwrite=True,prefix='.user-',default=None):
+    from v6_storage.backend import before_write,after_write
+    if before_write(path,value,overwrite):return
     trace=WriteTrace(path)
     try:
         with thread_guard(path):answer=_atomic_write_json(path,value,trace=trace,overwrite=overwrite,prefix=prefix,default=default)
         trace.success=True
+        after_write(path,value)
         return answer
     except BaseException:
         if trace.state not in ('CLEANED','ORPHANED'):

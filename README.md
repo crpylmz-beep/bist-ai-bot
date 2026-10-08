@@ -12,3 +12,5 @@ Veri yolu/migration: [DATA_PERSISTENCE.md](DATA_PERSISTENCE.md). Worker: [ANA_MO
 Testler: `python -m unittest discover -s tests`; JavaScript smoke testleri `tests/*.cjs`.
 
 Pozitif kapanış havuzu, Yarın TOP10/30/50 ve 1/3/5 günlük ölçüm: [POZITIF_KAPANIS.md](POZITIF_KAPANIS.md).
+
+V6 PostgreSQL/R2 hazırlığı ve kaynakları silmeyen DRY_RUN taşıma: [docs/STORAGE_V6.md](docs/STORAGE_V6.md). Varsayılan `STORAGE_BACKEND=legacy`; gerçek bağlantı ve production geçişi otomatik yapılmaz. Kapasite/maliyet sınırları: [docs/STORAGE_V6_COSTS.md](docs/STORAGE_V6_COSTS.md).

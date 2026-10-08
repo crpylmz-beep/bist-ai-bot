@@ -1,3 +1,4 @@
+from v6_storage.config import StorageError as V6StorageError
 from veri_yollari import data_file, public_dir, archive_dir, paths
 import haber_zeka
 import haber_etki_motoru
@@ -84,9 +85,8 @@ def guvenli_float(x, varsayilan=0.0):
 
 def tahmin_gecmisi_oku(dosya_yolu=None):
     hedef=dosya_yolu or TAHMIN_GECMISI_FILE
-    if not os.path.exists(hedef):
-        return {"surum":1,"tahminler":[],"ogrenme_gecmisi":[]}
-    with open(hedef,encoding='utf-8') as handle:veri=json.load(handle)
+    from recovery_journal import read_document
+    veri=read_document(hedef,{"surum":1,"tahminler":[],"ogrenme_gecmisi":[]})
     if not isinstance(veri,dict) or not isinstance(veri.get('tahminler',[]),list):
         raise ValueError('Tahmin geçmişi geçersiz formatta; korunuyor')
     veri.setdefault('surum',1);veri.setdefault('tahminler',[]);veri.setdefault('ogrenme_gecmisi',[])
@@ -4561,6 +4561,8 @@ def ai_ogrenme_kaydet(sonuclar, model="GUN_ICI"):
             with open(dosya, "r", encoding="utf-8") as f:
                 from recovery_journal import read_handle
                 veri = read_handle(f)
+        except V6StorageError:
+            raise
         except Exception:
             veri = {"kayitlar": []}
     else:
@@ -4762,6 +4764,8 @@ def ai_ogrenme_ozeti_yaz():
         with open(kaynak, "r", encoding="utf-8") as f:
             from recovery_journal import read_handle
             veri = read_handle(f)
+    except V6StorageError:
+        raise
     except Exception:
         return
 
@@ -4872,6 +4876,8 @@ def ai_ogrenilmis_agirliklari_hesapla():
         with open(kaynak, "r", encoding="utf-8") as f:
             from recovery_journal import read_handle
             veri = read_handle(f)
+    except V6StorageError:
+        raise
     except Exception:
         return None
 
@@ -5204,6 +5210,8 @@ def ai_sinyal_sonuc_guncelle(guncel_sonuclar):
         with open(dosya, "r", encoding="utf-8") as f:
             from recovery_journal import read_handle
             veri = read_handle(f)
+    except V6StorageError:
+        raise
     except Exception as e:
         print("AI SONUC OKUMA HATASI:", e)
         return 0

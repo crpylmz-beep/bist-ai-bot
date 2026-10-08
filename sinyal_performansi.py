@@ -778,7 +778,8 @@ def refresh_indicator_performance(location=None,current=None,holiday=None):
             if not source.exists():continue
             key=kind+':'+source.name
             try:
-                signature=[(p.stat().st_mtime_ns,p.stat().st_size) if p and p.exists() else None for p in (source,result_path)]
+                from v6_storage.backend import file_signature
+                signature=[file_signature(p) if p and p.exists() else None for p in (source,result_path)]
                 signature=json.loads(json.dumps(signature));previous=old.get(key,{})
                 if not isinstance(previous,dict):previous={}
                 gate=current.date().isoformat()

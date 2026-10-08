@@ -287,8 +287,11 @@ def main():
     with worker_lock(runtime_dir()):
         from disk_koruma import reclaim_once
         from atomik_temp_temizligi import cleanup_atomic_temps
-        cleanup_atomic_temps(paths(),resumable=True)
-        reclaim_once(paths())
+        from v6_storage.config import Settings
+        if Settings.from_env().mode=='legacy':
+            cleanup_atomic_temps(paths(),resumable=True)
+            reclaim_once(paths())
+        else:logging.info('[STORAGE_V6] migration_mode=true automatic_cleanup=false legacy_wal_rewrite=false')
         from ana_motor_gorevleri import WorkerTasks
         from cloud_bootstrap import bootstrap_public
         bootstrap_public()

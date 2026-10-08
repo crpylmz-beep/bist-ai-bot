@@ -19,8 +19,10 @@ class DiskMaintenance:
 
     def round(self):
         if not worker_scope_matches(self.location):raise RuntimeError('WORKER_LOCK_REQUIRED')
+        from v6_storage.config import Settings
+        legacy=Settings.from_env().mode=='legacy'
         token=inspection_stop.set(self.stop)
-        try:result=self.inspector(self.location,cleanup=True,budget_seconds=self.budget,skip_identifiers=self.visited,release_locks_during_proof=True,resumable=True)
+        try:result=self.inspector(self.location,cleanup=legacy,budget_seconds=self.budget,skip_identifiers=self.visited,release_locks_during_proof=True,resumable=True)
         finally:inspection_stop.reset(token)
         # Timed-out and locked files are retried, but after the other candidates.
         # Each subsequent proof still reacquires every lease/lock and inode check.
@@ -32,7 +34,7 @@ class DiskMaintenance:
         if result['scanned']==0:self.visited.clear()
         from history_journal import HistoryJournal
         target=self.location.runtime/'ai_ogrenme_gecmisi.json'
-        if target.exists():
+        if legacy and target.exists():
             try:
                 merged=HistoryJournal(target).flush()
                 if merged:logging.info('[STORAGE_WAL] merged_transactions=%d',merged)

@@ -5,3 +5,7 @@ requests==2.34.2
 pywebpush==2.1.2
 cryptography==50.0.2
 exchange-calendars==4.13.2
+psycopg[binary]==3.3.6
+psycopg-pool==3.3.3
+boto3==1.43.109
+ijson==3.4.0.post0

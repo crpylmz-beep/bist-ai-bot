@@ -98,6 +98,9 @@ def apply_overlay(path,document):
 
 
 def read_document(path,default=None):
+    from v6_storage.backend import read
+    handled,document=read(path)
+    if handled:return document
     path=Path(path)
     if not path.exists():return default
     with path.open(encoding='utf-8') as handle:document=json.load(handle,object_pairs_hook=proof.strict_object)
@@ -105,5 +108,8 @@ def read_document(path,default=None):
 
 
 def read_handle(handle):
+    from v6_storage.backend import read
+    handled,document=read(handle.name)
+    if handled:return document
     document=json.load(handle)
     return apply_overlay(handle.name,document)

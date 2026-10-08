@@ -67,13 +67,17 @@ def load_sources(location,current):
     records=[];errors={}
     for path in sorted(location.runtime_file('gunluk_al_sat_gecmisi').glob('????-??-??.json')):
         try:
-            with locked(path):value=json.loads(path.read_bytes())
+            from recovery_journal import read_document
+            with locked(path):value=read_document(path)
             if value.get('model')!='GUNLUK_AL_SAT_V1' or not isinstance(value.get('events'),dict):raise ValueError('Source')
             for identity,row in value['events'].items():
                 if not isinstance(row,dict):errors[path.name]='MALFORMED';continue
                 if row.get('event_id')!=identity:errors[path.name]='SOURCE_ID_MISMATCH';continue
                 records.append(row)
-        except Exception as error:errors[path.name]=type(error).__name__
+        except Exception as error:
+            from v6_storage.config import StorageError
+            if isinstance(error,StorageError):raise
+            errors[path.name]=type(error).__name__
     return records,errors
 
 
