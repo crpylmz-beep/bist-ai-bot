@@ -215,7 +215,12 @@ class BistHandler(SimpleHTTPRequestHandler):
         self.api()
 
     def do_POST(self):
-        self.api()
+        if urlsplit(self.path).path == '/api/admin/storage-inventory':
+            from v6_storage.admin_inventory import handle
+            value, status = handle(self.headers, urlsplit(self.path), self.data_paths)
+            self.respond(value, status)
+        else:
+            self.api()
 
     def do_PATCH(self):
         self.api()

@@ -4,6 +4,7 @@ import math
 import os
 from pathlib import Path
 import stat
+import time
 from .records import now
 
 CATEGORIES=('prediction_history','learning_data','signal_outcomes','temporary_files',
@@ -33,22 +34,32 @@ def category(name,parts):
     return 'other_preserve'
 
 
-def report(root,*,pg_factor_low=1.5,pg_factor_high=3.0,r2_ratio_low=.25,r2_ratio_high=.75,limit=20):
+def report(root,*,pg_factor_low=1.5,pg_factor_high=3.0,r2_ratio_low=.25,r2_ratio_high=.75,limit=20,max_entries=200000,max_seconds=20):
     factors=(pg_factor_low,pg_factor_high,r2_ratio_low,r2_ratio_high)
     if not all(math.isfinite(x) and x>0 for x in factors) or pg_factor_low>pg_factor_high or r2_ratio_low>r2_ratio_high or r2_ratio_high>1:
         raise ValueError('Invalid capacity assumptions')
     if not 0<=limit<=100:raise ValueError('Largest-file limit: 0–100')
+    if max_entries<=0 or not math.isfinite(max_seconds) or max_seconds<=0:raise ValueError('Invalid scan budget')
+    deadline=time.monotonic()+max_seconds
+    visited=0;budget_exhausted=False
     root=Path(root).absolute()
     fd=os.open(root,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW)
     groups={name:{'files':0,'logical_bytes':0,'allocated_bytes':0,'private_logical_bytes':0,'json_logical_bytes':0,'private_json_bytes':0,'compressed_bytes':0,'private_compressed_bytes':0} for name in CATEGORIES}
     errors=0;links=0;aliases=0;unique=set();largest=[];physical=0
     def walk(folder,parts):
-        nonlocal errors,links,aliases,physical
+        nonlocal errors,links,aliases,physical,visited,budget_exhausted
         try:
-            with os.scandir(folder) as iterator:entries=list(iterator)
+            if len(parts)>=64:budget_exhausted=True;return
+            # Stream directory metadata; never materialize an unbounded directory.
+            def entries():
+                with os.scandir(folder) as iterator:
+                    yield from iterator
         except OSError:
             errors+=1;return
-        for entry in entries:
+        for entry in entries():
+            if budget_exhausted or visited>=max_entries or time.monotonic()>=deadline:
+                budget_exhausted=True;return
+            visited+=1
             try:
                 info=entry.stat(follow_symlinks=False)
                 if stat.S_ISLNK(info.st_mode):links+=1;continue
@@ -76,7 +87,8 @@ def report(root,*,pg_factor_low=1.5,pg_factor_high=3.0,r2_ratio_low=.25,r2_ratio
                     largest.sort(key=lambda row:row['logical_bytes'],reverse=True);del largest[limit:]
             except OSError:errors+=1
     try:
-        walk(fd,())
+        try:walk(fd,())
+        except OSError:errors+=1
         disk=os.fstatvfs(fd)
         filesystem={'total_bytes':disk.f_blocks*disk.f_frsize,'available_bytes':disk.f_bavail*disk.f_frsize,'used_bytes':(disk.f_blocks-disk.f_bfree)*disk.f_frsize}
     finally:os.close(fd)
@@ -96,7 +108,7 @@ def report(root,*,pg_factor_low=1.5,pg_factor_high=3.0,r2_ratio_low=.25,r2_ratio
     return {'mode':'READ_ONLY_METADATA','generated_at':now(),'production_inspected':None,
         'scope':'EXPLICIT_OPERATOR_ROOT','live_scan_atomic_snapshot':False,'categories':groups,'largest':largest,
         'filesystem':filesystem,'tree_allocated_unique_bytes':physical,'hardlink_alias_paths':aliases,
-        'symlinks_skipped':links,'errors':errors,'complete':errors==0,
+        'symlinks_skipped':links,'errors':errors,'complete':errors==0 and not budget_exhausted,'budget_exhausted':budget_exhausted,'entries_scanned':visited,
         'postgresql_capacity_scenario':pg,'r2_capacity_scenario':r2,
         'notes':['Filename-based classification is advisory; every source is preserved.',
                  'Logical category bytes may include aliases/duplicate records; estimates are not deduplicated migration measurements.',

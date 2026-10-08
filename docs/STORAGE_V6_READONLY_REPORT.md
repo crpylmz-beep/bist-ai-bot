@@ -44,3 +44,37 @@ PG ve R2 girişleri farklıdır; tablodaki aynı ham boyut ikisinin birlikte ger
 Geçici fixture üzerinde sınıflandırma/hesap, içerik okuma yasağı, byte+mtime değişmezliği, private temp hariç tutma, symlink/hardlink, eksik hedef, hatalı katsayı, okunamayan dizin ve ortam değişkenlerinden bağımsız CLI test edildi. Production verisi test fixture olarak kullanılmadı. Mevcut V5 journal/proof mekanizmaları ve canlı storage writer'ları değiştirilmedi.
 
 `STORAGE_V6_REPOSITORY_INVENTORY.json` eki yalnız yerel repo `webapp/data` metadata ölçümüdür; production veya tam `.local` envanteri değildir. Kaynak boyut/mtime değerleri değişmedi. Gerçek production kapasitesi ölçülmüş değildir.
+
+## Korunan production yönetici çağrısı
+
+Mevcut web sunucusunda `POST /api/admin/storage-inventory` uç noktası vardır.
+`BIST_STORAGE_ADMIN_TOKEN` en az 32 ASCII karakterlik ayrı, rastgele bir secret olarak
+Railway Variables üzerinden operatör tarafından tanımlanmalıdır. Tanımsız/kısa anahtar
+mekanizmayı kapalı tutar (503). Anahtarı repoya, URL'ye veya loglara yazmayın.
+Yalnız HTTPS üzerinden `Authorization: Bearer <secret>` başlığı gönderilir; istek
+parametresiz ve gövdesiz olmalıdır. Tarayıcı oturum çerezi yönetici yetkisi vermez.
+Yanıta CORS izni verilmez; Origin taşıyan tarayıcı çağrıları reddedilir.
+
+Operatör, anahtarı güvenli ortamına aldıktan sonra aşağıdaki Python istemcisiyle
+çağırabilir; komut satırına secret koymaz, yalnız toplu raporu standart çıktıya basar:
+
+```python
+import os, urllib.request
+request = urllib.request.Request(
+    os.environ['BIST_PUBLIC_HTTPS_URL'].rstrip('/') + '/api/admin/storage-inventory',
+    method='POST', headers={'Authorization': 'Bearer ' + os.environ['BIST_STORAGE_ADMIN_TOKEN']})
+with urllib.request.urlopen(request, timeout=30) as response:
+    print(response.read().decode('utf-8'))
+```
+
+Sunucunun yapılandırılmış `BIST_DATA_DIR` kökü kullanılır (production için `/data`);
+istemde yol seçilemez. Envanter veri klasörü oluşturmaz, recovery/cleanup/migration
+çalıştırmaz ve rapor dosyası yazmaz. Tek tarama eşzamanlı çalışır; en az 60 saniye
+ara gerekir. En fazla 200.000 dizin girdisi, 64 dizin derinliği ve 20 saniyelik
+kooperatif tarama bütçesi uygulanır (tek bir filesystem çağrısı bloklanırsa bu süre
+katı bir wall-clock timeout değildir). Symlinkler izlenmez. Sonuç yalnız kategori
+sayı/boyutları, disk toplamları ve varsayımsal PostgreSQL/R2 aralıklarını içerir;
+dosya adları, yolları, içerikleri veya kullanıcı kimlikleri dönmez.
+`complete=false` durumunda 206 döner; kısmi toplamlar tüm volume ölçümü değildir.
+Canlı dosyalar eşzamanlı değişebilir, sonuç atomik snapshot değildir. Bu geliştirme
+sırasında production çağrısı yapılmamış ve gerçek `/data` kullanımı ölçülmemiştir.
