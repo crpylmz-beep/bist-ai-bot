@@ -446,6 +446,7 @@ body{height:100vh;height:100dvh;background:#111827;overflow:hidden;display:flex;
 .context-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:8px;font-size:13px;overflow-wrap:anywhere}
 .context-metrics span,.context-metrics strong{display:block}#marketContextCard summary{cursor:pointer;font-weight:600}
 #marketContextCard h4{margin-bottom:4px}#marketContextDetails{font-size:14px}
+#indicatorPerformanceCard select{max-width:100%;min-width:0;font:inherit}#indicatorPerformanceCard summary{cursor:pointer;font-weight:600}#indicatorPerformanceDetails{font-size:14px;overflow-wrap:anywhere}
 .sector-card{border-top:1px solid #dce1e8;padding:10px 0;overflow-wrap:anywhere}.sector-warning{color:#935000}#sectorStrengthCard summary{cursor:pointer;font-weight:600}#sectorStrengthDetails{font-size:14px;min-width:0}
 </style>
 </head>
@@ -475,6 +476,11 @@ body{height:100vh;height:100dvh;background:#111827;overflow:hidden;display:flex;
     </div>
 
     <details class="market-card" id="marketContextCard"><summary id="marketContextSummary">Piyasa Durumu · Veriler bekleniyor</summary><div id="marketContextDetails"></div></details>
+
+    <details class="market-card" id="indicatorPerformanceCard"><summary id="indicatorPerformanceSummary">İndikatör Performansı · Veriler bekleniyor</summary>
+    <div class="context-metrics"><label>Sinyal ailesi<select id="indicatorFamily" onchange="indikatorYenile()"><option value="ALL">Tümü</option><option value="TOMORROW_TOP10">Yarın TOP10</option><option value="INTRADAY_BUY">Günlük AL</option><option value="INTRADAY_SELL">Günlük SAT</option><option value="AGGRESSIVE_BUY">Agresif Alış</option><option value="AGGRESSIVE_SELL">Agresif Satış</option><option value="OVERSOLD_REACTION">Aşırı Satım Tepkisi</option><option value="TREND">Trend</option></select></label>
+    <label>Yön<select id="indicatorDirection" onchange="indikatorYenile()"><option value="">Tümü</option><option value="BUY">Alış</option><option value="SELL">Satış</option></select></label>
+    <label>Vade<select id="indicatorHorizon" onchange="indikatorYenile()"><option value="">Tümü</option><option value="1">1 işlem günü</option><option value="3">3 işlem günü</option><option value="5">5 işlem günü</option><option value="10">10 işlem günü</option><option value="20">20 işlem günü</option><option value="60">60 işlem günü</option><option value="30m">30 dakika</option><option value="60m">60 dakika</option><option value="120m">120 dakika</option><option value="SEANS">Seans sonu</option></select></label></div><div id="indicatorPerformanceDetails"></div></details>
     <details class="market-card" id="sectorStrengthCard"><summary id="sectorStrengthSummary">Sektör Gücü · Veriler bekleniyor</summary><div id="sectorStrengthDetails"></div></details>
     <div class="section">
         <div class="section-title">📡 Sinyaller</div>
@@ -3265,6 +3271,27 @@ function haberListesiniBirlestir(canonical, legacy) {
 
 /* BAŞLAT */
 
+function indikatorEtiket(value){return ({INSUFFICIENT:'Yetersiz örnek',INSUFFICIENT_DATA:'Yetersiz veri',EARLY:'Erken veri',USABLE:'Kullanılabilir veri',STRONG_SAMPLE:'Güçlü örneklem',CANDIDATE:'Aday',STABLE:'Kararlı aday',TOMORROW_TOP10:'Yarın TOP10',INTRADAY_BUY:'Günlük AL',INTRADAY_SELL:'Günlük SAT',AGGRESSIVE_BUY:'Agresif Alış',AGGRESSIVE_SELL:'Agresif Satış',OVERSOLD_REACTION:'Aşırı Satım Tepkisi',TREND:'Trend',BUY:'Alış',SELL:'Satış',LOW_SAMPLE:'Yetersiz örnek',LOW_CONFIDENCE:'Düşük güven',REGIME_SAMPLE_LOW:'Rejim bazında örnek az',SECTOR_SAMPLE_LOW:'Sektör bazında örnek az',FEATURE_NOT_CAPTURED:'Bazı kayıtlarda özellik yakalanmamış',STALE_DATA:'Eski veri',OUTLIER_SENSITIVE:'Uç değerlere duyarlı',INCONSISTENT_HORIZONS:'Vadeler arasında tutarsızlık',INCONSISTENT_REGIMES:'Rejimler arasında tutarsızlık',STRONG_BULL:'Güçlü Pozitif',BULL:'Pozitif',NEUTRAL:'Nötr',BEAR:'Negatif',STRONG_BEAR:'Güçlü Negatif',LEADING:'Lider',WEAKENING:'Güç Kaybediyor',LAGGING:'Geride',IMPROVING:'Güçleniyor'})[value]||value||'--';}
+function indikatorGoster(doc){
+ const esc=yarinMetin,n=v=>gunlukNum(v,2),rate=v=>typeof v==='number'?n(v*100)+'%':'--';
+ if(doc?.enabled===false)return {summary:'İndikatör Performansı · Devre dışı',details:''};
+ if(doc?.engine_version!=='INDICATOR_PERFORMANCE_V1'||doc.production_applied!==false||!Array.isArray(doc.rows))return {summary:'İndikatör Performansı · Veriler bekleniyor',details:'Ölçüm Modu — Skorlara uygulanmıyor'};
+ const summary=doc.summary||{};
+ const breakdown=(name,values)=>Object.keys(values||{}).length?Object.entries(values).map(([key,value])=>'<div>'+name+': '+esc(indikatorEtiket(key))+' · '+esc(value.eligible_sample_count)+' örnek · '+(name==='Yakın dönem'||value.eligible_sample_count>=30?rate(value.success_rate):'Yeterli veri yok')+'</div>').join(''):'<div>'+name+': Yeterli veri yok</div>';
+ const list=doc.rows.map(r=>`<article class="sector-card"><strong>${esc(r.indicator_name)}</strong><p>${esc(indikatorEtiket(r.signal_family))} · ${esc(indikatorEtiket(r.direction))} · ${esc(r.horizon)}${/^\d+$/.test(r.horizon)?' işlem günü':''}</p><div class="context-metrics"><div>Örnek / Çözümlenen<strong>${esc(r.sample_count)} / ${esc(r.eligible_sample_count)}</strong></div><div>Başarı / Baseline<strong>${rate(r.success_rate)} / ${rate(r.baseline?.success_rate)}</strong></div><div>Teyitli / Teyitsiz<strong>${rate(r.with_feature_success_rate)} / ${rate(r.without_feature_success_rate)}</strong></div><div>Baseline farkı<strong>${typeof r.delta_success_rate==='number'?n(r.delta_success_rate*100)+' puan':'--'}</strong></div><div>Ortalama yön getirisi / Medyan<strong>${n(r.avg_return)}% / ${n(r.median_return)}%</strong></div><div>Güven<strong>${n(r.confidence)}/100</strong></div><div>MFE / MAE<strong>${n(r.avg_favorable_excursion)}% / ${n(r.avg_adverse_excursion)}%</strong></div><div>Aday ağırlık<strong>${n(r.learned_weight_candidate)}</strong></div></div><p>${esc(indikatorEtiket(r.data_status))} · ${esc(indikatorEtiket(r.weight_status))}</p><p>${esc((r.reasons||[]).join(' · '))}</p><p class="sector-warning">${esc((r.warnings||[]).map(indikatorEtiket).join(' · '))}</p><details><summary>Rejim / Sektör / Son örnekler</summary>${breakdown('Piyasa Rejimi',r.breakdown?.market_regime)}${breakdown('Sektör Gücü',r.breakdown?.sector_strength)}${breakdown('Yakın dönem',r.recency)}</details></article>`).join('');
+ const combos=(doc.combinations||[]).map(r=>'<div>'+esc(r.indicator_id)+' · '+esc(indikatorEtiket(r.signal_family))+' · '+esc(r.horizon)+' · '+esc(r.eligible_sample_count)+' örnek · '+rate(r.success_rate)+'</div>').join('');
+ return {summary:'İndikatör Performansı · '+(summary.resolved_sample_count??0)+' çözümlenmiş ölçüm',details:`<p><strong>Ölçüm Modu — Skorlara uygulanmıyor</strong></p><p>${esc(summary.tracked_indicator_count??0)} indikatör · ${esc(summary.usable_indicator_count??0)} yeterli veri · Son güncelleme: ${esc(gunlukSaat(doc.updated_at))}</p>${doc.stale?'<p class="sector-warning">Eski veri</p>':''}${doc.status==='DEGRADED'?'<p class="sector-warning">Bazı kaynaklar alınamadı; ölçüm kapsamı sınırlı.</p>':''}<p>İlişki ölçümüdür; nedensellik veya yatırım tavsiyesi değildir. Eski kayıtlara özellik eklenmez.</p>${list||'<p>Henüz doğrulanmış özellikli örnek yok.</p>'}${combos?'<details><summary>Teyit kombinasyonları</summary>'+combos+'</details>':''}`};
+}
+let indikatorRequest=0;
+async function indikatorYenile(){
+ const summary=document.getElementById('indicatorPerformanceSummary'),details=document.getElementById('indicatorPerformanceDetails');if(!summary||!details)return;
+ const request=++indikatorRequest,query=new URLSearchParams();
+ for(const [key,id] of [['family','indicatorFamily'],['direction','indicatorDirection'],['horizon','indicatorHorizon']]){const value=document.getElementById(id)?.value;if(value)query.set(key,value);}
+ if(!query.has('family'))query.set('family','ALL');
+ try{const view=indikatorGoster(await seviyeApi('/api/indicator-performance?'+query));if(request!==indikatorRequest)return;summary.textContent=view.summary;details.innerHTML=view.details;}
+ catch(_){if(request!==indikatorRequest)return;summary.textContent='İndikatör Performansı · Veriler alınamıyor';details.textContent='Ölçüm Modu — Skorlara uygulanmıyor. Önbellek hazırlanıyor olabilir.';}
+}
+
 function piyasaContextGoster(doc){
  const esc=yarinMetin,percent=n=>typeof n==='number'&&Number.isFinite(n)?gunlukNum(n,1)+'%':'—';
  const regime={STRONG_BULL:'Güçlü Pozitif',BULL:'Pozitif',NEUTRAL:'Nötr',BEAR:'Negatif',STRONG_BEAR:'Güçlü Negatif'};
@@ -3322,6 +3349,7 @@ if(typeof document.addEventListener === "function"){
     cloudDurumYenile();
     piyasaContextYenile();
     sektorYenile();
+    indikatorYenile();
     const standalone=Boolean(navigator.standalone || window.matchMedia('(display-mode: standalone)').matches);
     document.documentElement.dataset.displayMode=standalone ? 'standalone' : 'browser';
     pushDurumHazirla();
@@ -3331,7 +3359,7 @@ if(typeof document.addEventListener === "function"){
         refreshing = true;
         try {
             await cloudDurumYenile();
-            if(document.getElementById("homePage").style.display === "block"){await piyasaContextYenile();await sektorYenile();}
+            if(document.getElementById("homePage").style.display === "block"){await piyasaContextYenile();await sektorYenile();await indikatorYenile();}
             if(document.getElementById("gunIciTop10Page").style.display === "block") await showGunIciTop10(true);
             else if(document.getElementById("top10Page").style.display === "block") await showTop10(true);
             else if(document.getElementById("kapAlarmPage").style.display === "block") await showKapAlarms();

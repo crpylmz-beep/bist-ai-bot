@@ -2158,6 +2158,9 @@ def yarin_snapshot_modeli(veri, tahmin_zamani=None):
     snapshot["tahmin_zamani"] = tahmin_zamani
     snapshot["zaman_kaynagi"] = "ISTANBUL" if tahmin_zamani else "LEGACY_BELIRSIZ"
     for hisse in snapshot["top10"] + snapshot.get('ham_top10', []) + snapshot.get('shadow_top10', []) + snapshot.get('controlled_shadow_top10',[]) + snapshot.get('base_top10',[]) + (snapshot.get('pozitif_havuz') or {}).get('adaylar',[]):
+        from sinyal_performansi import indicator_enabled,safe_feature_capture
+        if tahmin_zamani and indicator_enabled() and 'indicator_evidence' not in hisse:
+            hisse['indicator_evidence']=safe_feature_capture(hisse,tahmin_zamani)
         hisse["tahmin"] = {
             "sembol": hisse.get("sembol"),
             "tahmin_zamani": tahmin_zamani,

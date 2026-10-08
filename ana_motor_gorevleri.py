@@ -242,6 +242,8 @@ class WorkerTasks:
                 'intraday_top10':self.intraday, 'yarin_top10':self.tomorrow,
                 'company_site':self.company_site,'performance':self.performance,
                 'intraday_performance':self.intraday_performance,'market_context':self.market_context}
+        from sinyal_performansi import indicator_enabled
+        if indicator_enabled():result['indicator_performance']=self.indicator_performance
         from piyasa_baglami import regime_enabled,sector_enabled
         if regime_enabled():result["market_regime"]=self.market_regime
         if sector_enabled():result["sector_strength"]=self.sector_strength
@@ -260,6 +262,10 @@ class WorkerTasks:
         from piyasa_baglami import PiyasaBaglami
         try:return PiyasaBaglami().refresh()
         except Exception as error:return {'hata':type(error).__name__}
+
+    def indicator_performance(self):
+        from sinyal_performansi import refresh_indicator_performance
+        return refresh_indicator_performance()
 
     def sector_strength(self):
         from piyasa_baglami import PiyasaBaglami

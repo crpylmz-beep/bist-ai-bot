@@ -201,6 +201,9 @@ class GunlukAlSat:
                 if identity not in history['events']:
                     history['events'][identity]=copy.deepcopy(dict(row,event_id=identity,analysis_only=True,
                         prediction_price=row['price'],engine_version=MODEL,snapshot_version=1))
+                    from sinyal_performansi import indicator_enabled,safe_feature_capture
+                    if indicator_enabled():
+                        history['events'][identity]['indicator_evidence']=safe_feature_capture(row,row['timestamp'],True,self.location)
                     atomic_json(target,history)
         state['signals'][row['symbol']]=row
 
