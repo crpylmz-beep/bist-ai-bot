@@ -14,6 +14,10 @@ from borsapy.exceptions import (APIError, AuthenticationError, RateLimitError,
     DataNotAvailableError, TickerNotFoundError, InvalidPeriodError, InvalidIntervalError)
 
 ERRORS={
+ 'SOURCE_ACCESS_RESTRICTED':('SOURCE_DATA','Haber kaynağı erişim koşulları nedeniyle işlenmedi.',True),
+ 'SOURCE_ROBOTS_DENIED':('SOURCE_DATA','Haber kaynağı robots.txt politikasına göre işlenmedi.',True),
+ 'SOURCE_INVALID_FEED':('SOURCE_DATA','Haber kaynağı geçerli RSS sağlamadı.',True),
+ 'SOURCE_CRAWL_DELAY':('SOURCE_DATA','Haber kaynağının erişim aralığı bu taramaya uygun değil.',True),
  'POSTGRES_UNAVAILABLE':('STORAGE','PostgreSQL bağlantısı/işlemi tamamlanamadı; kalıcı kaynak korunuyor.',True),
  'STORAGE_MIGRATION_REQUIRED':('CONFIG','Depolama migration veya doğrulanmış geçiş onayı gerekiyor.',False),
  'STORAGE_IMMUTABLE_CONFLICT':('STORAGE','Değiştirilemez kayıt çakışması; kaynaklar korunuyor.',False),

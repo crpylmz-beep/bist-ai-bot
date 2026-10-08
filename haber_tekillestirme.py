@@ -45,7 +45,7 @@ def amounts(value):
 
 def prepare(event):
     row=dict(event);row['sembol']=symbol(row['sembol'])
-    row['kaynak']='KAP' if row.get('kaynak')=='KAP' else 'SIRKET_SITE'
+    row['kaynak']=row.get('kaynak') if row.get('kaynak') in {'KAP','EKONOMIM','BLOOMBERG_HT','ENSONHABER_EKONOMI'} else 'SIRKET_SITE'
     row['baslik']=str(row.get('baslik','')).strip()[:500]
     row['metin']=str(row.get('metin',''))[:12000]
     row['discovered_at']=row.get('discovered_at') or now()
@@ -156,6 +156,18 @@ class CanonicalNews:
                     level=compare(event,variant,self.window)
                     if level!='DIFFERENT_EVENT':match=record;status=level;break
                 if match:break
+            # Polling an already completed feed entry must not rewrite the growing ledger.
+            public_ready=(match is not None and self.path.exists() and self.public_path.exists() and self.history_path.exists()
+                          and self.public_path.stat().st_mtime_ns >= self.path.stat().st_mtime_ns)
+            if public_ready and match and 'analiz' in match and 'alarm' in match and all(
+                    match.get('effects',{}).get(stage) in ('DONE','SKIPPED')
+                    for stage in ('alarm','notification','enqueue')) and any(
+                    v['kaynak']==event['kaynak'] and v.get('url')==event['url']
+                    and v.get('published_at')==event['published_at']
+                    and v['normalized_title']==event['normalized_title']
+                    and v['content_hash']==event['content_hash'] for v in match['variants']):
+                return {'canonical_id':match['canonical_id'],'duplicate_status':status,'created':False,
+                        'analiz':match['analiz'],'alarm':match['alarm'],'kaynak_etiketi':match['kaynak_etiketi']}
             created=match is None
             if created:
                 match={'canonical_id':uuid.uuid4().hex,'sembol':event['sembol'],'ana_baslik':event['baslik'],
@@ -167,11 +179,13 @@ class CanonicalNews:
             if event['content_hash'] not in match['hashler']:match['hashler'].append(event['content_hash'])
             if not any(v['normalized_title']==event['normalized_title'] and v['content_hash']==event['content_hash'] for v in match['variants']):match['variants'].append(event)
             sources={s['kaynak'] for s in match['kaynaklar']}
-            match['kaynak_etiketi']='KAP + ŞİRKET_SITE' if len(sources)>1 else ('KAP' if 'KAP' in sources else 'ŞİRKET_SITE')
+            match['kaynak_etiketi']=' + '.join('ŞİRKET_SITE' if name=='SIRKET_SITE' else name for name in sorted(sources,key=lambda name:(name!='KAP',name)))
             if event['kaynak']=='KAP':
                 match.update(ana_baslik=event['baslik'],ana_kaynak='KAP',kap_url=event['url'] or None)
-            else:
+            elif event['kaynak']=='SIRKET_SITE':
                 match.setdefault('ana_kaynak','SIRKET_SITE');match['sirket_url']=event['url'] or None
+            else:
+                match.setdefault('ana_kaynak',event['kaynak'])
             match.update(son_gorulme=event['discovered_at'],duplicate_status=status)
             atomic_json(self.path,data)
             if 'analiz' not in match:

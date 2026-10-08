@@ -27,6 +27,8 @@ DEFAULTS = {'bootstrap':30, 'kap':60, 'macro':120, 'alarm':30, 'push':20,
 ENV_NAMES = {'bootstrap':'BOOTSTRAP', 'kap':'KAP', 'macro':'MACRO', 'alarm':'ALARM', 'push':'PUSH',
              'intraday_top10':'INTRADAY_TOP10', 'company_site':'COMPANY_SITE',
              'full_scan':'FULL_SCAN', 'priority':'PRIORITY', 'yarin_top10':'YARIN_TOP10', 'performance':'PERFORMANCE', 'intraday_performance':'INTRADAY_PERFORMANCE', 'market_context':'MARKET_CONTEXT'}
+DEFAULTS['economy_news']=900
+ENV_NAMES['economy_news']='ECONOMY_NEWS'
 TECHNICAL = {'bootstrap', 'full_scan', 'priority', 'intraday_top10', 'yarin_top10'}
 from gunluk_al_sat import INTERVAL_SECONDS as INTRADAY_SIGNAL_INTERVAL
 DEFAULTS['indicator_performance']=900

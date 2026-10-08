@@ -234,13 +234,14 @@ class WorkerTasks:
     def callbacks(self):
         import kap_canli
         import makro_kaynak
-        from sirket_site_motoru import SirketSiteMotoru
-        self.company=SirketSiteMotoru(self.directory,enqueue=self.enqueue,stop=lambda:self.stop.is_set())
+        from ekonomi_haberleri import EconomyNews
+        self.economy_news=EconomyNews(self.bot.bist_hisseleri_getir,self.enqueue)
+        logging.info('[NEWS] company_site=disabled priority=KAP,EKONOMIM,BLOOMBERG_HT,ENSONHABER_EKONOMI')
         result={'bootstrap':self.bootstrap, 'kap':kap_canli.kap_kontrol, 'macro':makro_kaynak.yeni_haberleri_isle,
                 'alarm':self.alarm, 'push':self.push,
                 'priority':self.priority, 'full_scan':self.full_scan,
                 'intraday_top10':self.intraday, 'yarin_top10':self.tomorrow,
-                'company_site':self.company_site,'performance':self.performance,
+                'economy_news':self.economy_news.one_round,'performance':self.performance,
                 'intraday_performance':self.intraday_performance,'market_context':self.market_context}
         from sinyal_performansi import indicator_enabled
         if indicator_enabled():result['indicator_performance']=self.indicator_performance
@@ -277,6 +278,10 @@ class WorkerTasks:
         return PiyasaBaglami().refresh_measurement()
 
     def company_site(self):
+        # Explicit/manual compatibility only; never registered in the scheduler.
+        if not hasattr(self,'company'):
+            from sirket_site_motoru import SirketSiteMotoru
+            self.company=SirketSiteMotoru(self.directory,enqueue=self.enqueue,stop=lambda:self.stop.is_set())
         completed=self.company.tek_tur()
         details=getattr(self.company,'last_round_details',None)
         if getattr(self.company,'last_round_issue',None):
