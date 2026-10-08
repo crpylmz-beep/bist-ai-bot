@@ -19,6 +19,7 @@ def report(location):
     if not root:return {}
     usage=shutil.disk_usage(root);groups={k:{'bytes':0,'files':0} for k in ('public','private','runtime','archives','other')};largest=[];seen=set()
     folders=(('public',location.public),('private',location.users),('runtime',location.runtime),('archives',location.archives))
+    temp_summary={'count':0,'total_bytes':0,'oldest_age':None,'newest_age':None}
     known_runtime={'ai_ogrenme_gecmisi.json','tahmin_gecmisi.json','gun_ici_mumlar.json','gun_ici_performans_durum.json','performans_fiyat_cache.json','yarin_top10_sonuclar.json','karar_hata_gunlugu.json','yarin_kalibrasyon.json','gun_ici_agirliklari.json'}
     for directory,dirs,files in os.walk(root,followlinks=False):
         dirs[:]=sorted(d for d in dirs if not (Path(directory)/d).is_symlink())
@@ -30,14 +31,19 @@ def report(location):
                 label=next((label for label,folder in folders if path.is_relative_to(folder)),'other')
                 groups[label]['files']+=1
                 if inode not in seen:groups[label]['bytes']+=stat.st_size;seen.add(inode)
+                if label=='runtime' and name.startswith('.user-'):
+                    age=max(0,time.time()-stat.st_mtime);temp_summary['count']+=1;temp_summary['total_bytes']+=stat.st_size
+                    temp_summary['oldest_age']=max(temp_summary['oldest_age'] or 0,age)
+                    temp_summary['newest_age']=min(temp_summary['newest_age'] if temp_summary['newest_age'] is not None else age,age)
                 safe=name if (label=='public' and path.parent==location.public and name.endswith('.json')) or (label=='runtime' and name in known_runtime) else label+' file'
                 if name.startswith(('.user-','.snapshot-','.migration-')):safe=label+'/'+name.split('-',1)[0]+'-* (temporary; unverified)'
                 largest.append((stat.st_size,safe))
             except OSError:continue
+    logging.info('[DISK_TEMP_INVENTORY] %s',temp_summary)
     logging.info('[DISK] capacity=%d used=%d free=%d groups=%s largest=%s',usage.total,usage.used,usage.free,groups,sorted(largest,reverse=True)[:15])
     logging.info('[DISK] directory_MiB=%s largest_file_MiB=%s',{k:round(v['bytes']/1024**2,2) for k,v in groups.items()},[(round(size/1024**2,2),label) for size,label in sorted(largest,reverse=True)[:30]])
     if usage.free<10*1024*1024:logging.warning('[DISK] Kritik boş alan. Kalıcı geçmiş silinmeyecek; Railway volume kapasitesini artırın.')
-    return {'total':usage.total,'used':usage.used,'free':usage.free,'groups':groups}
+    return {'total':usage.total,'used':usage.used,'free':usage.free,'groups':groups,'atomic_temps':temp_summary}
 
 
 def trim_price_cache(cache,today=None):
@@ -177,6 +183,8 @@ def reclaim_once(location,clock=time.time):
             logging.info('[DISK_ONCE] BEFORE used_MiB=%.2f free_MiB=%.2f target_free_MiB=150',before['used']/1024**2,before['free']/1024**2)
             # Persist the one-shot gate before deletion. If even this fails, do not delete.
             atomic_json(marker,{'status':'STARTED','permanent_data_deleted':False})
+            from atomik_temp_temizligi import cleanup_atomic_temps
+            cleanup_atomic_temps(location)
             # The only replay cache is checked against its actual producer schema.
             cache=location.runtime/'performans_fiyat_cache.json'
             if before['free']<target and cache.is_file() and not cache.is_symlink():
@@ -197,6 +205,7 @@ def reclaim_once(location,clock=time.time):
                 for path in files:
                     if shutil.disk_usage(location.root).free>=target:break
                     name=path.name
+                    if name.startswith('.user-'):continue  # handled by proven/leased startup cleanup
                     is_temp=name.startswith('.migration-') or (name.startswith(('.user-','.snapshot-')) and name.endswith('.tmp'))
                     source_name=name[:-4] if name.endswith('.json.bak') else name[:-7] if name.endswith('.json.backup') else None
                     if not is_temp and not source_name:continue
@@ -213,7 +222,9 @@ def reclaim_once(location,clock=time.time):
                         if digest!=hashed[source][1]:continue
                         if _fingerprint(path)!=stamp or _fingerprint(source)!=source_stamp:break
                         # Names of unknown/private recovery candidates never enter logs.
-                        size=stamp[2];path.unlink();removed.append((label+'/verified-redundant-copy',size));break
+                        size=stamp[2]
+                        if unlink_inactive(path,stamp):removed.append((label+'/verified-redundant-copy',size))
+                        break
             after=report(location)
             result={'status':'COMPLETED','before_used':before['used'],'before_free':before['free'],
                     'after_used':after['used'],'after_free':after['free'],'freed_bytes':max(0,after['free']-before['free']),
@@ -225,3 +236,20 @@ def reclaim_once(location,clock=time.time):
     except OSError as error:
         logging.warning('[DISK_ONCE] Inspection/cleanup stopped errno=%s; unique data preserved',error.errno)
         return {'status':'INCOMPLETE','errno':error.errno}
+
+
+def unlink_inactive(path,expected):
+    """Respect the same fd lease for old one-shot snapshot scratch cleanup."""
+    import fcntl
+    fd=None
+    try:
+        fd=os.open(path,os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK)
+        fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB)
+        from atomik_temp_temizligi import foreign_open
+        if foreign_open(fd) is not False:return False
+        info=os.fstat(fd)
+        if (info.st_dev,info.st_ino,info.st_size,info.st_mtime_ns)!=expected or _fingerprint(path)!=expected:return False
+        path.unlink();return True
+    except BlockingIOError:return False
+    finally:
+        if fd is not None:os.close(fd)

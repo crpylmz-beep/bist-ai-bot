@@ -2113,27 +2113,10 @@ def yarin_top10_kilitli_oku():
 
 
 def json_atomik_yaz(dosya, veri, overwrite=True):
-    """Tam JSON'u ayni dizinde hazirla; arsivde mevcut dosyaya dokunma."""
-    import tempfile
-
-    dizin = os.path.dirname(os.path.abspath(dosya))
-    os.makedirs(dizin, exist_ok=True)
-    fd, gecici = tempfile.mkstemp(prefix=".snapshot-", suffix=".tmp", dir=dizin)
-    try:
-        with os.fdopen(fd, "w", encoding="utf-8") as f:
-            json.dump(veri, f, ensure_ascii=False, indent=2, default=str,
-                      allow_nan=False)
-            f.flush()
-            os.fsync(f.fileno())
-        if overwrite:
-            os.replace(gecici, dosya)
-        else:
-            # link() mevcut hedef varsa atomik olarak hata verir;
-            # kontrol-et/sonra-yaz yarisi veya yarim JSON olusmaz.
-            os.link(gecici, dosya)
-    finally:
-        if os.path.exists(gecici):
-            os.unlink(gecici)
+    """Preserve create-only archives and existing JSON encoding through one writer."""
+    from atomik_depolama import atomic_write_json
+    os.makedirs(os.path.dirname(os.path.abspath(dosya)),exist_ok=True)
+    return atomic_write_json(dosya,veri,overwrite=overwrite,prefix='.snapshot-',default=str)
 
 
 def yarin_snapshot_oku(dosya):

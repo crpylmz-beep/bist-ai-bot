@@ -10,6 +10,7 @@ from disk_koruma import reclaim_once,_replay_schema
 
 class OneShotReclaimTests(unittest.TestCase):
  def setUp(self):
+  self.enterContext(patch('atomik_temp_temizligi.foreign_open',return_value=False))  # controlled synthetic orphan fixture
   self.temp=tempfile.TemporaryDirectory();self.addCleanup(self.temp.cleanup);self.root=Path(self.temp.name)
   self.location=DataPaths({'BIST_DATA_DIR':self.temp.name});self.location.ensure()
   self.usage=shutil._ntuple_diskusage(500*1024**2,499*1024**2,1024**2)

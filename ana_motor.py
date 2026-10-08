@@ -280,6 +280,8 @@ def main():
         print(json.dumps(check_configuration(),ensure_ascii=False));return
     with worker_lock(runtime_dir()):
         from disk_koruma import reclaim_once
+        from atomik_temp_temizligi import cleanup_atomic_temps
+        cleanup_atomic_temps(paths())
         reclaim_once(paths())
         from ana_motor_gorevleri import WorkerTasks
         from cloud_bootstrap import bootstrap_public
