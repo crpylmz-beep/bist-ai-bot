@@ -97,7 +97,7 @@ def health_snapshot(directory=None):
                 for name,_,_ in SOURCES:
                     row=sources.get(name,{})
                     status=row.get('status')
-                    if status not in ('OK','RETRYING','BLOCKED','NOT_CHECKED'):continue
+                    if status not in ('OK','RETRYING','BLOCKED','NOT_CHECKED','DISABLED'):continue
                     result['news_sources'][name]={'status':status,'code':('NONE' if row.get('code')=='NONE' else public_issue(row)['code']),
                         **{key:max(0,min(row[key],10000)) for key in ('processed','ignored') if type(row.get(key)) is int},
                         'checked_at':str(row.get('checked_at',''))[:40]}

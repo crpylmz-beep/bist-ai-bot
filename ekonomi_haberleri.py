@@ -38,10 +38,12 @@ def read_bounded(url):
 
 
 class EconomyNews:
-    def __init__(self, universe, enqueue, fetch=read_bounded, news=None, health_writer=None):
+    def __init__(self, universe, enqueue, fetch=read_bounded, news=None, health_writer=None, restrictions=None):
         self.universe, self.enqueue, self.fetch = universe, enqueue, fetch
         self.news = news or CanonicalNews()
         self.health_writer=health_writer
+        from haber_kaynak_politikasi import SourceRestrictions
+        self.restrictions=restrictions or SourceRestrictions()
 
     def _health(self, rows):
         from kullanici_kayitlari import atomic_json
@@ -54,16 +56,22 @@ class EconomyNews:
                          source,row['status'],row['code'],row['processed'],row['ignored'])
 
     def one_round(self):
+        disabled=self.restrictions.load()
         symbols = set(self.universe())
         health={source:{'status':'NOT_CHECKED','code':'NONE','processed':0,'ignored':0,'checked_at':now()} for source,_,_ in SOURCES}
         if not symbols:
-            for row in health.values():row.update(status='BLOCKED',code='EMPTY_UNIVERSE')
+            for source,row in health.items():
+                if source in disabled:row.update(status='DISABLED',code=disabled[source]['code'],checked_at=disabled[source]['disabled_at'])
+                else:row.update(status='BLOCKED',code='EMPTY_UNIVERSE')
             self._health(health)
             from gorev_hatalari import TaskIssue
             raise TaskIssue({'code':'EMPTY_UNIVERSE'},0)
-        result = {'processed': 0, 'ignored': 0, 'errors': {}}
+        result = {'processed': 0, 'ignored': 0, 'errors': {}, 'disabled':sum(source in disabled for source,_,_ in SOURCES)}
         current = datetime.fromisoformat(now())
         for source, host, default_url in SOURCES:
+            if source in disabled:
+                health[source].update(status='DISABLED',code=disabled[source]['code'],checked_at=disabled[source]['disabled_at'])
+                continue
             before_processed,before_ignored=result['processed'],result['ignored']
             try:
                 url = os.environ.get(source + '_RSS_URL', default_url)
@@ -125,7 +133,14 @@ class EconomyNews:
                 # Fixed short codes, never a response body or credential-bearing URL.
                 if isinstance(error, ValueError) and str(error).startswith('SOURCE_'):
                     issue = {'code': str(error), 'category': 'SOURCE_DATA', 'retryable': True}
-                health[source].update(status='RETRYING',code=issue.get('code','TASK_ERROR'))
+                from haber_kaynak_politikasi import restriction
+                blocked=restriction(error)
+                if blocked:
+                    issue=blocked
+                    row=self.restrictions.disable(source,blocked)
+                    health[source].update(status='DISABLED',code=row['code'])
+                    result['disabled']+=1
+                else:health[source].update(status='RETRYING',code=issue.get('code','TASK_ERROR'))
                 result['errors'][source] = issue
                 logging.warning('[NEWS_SOURCE] source=%s code=%s', source, issue.get('code'))
             finally:
@@ -134,4 +149,5 @@ class EconomyNews:
         if result['errors']:
             from gorev_hatalari import TaskIssue, strongest
             raise TaskIssue(strongest(result['errors'].values()), result['processed'])
+        result['diagnostics']={'successful':result['processed'],'skipped':sum(row['status']=='DISABLED' for row in health.values())}
         return result

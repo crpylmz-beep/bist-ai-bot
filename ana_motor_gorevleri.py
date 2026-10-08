@@ -237,7 +237,9 @@ class WorkerTasks:
         from ekonomi_haberleri import EconomyNews
         self.economy_news=EconomyNews(self.bot.bist_hisseleri_getir,self.enqueue)
         logging.info('[NEWS] company_site=disabled priority=KAP,EKONOMIM,BLOOMBERG_HT,ENSONHABER_EKONOMI')
-        result={'bootstrap':self.bootstrap, 'kap':kap_canli.kap_kontrol, 'macro':makro_kaynak.yeni_haberleri_isle,
+        from haber_kaynak_politikasi import SourceRestrictions
+        news_policy=SourceRestrictions()
+        result={'bootstrap':self.bootstrap, 'kap':lambda:news_policy.call('KAP',kap_canli.kap_kontrol), 'macro':makro_kaynak.yeni_haberleri_isle,
                 'alarm':self.alarm, 'push':self.push,
                 'priority':self.priority, 'full_scan':self.full_scan,
                 'intraday_top10':self.intraday, 'yarin_top10':self.tomorrow,
