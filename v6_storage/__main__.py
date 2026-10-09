@@ -11,7 +11,8 @@ from .migration import Migrator
 def main(argv=None):
     parser=argparse.ArgumentParser(description='V6 storage: defaults to read-only dry run')
     sub=parser.add_subparsers(dest='command',required=True)
-    sub.add_parser('schema')
+    schema=sub.add_parser('schema')
+    schema.add_argument('--check',action='store_true',help='Read-only verification; no schema DDL')
     migration=sub.add_parser('migrate');migration.add_argument('source');migration.add_argument('--apply',action='store_true');migration.add_argument('--budget-records',type=int)
     archive=sub.add_parser('archive');archive.add_argument('source');archive.add_argument('--apply',action='store_true')
     restore=sub.add_parser('restore');restore.add_argument('manifest');restore.add_argument('target');restore.add_argument('--apply',action='store_true')
@@ -41,11 +42,33 @@ def main(argv=None):
             print(json.dumps({'mode':'READ_ONLY_METADATA','error':'INVENTORY_UNAVAILABLE_OR_INVALID_ARGUMENT','success':False}));return 2
         print(json.dumps(value,ensure_ascii=False));return 0 if value['complete'] else 2
     from veri_yollari import paths
-    location=paths();database=None
+    location=paths();database=None;stage=None;pool_filter=None
     try:
         if args.command=='schema':
+            stage='CONFIGURATION'
+            settings=Settings.from_env();settings.require_database()
+            stage='DEPENDENCIES'
+            try:
+                import psycopg
+                import psycopg_pool
+            except ImportError:
+                raise StorageError('POSTGRES_DEPENDENCY_MISSING') from None
+            from .schema_diagnostics import PoolDiagnosticsFilter
+            pool_filter=PoolDiagnosticsFilter()
+            logging.getLogger('psycopg.pool').addFilter(pool_filter)
+            stage='CONNECT'
             from .postgres import PostgresStore
-            database=PostgresStore(Settings.from_env());print(json.dumps({'applied':database.migrate()}));return 0
+            try:database=PostgresStore(settings)
+            except StorageError:raise
+            except Exception as error:
+                from .schema_diagnostics import postgres_details
+                safe=StorageError('POSTGRES_OPERATION_FAILED');safe.safe_details=postgres_details(error)
+                raise safe from None
+            stage='SCHEMA_VERIFY' if args.check else 'SCHEMA_APPLY'
+            applied=[] if args.check else database.migrate()
+            stage='SCHEMA_VERIFY'
+            database.ready()
+            print(json.dumps({'applied':applied,'verified':True,'read_only':args.check}));return 0
         if args.command=='migrate':
             selected=shape_for(args.source,location)
             if selected is None:raise StorageError('SOURCE_SCHEMA_UNSUPPORTED_ARCHIVE_REQUIRED')
@@ -80,9 +103,22 @@ def main(argv=None):
             from .usage import disk_report
             print(json.dumps(disk_report(location.root or location.runtime)));return 0
     except StorageError as error:
-        print(json.dumps({'error':error.storage_code,'success':False}));return 2
+        payload={'error':error.storage_code,'success':False}
+        if args.command=='schema':
+            payload['stage']=stage
+            details=getattr(error,'safe_details',{})
+            if details.get('reason')=='POSTGRES_CONNECTION_TIMEOUT' and pool_filter and pool_filter.best():
+                details=pool_filter.best()
+            payload.update(details)
+            if details.get('reason'):
+                payload['error']=details['reason']
+                payload['storage_error']=error.storage_code
+        print(json.dumps(payload));return 2
     finally:
-        if database:database.close()
+        try:
+            if database:database.close()
+        finally:
+            if pool_filter:logging.getLogger('psycopg.pool').removeFilter(pool_filter)
 
 
 if __name__=='__main__':raise SystemExit(main())

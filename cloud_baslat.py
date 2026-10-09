@@ -69,39 +69,15 @@ def supervise(launcher=None, stop=None):
         logging.info('[CLOUD] web başlatılıyor')
         children['web'] = launcher('web_server.py')
         logging.info('[CLOUD] web pid=%s', children['web'].pid)
+        # The legacy flag is write-capable: never run it in a read-only diagnostic release.
         if os.environ.get('BIST_RUN_POSTGRES_SCHEMA_ONCE') == '1':
-            def _verify_schema_once():
-                # Never print the DSN or subprocess stderr: both may contain secrets.
-                try:
-                    result = subprocess.run(
-                        [sys.executable, '-u', '-B', '-m', 'v6_storage', 'schema'],
-                        cwd=ROOT, env={**os.environ, 'PYTHONUNBUFFERED': '1', 'PYTHONDONTWRITEBYTECODE': '1'},
-                        capture_output=True, text=True, timeout=120,
-                    )
-                    if result.returncode == 0:
-                        import json
-                        try:
-                            applied = json.loads(result.stdout).get('applied', [])
-                            if not isinstance(applied, list) or not all(isinstance(x, str) for x in applied):
-                                raise ValueError('invalid result')
-                            logging.info('[V6_SCHEMA_ONCE_RESULT] status=SUCCESS applied_count=%d', len(applied))
-                        except (ValueError, TypeError):
-                            logging.warning('[V6_SCHEMA_ONCE_RESULT] status=UNVERIFIED_OUTPUT')
-                    else:
-                        try:
-                            payload = json.loads(result.stdout)
-                            code = payload.get('error', 'UNKNOWN')
-                            if not isinstance(code, str) or not code.isupper() or len(code) > 80 or not all(ch.isupper() or ch.isdigit() or ch == '_' for ch in code):
-                                code = 'UNSAFE_OR_UNKNOWN'
-                        except (ValueError, TypeError, AttributeError):
-                            code = 'UNKNOWN'
-                        logging.warning('[V6_SCHEMA_ONCE_RESULT] status=FAILED exit_code=%d error_code=%s', result.returncode, code)
-                except subprocess.TimeoutExpired:
-                    logging.warning('[V6_SCHEMA_ONCE_RESULT] status=TIMEOUT')
-                except OSError:
-                    logging.warning('[V6_SCHEMA_ONCE_RESULT] status=LAUNCH_FAILED')
-            threading.Thread(target=_verify_schema_once, name='v6-schema-once', daemon=True).start()
-            logging.info('[V6_SCHEMA_ONCE_LAUNCH] started')
+            logging.warning('[V6_SCHEMA_CHECK] status=BLOCKED error_code=WRITE_CAPABLE_SCHEMA_FLAG_ENABLED')
+        if os.environ.get('BIST_RUN_POSTGRES_SCHEMA_CHECK_ONCE') == '1':
+            try:
+                from v6_storage.railway_schema_check import start_once
+                start_once(ROOT)
+            except Exception:
+                logging.warning('[V6_SCHEMA_CHECK] status=FAILED error_code=CHECK_LAUNCH_FAILED')
         if os.environ.get('BIST_RUN_INTEGRITY_ONCE') == '1':
             try:
                 subprocess.Popen(
