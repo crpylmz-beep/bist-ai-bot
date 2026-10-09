@@ -76,7 +76,7 @@ def census(root, max_seconds=600, max_files=200000):
                 after = path.lstat()
                 if (before.st_dev, before.st_ino, before.st_size, before.st_mtime_ns) != (after.st_dev, after.st_ino, after.st_size, after.st_mtime_ns):
                     row['changed'] += 1
-            except (OSError, ValueError, ijson.JSONError):
+            except (OSError, ValueError, UnicodeError, json.JSONDecodeError, ijson.JSONError):
                 row['parse_errors'] += 1
         if stopped:
             break
