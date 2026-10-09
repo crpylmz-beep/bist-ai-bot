@@ -26,3 +26,23 @@ fiyat çekme veya otomatik sonuç hesaplama worker'ı eklenmemiştir.
 Geliştirme branch'i kararlı main tabanlıdır; önceki deneysel kalite filtreleri
 branch'i korunmuştur, burada üretim seçim/puanlama formülü değiştirilmemiştir.
 Production'a deploy/push yapılmaz; testler geçici kökler kullanır.
+
+## Otomatik sonuç değerlendirme
+
+Worker'ın mevcut performance turu sonunda `evaluate_round()` çağrılır. Yalnız bu
+metadata'yı taşıyan READY tahminler değerlendirilir; legacy kayıtlar değişmez.
+Sonuçlar runtime/yarin_dated_outcomes.sqlite3 içinde (prediction_id, horizon)
+benzersiz anahtarıyla eklenir, güncellenmez. Büyük JSON geçmişi yeniden yazılmaz.
+Kapanış getirisi ve pozitif kapanış isabeti, hedef/stop teması, günlük mumlarla
+bilinebilen sıra ve referansa göre MAE hesaplanır. Aynı mumdaki iki temas UNKNOWN
+olarak kalır; intraday sıra uydurulmaz. Komisyon dahil değildir.
+
+Mevcut borsapy sağlayıcısı nominal referans/seviyelerle uyumlu unadjusted günlük
+OHLC sağlar. Bölünme/sermaye işlemi içeren dönemlerde nominal getiri total return
+olarak yorumlanmamalıdır. Tüm gerekli seanslar ve tutarlı OHLC zorunludur; eksik
+veriyle sonuç yazılmaz. Her vade yalnız kendi seanslarını kullanır. Bir turda en
+fazla 20 sembol okunur; her sembol bir kez alınır. Eksik/başarısız veriler 6 saat
+sonra yeniden denenir, deferred sayısı raporlanır; sonraki semboller engellenmez.
+Sağlayıcı hatası başarılı sonuçlar commit edildikten sonra yeniden yükseltilir.
+Küçük SQLite transaction'ları kesintiden sonra mükerrer sonuç oluşmasını önler.
+Hiçbir production bağlantısı, taşıma, silme veya deploy yapılmamıştır.

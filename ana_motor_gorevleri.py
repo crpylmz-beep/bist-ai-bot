@@ -311,6 +311,8 @@ class WorkerTasks:
         if result.get('hatalar'):
             details=result.get('error_details') or {}
             raise TaskIssue(strongest(details.values()) if details else {'code':'ANALYSIS_NO_RESULT'},result.get('tamamlanan_vade',0))
+        from yarin_degerlendirme import evaluate_round
+        result['dated_top10'] = evaluate_round()
         return result
 
     def alarm(self):

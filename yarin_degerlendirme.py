@@ -101,3 +101,103 @@ def due(value, current):
     if value.get('status') != 'READY': return []
     now = instant(current)
     return [int(h) for h, at in value['evaluate_after'].items() if instant(at) <= now]
+
+
+def evaluate(value, bars, horizon, current):
+    """Daily bars only; reject gaps and ambiguous/invalid OHLC, never use future bars."""
+    from datetime import date
+    if horizon not in due(value, current): return None
+    signal = instant(value['signal_time'])
+    if not value.get('reference_time') or instant(value['reference_time']) > signal:
+        return None
+    end = date.fromisoformat(value['evaluation_dates'][str(horizon)])
+    first = date.fromisoformat(value['evaluation_dates']['1'])
+    days = [first] + sessions_after(first, horizon - 1)
+    if days[-1] != end: raise ValueError('Inconsistent evaluation calendar')
+    rows = {}
+    for bar in bars:
+        day = date.fromisoformat(str(bar['timestamp'])[:10])
+        if day not in days: continue
+        opening = bist_calendar(day.year).session_open(day.isoformat()).to_pydatetime()
+        if opening <= signal: return None
+        numbers = [finite(bar.get(k)) for k in ('open','high','low','close')]
+        if any(v is None or v <= 0 for v in numbers): return None
+        o,h,l,c = numbers
+        if not l <= min(o,c) <= max(o,c) <= h: return None
+        if day in rows and rows[day] != numbers: raise ValueError('Conflicting OHLC bars')
+        rows[day] = numbers
+    if set(rows) != set(days): return None
+    price = value['reference_price']; target = value['daily_target']; stop = value['daily_stop']
+    target_day = next((d for d in days if rows[d][1] >= target), None)
+    stop_day = next((d for d in days if rows[d][2] <= stop), None)
+    order = ('UNKNOWN_SAME_BAR' if target_day == stop_day else
+             'TARGET_FIRST' if target_day < stop_day else 'STOP_FIRST') if target_day and stop_day else None
+    close = rows[end][3]; low = min(rows[d][2] for d in days)
+    return {'horizon':horizon,'evaluation_date':end.isoformat(),
+        'return_pct':100*(close/price-1),'hit':close > price,
+        'target_hit':target_day is not None,'stop_hit':stop_day is not None,
+        'target_stop_order':order,'mae_pct':min(0.,100*(low/price-1)),
+        'lowest_price':low,'highest_price':max(rows[d][1] for d in days),
+        'evaluated_at':instant(current).isoformat(timespec='seconds')}
+
+
+def daily_history(symbol):
+    # Existing provider, explicitly unadjusted to match the frozen nominal levels.
+    import bist_bot
+    frame = bist_bot.bp.Ticker(symbol).history(period='1y', interval='1d', adjust=False, auto_adjust=False)
+    if frame is None or frame.empty: return []
+    return [{'timestamp':str(day), **{k:row.get(v) for k,v in
+             (('open','Open'),('high','High'),('low','Low'),('close','Close'))}}
+            for day,row in frame.iterrows()]
+
+
+def evaluate_round(location=None, history_provider=None, current=None, batch_size=20):
+    """Prospective archives read-only; compact append-only SQLite outcomes, no backfill."""
+    import sqlite3
+    from contextlib import closing
+    from veri_yollari import paths
+    location = location or paths()
+    current = instant(current or datetime.now(IST))
+    provider = history_provider or daily_history
+    database = location.runtime_file('yarin_dated_outcomes.sqlite3')
+    database.parent.mkdir(parents=True, exist_ok=True)
+    result = {'completed':0,'missing':0,'symbols':0,'deferred':0}
+    errors = []
+    with closing(sqlite3.connect(database, timeout=30)) as connection:
+        connection.execute('CREATE TABLE IF NOT EXISTS outcomes (prediction_id TEXT NOT NULL, horizon INTEGER NOT NULL, payload TEXT NOT NULL, PRIMARY KEY(prediction_id,horizon))')
+        connection.execute('CREATE TABLE IF NOT EXISTS attempts (symbol TEXT PRIMARY KEY, retry_after TEXT NOT NULL)')
+        cache = {}
+        for archive in sorted(location.archives.glob('*.json')):
+            with archive.open(encoding='utf-8') as stream: snapshot = json.load(stream)
+            records = (snapshot.get('dated_evaluations') or {}).get('records', {})
+            for key,value in records.items():
+                pending = [h for h in due(value,current) if not connection.execute(
+                    'SELECT 1 FROM outcomes WHERE prediction_id=? AND horizon=?',(key,h)).fetchone()]
+                if not pending: continue
+                symbol = value['symbol']
+                if symbol not in cache:
+                    if len(cache) >= batch_size: continue
+                    retry = connection.execute('SELECT retry_after FROM attempts WHERE symbol=?',(symbol,)).fetchone()
+                    if retry and instant(retry[0]) > current:
+                        result['deferred'] += len(pending)
+                        continue
+                    connection.execute('INSERT OR REPLACE INTO attempts VALUES (?,?)',(symbol,(current+timedelta(hours=6)).isoformat()))
+                    try: cache[symbol] = provider(symbol)
+                    except Exception as error:
+                        cache[symbol] = None
+                        errors.append(error)
+                if cache[symbol] is None: continue
+                for horizon in pending:
+                    outcome = evaluate(value,cache[symbol],horizon,current)
+                    if outcome is None:
+                        result['missing'] += 1
+                        continue
+                    cursor = connection.execute('INSERT OR IGNORE INTO outcomes VALUES (?,?,?)',
+                        (key,horizon,json.dumps(outcome,separators=(',',':'),allow_nan=False)))
+                    result['completed'] += cursor.rowcount
+            # Small durable commits preserve earlier successes on interruption.
+            connection.commit()
+        result['symbols'] = len(cache)
+    if errors: raise errors[0]
+    if result['missing']: raise ValueError('Dated TOP10 outcome: required OHLC unavailable')
+    return result
