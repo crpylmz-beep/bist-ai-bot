@@ -89,6 +89,16 @@ def supervise(launcher=None, stop=None):
                 logging.info('[V6_JSON_CENSUS_LAUNCH] started')
             except OSError:
                 logging.warning('[V6_JSON_CENSUS_LAUNCH] failed')
+        if os.environ.get('BIST_RUN_DUPLICATE_AUDIT_ONCE') == '1':
+            try:
+                subprocess.Popen(
+                    [sys.executable, '-u', '-B', '-m', 'v6_storage.readonly_duplicate_files', '--root', '/data'],
+                    cwd=ROOT, env={**os.environ, 'PYTHONUNBUFFERED': '1', 'PYTHONDONTWRITEBYTECODE': '1'},
+                    stdout=None, stderr=None, start_new_session=True,
+                )
+                logging.info('[V6_DUPLICATE_FILE_AUDIT_LAUNCH] started')
+            except OSError:
+                logging.warning('[V6_DUPLICATE_FILE_AUDIT_LAUNCH] failed')
         while not stop.wait(.5):
             if children['worker'].poll() is not None:
                 logging.error('[CLOUD] worker beklenmedik çıkış code=%s; servis yeniden başlatılmalı', children['worker'].returncode)
