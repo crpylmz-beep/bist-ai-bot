@@ -1,4 +1,4 @@
-"""Read-only V6 source verification. No user data or filenames in logs."""
+"""Read-only integrity report for a stable file tree; no source paths in output."""
 import argparse
 import hashlib
 import json
@@ -12,14 +12,17 @@ def scan(root, max_files=200000, max_seconds=900):
     started = time.monotonic()
     rows = []
     errors = []
-    count = 0
-    with os.scandir(root) as _:
-        pass
+    visited = 0
+    try:
+        with os.scandir(root):
+            pass
+    except OSError:
+        return {'status':'INCOMPLETE','reason':'ROOT_UNAVAILABLE','files_checked':0,'errors':1}
     for directory, dirs, files in os.walk(root, followlinks=False):
         dirs[:] = sorted(d for d in dirs if not (Path(directory)/d).is_symlink())
         for filename in sorted(files):
-            count += 1
-            if count > max_files or time.monotonic()-started > max_seconds:
+            visited += 1
+            if visited > max_files or time.monotonic()-started > max_seconds:
                 return {'status':'INCOMPLETE','files_checked':len(rows),'errors':len(errors),'reason':'BUDGET_EXCEEDED'}
             path = Path(directory)/filename
             try:
@@ -28,13 +31,18 @@ def scan(root, max_files=200000, max_seconds=900):
                     continue
                 digest = hashlib.sha256()
                 with os.fdopen(os.open(path,os.O_RDONLY|os.O_NOFOLLOW),'rb') as stream:
+                    actual = os.fstat(stream.fileno())
+                    if (actual.st_dev,actual.st_ino)!=(before.st_dev,before.st_ino):
+                        errors.append('SOURCE_CHANGED')
+                        continue
                     while block := stream.read(1024*1024):
+                        if time.monotonic()-started > max_seconds:
+                            return {'status':'INCOMPLETE','files_checked':len(rows),'errors':len(errors),'reason':'BUDGET_EXCEEDED'}
                         digest.update(block)
                 after = path.lstat()
                 if (before.st_dev,before.st_ino,before.st_size,before.st_mtime_ns)!=(after.st_dev,after.st_ino,after.st_size,after.st_mtime_ns):
                     errors.append('SOURCE_CHANGED')
                     continue
-                # Do not emit file names, hashes of paths, contents or personal data.
                 rows.append((before.st_size,digest.digest()))
             except OSError:
                 errors.append('UNREADABLE_OR_CHANGED')
