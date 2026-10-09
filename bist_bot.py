@@ -2291,6 +2291,8 @@ def yarin_top10_kilitli_kaydet(sonuclar, toplam_hisse, pozitif_kapanis=False):
                 **({'pozitif_havuz':pool} if pool is not None else {}),
                 "top10": kayitlar
             }, simdi.isoformat(timespec="seconds"))
+            from yarin_degerlendirme import attach_new
+            attach_new(veri)
             json_atomik_yaz(arsiv, veri, overwrite=False)
             # Mevcut web/Telegram okuyuculari ayni top10 yapisini kullanir.
             json_atomik_yaz(YARIN_TOP10_FILE, veri)
