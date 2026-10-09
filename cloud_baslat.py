@@ -70,15 +70,31 @@ def supervise(launcher=None, stop=None):
         children['web'] = launcher('web_server.py')
         logging.info('[CLOUD] web pid=%s', children['web'].pid)
         if os.environ.get('BIST_RUN_POSTGRES_SCHEMA_ONCE') == '1':
-            try:
-                subprocess.Popen(
-                    [sys.executable, '-u', '-B', '-m', 'v6_storage', 'schema'],
-                    cwd=ROOT, env={**os.environ, 'PYTHONUNBUFFERED': '1', 'PYTHONDONTWRITEBYTECODE': '1'},
-                    stdout=None, stderr=None, start_new_session=True,
-                )
-                logging.info('[V6_SCHEMA_ONCE_LAUNCH] started')
-            except OSError:
-                logging.warning('[V6_SCHEMA_ONCE_LAUNCH] failed')
+            def _verify_schema_once():
+                # Never print the DSN or subprocess stderr: both may contain secrets.
+                try:
+                    result = subprocess.run(
+                        [sys.executable, '-u', '-B', '-m', 'v6_storage', 'schema'],
+                        cwd=ROOT, env={**os.environ, 'PYTHONUNBUFFERED': '1', 'PYTHONDONTWRITEBYTECODE': '1'},
+                        capture_output=True, text=True, timeout=120,
+                    )
+                    if result.returncode == 0:
+                        import json
+                        try:
+                            applied = json.loads(result.stdout).get('applied', [])
+                            if not isinstance(applied, list) or not all(isinstance(x, str) for x in applied):
+                                raise ValueError('invalid result')
+                            logging.info('[V6_SCHEMA_ONCE_RESULT] status=SUCCESS applied_count=%d', len(applied))
+                        except (ValueError, TypeError):
+                            logging.warning('[V6_SCHEMA_ONCE_RESULT] status=UNVERIFIED_OUTPUT')
+                    else:
+                        logging.warning('[V6_SCHEMA_ONCE_RESULT] status=FAILED exit_code=%d', result.returncode)
+                except subprocess.TimeoutExpired:
+                    logging.warning('[V6_SCHEMA_ONCE_RESULT] status=TIMEOUT')
+                except OSError:
+                    logging.warning('[V6_SCHEMA_ONCE_RESULT] status=LAUNCH_FAILED')
+            threading.Thread(target=_verify_schema_once, name='v6-schema-once', daemon=True).start()
+            logging.info('[V6_SCHEMA_ONCE_LAUNCH] started')
         if os.environ.get('BIST_RUN_INTEGRITY_ONCE') == '1':
             try:
                 subprocess.Popen(
