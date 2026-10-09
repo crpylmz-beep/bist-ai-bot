@@ -79,12 +79,14 @@ class WorkerTasks:
     def priority(self):
         with self.lock:
             batch=list(self.events.items())[:3]
+        universe=set(self.symbols or self.bot.bist_hisseleri_getir())
+        if batch and not universe:raise TaskIssue({'code':'EMPTY_UNIVERSE'})
         completed=0
         failed=[];skips=[]
         for stock,version in batch:
             with capture() as issues:
                 try:
-                    if self.symbols and stock not in self.symbols:
+                    if stock not in universe:
                         issues.append(public_issue({'code':'OUTSIDE_EQUITY_UNIVERSE'}));result=None
                     else:result=self.original_priority(stock,gun_ici_yenile=False)
                 except Exception as error:

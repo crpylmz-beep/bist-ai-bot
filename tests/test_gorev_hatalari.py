@@ -19,7 +19,9 @@ class TaskDiagnosticsTests(unittest.TestCase):
   self.location=DataPaths({'BIST_DATA_DIR':self.temp.name});self.location.ensure()
   self.enterContext(patch.dict(os.environ,{'BIST_DATA_DIR':self.temp.name}));self.now=datetime(2026,10,7,12,tzinfo=ISTANBUL);self.mono=0
  def worker(self):
-  worker=WorkerTasks();self.addCleanup(worker.close);return worker
+  worker=WorkerTasks();self.addCleanup(worker.close)
+  self.enterContext(patch.object(worker.bot,'bist_hisseleri_getir',return_value=['AAA','BBB','CCC','THYAO']))
+  return worker
  def error(self,status):
   response=requests.Response();response.status_code=status
   return requests.HTTPError('secret TOKEN URL',response=response)

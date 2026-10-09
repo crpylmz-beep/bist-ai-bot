@@ -251,7 +251,9 @@ class PiyasaBaglami:
                 rows=data.get('hisseler',[]);fallback=data.get('updated_at') or data.get('guncelleme')
             if index is None:index=data.get('bist100',{})
             sector_map=sektor_eslestirmesi(self.location)
-            if universe is None:universe=set(sector_map)|{r.get('sembol') for r in data.get('hisseler',[]) if r.get('sembol')}
+            if universe is None:
+                import bist_bot
+                universe=bist_bot.bist_hisseleri_getir()
             result=build_context(rows,universe,index,sector_map,current,source,fallback)
             self.location.public.mkdir(parents=True,exist_ok=True)
             atomic_json(self.file,result)
@@ -281,14 +283,14 @@ class PiyasaBaglami:
             if universe is None:
                 saved=load(universe_path,{})
                 at=stamp(saved.get('created_at'))
-                if saved.get('source')=='XUTUM' and at and at<=current and at.date()==current.date():universe=saved['symbols']
+                if saved.get('source')=='KAP_VERIFIED_EQUITIES' and at and at<=current and at.date()==current.date():universe=saved['symbols']
                 else:
                     import bist_bot
                     universe=bist_bot.bist_hisseleri_getir()
                     if not universe:
                         from gorev_hatalari import TaskIssue
                         raise TaskIssue({'code':'EMPTY_UNIVERSE'})
-                    with locked(universe_path):atomic_json(universe_path,{'source':'XUTUM','created_at':current.isoformat(),'symbols':universe})
+                    with locked(universe_path):atomic_json(universe_path,{'source':'KAP_VERIFIED_EQUITIES','created_at':current.isoformat(),'symbols':universe})
             day=expected_session(current,holiday)
             history=self.location.runtime/'market_context'/f'{day.isoformat()}.json'
             if history.exists():
@@ -367,13 +369,13 @@ class PiyasaBaglami:
             if universe is None:
                 saved=load(self.location.runtime/'market_context_universe.json',{})
                 at=stamp(saved.get('created_at'))
-                if saved.get('source')=='XUTUM' and at and at<=current and at.date()==current.date():universe=saved.get('symbols')
+                if saved.get('source')=='KAP_VERIFIED_EQUITIES' and at and at<=current and at.date()==current.date():universe=saved.get('symbols')
                 else:
                     import bist_bot
                     universe=bist_bot.bist_hisseleri_getir()
                     if universe:
                         path=self.location.runtime/'market_context_universe.json'
-                        with locked(path):atomic_json(path,{'source':'XUTUM','created_at':current.isoformat(),'symbols':universe})
+                        with locked(path):atomic_json(path,{'source':'KAP_VERIFIED_EQUITIES','created_at':current.isoformat(),'symbols':universe})
                 if not universe:
                     sector_trace('UNIVERSE',{},universe or [],mapping,{'code':'EMPTY_UNIVERSE'})
                     raise TaskIssue({'code':'EMPTY_UNIVERSE'})

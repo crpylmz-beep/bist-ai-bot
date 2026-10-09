@@ -80,13 +80,8 @@ def tek_hisse_site(sembol):
 
 def harita_olustur():
 
-    df = bp.companies()
-
-    semboller = [
-        str(x).strip().upper()
-        for x in df["ticker"].tolist()
-        if str(x).strip()
-    ]
+    from pay_evreni import symbols
+    semboller = symbols()
 
     toplam = len(semboller)
 

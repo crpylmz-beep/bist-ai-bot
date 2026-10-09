@@ -282,7 +282,8 @@ def hisse_analiz_hesapla(
         hisse = bp.Ticker(sembol)
 
         try:
-            veri = hisse.history(period=period)
+            from tarama_verisi import history
+            veri = history(hisse, sembol, period)
         except Exception as error:
             from gorev_hatalari import remember
             remember(error,'PROVIDER',sembol)
@@ -1625,16 +1626,8 @@ def agresif_mi(a):
 # =========================================================
 
 def bist_hisseleri_getir():
-    # Official BIST All equity-index constituents, not KAP issuer membership.
-    from saglayici_sembolleri import bist_symbol
-    try:
-        rows=bp.Index('XUTUM').components
-        if not rows:return []  # Never fall back to an untyped issuer universe.
-        return sorted({bist_symbol(row['symbol']) for row in rows})
-    except Exception as error:
-        from gorev_hatalari import remember
-        remember(error,'PROVIDER')
-        return []
+    from pay_evreni import symbols
+    return symbols()
 
 
 # =========================================================

@@ -27,26 +27,8 @@ DURUM_DOSYA = runtime_file('kap_son_gorulen.json')
 
 
 def bist_sembolleri_getir():
-    try:
-        df = bp.companies()
-
-        semboller = set(
-            str(x).upper().strip()
-            for x in df["ticker"].dropna().tolist()
-        )
-
-        print(
-            f"BIST SEMBOL LISTESI: {len(semboller)}"
-        )
-
-        return semboller
-
-    except Exception as e:
-        print(
-            "BIST SEMBOL LISTESI HATASI:",
-            e
-        )
-        return set()
+    from pay_evreni import symbols
+    return set(symbols())
 
 
 BIST_SEMBOLLER = None  # Provider discovery is lazy; imports remain offline.

@@ -99,14 +99,13 @@ class CompanyBoundaryRoundTests(unittest.TestCase):
 class EquityUniverseTests(unittest.TestCase):
  def test_official_equity_components_not_untyped_companies(self):
   import bist_bot
-  with patch.object(bist_bot.bp,'Index') as index,patch.object(bist_bot.bp,'companies') as issuers:
-   index.return_value.components=[{'symbol':'THYAO.E'},{'symbol':'GARAN'},{'symbol':'THYAO'}]
+  with patch('pay_evreni.symbols',return_value=['GARAN','THYAO']) as source,patch.object(bist_bot.bp,'companies') as issuers:
    self.assertEqual(bist_bot.bist_hisseleri_getir(),['GARAN','THYAO'])
-   index.assert_called_once_with('XUTUM');issuers.assert_not_called()
+   source.assert_called_once();issuers.assert_not_called()
  def test_equity_source_failure_does_not_fall_back_to_issuer_list(self):
   import bist_bot
-  with patch.object(bist_bot.bp,'Index') as index,patch.object(bist_bot.bp,'companies') as issuers:
-   index.return_value.components=[];self.assertEqual(bist_bot.bist_hisseleri_getir(),[]);issuers.assert_not_called()
+  with patch('pay_evreni.symbols',return_value=[]) as source,patch.object(bist_bot.bp,'companies') as issuers:
+   self.assertEqual(bist_bot.bist_hisseleri_getir(),[]);issuers.assert_not_called()
 
 class SkipIsolationTests(unittest.TestCase):
  setUp=diagnostics.TaskDiagnosticsTests.setUp
@@ -120,7 +119,7 @@ class SkipIsolationTests(unittest.TestCase):
    worker.priority();self.assertEqual(provider.call_count,3)
   saved=json.loads((self.location.runtime/'provider_unsupported.json').read_text());self.assertEqual(set(saved),{'AAA','BBB','CCC'})
  def test_priority_non_equity_is_skipped_before_history(self):
-  worker=self.worker();worker.symbols=['THYAO'];worker.enqueue('ADBNK')
+  worker=self.worker();worker.symbols=[];worker.enqueue('ADBNK')
   with patch.object(worker,'original_priority') as provider:result=worker.priority()
   provider.assert_not_called();self.assertEqual(result['diagnostics']['skipped'],1)
   self.assertEqual(result['diagnostics']['reasons'][0]['code'],'OUTSIDE_EQUITY_UNIVERSE')

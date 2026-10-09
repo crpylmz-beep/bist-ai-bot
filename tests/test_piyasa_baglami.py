@@ -174,7 +174,7 @@ class MarketTests(unittest.TestCase):
         class Fixed(datetime):
             @classmethod
             def now(cls,tz=None):return self.current
-        with patch.object(bist_bot,'datetime',Fixed),patch.object(bist_bot,'yarin_potansiyel_hesapla',return_value=80):
+        with patch.object(bist_bot,'datetime',Fixed),patch.object(bist_bot,'yarin_potansiyel_hesapla',return_value=80),patch.object(bist_bot,'bist_hisseleri_getir',return_value=list(self.map)):
             bist_bot.yarin_top10_listesi([row],kalibrasyon={'learning_enabled':True,'active':active,'shadow':{'general':BASE}},piyasa=doc)
         self.assertEqual(row['kalibrasyon_duzeltmesi'],0)
         self.assertEqual(row['final_puan'],80)
@@ -194,7 +194,7 @@ class MarketTests(unittest.TestCase):
         class Fixed(datetime):
             @classmethod
             def now(cls,tz=None):return self.current
-        with patch.object(bist_bot,'datetime',Fixed),patch.object(bist_bot,'yarin_potansiyel_hesapla',return_value=80):
+        with patch.object(bist_bot,'datetime',Fixed),patch.object(bist_bot,'yarin_potansiyel_hesapla',return_value=80),patch.object(bist_bot,'bist_hisseleri_getir',return_value=list(self.map)):
             top=bist_bot.yarin_top10_listesi([row],kalibrasyon={'learning_enabled':False},piyasa=doc)
         self.assertEqual(row['ham_puan'],80);self.assertEqual(row['kalibrasyon_duzeltmesi'],0)
         self.assertAlmostEqual(row['final_puan'],80+row['piyasa_baglami_etkisi']);self.assertLessEqual(abs(top[0][0]-80),2.5)
@@ -325,7 +325,7 @@ class MarketTests(unittest.TestCase):
         class Fixed(datetime):
             @classmethod
             def now(cls,tz=None):return self.current
-        with patch.object(bist_bot,'datetime',Fixed),patch.object(bist_bot,'yarin_potansiyel_hesapla',return_value=80):
+        with patch.object(bist_bot,'datetime',Fixed),patch.object(bist_bot,'yarin_potansiyel_hesapla',return_value=80),patch.object(bist_bot,'bist_hisseleri_getir',return_value=list(self.map)):
             saved=bist_bot.yarin_top10_kilitli_kaydet(rows,len(rows))
             self.assertIsNotNone(saved);ctx=saved['top10'][0]['tahmin']['piyasa_baglami']
             self.assertEqual(ctx['piyasa_rejimi'],'GUCLU_YUKSELIS')
