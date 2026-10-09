@@ -88,7 +88,14 @@ def supervise(launcher=None, stop=None):
                         except (ValueError, TypeError):
                             logging.warning('[V6_SCHEMA_ONCE_RESULT] status=UNVERIFIED_OUTPUT')
                     else:
-                        logging.warning('[V6_SCHEMA_ONCE_RESULT] status=FAILED exit_code=%d', result.returncode)
+                        try:
+                            payload = json.loads(result.stdout)
+                            code = payload.get('error', 'UNKNOWN')
+                            if not isinstance(code, str) or not code.isupper() or len(code) > 80 or not all(ch.isupper() or ch.isdigit() or ch == '_' for ch in code):
+                                code = 'UNSAFE_OR_UNKNOWN'
+                        except (ValueError, TypeError, AttributeError):
+                            code = 'UNKNOWN'
+                        logging.warning('[V6_SCHEMA_ONCE_RESULT] status=FAILED exit_code=%d error_code=%s', result.returncode, code)
                 except subprocess.TimeoutExpired:
                     logging.warning('[V6_SCHEMA_ONCE_RESULT] status=TIMEOUT')
                 except OSError:
