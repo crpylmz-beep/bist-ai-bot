@@ -38,26 +38,6 @@ def run_startup_inventory():
 
 
 
-def run_startup_integrity():
-    """Optional, one-shot read-only SHA-256 scan; no user data in logs."""
-    if os.environ.get('BIST_RUN_INTEGRITY_ONCE') != '1':
-        return
-    previous_bytecode = sys.dont_write_bytecode
-    sys.dont_write_bytecode = True
-    try:
-        from v6_storage.readonly_integrity import scan
-        root = os.environ.get('BIST_DATA_DIR', '').strip()
-        if not root or not Path(root).is_absolute():
-            result = {'status':'INCOMPLETE','reason':'DATA_ROOT_REQUIRED'}
-        else:
-            result = scan(root)
-        import json
-        logging.info('[V6_FILE_INTEGRITY] %s', json.dumps(result, sort_keys=True))
-    except Exception:
-        logging.warning('[V6_FILE_INTEGRITY] {"status":"INCOMPLETE","reason":"SCAN_FAILED"}')
-    finally:
-        sys.dont_write_bytecode = previous_bytecode
-
 def seed_reference_data(location):
     from cloud_bootstrap import bootstrap_public
     result=bootstrap_public(location)
@@ -111,7 +91,6 @@ def supervise(launcher=None, stop=None):
 def main():
     logging.basicConfig(level=logging.INFO, format='%(message)s')
     run_startup_inventory()
-    run_startup_integrity()
     location = paths()
     location.ensure()
     from disk_koruma import report,cleanup_startup
