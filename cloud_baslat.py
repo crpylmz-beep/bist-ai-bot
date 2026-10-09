@@ -69,6 +69,16 @@ def supervise(launcher=None, stop=None):
         logging.info('[CLOUD] web başlatılıyor')
         children['web'] = launcher('web_server.py')
         logging.info('[CLOUD] web pid=%s', children['web'].pid)
+        if os.environ.get('BIST_RUN_POSTGRES_SCHEMA_ONCE') == '1':
+            try:
+                subprocess.Popen(
+                    [sys.executable, '-u', '-B', '-m', 'v6_storage', 'schema'],
+                    cwd=ROOT, env={**os.environ, 'PYTHONUNBUFFERED': '1', 'PYTHONDONTWRITEBYTECODE': '1'},
+                    stdout=None, stderr=None, start_new_session=True,
+                )
+                logging.info('[V6_SCHEMA_ONCE_LAUNCH] started')
+            except OSError:
+                logging.warning('[V6_SCHEMA_ONCE_LAUNCH] failed')
         if os.environ.get('BIST_RUN_INTEGRITY_ONCE') == '1':
             try:
                 subprocess.Popen(
