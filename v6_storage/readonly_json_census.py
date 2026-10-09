@@ -14,7 +14,7 @@ def census(root, max_seconds=600, max_files=200000):
     root = Path(root).absolute()
     deadline = time.monotonic() + max_seconds
     counts = {k: {'files': 0, 'array_items': 0, 'object_members': 0, 'jsonl_lines': 0,
-                  'unsupported_roots': 0, 'parse_errors': 0, 'changed': 0} for k in sorted(ELIGIBLE)}
+                  'nested_array_items': 0, 'nested_object_members': 0, 'max_depth': 0,\n                  'unsupported_roots': 0, 'parse_errors': 0, 'changed': 0} for k in sorted(ELIGIBLE)}
     scanned = 0
     errors = 0
     stopped = False
@@ -62,15 +62,27 @@ def census(root, max_seconds=600, max_files=200000):
                                 if time.monotonic() >= deadline:
                                     stopped = True
                                     break
+                                depth = prefix.count('.') + (1 if prefix else 0)
+                                row['max_depth'] = max(row['max_depth'], depth)
                                 if prefix == 'item' and event in ('start_map', 'start_array', 'string', 'number', 'boolean', 'null'):
                                     row['array_items'] += 1
+                                elif prefix.endswith('.item') and event in ('start_map', 'start_array', 'string', 'number', 'boolean', 'null'):
+                                    row['nested_array_items'] += 1
+                                if event == 'map_key' and prefix:
+                                    row['nested_object_members'] += 1
                         elif root_event[1] == 'start_map':
                             for prefix, event, _value in parser:
                                 if time.monotonic() >= deadline:
                                     stopped = True
                                     break
+                                depth = prefix.count('.') + (1 if prefix else 0)
+                                row['max_depth'] = max(row['max_depth'], depth)
                                 if prefix == '' and event == 'map_key':
                                     row['object_members'] += 1
+                                elif event == 'map_key':
+                                    row['nested_object_members'] += 1
+                                if prefix.endswith('.item') and event in ('start_map', 'start_array', 'string', 'number', 'boolean', 'null'):
+                                    row['nested_array_items'] += 1
                         else:
                             row['unsupported_roots'] += 1
                 after = path.lstat()
