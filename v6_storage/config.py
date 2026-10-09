@@ -2,7 +2,7 @@
 from dataclasses import dataclass
 import errno
 import os
-from urllib.parse import urlparse
+from urllib.parse import urlparse,parse_qs
 
 
 class StorageError(OSError):
@@ -36,8 +36,48 @@ class Settings:
 
     def require_database(self):
         if not self.dsn:raise StorageError('POSTGRES_NOT_CONFIGURED')
-        parsed=urlparse(self.dsn)
+        try:parsed=urlparse(self.dsn)
+        except ValueError:raise StorageError('POSTGRES_CONFIGURATION_INVALID') from None
         if parsed.scheme not in ('postgres','postgresql') or not parsed.hostname:raise StorageError('POSTGRES_CONFIGURATION_INVALID')
         # Remote plaintext connections are prohibited; local disposable tests may use trust.
-        if parsed.hostname not in ('127.0.0.1','localhost','::1') and not any(x in parsed.query.split('&') for x in ('sslmode=require','sslmode=verify-ca','sslmode=verify-full')):
+        if parsed.hostname not in ('127.0.0.1','localhost','::1') and parse_qs(parsed.query,keep_blank_values=True).get('sslmode') not in (['require'],['verify-ca'],['verify-full']):
             raise StorageError('POSTGRES_TLS_REQUIRED')
+
+
+@dataclass(frozen=True, repr=False)
+class R2Settings:
+    bucket: str = ''
+    endpoint: str = ''
+    access_key: str = ''
+    secret_key: str = ''
+    private_confirmed: bool = False
+    connect_timeout: int = 10
+    read_timeout: int = 30
+
+    def __repr__(self):
+        return f'R2Settings(configured={bool(self.bucket and self.endpoint and self.access_key and self.secret_key)})'
+
+    @classmethod
+    def from_env(cls, env=None):
+        env = os.environ if env is None else env
+        def timeout(name, default):
+            try: value = int(env.get(name, str(default)))
+            except (ValueError, TypeError): raise StorageError('R2_CONFIGURATION_INVALID') from None
+            if not 1 <= value <= 60: raise StorageError('R2_CONFIGURATION_INVALID')
+            return value
+        return cls(env.get('R2_BUCKET', ''), env.get('R2_ENDPOINT_URL', ''),
+                   env.get('R2_ACCESS_KEY_ID', ''), env.get('R2_SECRET_ACCESS_KEY', ''),
+                   env.get('R2_PRIVATE_BUCKET_CONFIRMED', 'false').lower() == 'true',
+                   timeout('R2_CONNECT_TIMEOUT_SECONDS', 10), timeout('R2_READ_TIMEOUT_SECONDS', 30))
+
+    def require(self):
+        if not self.bucket or not self.access_key or not self.secret_key:
+            raise StorageError('R2_NOT_CONFIGURED')
+        try: parsed = urlparse(self.endpoint)
+        except ValueError: raise StorageError('R2_ENDPOINT_INVALID') from None
+        if (parsed.scheme != 'https' or not (parsed.hostname or '').endswith('.r2.cloudflarestorage.com')
+                or parsed.username or parsed.password or parsed.query or parsed.fragment
+                or parsed.path not in ('', '/')):
+            raise StorageError('R2_ENDPOINT_INVALID')
+        if not self.private_confirmed:
+            raise StorageError('R2_PRIVATE_BUCKET_CONFIRMATION_REQUIRED')

@@ -8,7 +8,7 @@ import tempfile
 import time
 from urllib.parse import urlparse
 import zlib
-from .config import StorageError
+from .config import StorageError,R2Settings
 from .migration import checksum,fingerprint
 from .records import now
 
@@ -23,17 +23,15 @@ class R2Archive:
         self.bucket=bucket or env.get('R2_BUCKET');self.client=client
         if not self.bucket:raise StorageError('R2_NOT_CONFIGURED')
         if client is None:
-            endpoint=env.get('R2_ENDPOINT_URL','');parsed=urlparse(endpoint)
-            if parsed.scheme!='https' or not (parsed.hostname or '').endswith('.r2.cloudflarestorage.com'):raise StorageError('R2_ENDPOINT_INVALID')
-            if env.get('R2_PRIVATE_BUCKET_CONFIRMED','false').lower()!='true':raise StorageError('R2_PRIVATE_BUCKET_CONFIRMATION_REQUIRED')
-            if not env.get('R2_ACCESS_KEY_ID') or not env.get('R2_SECRET_ACCESS_KEY'):raise StorageError('R2_NOT_CONFIGURED')
+            settings=R2Settings.from_env({**env,'R2_BUCKET':self.bucket});settings.require()
+            endpoint=settings.endpoint
             import boto3
             import botocore.session
             session=botocore.session.Session()
             config_store=session.get_component('config_store')
             for name,value in (('profile',None),('config_file',os.devnull),('credentials_file',os.devnull)):config_store.set_config_variable(name,value)
             from botocore.config import Config
-            self.client=boto3.Session(botocore_session=session).client('s3',endpoint_url=endpoint,aws_access_key_id=env['R2_ACCESS_KEY_ID'],aws_secret_access_key=env['R2_SECRET_ACCESS_KEY'],region_name='auto',config=Config(connect_timeout=10,read_timeout=30,retries={'total_max_attempts':3,'mode':'standard'}))
+            self.client=boto3.Session(botocore_session=session).client('s3',endpoint_url=endpoint,aws_access_key_id=settings.access_key,aws_secret_access_key=settings.secret_key,region_name='auto',config=Config(connect_timeout=settings.connect_timeout,read_timeout=settings.read_timeout,retries={'total_max_attempts':3,'mode':'standard'}))
 
     def call(self,name,**kwargs):
         for attempt in range(3):

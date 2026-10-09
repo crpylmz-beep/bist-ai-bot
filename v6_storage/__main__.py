@@ -17,12 +17,19 @@ def main(argv=None):
     restore=sub.add_parser('restore');restore.add_argument('manifest');restore.add_argument('target');restore.add_argument('--apply',action='store_true')
     export=sub.add_parser('export');export.add_argument('source');export.add_argument('target')
     sub.add_parser('usage')
+    health=sub.add_parser('connections-health')
+    health.add_argument('--probe',action='store_true')
     log_inventory=sub.add_parser('inventory-log')
     log_inventory.add_argument('--railway-logs',action='store_true')
     inventory=sub.add_parser('inventory');inventory.add_argument('--root',required=True)
     inventory.add_argument('--pg-factor-low',type=float,default=1.5);inventory.add_argument('--pg-factor-high',type=float,default=3.0)
     inventory.add_argument('--r2-ratio-low',type=float,default=.25);inventory.add_argument('--r2-ratio-high',type=float,default=.75)
     args=parser.parse_args(argv)
+    if args.command=='connections-health':
+        from .connection_health import check
+        value=check(probe=args.probe)
+        print(json.dumps(value,ensure_ascii=True))
+        return 2 if any(row['status'] in ('ERROR','PARTIALLY_CONFIGURED') for row in value['services'].values()) else 0
     if args.command=='inventory-log':
         from .inventory_log import run_once
         return run_once(railway_logs=args.railway_logs)
