@@ -37,6 +37,7 @@ def run_startup_inventory():
         sys.dont_write_bytecode = previous_bytecode
 
 
+
 def seed_reference_data(location):
     from cloud_bootstrap import bootstrap_public
     result=bootstrap_public(location)
