@@ -41,7 +41,7 @@ def _identity(row, mapping_key=None):
         return None
     return key
 
-def audit(root, max_seconds=600, max_records=2000000):
+def audit(root, max_seconds=600, max_records=300000):
     root = Path(root).absolute()
     deadline = time.monotonic() + max_seconds
     summary = {}
