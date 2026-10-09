@@ -40,8 +40,12 @@ class PostgresStore:
                 with connection.transaction():yield connection
         except StorageError:raise
         except Exception as error:
-            logging.error('[STORAGE_V6] code=POSTGRES_OPERATION_FAILED type=%s sqlstate=%s',type(error).__name__,getattr(error,'sqlstate',None))
-            raise StorageError('POSTGRES_OPERATION_FAILED') from None
+            from .schema_diagnostics import postgres_details
+            details=postgres_details(error)
+            logging.error('[STORAGE_V6] code=POSTGRES_OPERATION_FAILED reason=%s sqlstate=%s',details['reason'],details.get('sqlstate'))
+            safe=StorageError('POSTGRES_OPERATION_FAILED')
+            safe.safe_details=details
+            raise safe from None
 
     @staticmethod
     def json(value):
@@ -66,6 +70,7 @@ class PostgresStore:
 
     def ready(self):
         with self.transaction() as db:
+            db.execute('SET TRANSACTION READ ONLY')
             row=db.execute("SELECT to_regclass('bist_v6.schema_migrations') AS name").fetchone()
             if row['name'] is None:raise StorageError('SCHEMA_MIGRATION_REQUIRED')
             versions={r['version']:r['checksum'] for r in db.execute('SELECT version,checksum FROM bist_v6.schema_migrations')}
