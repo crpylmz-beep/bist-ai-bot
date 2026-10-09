@@ -14,7 +14,8 @@ def census(root, max_seconds=600, max_files=200000):
     root = Path(root).absolute()
     deadline = time.monotonic() + max_seconds
     counts = {k: {'files': 0, 'array_items': 0, 'object_members': 0, 'jsonl_lines': 0,
-                  'nested_array_items': 0, 'nested_object_members': 0, 'max_depth': 0,\n                  'unsupported_roots': 0, 'parse_errors': 0, 'changed': 0} for k in sorted(ELIGIBLE)}
+                  'nested_array_items': 0, 'nested_object_members': 0, 'max_depth': 0,
+                  'unsupported_roots': 0, 'parse_errors': 0, 'changed': 0} for k in sorted(ELIGIBLE)}
     scanned = 0
     errors = 0
     stopped = False
