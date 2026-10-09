@@ -18,7 +18,9 @@ def scan(root, max_files=200000, max_seconds=900):
             pass
     except OSError:
         return {'status':'INCOMPLETE','reason':'ROOT_UNAVAILABLE','files_checked':0,'errors':1}
-    for directory, dirs, files in os.walk(root, followlinks=False):
+    def walk_error(_error):
+        errors.append('DIRECTORY_UNREADABLE')
+    for directory, dirs, files in os.walk(root, followlinks=False, onerror=walk_error):
         dirs[:] = sorted(d for d in dirs if not (Path(directory)/d).is_symlink())
         for filename in sorted(files):
             visited += 1
