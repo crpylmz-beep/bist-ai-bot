@@ -38,6 +38,7 @@ class V6BulkImportRegression(unittest.TestCase):
                 return {"status": "VERIFIED", "records": 1}
 
             with patch("v6_storage.bulk_import.paths", return_value=location), \
+                 patch("v6_storage.bulk_import.Path", side_effect=lambda value: location.root if value == "/data" else Path(value)), \
                  patch("v6_storage.postgres.PostgresStore", DummyStore), \
                  patch("v6_storage.bulk_import.Migrator.run", migrate), \
                  patch("builtins.print") as printer:
