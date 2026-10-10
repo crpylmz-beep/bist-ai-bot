@@ -1,0 +1,25 @@
+name: V6 JSON migration regression
+
+on:
+  push:
+    branches: [feat/v6-direct-bulk-import]
+    paths:
+      - 'v6_storage/**'
+      - 'tests/test_v6_metadata_nested.py'
+      - '.github/workflows/v6-json-migration-regression.yml'
+  pull_request:
+    paths:
+      - 'v6_storage/**'
+      - 'tests/test_v6_metadata_nested.py'
+
+jobs:
+  metadata:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: python -m pip install ijson==3.4.0.post0
+      - run: python -m unittest -v tests/test_v6_metadata_nested.py
