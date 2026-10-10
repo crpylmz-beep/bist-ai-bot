@@ -161,6 +161,24 @@ class LearningTests(unittest.TestCase):
     def test_nested_future_snapshot(self):
         row=dict(self.row,indicator_snapshot={'captured_at':self.now.isoformat(),'inputs':{'fiyat':100,'rsi':45},'technical':{'asof':(self.now+timedelta(seconds=1)).isoformat()}})
         self.assertEqual(self.delta(row=row),0)
+    def test_stale_ready_context_rejected_at_ranking_time(self):
+        model=self.model();model['asof']=(self.now-timedelta(days=learning.TOP10_MAX_CACHE_AGE_DAYS,seconds=1)).isoformat()
+        original=copy.deepcopy(model)
+        result=learning.rank_with_learning([(80,dict(self.row)),(79,dict(self.row))],model,self.now)
+        self.assertEqual([score for score,_ in result],[80,79])
+        self.assertTrue(all(r['learning_adjustment']==0 and r['learning_status']=='STALE_REPORT' for _,r in result))
+        self.assertEqual(model,original)
+    def test_freshness_boundary_allowed_and_one_second_later_rejected(self):
+        model=self.model();model['asof']=(self.now-timedelta(days=learning.TOP10_MAX_CACHE_AGE_DAYS)).isoformat()
+        self.assertGreater(self.delta(model),0)
+        result=learning.top10_learning_adjustment(self.row,model,self.now+timedelta(seconds=1))
+        self.assertEqual(result['learning_adjustment'],0);self.assertEqual(result['learning_status'],'STALE_REPORT')
+    def test_cached_context_becomes_stale_between_loading_and_ranking(self):
+        with patch('sinyal_performansi.read_report',return_value=self.report()) as read:
+            model=learning.top10_learning_context(self.paths,self.now)
+            result=learning.rank_with_learning([(80,dict(self.row))],model,self.now+timedelta(days=8))
+        read.assert_called_once();self.assertEqual(result[0][0],80)
+        self.assertEqual(result[0][1]['learning_status'],'STALE_REPORT')
     def test_context_future_guard_at_scoring_time(self):
         model=self.model();model['asof']=(self.now+timedelta(minutes=1)).isoformat();self.assertEqual(self.delta(model),0)
     def test_context_stale_guard_at_scoring_time(self):
