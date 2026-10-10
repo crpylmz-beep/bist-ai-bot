@@ -2195,6 +2195,9 @@ def yarin_snapshot_modeli(veri, tahmin_zamani=None):
                 ) if k in hisse
             }
         }
+    if tahmin_zamani and 'base_top10' in snapshot:
+        from top10_frozen_pair import freeze_pair
+        snapshot['frozen_comparison'] = freeze_pair(snapshot)
     return snapshot
 
 
@@ -2250,6 +2253,7 @@ def yarin_top10_kilitli_kaydet(sonuclar, toplam_hisse, pozitif_kapanis=False):
                 rows=sonuclar,fallback=simdi.isoformat(),force=True)
             calibration = YarinKalibrasyon(paths(repo_root=os.path.dirname(__file__)), clock=lambda: simdi).freeze_day()
             from yarin_kalibrasyon import top10_learning_context,rank_with_learning
+            from yarin_kalibrasyon import TOP10_HORIZON_WEIGHTS,TOP10_MAX_ADJUSTMENT
             learning_context=top10_learning_context(paths(repo_root=os.path.dirname(__file__)),simdi)
             top10 = yarin_top10_listesi(sonuclar, kalibrasyon=calibration, piyasa=piyasa,learning_context=learning_context)
             # Prospective baseline/shadow lists; never recomputed from later outcomes.
@@ -2301,6 +2305,10 @@ def yarin_top10_kilitli_kaydet(sonuclar, toplam_hisse, pozitif_kapanis=False):
                 "piyasa_modeli": piyasa,
                 "base_top10":base_top10,
                 "learning_comparison":learning_comparison,
+                "comparison_context":{'learning_asof':learning_context.get('asof'),
+                    'learning_status':learning_context.get('status'),
+                    'horizon_weights':dict(TOP10_HORIZON_WEIGHTS),
+                    'maximum_adjustment':TOP10_MAX_ADJUSTMENT},
                 "aday_secimi":candidate_selection,
                 "ham_top10": ham_top10,
                 "shadow_top10": shadow_top10,

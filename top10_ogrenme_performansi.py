@@ -20,6 +20,7 @@ MIN_PAIRED_SAMPLES = 100
 
 
 def verified(row, horizon, current, holiday=None):
+    if row.get('comparison_integrity_error'):return row['comparison_integrity_error']
     # BASE is an immutable prospective control, not a live training sample.
     # Reuse all price/session/provenance gates without weakening global quality.
     if row.get('kaynak') != 'IMMUTABLE_YARIN_SNAPSHOT': return 'UNVERIFIED_SNAPSHOT'
@@ -49,6 +50,7 @@ def metrics(rows, horizon):
     average_mae = mean(mae) if mae else None
     return {'count': len(values), 'mean_return': average, 'median_return': median(values),
             'positive_count': positive, 'success_rate': positive / len(values),
+            'return_samples':values,'mfe_values':mfe,'mae_values':mae,
             'best_return': max(values), 'worst_return': min(values),
             'mean_mfe': mean(mfe) if mfe else None, 'max_mfe': max(mfe) if mfe else None,
             'mean_mae': average_mae, 'worst_mae': min(mae) if mae else None,
@@ -71,10 +73,23 @@ def comparison(snapshot_id, rows, horizon, current, holiday=None):
         isinstance(r.get('learning_version'),str) and r['learning_version'] in versions
         for r in lists['LEARNED']) else None
     result['learning_applied'] = any(number(r.get('learning_adjustment'),0)!=0 for r in lists['LEARNED'])
+    result['model_versions']={name:{'version':items[0].get('model_version') if items else None,
+        'configuration_digest':items[0].get('model_configuration_digest') if items else None}
+        for name,items in lists.items()}
     result['outcomes_available_at'] = None
     excluded = Counter()
+    if any(r.get('comparison_schema') for r,_ in rows):
+        for field in ('comparison_schema','data_slice_id','comparison_digest'):
+            values=[r.get(field) for r,_ in rows]
+            if any(not isinstance(v,str) or not v for v in values) or len(set(values))!=1:
+                excluded['INCONSISTENT_'+field.upper()]+=1
+        for name,items in lists.items():
+            for field in ('model_version','model_configuration_digest'):
+                values=[r.get(field) for r in items]
+                if not values or any(not isinstance(v,str) or not v for v in values) or len(set(values))!=1:
+                    excluded[name+'_INCONSISTENT_'+field.upper()]+=1
     observed = {name: [] for name in MODELS}
-    coherent = True
+    coherent = not excluded
     data_quality={name:{'records':len(items),'verified':0,'pending':0,'missing_due_outcomes':0,'excluded':0}
                   for name,items in lists.items()}
     for name, items in lists.items():
@@ -128,6 +143,7 @@ def comparison(snapshot_id, rows, horizon, current, holiday=None):
             'mean_return': mean(values) if values else None,
             'success_rate': sum(value>0 for value in values)/len(values) if values else None}
     result['excluded'] = dict(excluded)
+    result['display_status']='YETERSİZ VERİ' if excluded else 'TAMAMLANDI'
     if excluded: return result
     result['base'] = metrics(lists['BASE'], horizon)
     result['learned'] = metrics(lists['LEARNED'], horizon)
@@ -220,6 +236,16 @@ def summary(comparisons):
                       'success_rate':positives/samples if samples else None,
                       'mean_return':sum(r['mean_return']*r['count'] for r in rows)/samples if samples else None,
                       'data_quality':dict(quality_counts)}
+        returns=[v for r in rows for v in r.get('return_samples',[])]
+        mae=[v for r in rows for v in r.get('mae_values',[])]
+        mfe=[v for r in rows for v in r.get('mfe_values',[])]
+        risk_complete=bool(samples) and len(mae)==samples and len(mfe)==samples
+        models[name].update(median_return=median(returns) if samples and len(returns)==samples else None,
+            risk={'display_status':'TAMAMLANDI' if risk_complete else 'YETERSİZ VERİ',
+                  'complete':risk_complete,'mae_samples':len(mae),'mfe_samples':len(mfe),
+                  'mean_mae':mean(mae) if mae else None,'median_mae':median(mae) if mae else None,
+                  'worst_mae':min(mae) if mae else None,'mean_mfe':mean(mfe) if mfe else None,
+                  'median_mfe':median(mfe) if mfe else None})
         observed=[r['observed_models'][name] for r in comparisons if name in r.get('observed_models',{})]
         observed_samples=sum(r['sample_count'] for r in observed)
         observed_positive=sum(r['positive_count'] for r in observed)
@@ -230,8 +256,14 @@ def summary(comparisons):
     delta={'mean_return':models['LEARNED']['mean_return']-models['BASE']['mean_return'] if all(models[n]['sample_count'] for n in MODELS) else None,
            'success_rate_percentage_points':100*(models['LEARNED']['success_rate']-models['BASE']['success_rate']) if all(models[n]['sample_count'] for n in MODELS) else None}
     exclusions=Counter()
+    delta['median_return']=(models['LEARNED']['median_return']-models['BASE']['median_return']
+                            if all(models[n]['median_return'] is not None for n in MODELS) else None)
+    delta['mean_mae']=(models['LEARNED']['risk']['mean_mae']-models['BASE']['risk']['mean_mae']
+                      if all(models[n]['risk']['complete'] for n in MODELS) else None)
     for row in comparisons:exclusions.update(row.get('excluded',{}))
-    return {'completed_days': len(valid), 'insufficient_days': len(comparisons) - len(valid),
+    return {'display_status':'TAMAMLANDI' if len({stamp(r.get('snapshot_time')).date() for r in valid
+                if stamp(r.get('snapshot_time'))})>=MIN_PAIRED_DAYS else 'YETERSİZ VERİ',
+            'completed_days': len(valid), 'insufficient_days': len(comparisons) - len(valid),
             'learned_wins': counts['LEARNED_BETTER'], 'base_wins': counts['BASE_BETTER'],
             'ties': counts['TIE'], 'learned_win_rate': counts['LEARNED_BETTER'] / len(valid) if valid else None,
             'mean_learned_edge': mean(edges) if edges else None,

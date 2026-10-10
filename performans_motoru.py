@@ -343,6 +343,11 @@ class PerformansMotoru:
             name=path.name
             if name in state.get('arsivler',{}):continue
             raw=path.read_bytes();snapshot=json.loads(raw);day=snapshot.get('analiz_tarihi',path.stem)
+            pair=snapshot.get('frozen_comparison')
+            pair_error=None
+            if pair is not None:
+                from top10_frozen_pair import verify_pair
+                pair_error=verify_pair(snapshot)
             snapshot_id=day+'_'+hashlib.sha256(raw).hexdigest()[:16]
             lists=[('YARIN_TOP10',snapshot.get('top10',[])),('YARIN_BASELINE',snapshot.get('ham_top10',[])),('YARIN_LEARNING_BASELINE',snapshot.get('base_top10',[])),('YARIN_SHADOW',snapshot.get('shadow_top10',[])),('YARIN_CONTROLLED_SHADOW',snapshot.get('controlled_shadow_top10',[]))]
             lists.append(('POSITIVE_CANDIDATE',(snapshot.get('pozitif_havuz') or {}).get('adaylar',[])))
@@ -383,6 +388,17 @@ class PerformansMotoru:
                     record['recorded_decision']=record['karar'];record['karar']='AL'
                     record['model_version']=(record.get('positive_opportunity') or {}).get('model_version','LEGACY_UNKNOWN')
                     record['analysis_only']=True
+                if pair is not None and model in ('YARIN_TOP10','YARIN_LEARNING_BASELINE'):
+                    paired_model='LEARNED' if model=='YARIN_TOP10' else 'BASE'
+                    metadata=pair if isinstance(pair,dict) else {}
+                    paired_models=metadata.get('models')
+                    model_metadata=paired_models.get(paired_model,{}) if isinstance(paired_models,dict) else {}
+                    if not isinstance(model_metadata,dict):model_metadata={}
+                    record.update(comparison_schema=metadata.get('schema'),
+                        data_slice_id=metadata.get('data_slice_id'),comparison_digest=metadata.get('comparison_digest'),
+                        model_version=model_metadata.get('version'),
+                        model_configuration_digest=model_metadata.get('configuration_digest'),
+                        comparison_integrity_error=pair_error)
                 records.append(record)
             state.setdefault('arsivler',{})[name]=snapshot_id
         return records
