@@ -27,7 +27,7 @@ class PostgresStore:
         if pool is None:
             from psycopg_pool import ConnectionPool
             from psycopg.rows import dict_row
-            pool=ConnectionPool(self.settings.dsn,min_size=0,max_size=self.settings.pool_size,timeout=self.settings.timeout,open=False,kwargs={'row_factory':dict_row,'connect_timeout':self.settings.timeout,'options':'-c timezone=Europe/Istanbul -c synchronous_commit=on'},reconnect_timeout=self.settings.timeout)
+            pool=ConnectionPool(self.settings.connection_dsn(),min_size=0,max_size=self.settings.pool_size,timeout=self.settings.timeout,open=False,kwargs={'row_factory':dict_row,'connect_timeout':self.settings.timeout,'options':'-c timezone=Europe/Istanbul -c synchronous_commit=on'},reconnect_timeout=self.settings.timeout)
             pool.open()
         self.pool=pool
 

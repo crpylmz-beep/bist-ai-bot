@@ -19,7 +19,7 @@ class SchemaDiagnosticsTests(unittest.TestCase):
    code,data=self.run_schema(['schema'])
   self.assertEqual(code,2);self.assertEqual(data['error'],'POSTGRES_NOT_CONFIGURED');self.assertEqual(data['stage'],'CONFIGURATION');store.assert_not_called()
  def test_no_tls_not_silently_disabled(self):
-  code,data=self.run_schema(['schema'],{'DATABASE_URL':'postgresql://user:SECRET@remote/db'})
+  code,data=self.run_schema(['schema'],{'DATABASE_URL':'postgresql://user:SECRET@remote/db?sslmode=disable'})
   self.assertEqual(code,2);self.assertEqual(data['error'],'POSTGRES_TLS_REQUIRED');self.assertNotIn('SECRET',str(data))
  def test_readonly_check_does_not_migrate(self):
   with patch('v6_storage.postgres.PostgresStore') as store:
@@ -36,7 +36,7 @@ class SchemaDiagnosticsTests(unittest.TestCase):
    code,data=self.run_schema(['schema','--check'],{'DATABASE_URL':'postgresql://localhost/test'})
   self.assertEqual(code,2);self.assertEqual(data['stage'],'SCHEMA_VERIFY');self.assertFalse(data['success'])
  def test_override_precedence_remains(self):
-  code,data=self.run_schema(['schema'],{'DATABASE_URL':'postgresql://localhost/test','BIST_POSTGRES_DSN':'postgresql://user:SECRET@remote/db'})
+  code,data=self.run_schema(['schema'],{'DATABASE_URL':'postgresql://localhost/test','BIST_POSTGRES_DSN':'postgresql://user:SECRET@remote/db?sslmode=disable'})
   self.assertEqual(data['error'],'POSTGRES_TLS_REQUIRED');self.assertEqual(code,2)
  def test_sqlstate_classification_and_safe_logs(self):
   for state,reason in [('28P01','POSTGRES_AUTH_FAILED'),('42501','POSTGRES_PERMISSION_DENIED'),('08006','POSTGRES_CONNECTION_FAILED'),('42601','POSTGRES_SQL_SYNTAX'),('53100','POSTGRES_DISK_FULL')]:

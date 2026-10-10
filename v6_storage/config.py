@@ -35,13 +35,27 @@ class Settings:
     def __repr__(self):return f'Settings(mode={self.mode!r},configured={bool(self.dsn)},cutover_ack={self.cutover_ack})'
 
     def require_database(self):
+        self.connection_dsn()
+
+    def connection_dsn(self):
+        """Return a TLS-enforcing DSN without changing environment or stored secrets."""
         if not self.dsn:raise StorageError('POSTGRES_NOT_CONFIGURED')
-        try:parsed=urlparse(self.dsn)
+        try:
+            parsed=urlparse(self.dsn)
+            hostname=parsed.hostname
         except ValueError:raise StorageError('POSTGRES_CONFIGURATION_INVALID') from None
-        if parsed.scheme not in ('postgres','postgresql') or not parsed.hostname:raise StorageError('POSTGRES_CONFIGURATION_INVALID')
-        # Remote plaintext connections are prohibited; local disposable tests may use trust.
-        if parsed.hostname not in ('127.0.0.1','localhost','::1') and parse_qs(parsed.query,keep_blank_values=True).get('sslmode') not in (['require'],['verify-ca'],['verify-full']):
-            raise StorageError('POSTGRES_TLS_REQUIRED')
+        if parsed.scheme not in ('postgres','postgresql') or not hostname or parsed.fragment:
+            raise StorageError('POSTGRES_CONFIGURATION_INVALID')
+        modes=parse_qs(parsed.query,keep_blank_values=True).get('sslmode')
+        if modes is not None:
+            if modes not in (['require'],['verify-ca'],['verify-full']):
+                raise StorageError('POSTGRES_TLS_REQUIRED')
+            return self.dsn
+        # Retain existing loopback-only disposable-test behavior. Remote connections
+        # explicitly require TLS even when libpq environment defaults prefer plaintext.
+        if hostname in ('127.0.0.1','localhost','::1'):return self.dsn
+        separator='&' if '?' in self.dsn else '?'
+        return self.dsn+separator+'sslmode=require'
 
 
 @dataclass(frozen=True, repr=False)
