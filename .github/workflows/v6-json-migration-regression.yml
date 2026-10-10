@@ -7,12 +7,12 @@ on:
       - 'v6_storage/**'
       - 'tests/test_v6_metadata_nested.py'
       - 'tests/test_v6_bulk_import_regression.py'
-      - 'tests/test_v6_bulk_import_regression.py'
       - '.github/workflows/v6-json-migration-regression.yml'
   pull_request:
     paths:
       - 'v6_storage/**'
       - 'tests/test_v6_metadata_nested.py'
+      - 'tests/test_v6_bulk_import_regression.py'
 
 jobs:
   metadata:
