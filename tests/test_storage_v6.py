@@ -45,7 +45,7 @@ class V6Configuration(unittest.TestCase):
     def test_bad_mode(self):
         with self.assertRaises(StorageError):Settings.from_env({'STORAGE_BACKEND':'unsafe'})
     def test_tls(self):
-        with self.assertRaises(StorageError):Settings(dsn='postgresql://name:secret@remote/db').require_database()
+        self.assertEqual(Settings(dsn='postgresql://name:secret@remote/db').connection_dsn(),'postgresql://name:secret@remote/db?sslmode=require')
     def test_tls_valid(self):Settings(dsn='postgresql://remote/db?sslmode=verify-full').require_database()
     def test_secret_repr(self):self.assertNotIn('secret',repr(Settings(dsn='postgresql://name:secret@remote/db')))
     def test_no_db(self):

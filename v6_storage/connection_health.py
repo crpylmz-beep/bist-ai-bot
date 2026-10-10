@@ -12,7 +12,7 @@ def postgres_probe(settings):
     # One short-lived diagnostic connection, no background pool retry logs.
     # The application row store continues to use its existing connection pool.
     import psycopg
-    with psycopg.connect(settings.dsn, connect_timeout=settings.timeout,
+    with psycopg.connect(settings.connection_dsn(), connect_timeout=settings.timeout,
                          options='-c timezone=Europe/Istanbul', autocommit=True) as db:
         with db.transaction():
             db.execute('SET TRANSACTION READ ONLY')

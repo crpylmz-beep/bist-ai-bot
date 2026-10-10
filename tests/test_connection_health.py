@@ -47,7 +47,7 @@ class ConnectionHealthTests(unittest.TestCase):
         for env,service,code in (({'R2_BUCKET':'x'},'r2','R2_NOT_CONFIGURED'),
             ({**ENV,'R2_ENDPOINT_URL':'http://unsafe.test'},'r2','R2_ENDPOINT_INVALID'),
             ({**ENV,'R2_PRIVATE_BUCKET_CONFIRMED':'false'},'r2','R2_PRIVATE_BUCKET_CONFIRMATION_REQUIRED'),
-            ({**ENV,'BIST_POSTGRES_DSN':'postgres://user:secret@db.example/db'},'postgresql','POSTGRES_TLS_REQUIRED')):
+            ({**ENV,'BIST_POSTGRES_DSN':'postgres://user:secret@db.example/db?sslmode=disable'},'postgresql','POSTGRES_TLS_REQUIRED')):
             pg=Mock();r2=Mock();value=check(env=env,probe=False,pg_checker=pg,r2_checker=r2)
             self.assertEqual(value['services'][service]['code'],code);pg.assert_not_called();r2.assert_not_called()
 

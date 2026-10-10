@@ -23,7 +23,9 @@ Bilgiler yalnız güvenli ortam değişkenlerinden alınır; .env/secrets commit
 | `R2_CONNECT_TIMEOUT_SECONDS` | 1–60 saniye, varsayılan 10 |
 | `R2_READ_TIMEOUT_SECONDS` | 1–60 saniye, varsayılan 30 |
 
-Uzak PG için tek bir `sslmode=require`, `verify-ca` veya `verify-full` gerekir;
+Uzak PG URL’sinde `sslmode` yoksa bağlantı sırasında bellekte `sslmode=require`
+eklenir; environment ve kaydedilmiş URL değişmez. Açıkça belirtilen tek bir
+`sslmode=require`, `verify-ca` veya `verify-full` korunur;
 çelişkili/tekrarlanan sslmode kabul edilmez. Tercihen sağlayıcının CA doğrulamasıyla
 `verify-full` kullanın. R2 endpoint'i yalnız HTTPS Cloudflare R2 alanı kabul eder;
 URL içindeki credential/query/fragment reddedilir. Özel bucket onay bayrağı gerçek
@@ -79,3 +81,8 @@ veya geçişin güvenli olduğunu kanıtlamaz. `NOT_CONFIGURED` kesinti anlamın
 
 Bu hazırlık, `/data` kullanımının azaldığı veya canlı bağlantıların hazır olduğu
 anlamına gelmez. Mevcut iş algoritmaları ve başlangıç varsayılanları korunmuştur.
+
+TLS desteklemeyen sunucuya plaintext fallback yapılmaz. `require` şifrelemeyi
+zorunlu tutar; sertifika/hostname doğrulaması için sağlayıcının CA yapılandırmasıyla
+`verify-full` tercih edilmelidir. Bu düzeltme production bağlantısı veya migration
+onayı değildir. Yerel loopback testlerinin önceki davranışı korunur.
