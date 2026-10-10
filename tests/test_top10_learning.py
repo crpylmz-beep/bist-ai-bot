@@ -24,10 +24,18 @@ class LearningTests(unittest.TestCase):
         positive=int(round(n*win))
         return {'sample_size':n,'sample_count':n,'completed':n,'positive':positive,'negative':n-positive,'neutral':0,
                 'success_rate':positive/n,'mean_return':ret,'median_return':ret,'mean_mfe':2,'mean_mae':-1,'mfe_samples':n,'mae_samples':n}
+    def evidence(self,n=300,win=.8,ret=2):
+        stat=self.stat(n,win,ret)
+        stat.update(independent_days=10,daily_edge_lower=ret-.01,daily_edge_upper=ret+.01)
+        return {'train':dict(stat),'validation':dict(stat),
+                'cutoff':'2026-09-01T00:00:00+03:00','train_observed_through':'2026-08-31T19:00:00+03:00'}
+    def baseline(self,n=300):
+        stat=dict(self.stat(n),independent_days=10)
+        return {'train':dict(stat),'validation':dict(stat)}
     def model(self,n=300,win=.8,ret=2,indicator='RSI',condition='40-49',source='YARIN_TOP10'):
-        entry=self.stat(n,win,ret);baseline=self.stat(max(n,300))
+        entry=self.evidence(n,win,ret);baseline=self.baseline(max(n,300))
         return {'status':'READY','asof':(self.now-timedelta(hours=1)).isoformat(),
-                'index':{(indicator,condition,source,h):dict(entry) for h in (1,3,5)},
+                'index':{(indicator,condition,source,h):copy.deepcopy(entry) for h in (1,3,5)},
                 'baselines':{'YARIN_TOP10':{str(h):dict(baseline) for h in (1,3,5)},'ALL':{str(h):dict(baseline) for h in (1,3,5)}}}
     def adjustment(self,model=None,row=None):
         return learning.top10_learning_adjustment(row or self.row,model or self.model(),self.now)
@@ -40,20 +48,20 @@ class LearningTests(unittest.TestCase):
     def test_negative_edge(self):self.assertLess(self.delta(self.model(win=.2,ret=-2)),0)
     def test_identical_baseline_is_zero(self):self.assertEqual(self.delta(self.model(win=.5,ret=0)),0)
     def test_baseline_insufficient(self):
-        model=self.model();model['baselines']['YARIN_TOP10']={str(h):self.stat(29) for h in (1,3,5)}
+        model=self.model();model['baselines']['YARIN_TOP10']={str(h):self.baseline(29) for h in (1,3,5)}
         self.assertEqual(self.delta(model),0)
     def test_d1_primary(self):
         full=self.delta();model=self.model();model['index']={k:v for k,v in model['index'].items() if k[-1]==1}
-        self.assertAlmostEqual(self.delta(model),full*.8)
+        self.assertAlmostEqual(self.delta(model),full*(.55/.8))
     def test_d3_auxiliary(self):
         model=self.model();model['index']={k:v for k,v in model['index'].items() if k[-1] in (1,3)}
-        self.assertAlmostEqual(self.delta(model),self.delta()*.95)
+        self.assertAlmostEqual(self.delta(model),self.delta()*(.70/.8))
     def test_d5_auxiliary(self):
         model=self.model();model['index']={k:v for k,v in model['index'].items() if k[-1] in (1,5)}
-        self.assertAlmostEqual(self.delta(model),self.delta()*.85)
+        self.assertAlmostEqual(self.delta(model),self.delta()*(.65/.8))
     def test_auxiliary_without_d1_zero(self):
         model=self.model();model['index']={k:v for k,v in model['index'].items() if k[-1]!=1};self.assertEqual(self.delta(model),0)
-    def test_long_horizons_ignored(self):
+    def test_long_horizons_without_validation_ignored(self):
         model=self.model()
         for h in (10,20,60):model['index'][('RSI','40-49','YARIN_TOP10',h)]=self.stat(win=.1,ret=-99)
         self.assertEqual(self.delta(model),self.delta())
@@ -61,14 +69,14 @@ class LearningTests(unittest.TestCase):
         model=self.model()
         for h in (1,3,5):model['index'][('RSI','40-49','ALL',h)]=self.stat(win=.1,ret=-2)
         self.assertEqual(self.delta(model),self.delta())
-    def test_general_fallback_halved(self):self.assertEqual(self.delta(self.model(source='ALL')),self.delta()*.5)
-    def test_fallback_explained(self):self.assertEqual(self.adjustment(self.model(source='ALL'))['learning_reasons'][0]['evidence'][0]['source'],'ALL')
+    def test_general_fallback_not_trusted(self):self.assertEqual(self.delta(self.model(source='ALL')),0)
+    def test_fallback_has_no_learning_reasons(self):self.assertEqual(self.adjustment(self.model(source='ALL'))['learning_reasons'],[])
     def test_missing_feature_zero(self):self.assertEqual(self.delta(row={'sembol':'THYAO','fiyat':100}),0)
     def test_future_feature_zero(self):self.assertEqual(self.delta(row=dict(self.row,feature_timestamp=(self.now+timedelta(minutes=1)).isoformat())),0)
     def test_missing_price_zero(self):self.assertEqual(self.delta(row=dict(self.row,fiyat=None)),0)
     def test_pending_not_used(self):
         model=self.model()
-        for entry in model['index'].values():entry['completed']=0
+        for entry in model['index'].values():entry['train']['completed']=0
         self.assertEqual(self.delta(model),0)
     def test_unverified_not_used(self):
         model=self.model()
@@ -76,28 +84,30 @@ class LearningTests(unittest.TestCase):
         self.assertEqual(self.delta(model),0)
     def test_risk_damps_bonus(self):
         model=self.model()
-        for entry in model['index'].values():entry.update(mean_mfe=.1,mean_mae=-10)
+        for entry in model['index'].values():
+            for split in ('train','validation'):entry[split].update(mean_mfe=.1,mean_mae=-10)
         self.assertLess(self.delta(model),self.delta()/50)
     def test_outlier_mean_cannot_dominate(self):
         model=self.model(win=.5,ret=0)
-        for entry in model['index'].values():entry['mean_return']=999999
+        for entry in model['index'].values():
+            for split in ('train','validation'):entry[split].update(mean_return=999999,median_return=.01)
         self.assertLess(self.delta(model),learning.TOP10_FAMILY_CAP/2)
     def test_family_averages_correlated_inputs(self):
         model=self.model();row=dict(self.row,macd=2,signal=1,hist=1,hist_onceki=.5,momentum15=2)
         conditions={'MACD_SIGN':'POSITIVE','MACD_SIGNAL':'ABOVE','HIST_SIGN':'POSITIVE','HIST_TREND':'IMPROVING','MOMENTUM':'POSITIVE'}
         for indicator,condition in conditions.items():
-            for h in (1,3,5):model['index'][(indicator,condition,'YARIN_TOP10',h)]=self.stat(win=.8,ret=2)
+            for h in (1,3,5):model['index'][(indicator,condition,'YARIN_TOP10',h)]=self.evidence(win=.8,ret=2)
         self.assertEqual(self.delta(model,row),self.delta())
     def test_combination_replaces_components(self):
         model=self.model(indicator='COMBO_RSI_MACD_VOLUME',condition='CONFIRMED')
         for indicator,condition in (('RSI','40-49'),('MACD_SIGNAL','ABOVE'),('VOLUME','150-199')):
-            for h in (1,3,5):model['index'][(indicator,condition,'YARIN_TOP10',h)]=self.stat(win=.8,ret=2)
+            for h in (1,3,5):model['index'][(indicator,condition,'YARIN_TOP10',h)]=self.evidence(win=.8,ret=2)
         result=self.adjustment(model,dict(self.row,macd=2,signal=1,hacim_orani=180))
         self.assertLessEqual(abs(result['learning_adjustment']),learning.TOP10_COMBINATION_CAP)
         self.assertTrue(any(r.get('suppressed_by') for r in result['learning_reasons']))
     def test_weaker_combo_does_not_replace_high_confidence_family(self):
         model=self.model()
-        for h in (1,3,5):model['index'][('COMBO_RSI_MACD','CONFIRMED','YARIN_TOP10',h)]=self.stat(30,win=.8,ret=2)
+        for h in (1,3,5):model['index'][('COMBO_RSI_MACD','CONFIRMED','YARIN_TOP10',h)]=self.evidence(30,win=.8,ret=2)
         result=self.adjustment(model,dict(self.row,macd=2,signal=1))
         self.assertEqual(result['learning_adjustment'],self.delta())
     def test_total_caps_both_directions(self):
@@ -107,7 +117,7 @@ class LearningTests(unittest.TestCase):
             model=self.model(win=win,ret=ret)
             for indicator,condition in indicator_conditions(row).items():
                 if indicator.startswith('COMBO'):continue
-                for h in (1,3,5):model['index'][(indicator,condition,'YARIN_TOP10',h)]=self.stat(win=win,ret=ret)
+                for h in learning.TOP10_HORIZON_WEIGHTS:model['index'][(indicator,condition,'YARIN_TOP10',h)]=self.evidence(win=win,ret=ret)
             result=self.adjustment(model,row);self.assertEqual(abs(result['learning_adjustment']),learning.TOP10_MAX_ADJUSTMENT)
             self.assertAlmostEqual(sum(r['contribution'] for r in result['learning_reasons']),result['learning_adjustment'],places=5)
     def test_aggregation_exception_fails_safe(self):
@@ -134,7 +144,7 @@ class LearningTests(unittest.TestCase):
         for (indicator,condition,source,h),stat in model['index'].items():rows.append(dict(stat,indicator=indicator,condition=condition,signal_type=source,horizon=h,period='ALL'))
         at=(self.now-timedelta(hours=1)).isoformat()
         return {'version':VERSION,'analysis_only':True,'reliability_thresholds':RELIABILITY,'updated_at':at,
-                'indicator_analysis':{'rows':rows,'updated_at':at,'analysis_only':True},
+                'top10_temporal_learning':{'version':'TOP10_TEMPORAL_V1','rows':rows,'updated_at':at,'analysis_only':True,'baselines':model['baselines']['YARIN_TOP10']},
                 'periods':{'ALL':{'signals':{'YARIN_TOP10':model['baselines']['YARIN_TOP10']},'overall':{'ALL':model['baselines']['ALL']}}}}
     def test_valid_context_uses_single_cache_read(self):
         with patch('sinyal_performansi.read_report',return_value=self.report()) as read:
@@ -152,7 +162,7 @@ class LearningTests(unittest.TestCase):
         report=self.report();report['updated_at']=(self.now-timedelta(days=8)).isoformat()
         with patch('sinyal_performansi.read_report',return_value=report):self.assertEqual(learning.top10_learning_context(self.paths,self.now)['status'],'STALE_REPORT')
     def test_duplicate_evidence_not_double_counted(self):
-        report=self.report();report['indicator_analysis']['rows']+=report['indicator_analysis']['rows'][:1]
+        report=self.report();report['top10_temporal_learning']['rows']+=report['top10_temporal_learning']['rows'][:1]
         with patch('sinyal_performansi.read_report',return_value=report):self.assertEqual(learning.top10_learning_context(self.paths,self.now)['status'],'CACHE_ERROR')
     def test_history_unchanged(self):
         path=self.paths.runtime_file('tahmin_gecmisi.json');atomic_json(path,{'keep':'unique'});before=path.read_bytes()
@@ -161,8 +171,72 @@ class LearningTests(unittest.TestCase):
     def test_nested_future_snapshot(self):
         row=dict(self.row,indicator_snapshot={'captured_at':self.now.isoformat(),'inputs':{'fiyat':100,'rsi':45},'technical':{'asof':(self.now+timedelta(seconds=1)).isoformat()}})
         self.assertEqual(self.delta(row=row),0)
+    def test_stale_ready_context_rejected_at_ranking_time(self):
+        model=self.model();model['asof']=(self.now-timedelta(days=learning.TOP10_MAX_CACHE_AGE_DAYS,seconds=1)).isoformat()
+        original=copy.deepcopy(model)
+        result=learning.rank_with_learning([(80,dict(self.row)),(79,dict(self.row,sembol='ASELS'))],model,self.now)
+        self.assertEqual([score for score,_ in result],[80,79])
+        self.assertTrue(all(r['learning_adjustment']==0 and r['learning_status']=='STALE_REPORT' for _,r in result))
+        self.assertEqual(model,original)
+    def test_freshness_boundary_allowed_and_one_second_later_rejected(self):
+        model=self.model();model['asof']=(self.now-timedelta(days=learning.TOP10_MAX_CACHE_AGE_DAYS)).isoformat()
+        self.assertGreater(self.delta(model),0)
+        result=learning.top10_learning_adjustment(self.row,model,self.now+timedelta(seconds=1))
+        self.assertEqual(result['learning_adjustment'],0);self.assertEqual(result['learning_status'],'STALE_REPORT')
+    def test_cached_context_becomes_stale_between_loading_and_ranking(self):
+        with patch('sinyal_performansi.read_report',return_value=self.report()) as read:
+            model=learning.top10_learning_context(self.paths,self.now)
+            result=learning.rank_with_learning([(80,dict(self.row))],model,self.now+timedelta(days=8))
+        read.assert_called_once();self.assertEqual(result[0][0],80)
+        self.assertEqual(result[0][1]['learning_status'],'STALE_REPORT')
+    def test_candidate_limit_after_dedup_and_quality(self):
+        rows=[(100,{'sembol':'BAD','fiyat':float('nan')}),(99,dict(self.row))]*5
+        rows += [(80-i/100,dict(self.row,sembol='S'+str(i))) for i in range(70)]
+        output=learning.rank_with_learning(rows,{'status':'DISABLED'},self.now)
+        self.assertEqual(len(output),60);self.assertEqual(len({r['sembol'] for _,r in output}),60)
+        self.assertEqual(output[-1][1]['sembol'],'S58')
+    def test_duplicate_symbol_normalized_and_best_base_kept(self):
+        low=dict(self.row,sembol=' thyao ');high=dict(self.row,sembol='THYAO')
+        rows=learning.top10_candidate_rows([(70,low),(80,high),(79,dict(self.row,sembol='ISB')),(78,dict(self.row,sembol='ISATR'))])
+        self.assertEqual(len(rows),3);self.assertIs(rows[0][1],high)
+    def test_candidate_malformed_and_nonfinite_skipped(self):
+        invalid=[None,('x',), (float('inf'),dict(self.row)),(True,dict(self.row)),(80,{}),(80,dict(self.row,fiyat=-1)),(80,dict(self.row,fiyat=True)),(80,dict(self.row,teknik_gostergeler={'stale':True}))]
+        self.assertEqual(learning.top10_candidate_rows(invalid+[(79,dict(self.row))]),[(79,self.row)])
+    def test_learning_ties_keep_base_precedence(self):
+        a=dict(self.row,sembol='BBB');b=dict(self.row,sembol='AAA')
+        output=learning.rank_with_learning([(80,a),(80,b)],{'status':'DISABLED'},self.now)
+        self.assertEqual([r['sembol'] for _,r in output],['BBB','AAA'])
+    def test_real_ranker_exact_ties_symbol_order_independent_of_input(self):
+        rows=[dict(self.row,sembol='BBB',old_score=80),dict(self.row,sembol='AAA',old_score=80)]
+        for items in (rows,list(reversed(rows))):
+            self.assertEqual([r['sembol'] for _,r in self.real_ranking(copy.deepcopy(items),False)],['AAA','BBB'])
+    def test_real_ranker_invalid_price_never_scored(self):
+        rows=[dict(self.row,sembol='BAD',fiyat=float('nan'),old_score=95),dict(self.row,sembol='AAA',old_score=80)]
+        self.assertEqual([r['sembol'] for _,r in self.real_ranking(rows,False)],['AAA'])
     def test_context_future_guard_at_scoring_time(self):
         model=self.model();model['asof']=(self.now+timedelta(minutes=1)).isoformat();self.assertEqual(self.delta(model),0)
+    def test_context_stale_guard_at_scoring_time(self):
+        model=self.model()
+        model['asof']=(self.now-timedelta(days=learning.TOP10_MAX_CACHE_AGE_DAYS,seconds=1)).isoformat()
+        result=self.adjustment(model)
+        self.assertEqual(result['learning_adjustment'],0)
+        self.assertEqual(result['learning_status'],'STALE_REPORT')
+        self.assertEqual(result['learning_reasons'],[])
+    def test_context_age_boundary_remains_usable(self):
+        model=self.model()
+        model['asof']=(self.now-timedelta(days=learning.TOP10_MAX_CACHE_AGE_DAYS)).isoformat()
+        self.assertEqual(self.delta(model),self.delta())
+    def test_reused_context_expiry_preserves_base_ranking(self):
+        with patch('sinyal_performansi.read_report',return_value=self.report()) as read:
+            context=learning.top10_learning_context(self.paths,self.now)
+            rows=[(80,dict(self.row,rsi=90)),(79.5,dict(self.row,sembol='ASELS'))]
+            later=self.now+timedelta(days=learning.TOP10_MAX_CACHE_AGE_DAYS)
+            result=learning.rank_with_learning(rows,context,later)
+        read.assert_called_once()
+        self.assertEqual([score for score,row in result],[80,79.5])
+        self.assertEqual([row['sembol'] for score,row in result],['THYAO','ASELS'])
+        self.assertTrue(all(row['learning_status']=='STALE_REPORT' for score,row in result))
+        self.assertTrue(all(row['rank_change']==0 for score,row in result))
     def test_unverified_candidate_snapshot(self):
         self.assertEqual(self.delta(row=dict(self.row,indicator_snapshot={'inputs':{'rsi':45}})),0)
     def real_ranking(self,rows,enabled=True):
@@ -231,5 +305,6 @@ class LearningTests(unittest.TestCase):
         self.assertTrue(any(r['excluded'].get('NON_LIVE') for r in report['rows']))
     def test_robust_excursion_median_prevents_mean_outlier_dominance(self):
         model=self.model()
-        for entry in model['index'].values():entry.update(mean_mae=-999999,mean_mfe=999999,median_mae=-1,median_mfe=2)
+        for entry in model['index'].values():
+            for split in ('train','validation'):entry[split].update(mean_mae=-999999,mean_mfe=999999,median_mae=-1,median_mfe=2)
         self.assertEqual(self.delta(model),self.delta())

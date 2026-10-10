@@ -174,6 +174,8 @@ def opportunity(row,cutoff,history,legacy_score):
 
 
 def build_pool(rows,current,total,score_fn,history=None):
+    from top10_aday_secimi import prepare_candidates, valid_candidate
+    rows=prepare_candidates(rows,current,keep_invalid=True)
     cutoff=datetime.combine(current.date(),time(18,10),ISTANBUL)
     if current.weekday()>=5 or current.time().replace(tzinfo=None)<time(18,15):raise ValueError('Kapanış analizi yalnız kapanmış işlem seansında')
     from performans_motoru import controlled_context,controlled_score
@@ -188,11 +190,17 @@ def build_pool(rows,current,total,score_fn,history=None):
         symbol=row.get('sembol')
         if symbol in seen:continue
         seen.add(symbol)
-        closing=(row.get('teknik_gostergeler') or {}).get('closing') or {}
+        doc=row.get('teknik_gostergeler')
+        closing=doc.get('closing') if isinstance(doc,dict) else None
+        if not isinstance(closing,dict):closing={}
         price=number(closing.get('close'));previous=number(closing.get('previous_close'))
         change=(price/previous-1)*100 if price and previous and previous>0 else number(row.get('degisim'),0)
         if change<=0:continue
-        positive+=1;raw,quality=closing_inputs(row,cutoff)
+        positive+=1
+        if not valid_candidate(row,current):
+            rejected.append({'sembol':symbol,'filters':['INVALID_TOP10_DATA']})
+            continue
+        raw,quality=closing_inputs(row,cutoff)
         if quality:rejected.append({'sembol':symbol,'filters':quality});continue
         attach_final_decision(raw,cutoff,'DAILY')
         legacy=score_fn(raw);raw.update(baseline_score(raw,legacy,calibration));raw.update(effects(raw,legacy,cutoff,'YARIN'))

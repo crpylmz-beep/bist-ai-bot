@@ -43,6 +43,44 @@ class ComparisonTests(unittest.TestCase):
         row = self.rows[-1]; row.update(sembol='NEW', base_rank=11, learned_rank=10, rank_change=1, learning_adjustment=1)
         for h in HORIZONS: row[f'sonuc_{h}g'].update(fiyat=115, getiri_yuzde=15, yon_getirisi=15)
         self.rows[9].update(learned_rank=11, rank_change=-1)
+    def test_summary_metrics_all_horizons(self):
+        report=self.report()
+        for h in HORIZONS:
+            summary=report['horizons'][str(h)]
+            self.assertEqual(summary['models']['BASE']['sample_count'],10)
+            self.assertEqual(summary['models']['LEARNED']['success_rate'],1)
+            self.assertEqual(summary['models']['BASE']['mean_return'],5.5)
+            self.assertEqual(summary['differences_vs_base']['mean_return'],0)
+    def test_summary_mean_and_success_delta_vs_base(self):
+        self.enter()
+        for h in HORIZONS:self.rows[-1][f'sonuc_{h}g'].update(fiyat=90,getiri_yuzde=-10,yon_getirisi=-10)
+        summary=self.report()['horizons']['1']
+        self.assertAlmostEqual(summary['differences_vs_base']['mean_return'],-2)
+        self.assertAlmostEqual(summary['differences_vs_base']['success_rate_percentage_points'],-10)
+    def test_due_missing_distinct_from_not_yet_due(self):
+        for h in HORIZONS:self.rows[0][f'sonuc_{h}g']=None
+        report=self.report();self.assertEqual(report['horizons']['1']['models']['BASE']['data_quality']['missing_due_outcomes'],1)
+        current=self.at+timedelta(days=1)
+        report=module.aggregate(self.rows,current,self.holiday)
+        self.assertEqual(report['horizons']['60']['models']['BASE']['data_quality']['pending'],10)
+        self.assertEqual(report['horizons']['60']['models']['BASE']['data_quality']['missing_due_outcomes'],0)
+        self.assertIsNone(report['horizons']['60']['models']['BASE']['mean_return'])
+    def test_missing_evidence_not_counted_as_loss_or_zero_return(self):
+        self.rows[0]['sonuc_1g']=None
+        summary=self.report()['horizons']['1']
+        self.assertEqual(summary['models']['BASE']['sample_count'],0)
+        self.assertIsNone(summary['models']['BASE']['success_rate'])
+        self.assertEqual(summary['excluded_reasons']['PENDING'],1)
+    def test_report_preserves_history_and_repeated_reports_identical(self):
+        before=copy.deepcopy(self.rows)
+        first=self.report();self.assertEqual(first,self.report());self.assertEqual(self.rows,before)
+    def test_duplicate_does_not_inflate_summary(self):
+        self.rows.append(copy.deepcopy(self.rows[0]))
+        self.assertEqual(self.report()['horizons']['1']['models']['BASE']['sample_count'],10)
+    def test_later_result_does_not_change_one_day_metrics(self):
+        first=self.report()['horizons']['1']
+        self.rows[0]['sonuc_60g']['getiri_yuzde']=999
+        self.assertEqual(self.report()['horizons']['1'],first)
     def test_identical_lists_tie(self): self.assertEqual(self.first()['status'], 'TIE')
     def test_learned_better(self): self.enter(); self.assertEqual(self.first()['status'], 'LEARNED_BETTER')
     def test_base_better(self):
@@ -155,6 +193,86 @@ class ComparisonTests(unittest.TestCase):
             PerformansMotoru(location=self.paths, clock=lambda: self.now).reports([], self.now)
         report = json.loads(self.paths.public_file('performans_ozeti.json').read_bytes())
         self.assertEqual(report['top10_learning_comparison']['status'], 'UNAVAILABLE')
+
+    def test_observed_returns_survive_partial_data_at_all_six_horizons(self):
+        for h in HORIZONS:self.rows[0][f'sonuc_{h}g']=None
+        report=self.report()
+        for h in HORIZONS:
+            stats=report['horizons'][str(h)]
+            self.assertEqual(stats['observed_models']['BASE']['sample_count'],9)
+            self.assertEqual(stats['observed_models']['BASE']['mean_return'],6)
+            self.assertEqual(stats['observed_models']['BASE']['success_rate'],1)
+            self.assertEqual(stats['observed_models']['LEARNED']['sample_count'],10)
+            self.assertEqual(stats['models']['BASE']['sample_count'],0)
+            self.assertIsNone(stats['differences_vs_base']['mean_return'])
+
+    def test_observed_incomplete_result_dict_is_not_a_zero_or_success(self):
+        self.rows[0]['sonuc_1g']={'degerlendirme_tamamlandi':False,'fiyat':None,'getiri_yuzde':99}
+        stats=self.report()['horizons']['1']['observed_models']
+        self.assertEqual(stats['BASE']['sample_count'],9)
+        self.assertEqual(stats['BASE']['mean_return'],6)
+        self.assertEqual(stats['LEARNED']['sample_count'],10)
+
+    def test_observed_zero_and_negative_returns_count_as_completed_not_wins(self):
+        for offset in (0,10):
+            self.rows[offset]['sonuc_1g'].update(fiyat=100,getiri_yuzde=0,yon_getirisi=0)
+            self.rows[offset+1]['sonuc_1g'].update(fiyat=90,getiri_yuzde=-10,yon_getirisi=-10)
+        stats=self.report()['horizons']['1']
+        for name in module.MODELS:
+            self.assertEqual(stats['observed_models'][name]['sample_count'],10)
+            self.assertEqual(stats['observed_models'][name]['success_rate'],.8)
+            self.assertEqual(stats['observed_models'][name]['mean_return'],4.2)
+        self.assertEqual(stats['differences_vs_base']['mean_return'],0)
+
+    def test_observed_invalid_duplicate_and_future_results_excluded(self):
+        duplicate=copy.deepcopy(self.rows[0]);duplicate['base_score']=999
+        self.rows.append(duplicate)
+        self.rows[1]['sonuc_1g']['observed_at']=(self.now+timedelta(days=1)).isoformat()
+        self.rows[2]['sonuc_1g']['getiri_yuzde']=999
+        stats=self.report()['horizons']['1']['observed_models']['BASE']
+        self.assertEqual(stats['sample_count'],7)
+        self.assertEqual(stats['mean_return'],7)
+
+    def test_observed_no_completed_evidence_is_none_for_each_horizon(self):
+        for row in self.rows:
+            for h in HORIZONS:row[f'sonuc_{h}g']=None
+        for stats in self.report()['horizons'].values():
+            for model in stats['observed_models'].values():
+                self.assertEqual(model['sample_count'],0)
+                self.assertIsNone(model['mean_return'])
+                self.assertIsNone(model['success_rate'])
+
+    def test_observed_completed_cohort_matches_existing_paired_metrics(self):
+        self.enter()
+        for stats in self.report()['horizons'].values():
+            for name in module.MODELS:
+                for key in ('sample_count','positive_count','mean_return','success_rate'):
+                    self.assertEqual(stats['observed_models'][name][key],stats['models'][name][key])
+            self.assertAlmostEqual(stats['differences_vs_base']['mean_return'],.5)
+
+    def test_observed_counts_are_weighted_by_verified_samples_not_snapshot_count(self):
+        first=self.report()['recent_comparisons'][0]
+        self.rows[0]['sonuc_60g']=None
+        second=self.first(60)
+        stats=module.summary([first,second])['observed_models']['BASE']
+        self.assertEqual(stats['sample_count'],19)
+        self.assertAlmostEqual(stats['mean_return'],109/19)
+
+    def test_observed_malformed_snapshot_structure_does_not_produce_rates(self):
+        self.rows[0]['tahmin_sirasi']=True
+        stats=self.report()['horizons']['1']['observed_models']
+        self.assertEqual(stats['BASE']['sample_count'],0)
+        self.assertIsNone(stats['LEARNED']['success_rate'])
+
+    def test_observed_report_api_filters_and_input_bytes_preserved(self):
+        self.rows[0]['sonuc_3g']=None
+        history=self.paths.runtime_file('observed_input.json')
+        atomic_json(history,{'records':self.rows});before=history.read_bytes()
+        module.publish(self.paths,self.rows,self.now,self.holiday)
+        report=module.api_report({'horizon':['3'],'period':['all_time']},self.paths)
+        self.assertEqual(report['summary']['observed_models']['BASE']['sample_count'],9)
+        self.assertTrue(all(r['horizon']==3 for r in report['recent_comparisons']))
+        self.assertEqual(history.read_bytes(),before)
 
 
 if __name__ == '__main__': unittest.main()

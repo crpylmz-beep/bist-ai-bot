@@ -17,6 +17,42 @@ from performans_motoru import (PerformansMotoru,outcome,sessions_after,summarize
 
 
 class PerformanceTests(unittest.TestCase):
+    def test_explicit_completion_required_for_realized_performance(self):
+        from performans_motoru import usable
+        for flag in (None,False,1,'true'):
+            result={'getiri_yuzde':10,'durum':'BASARILI'}
+            if flag is not None:result['degerlendirme_tamamlandi']=flag
+            row=dict(self.signal,sonuc_1g=result)
+            self.assertFalse(usable(row))
+            stats=summarize([row])
+            self.assertEqual(stats['degerlendirilen'],0)
+            self.assertIsNone(stats['basari_orani'])
+            self.assertIsNone(stats['ortalama'])
+
+    def test_unverified_and_nonfinite_results_never_count_as_success(self):
+        from performans_motoru import usable
+        for update in ({'legacy_unverified':True},{'unverified':True},
+                       {'getiri_yuzde':float('nan')},{'getiri_yuzde':float('inf')},
+                       {'getiri_yuzde':True}):
+            result=dict(self.result(),**update)
+            self.assertFalse(usable(dict(self.signal,sonuc_1g=result)))
+        row=dict(self.signal,legacy_unverified=True,sonuc_1g=self.result())
+        self.assertFalse(usable(row))
+
+    def test_partial_realized_metrics_use_only_completed_returns_and_labels(self):
+        good=dict(self.signal,sonuc_1g=dict(self.result(),getiri_yuzde='6'))
+        unknown=dict(self.signal,sonuc_1g={'getiri_yuzde':999,'durum':'BASARILI'})
+        missing=dict(self.signal,sonuc_1g=None)
+        failed=dict(self.signal,sonuc_1g=dict(self.result(),getiri_yuzde=-2,durum='BASARISIZ'))
+        rows=[good,unknown,missing,failed];before=json.dumps(rows)
+        stats=summarize(rows)
+        self.assertEqual(stats['degerlendirilen'],2)
+        self.assertEqual(stats['ortalama'],2)
+        self.assertEqual(stats['basari_orani'],.5)
+        self.assertEqual(stats['confusion']['TP'],1)
+        self.assertEqual(stats['confusion']['FP'],1)
+        self.assertEqual(json.dumps(rows),before)
+
     def setUp(self):
         self.temp=tempfile.TemporaryDirectory();self.addCleanup(self.temp.cleanup)
         self.location=DataPaths({'BIST_DATA_DIR':self.temp.name});self.location.ensure()

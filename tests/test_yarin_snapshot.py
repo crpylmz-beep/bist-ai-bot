@@ -238,7 +238,7 @@ class SnapshotTests(unittest.TestCase):
         stubs = {
             'bist_hisseleri_getir': ['THYAO'], 'gun_ici_gecersiz_oku': set(),
             'gun_ici_stream_verileri_getir': ({'THYAO': data}, []),
-            'gun_ici_analiz_hesapla': {'sembol': 'THYAO', 'gun_ici_puan': 70},
+            'gun_ici_analiz_hesapla': {'sembol': 'THYAO', 'fiyat':300, 'gun_ici_puan': 70},
             'ilk_hacimli_kirilim_bul': ('10:30:00', 'GERCEKLESTI'),
         }
         for name, result in stubs.items():

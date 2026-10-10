@@ -6,6 +6,7 @@ import hashlib
 import json
 import math
 import os
+import copy
 from itertools import combinations
 from functools import lru_cache
 
@@ -16,6 +17,7 @@ from veri_yollari import paths
 
 POSITIVE_HORIZONS=(1,2,3,5,10)
 DAILY_HORIZONS=tuple(sorted(set(HORIZONS+POSITIVE_HORIZONS)))
+OUTCOME_VERSION='BIST_SESSION_OUTCOME_V2'
 
 
 @lru_cache(maxsize=8)
@@ -47,8 +49,19 @@ def sessions_after(day, count, holiday=None):
     return result
 
 
-def session_closed(day, current):
-    return day<current.date() or (day==current.date() and current.time().replace(tzinfo=None)>=time(18,15))
+def session_end(day,holiday=None):
+    if not business_day(day,holiday):return None
+    calendar=bist_calendar(day.year)
+    if calendar.is_session(day.isoformat()):
+        # Preserve the existing 15-minute finalization buffer, including half days.
+        return calendar.session_close(day.isoformat()).to_pydatetime().astimezone(ISTANBUL)+timedelta(minutes=15)
+    # Explicit holiday overrides used by injected calendars/tests.
+    return datetime.combine(day,time(18,15),ISTANBUL) if holiday else None
+
+
+def session_closed(day, current,holiday=None):
+    end=session_end(day,holiday)
+    return end is not None and current.astimezone(ISTANBUL)>=end
 
 
 def normalize_bars(bars, current, holiday=None):
@@ -56,7 +69,9 @@ def normalize_bars(bars, current, holiday=None):
     result={};invalid=set()
     for row in bars:
         date=stamp(row.get('timestamp') or row.get('date'))
-        if not date or not business_day(date.date(),holiday) or not session_closed(date.date(),current) or row.get('complete') is False:continue
+        if not date or not business_day(date.date(),holiday) or not session_closed(date.date(),current,holiday) or row.get('complete') is False:continue
+        if any(row.get(k) for k in ('stale','unverified','legacy_unverified')) or any(isinstance(row.get(k),bool) for k in ('open','high','low','close')):
+            invalid.add(date.date());continue
         day=date.date();bar={k:number(row.get(k)) for k in ('open','high','low','close')}
         if any(v is not None and v<=0 for v in bar.values()) or bar['close'] is None:
             invalid.add(day);continue
@@ -69,14 +84,14 @@ def normalize_bars(bars, current, holiday=None):
     return result
 
 
-def outcome(record, bars, horizon, current, holiday=None, require_ohlc=True):
+def outcome(record, bars, horizon, current, holiday=None, require_ohlc=True,price_source='UNSPECIFIED'):
     start=stamp(record.get('zaman') or record.get('tarih'));base=number(record.get('referans_fiyat'),number(record.get('fiyat'),0))
     empty={'durum':'VERI_YETERSIZ','degerlendirme_tamamlandi':False,'observed_at':current.isoformat()}
     if not start or base<=0:return dict(empty,neden='REFERANS_EKSIK')
     days=sessions_after(start.date(),horizon,holiday)
-    if not session_closed(days[-1],current):return None
+    if not session_closed(days[-1],current,holiday):return None
     # Bound normalization too: later horizons cannot affect even validation of this one.
-    end=datetime.combine(days[-1],time(18,15),ISTANBUL)
+    end=session_end(days[-1],holiday)
     data=normalize_bars(bars,min(current,end),holiday)
     if any(day not in data for day in days):return dict(empty,neden='ISLEM_GUNU_EKSIK',eksik_gunler=[d.isoformat() for d in days if d not in data])
     window=[data[day] for day in days]
@@ -117,6 +132,9 @@ def outcome(record, bars, horizon, current, holiday=None, require_ohlc=True):
     else:status='BASARISIZ'
     excursions=excursion_metrics(window,base,target,stop,short)
     return {'durum':status,'degerlendirme_tamamlandi':True,'baslangic_fiyati':base,'fiyat':close,
+        'evaluation_version':OUTCOME_VERSION,'price_source':price_source,
+        'price_data_digest':hashlib.sha256(json.dumps(
+            [(day.isoformat(),data[day]) for day in days],sort_keys=True,allow_nan=False).encode()).hexdigest(),
         **excursions,
         'model_version':record.get('model_version') or (record.get('nihai_karar') or {}).get('model_version') or record.get('calibration_version') or 'LEGACY_UNKNOWN',
         'performance_source':performance_source(record),
@@ -136,6 +154,28 @@ def outcome(record, bars, horizon, current, holiday=None, require_ohlc=True):
         'degerlendirme_tarihi':current.date().isoformat(),
         'tarih':days[-1].isoformat(),'observed_at':current.isoformat(),
         'kalite_uyarilari':(['TEMAS_SIRASI_BELIRSIZ'] if first=='BELIRSIZ' else [])+([] if full else ['OHLC_EKSIK'])+([] if valid_levels else ['SEVIYELER_EKSIK_VEYA_GECERSIZ'])}
+
+
+def propose_outcome_correction(record,horizon,bars,current,reason,price_source,holiday=None):
+    """Append an auditable proposal; the sealed outcome is never overwritten."""
+    original=record.get(f'sonuc_{horizon}g')
+    if not isinstance(original,dict) or original.get('degerlendirme_tamamlandi') is not True:
+        raise ValueError('Tamamlanmış sonuç gerekli')
+    if not isinstance(reason,str) or not reason.strip() or not isinstance(price_source,str) or not price_source.strip():
+        raise ValueError('Düzeltme nedeni ve fiyat kaynağı gerekli')
+    replacement=outcome(record,bars,horizon,current,holiday,price_source=price_source)
+    if not replacement or replacement.get('degerlendirme_tamamlandi') is not True:
+        raise ValueError('Düzeltme için güvenilir tamamlanmış fiyat gerekli')
+    original_digest=hashlib.sha256(json.dumps(original,sort_keys=True,allow_nan=False).encode()).hexdigest()
+    identity=hashlib.sha256(json.dumps([horizon,original_digest,replacement['price_data_digest'],price_source,reason],sort_keys=True).encode()).hexdigest()
+    proposals=record.setdefault('outcome_corrections',[])
+    for proposal in proposals:
+        if proposal['correction_id']==identity:return copy.deepcopy(proposal)
+    proposal={'correction_id':identity,'version':len(proposals)+1,'horizon':horizon,'status':'PROPOSED',
+        'reason':reason,'created_at':current.isoformat(),'original_digest':original_digest,
+        'replacement':replacement}
+    proposals.append(copy.deepcopy(proposal))
+    return proposal
 
 
 def criteria(record):
@@ -184,7 +224,10 @@ def wilson(successes,count):
 
 def usable(record,horizon=1):
     result=record.get('sonuc_'+str(horizon)+'g')
-    return isinstance(result,dict) and result.get('degerlendirme_tamamlandi',True) and number(result.get('getiri_yuzde')) is not None
+    return (isinstance(result,dict) and result.get('degerlendirme_tamamlandi') is True
+            and not any(record.get(key) or result.get(key) for key in ('legacy_unverified','unverified'))
+            and not isinstance(result.get('getiri_yuzde'),bool)
+            and number(result.get('getiri_yuzde')) is not None)
 
 
 def correlation(xs,ys):
@@ -196,12 +239,12 @@ def correlation(xs,ys):
 
 def summarize(records,horizon=1):
     rows=[r for r in records if usable(r,horizon)];key='sonuc_'+str(horizon)+'g'
-    returns=[r[key]['getiri_yuzde'] for r in rows]
+    returns=[number(r[key]['getiri_yuzde']) for r in rows]
     labelled=[r for r in rows if r[key].get('durum') in ('BASARILI','KISMEN_BASARILI','BASARISIZ','STOP')]
     successful=sum(r[key]['durum']=='BASARILI' for r in labelled)
     buys=lambda r:r.get('model')=='YARIN_TOP10' or r.get('karar') in ('AL','GUCLU_AL','GUCLU_AL_ADAYI')
-    fp=sum(buys(r) and r[key]['getiri_yuzde']<=0 for r in rows);tn=sum(not buys(r) and r[key]['getiri_yuzde']<=0 for r in rows)
-    fn=sum(not buys(r) and r[key]['getiri_yuzde']>0 for r in rows);tp=sum(buys(r) and r[key]['getiri_yuzde']>0 for r in rows)
+    fp=sum(buys(r) and value<=0 for r,value in zip(rows,returns));tn=sum(not buys(r) and value<=0 for r,value in zip(rows,returns))
+    fn=sum(not buys(r) and value>0 for r,value in zip(rows,returns));tp=sum(buys(r) and value>0 for r,value in zip(rows,returns))
     return {**robust(returns),'beklenen_kayit':len(records),'degerlendirilen':len(rows),'basari_etiketi_ornek':len(labelled),
         'basari_orani':successful/len(labelled) if labelled else None,'basari_guven_araligi':wilson(successful,len(labelled)),
         'pozitif':sum(v>0 for v in returns),'negatif':sum(v<0 for v in returns),'notr':sum(v==0 for v in returns),
@@ -326,6 +369,9 @@ class PerformansMotoru:
     def __init__(self,location=None,clock=None,history_provider=None,holiday=None,batch_size=None):
         self.location=location or paths();self.clock=clock or (lambda:datetime.now(ISTANBUL))
         self.provider=history_provider or provider_history;self.holiday=holiday
+        module=getattr(self.provider,'__module__',type(self.provider).__module__)
+        name=getattr(self.provider,'__qualname__',type(self.provider).__name__)
+        self.price_source='BORSAPY_DAILY_OHLCV' if history_provider is None else str(module)+'.'+str(name)
         self.batch_size=int(batch_size or os.environ.get('PERFORMANCE_BATCH_SIZE','10'))
         if not 1<=self.batch_size<=25:raise ValueError('PERFORMANCE_BATCH_SIZE: 1–25')
         self.history_path=self.location.runtime_file('ai_ogrenme_gecmisi.json')
@@ -334,12 +380,29 @@ class PerformansMotoru:
         self.result_path=self.location.runtime/'yarin_top10_sonuclar.json'
         self.legacy_path=self.location.runtime_file('tahmin_gecmisi.json')
 
+    def propose_correction(self,record_id,horizon,bars,reason):
+        """Explicit correction request, persisted under the existing history lock."""
+        if horizon not in HORIZONS:raise ValueError('Geçersiz vade')
+        with locked(self.history_path):
+            history=load(self.history_path,{'kayitlar':[]})
+            matches=[r for r in history['kayitlar'] if isinstance(r,dict) and r.get('kayit_id')==record_id]
+            if len(matches)!=1:raise ValueError('Tek ve mevcut tahmin kaydı gerekli')
+            proposal=propose_outcome_correction(matches[0],horizon,bars,self.clock().astimezone(ISTANBUL),
+                                              reason,self.price_source,self.holiday)
+            atomic_json(self.history_path,history)
+            return proposal
+
     def snapshot_records(self,state):
         records=[]
         for path in sorted(self.location.archives.glob('????-??-??.json')):
             name=path.name
             if name in state.get('arsivler',{}):continue
             raw=path.read_bytes();snapshot=json.loads(raw);day=snapshot.get('analiz_tarihi',path.stem)
+            pair=snapshot.get('frozen_comparison')
+            pair_error=None
+            if pair is not None:
+                from top10_frozen_pair import verify_pair
+                pair_error=verify_pair(snapshot)
             snapshot_id=day+'_'+hashlib.sha256(raw).hexdigest()[:16]
             lists=[('YARIN_TOP10',snapshot.get('top10',[])),('YARIN_BASELINE',snapshot.get('ham_top10',[])),('YARIN_LEARNING_BASELINE',snapshot.get('base_top10',[])),('YARIN_SHADOW',snapshot.get('shadow_top10',[])),('YARIN_CONTROLLED_SHADOW',snapshot.get('controlled_shadow_top10',[]))]
             lists.append(('POSITIVE_CANDIDATE',(snapshot.get('pozitif_havuz') or {}).get('adaylar',[])))
@@ -380,6 +443,17 @@ class PerformansMotoru:
                     record['recorded_decision']=record['karar'];record['karar']='AL'
                     record['model_version']=(record.get('positive_opportunity') or {}).get('model_version','LEGACY_UNKNOWN')
                     record['analysis_only']=True
+                if pair is not None and model in ('YARIN_TOP10','YARIN_LEARNING_BASELINE'):
+                    paired_model='LEARNED' if model=='YARIN_TOP10' else 'BASE'
+                    metadata=pair if isinstance(pair,dict) else {}
+                    paired_models=metadata.get('models')
+                    model_metadata=paired_models.get(paired_model,{}) if isinstance(paired_models,dict) else {}
+                    if not isinstance(model_metadata,dict):model_metadata={}
+                    record.update(comparison_schema=metadata.get('schema'),
+                        data_slice_id=metadata.get('data_slice_id'),comparison_digest=metadata.get('comparison_digest'),
+                        model_version=model_metadata.get('version'),
+                        model_configuration_digest=model_metadata.get('configuration_digest'),
+                        comparison_integrity_error=pair_error)
                 records.append(record)
             state.setdefault('arsivler',{})[name]=snapshot_id
         return records
@@ -516,7 +590,7 @@ class PerformansMotoru:
                     model=record.get('model','')
                     horizons=POSITIVE_HORIZONS if model=='POSITIVE_CANDIDATE' else HORIZONS if model in ('HABER','MAKRO') else DAILY_HORIZONS if model.startswith('YARIN') else HORIZONS
                     due=[h for h in horizons if not (isinstance(record.get('sonuc_'+str(h)+'g'),dict) and record['sonuc_'+str(h)+'g'].get('degerlendirme_tamamlandi',True))
-                         and session_closed(sessions_after(start.date(),h,self.holiday)[-1],current)]
+                         and session_closed(sessions_after(start.date(),h,self.holiday)[-1],current,self.holiday)]
                     if due:pending.append((dict(record),due))
                 atomic_json(self.history_path,history)
             # Existing legacy history is evaluated in place with the SAME outcome,
@@ -535,36 +609,68 @@ class PerformansMotoru:
                     retry=stamp(state['tekrar'].get(record['sinyal_id']))
                     if retry and retry>current:continue
                     due=[h for h in HORIZONS if row['takip'][str(h)]['status']=='PENDING'
-                        and session_closed(sessions_after(start.date(),h,self.holiday)[-1],current)]
+                        and session_closed(sessions_after(start.date(),h,self.holiday)[-1],current,self.holiday)]
                     if due:pending.append((record,due))
                 if legacy_dirty:atomic_json(self.legacy_path,legacy)
             symbols=list(dict.fromkeys(r['sembol'] for r,hs in pending))[:self.batch_size]
             per_symbol=max(1,100//len(symbols)) if symbols else 0
             selected=[pair for stock in symbols for pair in [(r,hs) for r,hs in pending if r['sembol']==stock][:per_symbol]]
+            def pair_key(record,h):
+                return (record.get('snapshot_id'),record.get('sembol'),h,record.get('zaman'),
+                    record.get('data_slice_id'),number(record.get('referans_fiyat'),number(record.get('fiyat'))),
+                    number(record.get('hedef')),number(record.get('stop')))
+            sealed={}
+            from top10_ogrenme_performansi import verified as verified_pair_outcome
+            for record in history['kayitlar']:
+                if not isinstance(record,dict):continue
+                if record.get('model') not in ('YARIN_TOP10','YARIN_LEARNING_BASELINE') or not record.get('snapshot_id'):continue
+                for h in DAILY_HORIZONS:
+                    value=record.get(f'sonuc_{h}g')
+                    if (usable(record,h) and value.get('evaluation_version')==OUTCOME_VERSION and
+                        value.get('price_source') and value.get('price_data_digest') and
+                        verified_pair_outcome(record,h,current,self.holiday) is None):
+                        sealed.setdefault(pair_key(record,h),copy.deepcopy(value))
             prices={}
             for stock in symbols:
                 try:
+                    if all(r.get('model') in ('YARIN_TOP10','YARIN_LEARNING_BASELINE') and pair_key(r,h) in sealed
+                           for r,hs in selected if r['sembol']==stock for h in hs):
+                        prices[stock]=[];continue
                     if not any(number(r.get('referans_fiyat'),0)>0 for r,hs in selected if r['sembol']==stock):
                         prices[stock]=[];continue
                     cached=cache.get(stock,{})
-                    if cached.get('day')==current.date().isoformat() and cached.get('closed')==session_closed(current.date(),current):prices[stock]=cached['bars']
+                    fetched=stamp(cached.get('fetched_at'))
+                    if (cached.get('day')==current.date().isoformat() and cached.get('closed')==session_closed(current.date(),current,self.holiday)
+                        and cached.get('price_source')==self.price_source and fetched and timedelta(0)<=current-fetched<timedelta(hours=6)):
+                        prices[stock]=cached['bars']
                     else:
                         prices[stock]=list(self.provider(stock))
-                        cache[stock]={'day':current.date().isoformat(),'closed':session_closed(current.date(),current),'bars':prices[stock]}
+                        cache[stock]={'day':current.date().isoformat(),'closed':session_closed(current.date(),current,self.holiday),
+                            'fetched_at':current.isoformat(),'price_source':self.price_source,'bars':prices[stock]}
                 except Exception as error:
                     from gorev_hatalari import describe
                     errors[stock]=type(error).__name__;error_details[stock]=describe(error,'PROVIDER')
             updates={}
             for record,hs in selected:
                 stock=record['sembol'];rid=record['sinyal_id'];processed+=1
-                if stock not in prices:
+                if stock not in prices and not any(pair_key(record,h) in sealed for h in hs):
                     state['tekrar'][rid]=(current+timedelta(hours=6)).isoformat();continue
                 updates[rid]={}
                 for horizon in hs:
-                    try:result=outcome(record,prices[stock],horizon,current,self.holiday)
+                    try:
+                        frozen=sealed.get(pair_key(record,horizon)) if record.get('model') in ('YARIN_TOP10','YARIN_LEARNING_BASELINE') else None
+                        if frozen:
+                            result=copy.deepcopy(frozen)
+                            result.update(model_version=record.get('model_version','LEGACY_UNKNOWN'),performance_source=performance_source(record))
+                        elif stock not in prices:continue
+                        else:result=outcome(record,prices[stock],horizon,current,self.holiday,price_source=self.price_source)
                     except (ValueError,TypeError,AttributeError):
                         result={'durum':'VERI_YETERSIZ','degerlendirme_tamamlandi':False,'neden':'GECERSIZ_FIYAT_GECMISI','observed_at':current.isoformat()}
-                    if result is not None:updates[rid]['sonuc_'+str(horizon)+'g']=result
+                    if result is not None:
+                        updates[rid]['sonuc_'+str(horizon)+'g']=result
+                        if result.get('degerlendirme_tamamlandi') is not True:cache.pop(stock,None)
+                        elif record.get('model') in ('YARIN_TOP10','YARIN_LEARNING_BASELINE'):
+                            sealed.setdefault(pair_key(record,horizon),copy.deepcopy(result))
                 state['tekrar'][rid]=(current+timedelta(hours=6)).isoformat()
             with locked(self.history_path):
                 history=load(self.history_path,{'kayitlar':[]})
