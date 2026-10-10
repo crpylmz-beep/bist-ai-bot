@@ -163,6 +163,28 @@ class LearningTests(unittest.TestCase):
         self.assertEqual(self.delta(row=row),0)
     def test_context_future_guard_at_scoring_time(self):
         model=self.model();model['asof']=(self.now+timedelta(minutes=1)).isoformat();self.assertEqual(self.delta(model),0)
+    def test_context_stale_guard_at_scoring_time(self):
+        model=self.model()
+        model['asof']=(self.now-timedelta(days=learning.TOP10_MAX_CACHE_AGE_DAYS,seconds=1)).isoformat()
+        result=self.adjustment(model)
+        self.assertEqual(result['learning_adjustment'],0)
+        self.assertEqual(result['learning_status'],'STALE_REPORT')
+        self.assertEqual(result['learning_reasons'],[])
+    def test_context_age_boundary_remains_usable(self):
+        model=self.model()
+        model['asof']=(self.now-timedelta(days=learning.TOP10_MAX_CACHE_AGE_DAYS)).isoformat()
+        self.assertEqual(self.delta(model),self.delta())
+    def test_reused_context_expiry_preserves_base_ranking(self):
+        with patch('sinyal_performansi.read_report',return_value=self.report()) as read:
+            context=learning.top10_learning_context(self.paths,self.now)
+            rows=[(80,dict(self.row,rsi=90)),(79.5,dict(self.row,sembol='ASELS'))]
+            later=self.now+timedelta(days=learning.TOP10_MAX_CACHE_AGE_DAYS)
+            result=learning.rank_with_learning(rows,context,later)
+        read.assert_called_once()
+        self.assertEqual([score for score,row in result],[80,79.5])
+        self.assertEqual([row['sembol'] for score,row in result],['THYAO','ASELS'])
+        self.assertTrue(all(row['learning_status']=='STALE_REPORT' for score,row in result))
+        self.assertTrue(all(row['rank_change']==0 for score,row in result))
     def test_unverified_candidate_snapshot(self):
         self.assertEqual(self.delta(row=dict(self.row,indicator_snapshot={'inputs':{'rsi':45}})),0)
     def real_ranking(self,rows,enabled=True):

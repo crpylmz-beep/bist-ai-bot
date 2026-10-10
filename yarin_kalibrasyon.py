@@ -336,6 +336,8 @@ def top10_learning_adjustment(row,model,current):
         if model.get('status')!='READY':return empty
         asof=stamp(model.get('asof'))
         if not asof or asof>current:return dict(empty,learning_status='FUTURE_OR_MISSING_REPORT')
+        if (current-asof).total_seconds()>TOP10_MAX_CACHE_AGE_DAYS*86400:
+            return dict(empty,learning_status='STALE_REPORT')
         feature_error=frozen_feature_issue(row,current)
         if feature_error:return dict(empty,learning_status=feature_error)
         if number(row.get('fiyat'),0)<=0:return dict(empty,learning_status='MISSING_PRICE')
