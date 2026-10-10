@@ -90,7 +90,7 @@ class SchemaDiagnosticsTests(unittest.TestCase):
     self.sql.append(sql)
     if sql=='SET TRANSACTION READ ONLY':self.readonly=True;return Cursor([])
     if not self.readonly or not sql.startswith('SELECT '):raise AssertionError('Write attempted')
-    if 'to_regclass' in sql:return Cursor([{'name':'bist_v6.schema_migrations'}])
+    if 'to_regclass' in sql:return Cursor([{'schema_name':'bist_v6','name':'bist_v6.schema_migrations'}])
     if 'SELECT version,checksum' in sql:return Cursor(manifest)
     raise AssertionError('Unexpected SQL')
   connection=Connection()
