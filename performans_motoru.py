@@ -184,7 +184,10 @@ def wilson(successes,count):
 
 def usable(record,horizon=1):
     result=record.get('sonuc_'+str(horizon)+'g')
-    return isinstance(result,dict) and result.get('degerlendirme_tamamlandi',True) and number(result.get('getiri_yuzde')) is not None
+    return (isinstance(result,dict) and result.get('degerlendirme_tamamlandi') is True
+            and not any(record.get(key) or result.get(key) for key in ('legacy_unverified','unverified'))
+            and not isinstance(result.get('getiri_yuzde'),bool)
+            and number(result.get('getiri_yuzde')) is not None)
 
 
 def correlation(xs,ys):
@@ -196,12 +199,12 @@ def correlation(xs,ys):
 
 def summarize(records,horizon=1):
     rows=[r for r in records if usable(r,horizon)];key='sonuc_'+str(horizon)+'g'
-    returns=[r[key]['getiri_yuzde'] for r in rows]
+    returns=[number(r[key]['getiri_yuzde']) for r in rows]
     labelled=[r for r in rows if r[key].get('durum') in ('BASARILI','KISMEN_BASARILI','BASARISIZ','STOP')]
     successful=sum(r[key]['durum']=='BASARILI' for r in labelled)
     buys=lambda r:r.get('model')=='YARIN_TOP10' or r.get('karar') in ('AL','GUCLU_AL','GUCLU_AL_ADAYI')
-    fp=sum(buys(r) and r[key]['getiri_yuzde']<=0 for r in rows);tn=sum(not buys(r) and r[key]['getiri_yuzde']<=0 for r in rows)
-    fn=sum(not buys(r) and r[key]['getiri_yuzde']>0 for r in rows);tp=sum(buys(r) and r[key]['getiri_yuzde']>0 for r in rows)
+    fp=sum(buys(r) and value<=0 for r,value in zip(rows,returns));tn=sum(not buys(r) and value<=0 for r,value in zip(rows,returns))
+    fn=sum(not buys(r) and value>0 for r,value in zip(rows,returns));tp=sum(buys(r) and value>0 for r,value in zip(rows,returns))
     return {**robust(returns),'beklenen_kayit':len(records),'degerlendirilen':len(rows),'basari_etiketi_ornek':len(labelled),
         'basari_orani':successful/len(labelled) if labelled else None,'basari_guven_araligi':wilson(successful,len(labelled)),
         'pozitif':sum(v>0 for v in returns),'negatif':sum(v<0 for v in returns),'notr':sum(v==0 for v in returns),

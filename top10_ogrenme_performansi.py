@@ -62,18 +62,25 @@ def comparison(snapshot_id, rows, horizon, current, holiday=None):
               'horizon': horizon, 'status': 'INSUFFICIENT', 'base': None, 'learned': None,
               'differences': None, 'excluded': {}}
     excluded = Counter()
+    observed = {name: [] for name in MODELS}
+    coherent = True
     data_quality={name:{'records':len(items),'verified':0,'pending':0,'missing_due_outcomes':0,'excluded':0}
                   for name,items in lists.items()}
     for name, items in lists.items():
         ranks = [r.get('tahmin_sirasi') for r in items]
         symbols = [r.get('sembol') for r in items]
+        if (len(items)>10 or len(set(symbols))!=len(symbols) or
+            any(type(rank) is not int or not 1<=rank<=10 for rank in ranks) or len(set(ranks))!=len(ranks)):
+            coherent = False
         if len(items) != 10 or sorted(ranks, key=str) != sorted(range(1, 11), key=str) or len(set(symbols)) != 10:
             excluded[name + '_INCOMPLETE_TOP10'] += 1
     for row, conflict in rows:
         reason = 'CONFLICTING_DUPLICATE' if conflict else verified(row, horizon, current, holiday)
         if reason: excluded[reason] += 1
         name=next(name for name,model in MODELS.items() if row.get('model')==model)
-        if reason is None:data_quality[name]['verified']+=1
+        if reason is None:
+            data_quality[name]['verified']+=1
+            observed[name].append(row)
         elif reason in ('PENDING','FUTURE_OUTCOME'):
             from performans_motoru import sessions_after,session_closed
             signal_time=stamp(row.get('zaman'))
@@ -83,15 +90,32 @@ def comparison(snapshot_id, rows, horizon, current, holiday=None):
     result['data_quality']=data_quality
     # Paired predictions must share one frozen observation time and symbol price.
     times = {r.get('zaman') for r, _ in rows}
-    if len(times) != 1: excluded['INCONSISTENT_SNAPSHOT_TIME'] += 1
+    if len(times) != 1:
+        excluded['INCONSISTENT_SNAPSHOT_TIME'] += 1
+        coherent = False
     prices = defaultdict(set)
     for row, _ in rows: prices[row.get('sembol')].add(number(row.get('fiyat')))
-    if any(len(v) > 1 for v in prices.values()): excluded['INCONSISTENT_BASE_PRICE'] += 1
+    if any(len(v) > 1 for v in prices.values()):
+        excluded['INCONSISTENT_BASE_PRICE'] += 1
+        coherent = False
     closes = defaultdict(set)
     for row, _ in rows:
         value = row.get(f'sonuc_{horizon}g')
         if isinstance(value, dict): closes[row.get('sembol')].add(number(value.get('fiyat')))
-    if any(len(v) > 1 for v in closes.values()): excluded['INCONSISTENT_RESULT_PRICE'] += 1
+    if any(len(v) > 1 for v in closes.values()):
+        excluded['INCONSISTENT_RESULT_PRICE'] += 1
+    observed_closes = defaultdict(set)
+    for items in observed.values():
+        for row in items:
+            observed_closes[row['sembol']].add(number(row[f'sonuc_{horizon}g']['fiyat']))
+    if any(len(values)>1 for values in observed_closes.values()):coherent=False
+    result['observed_models'] = {}
+    for name, items in observed.items():
+        values = [number(row[f'sonuc_{horizon}g']['getiri_yuzde']) for row in items] if coherent else []
+        result['observed_models'][name] = {
+            'sample_count': len(values), 'positive_count': sum(value>0 for value in values),
+            'mean_return': mean(values) if values else None,
+            'success_rate': sum(value>0 for value in values)/len(values) if values else None}
     result['excluded'] = dict(excluded)
     if excluded: return result
     result['base'] = metrics(lists['BASE'], horizon)
@@ -108,6 +132,7 @@ def summary(comparisons):
     counts = Counter(r['status'] for r in valid)
     edges = [r['differences']['mean_return'] for r in valid]
     models={}
+    observed_models={}
     for name in MODELS:
         rows=[r[name.lower()] for r in valid if isinstance(r.get(name.lower()),dict)]
         samples=sum(r['count'] for r in rows)
@@ -118,6 +143,13 @@ def summary(comparisons):
                       'success_rate':positives/samples if samples else None,
                       'mean_return':sum(r['mean_return']*r['count'] for r in rows)/samples if samples else None,
                       'data_quality':dict(quality_counts)}
+        observed=[r['observed_models'][name] for r in comparisons if name in r.get('observed_models',{})]
+        observed_samples=sum(r['sample_count'] for r in observed)
+        observed_positive=sum(r['positive_count'] for r in observed)
+        observed_models[name]={
+            'sample_count':observed_samples, 'positive_count':observed_positive,
+            'success_rate':observed_positive/observed_samples if observed_samples else None,
+            'mean_return':sum(r['mean_return']*r['sample_count'] for r in observed if r['sample_count'])/observed_samples if observed_samples else None}
     delta={'mean_return':models['LEARNED']['mean_return']-models['BASE']['mean_return'] if all(models[n]['sample_count'] for n in MODELS) else None,
            'success_rate_percentage_points':100*(models['LEARNED']['success_rate']-models['BASE']['success_rate']) if all(models[n]['sample_count'] for n in MODELS) else None}
     exclusions=Counter()
@@ -128,6 +160,8 @@ def summary(comparisons):
             'mean_learned_edge': mean(edges) if edges else None,
             'median_learned_edge': median(edges) if edges else None,
             'models':models,'differences_vs_base':delta,'excluded_reasons':dict(exclusions),
+            'observed_models':observed_models,
+            'observed_metrics_basis':'VERIFIED_OUTCOMES_ONLY_NOT_PAIRED_COMPARISON',
             'metrics_basis':'COMPLETE_VERIFIED_PAIRED_TOP10_ONLY',
             'success_definition':'POSITIVE_CLOSE_RETURN', 'horizon_basis':'BIST_TRADING_SESSIONS'}
 
