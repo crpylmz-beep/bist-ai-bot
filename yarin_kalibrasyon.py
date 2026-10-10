@@ -240,11 +240,11 @@ class YarinKalibrasyon:
             'shadow_top10':robust([p['shadow']['ortalama'] for p in pairs[-20:]]),'otomatik_aktivasyon':False})
 
 # Prospective indicator evidence around the existing tomorrow ranking only.
-TOP10_LEARNING_VERSION='TOP10_INDICATOR_V1'
+TOP10_LEARNING_VERSION='TOP10_INDICATOR_V2'
 TOP10_MAX_ADJUSTMENT=3.0
 TOP10_FAMILY_CAP=.75
 TOP10_COMBINATION_CAP=1.0
-TOP10_HORIZON_WEIGHTS={1:.80,3:.15,5:.05}
+TOP10_HORIZON_WEIGHTS={1:.55,3:.15,5:.10,10:.08,20:.07,60:.05}
 TOP10_CONFIDENCE_SCALE={'INSUFFICIENT':0.,'LOW':.25,'MEDIUM':.60,'HIGH':1.}
 TOP10_FALLBACK_SCALE=.5
 TOP10_WIN_EDGE_SCALE=.20
@@ -272,6 +272,7 @@ def _learning_clip(value,limit):return max(-limit,min(limit,value))
 def top10_learning_context(location,current):
     """One cached lookup per batch; failures do not affect the base ranker."""
     from sinyal_performansi import read_report,VERSION,RELIABILITY
+    from top10_temporal_learning import VERSION as TEMPORAL_VERSION
     try:
         if not top10_learning_enabled():return {'status':'DISABLED'}
         report=read_report(location);at=stamp(report.get('updated_at'))
@@ -279,18 +280,17 @@ def top10_learning_context(location,current):
             return {'status':'NO_VERIFIED_REPORT'}
         if not at or at>current:return {'status':'FUTURE_OR_MISSING_REPORT'}
         if (current-at).total_seconds()>TOP10_MAX_CACHE_AGE_DAYS*86400:return {'status':'STALE_REPORT'}
-        indicators=report['indicator_analysis']
+        indicators=report.get('top10_temporal_learning',{})
+        if indicators.get('version')!=TEMPORAL_VERSION:return {'status':'NO_TEMPORAL_VALIDATION'}
         if stamp(indicators.get('updated_at'))!=at or indicators.get('analysis_only') is not True:return {'status':'INCONSISTENT_REPORT'}
         index={}
         for row in indicators['rows']:
-            if row['period']!='ALL' or row['horizon'] not in TOP10_HORIZON_WEIGHTS:continue
+            if row['horizon'] not in TOP10_HORIZON_WEIGHTS:continue
             key=(row['indicator'],row['condition'],row['signal_type'],row['horizon'])
             if key in index:raise ValueError('Duplicate evidence')
             index[key]=row
-        overall=report['periods'].get('ALL',{})
         return {'status':'READY','asof':at.isoformat(),'index':index,
-                'baselines':{'YARIN_TOP10':overall.get('signals',{}).get('YARIN_TOP10',{}),
-                             'ALL':overall.get('overall',{}).get('ALL',{})}}
+                'baselines':{'YARIN_TOP10':indicators['baselines']}}
     except Exception as error:
         print('[TOP10_LEARNING] cache kullanılamadı:',type(error).__name__)
         return {'status':'CACHE_ERROR'}
@@ -324,6 +324,32 @@ def _indicator_edge(row,baseline):
     return edge*factor*risk_scale,confidence,factor,risk_scale
 
 
+def _validated_indicator_edge(entry,baseline,asof):
+    """Require independent days, purged labels and agreement on unseen dates."""
+    from top10_temporal_learning import MIN_TRAIN_DAYS,MIN_VALIDATION_DAYS,MIN_SAMPLES
+    if any(entry.get(key) or baseline.get(key) for key in ('legacy_unverified','unverified')):return None
+    cutoff=stamp(entry.get('cutoff'));through=stamp(entry.get('train_observed_through'))
+    if not cutoff or not through or not through<cutoff<=asof:return None
+    estimates=[];counts=[]
+    for split,minimum_days in (('train',MIN_TRAIN_DAYS),('validation',MIN_VALIDATION_DAYS)):
+        row=entry.get(split);base=baseline.get(split)
+        if not _verified_stat(row) or not _verified_stat(base):return None
+        for stat in (row,base):
+            days=number(stat.get('independent_days'))
+            if days is None or days!=int(days) or not minimum_days<=days<=stat['sample_size']:return None
+        if not MIN_SAMPLES<=row['sample_size']<=base['sample_size']:return None
+        lower=number(row.get('daily_edge_lower'));upper=number(row.get('daily_edge_upper'))
+        if lower is None or upper is None or lower>upper:return None
+        edge=_indicator_edge(row,base)
+        # Both the day-clustered interval and robust median must support the edge.
+        if not ((edge[0]>0 and lower>0 and row['median_return']>base['median_return']) or
+                (edge[0]<0 and upper<0 and row['median_return']<base['median_return'])):return None
+        estimates.append(edge);counts.append(row['sample_size'])
+    if estimates[0][0]*estimates[1][0]<=0:return None
+    chosen=min(estimates,key=lambda item:abs(item[0]))
+    return chosen,counts
+
+
 def top10_learning_adjustment(row,model,current):
     """Use only completed historical evidence and currently known candidate inputs."""
     from sinyal_performansi import indicator_conditions,frozen_feature_issue
@@ -347,25 +373,28 @@ def top10_learning_adjustment(row,model,current):
             details=[];delta=0.;main=False
             for horizon,weight in TOP10_HORIZON_WEIGHTS.items():
                 selected=None
-                for source in ('YARIN_TOP10','ALL'):
+                for source in ('YARIN_TOP10',):
                     entry=model['index'].get((indicator,condition,source,horizon))
                     baseline=model['baselines'][source].get(str(horizon))
-                    if not _verified_stat(entry) or not _verified_stat(baseline):continue
-                    if entry['sample_size']>baseline['sample_size']:continue
-                    selected=(entry,baseline,source);break
+                    if not isinstance(entry,dict) or not isinstance(baseline,dict):continue
+                    validation=_validated_indicator_edge(entry,baseline,asof)
+                    if validation is None:continue
+                    selected=(entry,baseline,source,validation);break
                 if not selected:continue
-                entry,baseline,source=selected
+                entry,baseline,source,validation=selected
                 if horizon==1:main=True
-                edge,confidence,factor,risk_scale=_indicator_edge(entry,baseline)
+                (edge,confidence,factor,risk_scale),counts=validation
+                train_entry=entry['train'];train_baseline=baseline['train']
                 fallback=TOP10_FALLBACK_SCALE if source=='ALL' else 1.
                 contribution=edge*weight*fallback
                 delta+=contribution
                 details.append({'horizon':horizon,'weight':weight,'source':source,'fallback_scale':fallback,
-                    'sample_count':entry['sample_size'],'baseline_count':baseline['sample_size'],
+                    'sample_count':counts[0],'validation_sample_count':counts[1],
+                    'baseline_count':train_baseline['sample_size'],'validation_cutoff':entry['cutoff'],
                     'confidence':confidence,'confidence_scale':factor,'risk_scale':risk_scale,
-                    'win_rate':entry['success_rate'],'baseline_win_rate':baseline['success_rate'],
-                    'mean_return':entry['mean_return'],'baseline_mean_return':baseline['mean_return'],
-                    'median_return':entry['median_return'],'baseline_median_return':baseline['median_return'],
+                    'win_rate':train_entry['success_rate'],'baseline_win_rate':train_baseline['success_rate'],
+                    'mean_return':train_entry['mean_return'],'baseline_mean_return':train_baseline['mean_return'],
+                    'median_return':train_entry['median_return'],'baseline_median_return':train_baseline['median_return'],
                     'weighted_edge':round(contribution,6)})
             if not main:continue  # Auxiliary horizons cannot enable a bonus alone.
             family=next((f for f,values in TOP10_FAMILIES.items() if indicator in values),'combination')

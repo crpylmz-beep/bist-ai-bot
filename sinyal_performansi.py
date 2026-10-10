@@ -285,6 +285,8 @@ def publish(location, records, current):
     """Called only when the existing performance report is due; bounded derived data."""
     report = aggregate(records, current)
     report['indicator_analysis'] = aggregate_indicators(records,current)
+    from top10_temporal_learning import build_evidence
+    report['top10_temporal_learning'] = build_evidence(records,current)
     target = location.public_file('sinyal_performansi.json')
     with locked(target): atomic_json(target, report)
     return report
