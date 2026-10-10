@@ -62,6 +62,8 @@ def comparison(snapshot_id, rows, horizon, current, holiday=None):
               'horizon': horizon, 'status': 'INSUFFICIENT', 'base': None, 'learned': None,
               'differences': None, 'excluded': {}}
     excluded = Counter()
+    data_quality={name:{'records':len(items),'verified':0,'pending':0,'missing_due_outcomes':0,'excluded':0}
+                  for name,items in lists.items()}
     for name, items in lists.items():
         ranks = [r.get('tahmin_sirasi') for r in items]
         symbols = [r.get('sembol') for r in items]
@@ -70,6 +72,15 @@ def comparison(snapshot_id, rows, horizon, current, holiday=None):
     for row, conflict in rows:
         reason = 'CONFLICTING_DUPLICATE' if conflict else verified(row, horizon, current, holiday)
         if reason: excluded[reason] += 1
+        name=next(name for name,model in MODELS.items() if row.get('model')==model)
+        if reason is None:data_quality[name]['verified']+=1
+        elif reason in ('PENDING','FUTURE_OUTCOME'):
+            from performans_motoru import sessions_after,session_closed
+            signal_time=stamp(row.get('zaman'))
+            due=signal_time and signal_time<=current and session_closed(sessions_after(signal_time.date(),horizon,holiday)[-1],current)
+            data_quality[name]['missing_due_outcomes' if due else 'pending']+=1
+        else:data_quality[name]['excluded']+=1
+    result['data_quality']=data_quality
     # Paired predictions must share one frozen observation time and symbol price.
     times = {r.get('zaman') for r, _ in rows}
     if len(times) != 1: excluded['INCONSISTENT_SNAPSHOT_TIME'] += 1
@@ -96,11 +107,29 @@ def summary(comparisons):
     valid = [r for r in comparisons if r['status'] != 'INSUFFICIENT']
     counts = Counter(r['status'] for r in valid)
     edges = [r['differences']['mean_return'] for r in valid]
+    models={}
+    for name in MODELS:
+        rows=[r[name.lower()] for r in valid if isinstance(r.get(name.lower()),dict)]
+        samples=sum(r['count'] for r in rows)
+        positives=sum(r['positive_count'] for r in rows)
+        quality_counts=Counter()
+        for comparison in comparisons:quality_counts.update(comparison.get('data_quality',{}).get(name,{}))
+        models[name]={'sample_count':samples,'positive_count':positives,
+                      'success_rate':positives/samples if samples else None,
+                      'mean_return':sum(r['mean_return']*r['count'] for r in rows)/samples if samples else None,
+                      'data_quality':dict(quality_counts)}
+    delta={'mean_return':models['LEARNED']['mean_return']-models['BASE']['mean_return'] if all(models[n]['sample_count'] for n in MODELS) else None,
+           'success_rate_percentage_points':100*(models['LEARNED']['success_rate']-models['BASE']['success_rate']) if all(models[n]['sample_count'] for n in MODELS) else None}
+    exclusions=Counter()
+    for row in comparisons:exclusions.update(row.get('excluded',{}))
     return {'completed_days': len(valid), 'insufficient_days': len(comparisons) - len(valid),
             'learned_wins': counts['LEARNED_BETTER'], 'base_wins': counts['BASE_BETTER'],
             'ties': counts['TIE'], 'learned_win_rate': counts['LEARNED_BETTER'] / len(valid) if valid else None,
             'mean_learned_edge': mean(edges) if edges else None,
-            'median_learned_edge': median(edges) if edges else None}
+            'median_learned_edge': median(edges) if edges else None,
+            'models':models,'differences_vs_base':delta,'excluded_reasons':dict(exclusions),
+            'metrics_basis':'COMPLETE_VERIFIED_PAIRED_TOP10_ONLY',
+            'success_definition':'POSITIVE_CLOSE_RETURN', 'horizon_basis':'BIST_TRADING_SESSIONS'}
 
 
 def aggregate(records, current, holiday=None):

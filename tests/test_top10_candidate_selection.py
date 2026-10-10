@@ -157,6 +157,9 @@ class CandidateSelectionTests(unittest.TestCase):
     def test_nonfinite_raw_score_does_not_enter_pipeline(self):
         self.assertEqual(self.ranking([self.row('AAA',float('inf')),self.row('BBB',80)])[0][1]['sembol'],'BBB')
 
+    def test_bool_raw_score_is_rejected_after_remote_merge(self):
+        self.assertEqual(self.ranking([self.row('AAA',True)]),[])
+
     def test_nonfinite_calibrated_score_cannot_be_clamped_into_top10(self):
         result=self.ranking([self.row()], **{'yarin_kalibrasyon.score':{
             'return_value':{'final_puan':float('nan'),'shadow_puan':80}}})

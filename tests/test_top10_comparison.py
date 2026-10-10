@@ -43,6 +43,44 @@ class ComparisonTests(unittest.TestCase):
         row = self.rows[-1]; row.update(sembol='NEW', base_rank=11, learned_rank=10, rank_change=1, learning_adjustment=1)
         for h in HORIZONS: row[f'sonuc_{h}g'].update(fiyat=115, getiri_yuzde=15, yon_getirisi=15)
         self.rows[9].update(learned_rank=11, rank_change=-1)
+    def test_summary_metrics_all_horizons(self):
+        report=self.report()
+        for h in HORIZONS:
+            summary=report['horizons'][str(h)]
+            self.assertEqual(summary['models']['BASE']['sample_count'],10)
+            self.assertEqual(summary['models']['LEARNED']['success_rate'],1)
+            self.assertEqual(summary['models']['BASE']['mean_return'],5.5)
+            self.assertEqual(summary['differences_vs_base']['mean_return'],0)
+    def test_summary_mean_and_success_delta_vs_base(self):
+        self.enter()
+        for h in HORIZONS:self.rows[-1][f'sonuc_{h}g'].update(fiyat=90,getiri_yuzde=-10,yon_getirisi=-10)
+        summary=self.report()['horizons']['1']
+        self.assertAlmostEqual(summary['differences_vs_base']['mean_return'],-2)
+        self.assertAlmostEqual(summary['differences_vs_base']['success_rate_percentage_points'],-10)
+    def test_due_missing_distinct_from_not_yet_due(self):
+        for h in HORIZONS:self.rows[0][f'sonuc_{h}g']=None
+        report=self.report();self.assertEqual(report['horizons']['1']['models']['BASE']['data_quality']['missing_due_outcomes'],1)
+        current=self.at+timedelta(days=1)
+        report=module.aggregate(self.rows,current,self.holiday)
+        self.assertEqual(report['horizons']['60']['models']['BASE']['data_quality']['pending'],10)
+        self.assertEqual(report['horizons']['60']['models']['BASE']['data_quality']['missing_due_outcomes'],0)
+        self.assertIsNone(report['horizons']['60']['models']['BASE']['mean_return'])
+    def test_missing_evidence_not_counted_as_loss_or_zero_return(self):
+        self.rows[0]['sonuc_1g']=None
+        summary=self.report()['horizons']['1']
+        self.assertEqual(summary['models']['BASE']['sample_count'],0)
+        self.assertIsNone(summary['models']['BASE']['success_rate'])
+        self.assertEqual(summary['excluded_reasons']['PENDING'],1)
+    def test_report_preserves_history_and_repeated_reports_identical(self):
+        before=copy.deepcopy(self.rows)
+        first=self.report();self.assertEqual(first,self.report());self.assertEqual(self.rows,before)
+    def test_duplicate_does_not_inflate_summary(self):
+        self.rows.append(copy.deepcopy(self.rows[0]))
+        self.assertEqual(self.report()['horizons']['1']['models']['BASE']['sample_count'],10)
+    def test_later_result_does_not_change_one_day_metrics(self):
+        first=self.report()['horizons']['1']
+        self.rows[0]['sonuc_60g']['getiri_yuzde']=999
+        self.assertEqual(self.report()['horizons']['1'],first)
     def test_identical_lists_tie(self): self.assertEqual(self.first()['status'], 'TIE')
     def test_learned_better(self): self.enter(); self.assertEqual(self.first()['status'], 'LEARNED_BETTER')
     def test_base_better(self):

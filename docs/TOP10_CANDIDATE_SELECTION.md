@@ -3,6 +3,9 @@
 10.10.2026; başlangıç `4949b0d`, dal `feature/bist-development`.
 GitHub dalındaki `03e6c82` commit'i geliştirme dalına birleştirildi;
 aynı eskilik düzeltmesi ve ek testleri korundu. Main birleştirmesi yapılmadı.
+Push öncesi gelen `0fbd6af` (60 aday) ve `4131264` (altı vadeli eşleştirilmiş
+rapor) geliştirmeleri de korundu. Çakışmalarda kalite/alias kontrolü, mevcut
+öğrenme sırasının korunması ve ortak 60 sınırı birlikte muhafaza edildi.
 
 ## Davranış
 
@@ -44,7 +47,8 @@ Yeni veri kaynağı isteği, ücretli servis veya kalıcı veri şeması eklenme
 BIST_DATA_DIR=/workspace/scratch/bist-test-runtime /workspace/bist-venv/bin/python -m unittest discover -s tests -p 'test_top10_candidate_selection.py'
 ```
 
-Sonuç: **33 yeni test geçti**. Kapsam: sembol alias/tekrarları, girdi sırasından
+Sonuç: **34 yeni yerel test + uzak daldan gelen 13 yeni test = 47 test geçti**.
+Birleştirme sonrası yalnız yeni değişiklikler doğrulandı. Kapsam: sembol alias/tekrarları, girdi sırasından
 bağımsız eşitlik, en yeni geçerli gözlem, NaN/Infinity/eksik girdiler,
 eski/gelecek/bozuk metadata, OHLC/hacim uyumu, legacy davranışı, gerçek intraday
 indikatör şeması, mevcut eşitlik ölçütleri ve uygunluk eşikleri, kalibrasyon
@@ -56,6 +60,7 @@ Syntax kontrolü değişen/yeni Python dosyalarında; import kontrolü
 `top10_aday_secimi`, `bist_bot`, `pozitif_kapanis` için geçti.
 Önceki 1.369 Python/18 JavaScript regresyon kontrolü tekrar çalıştırılmadı.
 Yerel log: `/workspace/scratch/bist-results/candidate-selection.log`.
+Birleştirme doğrulaması: `/workspace/scratch/bist-results/candidate-merge-validation.log`.
 Testlerde veri ve sağlayıcı mock'ları/geçici dizinler kullanıldı.
 
 PostgreSQL, migrations, `v6_storage`, `STORAGE_BACKEND`, Railway ayarları ve

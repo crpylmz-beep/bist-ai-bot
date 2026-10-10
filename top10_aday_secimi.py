@@ -104,7 +104,7 @@ def select_candidates(scored, secondary=('hacim_orani', 'risk_getiri')):
     """Select at most 60 finite base scores before learned reranking."""
     valid = []
     for score, row in scored:
-        if number(score) is None or not isinstance(row, dict) or not isinstance(row.get('sembol'), str):
+        if isinstance(score,bool) or number(score) is None or not isinstance(row, dict) or not isinstance(row.get('sembol'), str):
             continue
         try:
             row['sembol'] = bist_symbol(row['sembol'])

@@ -164,7 +164,7 @@ class LearningTests(unittest.TestCase):
     def test_stale_ready_context_rejected_at_ranking_time(self):
         model=self.model();model['asof']=(self.now-timedelta(days=learning.TOP10_MAX_CACHE_AGE_DAYS,seconds=1)).isoformat()
         original=copy.deepcopy(model)
-        result=learning.rank_with_learning([(80,dict(self.row)),(79,dict(self.row))],model,self.now)
+        result=learning.rank_with_learning([(80,dict(self.row)),(79,dict(self.row,sembol='ASELS'))],model,self.now)
         self.assertEqual([score for score,_ in result],[80,79])
         self.assertTrue(all(r['learning_adjustment']==0 and r['learning_status']=='STALE_REPORT' for _,r in result))
         self.assertEqual(model,original)
@@ -179,6 +179,30 @@ class LearningTests(unittest.TestCase):
             result=learning.rank_with_learning([(80,dict(self.row))],model,self.now+timedelta(days=8))
         read.assert_called_once();self.assertEqual(result[0][0],80)
         self.assertEqual(result[0][1]['learning_status'],'STALE_REPORT')
+    def test_candidate_limit_after_dedup_and_quality(self):
+        rows=[(100,{'sembol':'BAD','fiyat':float('nan')}),(99,dict(self.row))]*5
+        rows += [(80-i/100,dict(self.row,sembol='S'+str(i))) for i in range(70)]
+        output=learning.rank_with_learning(rows,{'status':'DISABLED'},self.now)
+        self.assertEqual(len(output),60);self.assertEqual(len({r['sembol'] for _,r in output}),60)
+        self.assertEqual(output[-1][1]['sembol'],'S58')
+    def test_duplicate_symbol_normalized_and_best_base_kept(self):
+        low=dict(self.row,sembol=' thyao ');high=dict(self.row,sembol='THYAO')
+        rows=learning.top10_candidate_rows([(70,low),(80,high),(79,dict(self.row,sembol='ISB')),(78,dict(self.row,sembol='ISATR'))])
+        self.assertEqual(len(rows),3);self.assertIs(rows[0][1],high)
+    def test_candidate_malformed_and_nonfinite_skipped(self):
+        invalid=[None,('x',), (float('inf'),dict(self.row)),(True,dict(self.row)),(80,{}),(80,dict(self.row,fiyat=-1)),(80,dict(self.row,fiyat=True)),(80,dict(self.row,teknik_gostergeler={'stale':True}))]
+        self.assertEqual(learning.top10_candidate_rows(invalid+[(79,dict(self.row))]),[(79,self.row)])
+    def test_learning_ties_keep_base_precedence(self):
+        a=dict(self.row,sembol='BBB');b=dict(self.row,sembol='AAA')
+        output=learning.rank_with_learning([(80,a),(80,b)],{'status':'DISABLED'},self.now)
+        self.assertEqual([r['sembol'] for _,r in output],['BBB','AAA'])
+    def test_real_ranker_exact_ties_symbol_order_independent_of_input(self):
+        rows=[dict(self.row,sembol='BBB',old_score=80),dict(self.row,sembol='AAA',old_score=80)]
+        for items in (rows,list(reversed(rows))):
+            self.assertEqual([r['sembol'] for _,r in self.real_ranking(copy.deepcopy(items),False)],['AAA','BBB'])
+    def test_real_ranker_invalid_price_never_scored(self):
+        rows=[dict(self.row,sembol='BAD',fiyat=float('nan'),old_score=95),dict(self.row,sembol='AAA',old_score=80)]
+        self.assertEqual([r['sembol'] for _,r in self.real_ranking(rows,False)],['AAA'])
     def test_context_future_guard_at_scoring_time(self):
         model=self.model();model['asof']=(self.now+timedelta(minutes=1)).isoformat();self.assertEqual(self.delta(model),0)
     def test_context_stale_guard_at_scoring_time(self):

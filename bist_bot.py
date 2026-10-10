@@ -2065,6 +2065,11 @@ def yarin_top10_listesi(sonuclar, kalibrasyon=None, piyasa=None, learning_contex
     from yarin_kalibrasyon import top10_learning_context,rank_with_learning
     if learning_context is None:
         learning_context=top10_learning_context(paths(repo_root=os.path.dirname(__file__)),baglam_zamani)
+    # Validate raw candidates before invoking existing formulas; do not cap pre-score.
+    from ai_karar_motoru import number as finite_number
+    sonuclar=[a for a in sonuclar if isinstance(a,dict) and isinstance(a.get('sembol'),str)
+              and a['sembol'].strip() and not isinstance(a.get('fiyat'),bool)
+              and finite_number(a.get('fiyat'),0)>0]
     sirali = []
     from performans_motoru import controlled_context,controlled_score
     controlled=controlled_context(paths(repo_root=os.path.dirname(__file__)),baglam_zamani,'DAILY')
@@ -2073,9 +2078,7 @@ def yarin_top10_listesi(sonuclar, kalibrasyon=None, piyasa=None, learning_contex
             continue
         a.pop('base_rank', None)
         ham = yarin_potansiyel_hesapla(a)
-        from ai_karar_motoru import number
-        if number(ham) is None:
-            continue
+        if isinstance(ham,bool) or finite_number(ham) is None:continue
         # Existing eligibility and safety gates always run before learned scoring.
         try:
             a.update(score(a, ham, kalibrasyon))
@@ -2089,7 +2092,7 @@ def yarin_top10_listesi(sonuclar, kalibrasyon=None, piyasa=None, learning_contex
         from ai_karar_motoru import attach_final_decision
         attach_final_decision(a,baglam_zamani,'DAILY')
         a['controlled_shadow']=controlled_score(a,ham,baglam_zamani,'DAILY',controlled)
-        if any(number(a.get(key)) is None for key in ('final_puan','shadow_puan','piyasa_baglami_etkisi')):
+        if any(finite_number(a.get(key)) is None for key in ('final_puan','shadow_puan','piyasa_baglami_etkisi')):
             continue
         if ham >= 55:
             a['final_puan'] = max(0,min(95,a['final_puan']+a['piyasa_baglami_etkisi']))
@@ -2250,7 +2253,9 @@ def yarin_top10_kilitli_kaydet(sonuclar, toplam_hisse, pozitif_kapanis=False):
             learning_context=top10_learning_context(paths(repo_root=os.path.dirname(__file__)),simdi)
             top10 = yarin_top10_listesi(sonuclar, kalibrasyon=calibration, piyasa=piyasa,learning_context=learning_context)
             # Prospective baseline/shadow lists; never recomputed from later outcomes.
-            eligible = [a for a in sonuclar if a.get("ham_puan", -999) >= 55 and 'base_rank' in a]
+            from yarin_kalibrasyon import top10_candidate_rows
+            eligible = [a for _,a in top10_candidate_rows([(a.get("final_puan"),a) for a in sonuclar
+                if isinstance(a,dict) and a.get("ham_puan", -999) >= 55 and 'base_rank' in a])]
             def comparison_rows(field):
                 ranked = sorted(eligible, key=lambda a: ranking_key(a[field],a))[:10]
                 return [dict(a, yarin_top10_sira=i+1, yarin_top10_puani=a[field]) for i,a in enumerate(ranked)]
