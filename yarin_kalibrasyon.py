@@ -410,8 +410,36 @@ def top10_learning_adjustment(row,model,current):
         return dict(empty,learning_status='CALCULATION_ERROR')
 
 
+TOP10_CANDIDATE_LIMIT = 60
+
+
+def top10_candidate_rows(base_order):
+    """Finite, priced, unique candidates; keep base tie precedence before learning."""
+    valid=[]
+    for index,pair in enumerate(base_order):
+        if not isinstance(pair,(tuple,list)) or len(pair)!=2:continue
+        base,row=pair
+        if not isinstance(row,dict):continue
+        symbol=row.get('sembol')
+        if not isinstance(symbol,str) or not symbol.strip():continue
+        if isinstance(base,bool) or number(base) is None:continue
+        price=row.get('fiyat')
+        if isinstance(price,bool) or number(price,0)<=0:continue
+        doc=row.get('teknik_gostergeler') or {}
+        if isinstance(doc,dict) and doc.get('stale') is True:continue
+        valid.append((number(base),index,row,symbol.strip().upper()))
+    valid.sort(key=lambda item:(-item[0],item[1]))
+    seen=set();result=[]
+    for base,index,row,symbol in valid:
+        if symbol in seen:continue
+        seen.add(symbol);result.append((base,row))
+        if len(result)==TOP10_CANDIDATE_LIMIT:break
+    return result
+
+
 def rank_with_learning(base_order,model,current):
     """Preserve stable base tie order and eligibility; rank the same candidates."""
+    base_order=top10_candidate_rows(base_order)
     try:
         for rank,(base,row) in enumerate(base_order,1):
             row.update(top10_learning_adjustment(row,model,current))
