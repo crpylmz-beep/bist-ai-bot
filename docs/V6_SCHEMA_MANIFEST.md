@@ -32,7 +32,7 @@ Tablolar: `bist_v6.dataset_versions`.
 
 Tablolar: `bist_v6.document_projections`.
 
-Her tablonun PRIMARY KEY tanımı ayrıca PostgreSQL benzersiz indeks oluşturur. 002 ordinal sütununu records’a, 004 ordinal sütununu import_proofs’a ekler. Şema kontrolü migration metadata ve dosya checksum’larını doğrular; tablo/sütun/trigger varlığının tam incelemesi değildir. Bu kapsam başarı logunda varsayılmamalıdır.
+Her tablonun PRIMARY KEY tanımı ayrıca PostgreSQL benzersiz indeks oluşturur. 001 ordinal sütununu records’a, 004 ordinal sütununu import_proofs’a ekler. Şema kontrolü migration metadata ve dosya checksum’larını doğrular; tablo/sütun/trigger varlığının tam incelemesi değildir. Bu kapsam başarı logunda varsayılmamalıdır.
 
 ## Güvenli hata ayrımı
 
