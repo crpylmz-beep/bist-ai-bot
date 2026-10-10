@@ -78,6 +78,19 @@ def supervise(launcher=None, stop=None):
                 start_once(ROOT)
             except Exception:
                 logging.warning('[V6_SCHEMA_CHECK] status=FAILED error_code=CHECK_LAUNCH_FAILED')
+        # Opt-in only. Runs in a separate process after the web and worker start.
+        # It does not change STORAGE_BACKEND, delete JSON, or block web startup.
+        if os.environ.get('BIST_RUN_POSTGRES_BULK_IMPORT_ONCE') == '1':
+            try:
+                subprocess.Popen(
+                    [sys.executable, '-u', '-B', '-m', 'v6_storage.bulk_import', '--apply'],
+                    cwd=ROOT,
+                    env={**os.environ, 'PYTHONUNBUFFERED': '1', 'PYTHONDONTWRITEBYTECODE': '1'},
+                    stdout=None, stderr=None, start_new_session=True,
+                )
+                logging.info('[V6_BULK_IMPORT_LAUNCH] started')
+            except OSError:
+                logging.warning('[V6_BULK_IMPORT_LAUNCH] failed')
         if os.environ.get('BIST_RUN_INTEGRITY_ONCE') == '1':
             try:
                 subprocess.Popen(
