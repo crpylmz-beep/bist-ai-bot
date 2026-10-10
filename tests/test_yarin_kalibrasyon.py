@@ -44,10 +44,10 @@ class CalibrationTests(unittest.TestCase):
     def test_learning_disabled_raw_score_and_ranking_unchanged(self):
         import bist_bot
         self.seed();self.engine.refresh()
-        rows=[dict(self.row,sembol='A',test_raw=81),dict(self.row,sembol='B',test_raw=80)]
+        rows=[dict(self.row,sembol='AA',test_raw=81),dict(self.row,sembol='BB',test_raw=80)]
         with patch.object(bist_bot,'yarin_potansiyel_hesapla',side_effect=lambda row:row['test_raw']):
             ranked=bist_bot.yarin_top10_listesi(rows,kalibrasyon=self.engine.context())
-        self.assertEqual([row['sembol'] for _,row in ranked],['A','B'])
+        self.assertEqual([row['sembol'] for _,row in ranked],['AA','BB'])
         self.assertEqual([v for v,_ in ranked],[81,80]);self.assertEqual(rows[0]['kalibrasyon_duzeltmesi'],0)
 
     def test_shadow_computed_without_activation(self):

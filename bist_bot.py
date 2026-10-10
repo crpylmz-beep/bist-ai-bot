@@ -2307,7 +2307,7 @@ def yarin_top10_kilitli_kaydet(sonuclar, toplam_hisse, pozitif_kapanis=False):
                 "learning_comparison":learning_comparison,
                 "comparison_context":{'learning_asof':learning_context.get('asof'),
                     'learning_status':learning_context.get('status'),
-                    'horizon_weights':dict(TOP10_HORIZON_WEIGHTS),
+                    'horizon_weights':{str(h):weight for h,weight in TOP10_HORIZON_WEIGHTS.items()},
                     'maximum_adjustment':TOP10_MAX_ADJUSTMENT},
                 "aday_secimi":candidate_selection,
                 "ham_top10": ham_top10,
