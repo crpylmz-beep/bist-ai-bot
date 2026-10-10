@@ -152,9 +152,9 @@ def quality(row, horizon, current, holiday=None):
     if result.get('legacy_unverified') or result.get('degerlendirme_tamamlandi') is None: return 'UNVERIFIED'
     if result.get('degerlendirme_tamamlandi') is not True: return 'PENDING'
     day = end_session(at.date(), horizon, holiday)
-    if not session_closed(day, current): return 'FUTURE_OUTCOME'
+    if not session_closed(day, current, holiday): return 'FUTURE_OUTCOME'
     observed = stamp(result.get('observed_at'))
-    if not observed or observed > current or not session_closed(day, observed): return 'UNVERIFIED_TIME'
+    if not observed or observed > current or not session_closed(day, observed, holiday): return 'UNVERIFIED_TIME'
     if str(result.get('tarih', '')) != day.isoformat(): return 'INVALID_SESSION_DATE'
     close, change = number(result.get('fiyat')), number(result.get('getiri_yuzde'))
     if close is None or close <= 0 or change is None: return 'INVALID_RESULT_PRICE'

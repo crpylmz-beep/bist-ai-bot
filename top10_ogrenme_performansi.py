@@ -110,7 +110,7 @@ def comparison(snapshot_id, rows, horizon, current, holiday=None):
         elif reason in ('PENDING','FUTURE_OUTCOME'):
             from performans_motoru import sessions_after,session_closed
             signal_time=stamp(row.get('zaman'))
-            due=signal_time and signal_time<=current and session_closed(sessions_after(signal_time.date(),horizon,holiday)[-1],current)
+            due=signal_time and signal_time<=current and session_closed(sessions_after(signal_time.date(),horizon,holiday)[-1],current,holiday)
             data_quality[name]['missing_due_outcomes' if due else 'pending']+=1
         else:data_quality[name]['excluded']+=1
     result['data_quality']=data_quality
@@ -131,9 +131,18 @@ def comparison(snapshot_id, rows, horizon, current, holiday=None):
     if any(len(v) > 1 for v in closes.values()):
         excluded['INCONSISTENT_RESULT_PRICE'] += 1
     observed_closes = defaultdict(set)
+    evidence=defaultdict(set);sources=set();rules=set()
     for items in observed.values():
         for row in items:
             observed_closes[row['sembol']].add(number(row[f'sonuc_{horizon}g']['fiyat']))
+            value=row[f'sonuc_{horizon}g']
+            if value.get('evaluation_version'):
+                rules.add(value.get('evaluation_version'));sources.add(value.get('price_source'))
+                evidence[row['sembol']].add(value.get('price_data_digest'))
+    if rules:
+        if len(rules)!=1 or len(sources)!=1 or None in sources or any(None in v or len(v)!=1 for v in evidence.values()) or any(
+                not r[f'sonuc_{horizon}g'].get('evaluation_version') for items in observed.values() for r in items):
+            excluded['INCONSISTENT_PRICE_EVIDENCE']+=1;coherent=False
     if any(len(values)>1 for values in observed_closes.values()):coherent=False
     result['observed_models'] = {}
     for name, items in observed.items():
