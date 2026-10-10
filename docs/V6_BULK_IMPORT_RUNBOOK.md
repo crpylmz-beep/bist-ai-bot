@@ -29,3 +29,17 @@ Kaynak canlı süreç tarafından değiştirilirse ilgili dosya UNRESOLVED kalab
 ## Canlıya alma
 Kod incelemesi ve üretim koşulları tamamlanmadan bu dalı main'e birleştirmeyin.
 Bu dosya otomatik başlatma veya üretim ortamında değişiklik yapmaz.
+
+## Telefondan yönetilen Railway başlatma (opt-in)
+Bu dalda `cloud_baslat.py`, web ve worker başlatıldıktan sonra
+`BIST_RUN_POSTGRES_BULK_IMPORT_ONCE=1` ise aktarımı ayrı bir alt süreçte başlatır.
+Varsayılan durumda **çalışmaz**. İşlem sonucu Railway loglarında
+`[V6_BULK_IMPORT_LAUNCH]` ve `{"status":"DONE"}` veya `{"status":"PARTIAL"}`
+satırlarıyla takip edilir. `started` yalnızca alt sürecin başlatıldığını
+gösterir; başarılı aktarım anlamına gelmez.
+
+**Önemli:** Ortam değişkeni etkin kaldıkça her yeni konteyner başlangıcında
+tekrar çalışabilir. Sonuç doğrulanınca değişken kapatılmalıdır.
+İşlem durursa PostgreSQL import cursor kayıtları sayesinde tekrar denenebilir.
+Canlı JSON değişirse `SOURCE_CHANGED` ile çözümlenmemiş kalabilir.
+Bu yöntem tüm /data içeriğini değil, yalnız desteklenen kaynakları kapsar.
