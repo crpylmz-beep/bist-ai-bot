@@ -2050,6 +2050,8 @@ def yarin_top10_listesi(sonuclar, kalibrasyon=None, piyasa=None, learning_contex
     from yarin_kalibrasyon import YarinKalibrasyon, score
     from piyasa_baglami import PiyasaBaglami, annotate, effects, usable_context
     baglam_zamani = datetime.now(ZoneInfo('Europe/Istanbul'))
+    from top10_aday_secimi import prepare_candidates, select_candidates
+    sonuclar = prepare_candidates(sonuclar, baglam_zamani)
     if piyasa is None:
         piyasa = PiyasaBaglami(paths(repo_root=os.path.dirname(__file__))).context('YARIN')
     piyasa = usable_context(piyasa,baglam_zamani,'YARIN')
@@ -2069,7 +2071,11 @@ def yarin_top10_listesi(sonuclar, kalibrasyon=None, piyasa=None, learning_contex
     for a in sonuclar:
         if not isinstance(a, dict) or not a:
             continue
+        a.pop('base_rank', None)
         ham = yarin_potansiyel_hesapla(a)
+        from ai_karar_motoru import number
+        if number(ham) is None:
+            continue
         # Existing eligibility and safety gates always run before learned scoring.
         try:
             a.update(score(a, ham, kalibrasyon))
@@ -2083,13 +2089,14 @@ def yarin_top10_listesi(sonuclar, kalibrasyon=None, piyasa=None, learning_contex
         from ai_karar_motoru import attach_final_decision
         attach_final_decision(a,baglam_zamani,'DAILY')
         a['controlled_shadow']=controlled_score(a,ham,baglam_zamani,'DAILY',controlled)
+        if any(number(a.get(key)) is None for key in ('final_puan','shadow_puan','piyasa_baglami_etkisi')):
+            continue
         if ham >= 55:
             a['final_puan'] = max(0,min(95,a['final_puan']+a['piyasa_baglami_etkisi']))
             a['shadow_puan'] = max(0,min(95,a['shadow_puan']+a['piyasa_baglami_etkisi']))
         if ham >= 55:
             sirali.append((a["final_puan"], a))
-    sirali.sort(key=lambda x: (x[0], guvenli_float(x[1].get("hacim_orani")),
-                              guvenli_float(x[1].get("risk_getiri"))), reverse=True)
+    sirali = select_candidates(sirali)
     return rank_with_learning(sirali,learning_context,baglam_zamani)[:10]
 
 
@@ -2226,7 +2233,9 @@ def yarin_top10_kilitli_kaydet(sonuclar, toplam_hisse, pozitif_kapanis=False):
                 return veri
 
             import copy
-            closing_source=copy.deepcopy(sonuclar)
+            from top10_aday_secimi import prepare_candidates, select_candidates, ranking_key
+            closing_source=copy.deepcopy([a for a in sonuclar if isinstance(a,dict)])
+            sonuclar=prepare_candidates(sonuclar,simdi)
             if pozitif_kapanis:
                 from pozitif_kapanis import enrich_closing_sources
                 from datetime import time as day_time
@@ -2241,14 +2250,13 @@ def yarin_top10_kilitli_kaydet(sonuclar, toplam_hisse, pozitif_kapanis=False):
             learning_context=top10_learning_context(paths(repo_root=os.path.dirname(__file__)),simdi)
             top10 = yarin_top10_listesi(sonuclar, kalibrasyon=calibration, piyasa=piyasa,learning_context=learning_context)
             # Prospective baseline/shadow lists; never recomputed from later outcomes.
-            eligible = [a for a in sonuclar if a.get("ham_puan", -999) >= 55]
+            eligible = [a for a in sonuclar if a.get("ham_puan", -999) >= 55 and 'base_rank' in a]
             def comparison_rows(field):
-                ranked = sorted(eligible, key=lambda a: (a[field], guvenli_float(a.get("hacim_orani")),
-                    guvenli_float(a.get("risk_getiri"))), reverse=True)[:10]
+                ranked = sorted(eligible, key=lambda a: ranking_key(a[field],a))[:10]
                 return [dict(a, yarin_top10_sira=i+1, yarin_top10_puani=a[field]) for i,a in enumerate(ranked)]
             ham_top10 = comparison_rows("ham_puan")
             shadow_top10 = comparison_rows("shadow_puan")
-            controlled_candidates=sorted(eligible,key=lambda a:(a.get('controlled_shadow') or {}).get('score',a['ham_puan']),reverse=True)[:10]
+            controlled_candidates=sorted(eligible,key=lambda a:ranking_key((a.get('controlled_shadow') or {}).get('score',a['ham_puan']),a))[:10]
             controlled_top10=[dict(a,yarin_top10_sira=i+1,yarin_top10_puani=(a.get('controlled_shadow') or {}).get('score',a['ham_puan'])) for i,a in enumerate(controlled_candidates)]
             learning_candidates=[a for a in eligible if 'base_rank' in a]
             pool=None
@@ -2259,7 +2267,7 @@ def yarin_top10_kilitli_kaydet(sonuclar, toplam_hisse, pozitif_kapanis=False):
                 pool=build_pool(closing_source,simdi,toplam_hisse,yarin_potansiyel_hesapla,history)
                 if pool['positive_count'] and not pool['analyzed_count']:raise RuntimeError('Pozitif kapanış kalite verisi yetersiz; snapshot yazılmadı')
                 by_symbol={r['sembol']:r for r in pool['adaylar']}
-                ordered=[(by_symbol[s]['positive_opportunity']['future_opportunity_score'],by_symbol[s]) for s in pool['eligible_symbols']]
+                ordered=select_candidates([(by_symbol[s]['positive_opportunity']['future_opportunity_score'],by_symbol[s]) for s in pool['eligible_symbols']],secondary=())
                 learned=rank_with_learning(ordered,learning_context,simdi)
                 top10=learned[:10];learning_candidates=[a for _,a in learned]
             base_top10=[dict(a,yarin_top10_sira=i+1,yarin_top10_puani=a['base_score'])
@@ -2267,6 +2275,9 @@ def yarin_top10_kilitli_kaydet(sonuclar, toplam_hisse, pozitif_kapanis=False):
             comparison_symbols={a['sembol'] for _,a in top10}|{a['sembol'] for a in base_top10}
             learning_comparison=[{key:a.get(key) for key in ('sembol','base_rank','learned_rank','rank_change','base_score','learning_adjustment','final_ranking_score','learning_version')}
                 for a in learning_candidates if a['sembol'] in comparison_symbols]
+            candidate_selection={'limit':60,'count':len(learning_candidates),
+                'basis':'POSITIVE_OPPORTUNITY' if pool is not None else 'BASE_FINAL_SCORE',
+                'symbols':[a['sembol'] for a in sorted(learning_candidates,key=lambda a:a['base_rank'])]}
             kayitlar = []
             for sira, (skor, a) in enumerate(top10, 1):
                 hisse = dict(a)
@@ -2285,6 +2296,7 @@ def yarin_top10_kilitli_kaydet(sonuclar, toplam_hisse, pozitif_kapanis=False):
                 "piyasa_modeli": piyasa,
                 "base_top10":base_top10,
                 "learning_comparison":learning_comparison,
+                "aday_secimi":candidate_selection,
                 "ham_top10": ham_top10,
                 "shadow_top10": shadow_top10,
                 "controlled_shadow_top10":controlled_top10,
@@ -5486,19 +5498,11 @@ def gun_ici_top10_tara():
             a['gun_ici_final_puan'] = guvenli_float(a.get('gun_ici_puan'))
         print('GUN ICI PERFORMANS BAGLANTI UYARISI:', type(e).__name__)
 
-    sonuclar.sort(
-        key=lambda a: (
-            guvenli_float(a.get("gun_ici_final_puan", a.get("gun_ici_puan"))),
-            guvenli_float(a.get("hacim3_orani")),
-            guvenli_float(a.get("momentum15"))
-        ),
-        reverse=True
-    )
-
-    top10 = [
-        a for a in sonuclar
-        if guvenli_float(a.get("gun_ici_puan")) >= 45
-    ][:10]
+    from top10_aday_secimi import prepare_candidates, intraday_candidates, ranking_key
+    sonuclar=prepare_candidates(sonuclar,datetime.now(ZoneInfo('Europe/Istanbul')),'INTRADAY')
+    sonuclar.sort(key=lambda a:ranking_key(guvenli_float(a.get('gun_ici_final_puan',a.get('gun_ici_puan'))),a,('hacim3_orani','momentum15')))
+    adaylar=intraday_candidates(sonuclar,datetime.now(ZoneInfo('Europe/Istanbul')))
+    top10=[a for _,a in adaylar[:10]]
 
     if gun_ici_performans is not None:
         try:
@@ -5539,6 +5543,8 @@ def gun_ici_top10_tara():
             "guncelleme": guncelleme_zamani.strftime("%Y-%m-%d %H:%M:%S"),
             "toplam": toplam,
             "teknik_aday": len(sonuclar),
+            "aday_secimi": {"limit":60,"count":len(adaylar),"basis":"INTRADAY_FINAL_SCORE",
+                            "symbols":[a['sembol'] for _,a in adaylar]},
             "top10": top10
         }
 
