@@ -55,8 +55,9 @@ def metadata(path,shape):
                     if event!=expected:raise StorageError('SOURCE_COLLECTION_INVALID')
                     actual[excluded]=shape.fields[excluded]
                 continue
-            if prefix=='' or event=='map_key':continue
+            if prefix=='':continue
             if builder is None:
+                if event=='map_key':continue
                 if prefix=='pozitif_havuz':continue
                 builder=ObjectBuilder();prefix_root=prefix;depth=0
             builder_size+=len(str(value).encode()) if value is not None else 1
