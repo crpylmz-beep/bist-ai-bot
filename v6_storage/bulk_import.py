@@ -38,7 +38,13 @@ def main(argv=None):
         database = PostgresStore(Settings.from_env())
         database.ready()
         for source in sources(location):
-            result = Migrator(database).run(source, shape_for(source, location), apply=True)
+            # A malformed or changing source must not prevent later files
+            # from being processed. Never expose source content in logs.
+            try:
+                result = Migrator(database).run(source, shape_for(source, location), apply=True)
+            except Exception as exc:
+                result = {"status": "UNRESOLVED", "records": 0,
+                          "error": "UNEXPECTED_" + type(exc).__name__}
             completed += result["status"] == "VERIFIED"
             unresolved += result["status"] != "VERIFIED"
             print(json.dumps({"source": str(source.relative_to(location.root)),
