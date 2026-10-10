@@ -15,6 +15,8 @@ MODELS = {'BASE': 'YARIN_LEARNING_BASELINE', 'LEARNED': 'YARIN_TOP10'}
 PERIODS = {'7d': 7, '30d': 30, '90d': 90, 'all_time': None}
 MAX_RECENT = 100
 MAX_RANK_CHANGES = 2000
+MIN_PAIRED_DAYS = 10
+MIN_PAIRED_SAMPLES = 100
 
 
 def verified(row, horizon, current, holiday=None):
@@ -28,6 +30,8 @@ def verified(row, horizon, current, holiday=None):
     candidate = dict(row, model='YARIN_TOP10', performance_source='LIVE', analysis_only=False)
     result = row.get(f'sonuc_{horizon}g')
     if isinstance(result, dict):
+        if result.get('unverified'):return 'UNVERIFIED_RESULT'
+        if isinstance(result.get('getiri_yuzde'),bool):return 'INVALID_RESULT_RETURN'
         candidate[f'sonuc_{horizon}g'] = dict(result, performance_source='LIVE')
         if result.get('performance_source') not in (None, 'LIVE', 'UNKNOWN'):
             return 'NON_PROSPECTIVE_RESULT'
@@ -61,6 +65,13 @@ def comparison(snapshot_id, rows, horizon, current, holiday=None):
     result = {'snapshot_id': snapshot_id, 'snapshot_time': at.isoformat() if at else None,
               'horizon': horizon, 'status': 'INSUFFICIENT', 'base': None, 'learned': None,
               'differences': None, 'excluded': {}}
+    versions = {r.get('learning_version') for r in lists['LEARNED']
+                if isinstance(r.get('learning_version'),str) and r['learning_version'].strip()}
+    result['learning_version'] = next(iter(versions)) if len(versions)==1 and all(
+        isinstance(r.get('learning_version'),str) and r['learning_version'] in versions
+        for r in lists['LEARNED']) else None
+    result['learning_applied'] = any(number(r.get('learning_adjustment'),0)!=0 for r in lists['LEARNED'])
+    result['outcomes_available_at'] = None
     excluded = Counter()
     observed = {name: [] for name in MODELS}
     coherent = True
@@ -120,11 +131,77 @@ def comparison(snapshot_id, rows, horizon, current, holiday=None):
     if excluded: return result
     result['base'] = metrics(lists['BASE'], horizon)
     result['learned'] = metrics(lists['LEARNED'], horizon)
+    result['outcomes_available_at'] = max(stamp(r[f'sonuc_{horizon}g']['observed_at'])
+                                        for r,_ in rows).isoformat()
     keys = ('mean_return', 'median_return', 'success_rate', 'top3_return', 'top5_return', 'top10_return')
     result['differences'] = {k: result['learned'][k] - result['base'][k] for k in keys}
     edge = result['differences']['mean_return']
     result['status'] = 'TIE' if math.isclose(edge, 0, abs_tol=1e-9) else 'LEARNED_BETTER' if edge > 0 else 'BASE_BETTER'
     return result
+
+
+def chronological_evaluation(comparisons):
+    """Evaluate frozen prospective ranks; never rescore the past with today's model.
+
+    Timeline metrics are retrospective outcomes as of the enclosing report time,
+    not labels available to a learner on the original prediction date.
+    """
+    ordered = sorted((r for r in comparisons if stamp(r.get('snapshot_time'))),
+                     key=lambda r:(stamp(r['snapshot_time']),str(r['snapshot_id'])))
+
+    def evaluate(rows):
+        completed = [r for r in rows if r['status']!='INSUFFICIENT' and r.get('learning_version')]
+        days = set(); applied_days = set(); samples = 0; returns = Counter(); positives = Counter()
+        timeline = []
+        for row in rows:
+            paired = row['status']!='INSUFFICIENT' and bool(row.get('learning_version'))
+            if paired:
+                day = stamp(row['snapshot_time']).date();days.add(day)
+                if row['learning_applied']:applied_days.add(day)
+                samples += row['base']['count']
+                for name in MODELS:
+                    stat = row[name.lower()]
+                    returns[name] += stat['mean_return']*stat['count']
+                    positives[name] += stat['positive_count']
+            timeline.append({'snapshot_id':row['snapshot_id'],'snapshot_time':row['snapshot_time'],
+                             'outcomes_available_at':row.get('outcomes_available_at'),
+                             'learning_version':row.get('learning_version'),
+                             'status':row['status'],'included_in_paired_metrics':paired,
+                             'exclusion_reason':('UNVERIFIED_LEARNING_VERSION' if not row.get('learning_version') else
+                                                 'INCOMPLETE_OR_UNVERIFIED_PAIR' if not paired else None),
+                             'paired_sample_count':samples,
+                             'paired_days':len(days),
+                             'cumulative_return_difference':(returns['LEARNED']-returns['BASE'])/samples if samples else None,
+                             'cumulative_success_difference_pp':100*(positives['LEARNED']-positives['BASE'])/samples if samples else None})
+        models = {name:{'sample_count':samples,'mean_return':returns[name]/samples if samples else None,
+                        'success_rate':positives[name]/samples if samples else None} for name in MODELS}
+        return_delta = (returns['LEARNED']-returns['BASE'])/samples if samples else None
+        success_delta = 100*(positives['LEARNED']-positives['BASE'])/samples if samples else None
+        sufficient = len(days)>=MIN_PAIRED_DAYS and samples>=MIN_PAIRED_SAMPLES
+        if not sufficient:assessment='INSUFFICIENT_DATA'
+        elif len(applied_days)<MIN_PAIRED_DAYS:assessment='INSUFFICIENT_APPLIED_LEARNING'
+        elif math.isclose(return_delta,0,abs_tol=1e-9) and math.isclose(success_delta,0,abs_tol=1e-9):assessment='TIE'
+        elif return_delta>0 and success_delta>=0:assessment='DESCRIPTIVE_LEARNED_AHEAD'
+        elif return_delta<0 and success_delta<=0:assessment='DESCRIPTIVE_BASE_AHEAD'
+        else:assessment='MIXED_RESULTS'
+        return {'assessment':assessment,'sufficient':sufficient,'paired_days':len(days),
+                'paired_snapshots':len(completed),'paired_samples_per_model':samples,
+                'applied_learning_days':len(applied_days),'excluded_snapshots':len(rows)-len(completed),
+                'models':models,'differences_vs_base':{'mean_return':return_delta,
+                    'success_rate_percentage_points':success_delta},
+                'first_snapshot_time':rows[0]['snapshot_time'] if rows else None,
+                'last_snapshot_time':rows[-1]['snapshot_time'] if rows else None,
+                'timeline':timeline[-MAX_RECENT:],'timeline_truncated':len(timeline)>MAX_RECENT}
+
+    versions = sorted({r['learning_version'] for r in ordered if r.get('learning_version')})
+    overall=evaluate(ordered)
+    if len(versions)>1:overall['assessment']='MULTIPLE_MODEL_VERSIONS'
+    return {**overall,'by_learning_version':{
+                version:evaluate([r for r in ordered if r.get('learning_version')==version]) for version in versions},
+            'minimum_paired_days':MIN_PAIRED_DAYS,'minimum_samples_per_model':MIN_PAIRED_SAMPLES,
+            'comparison_basis':'PROSPECTIVE_IMMUTABLE_SNAPSHOTS',
+            'reconstructed_scores':False,'improvement_claim':'DESCRIPTIVE_ONLY_NOT_STATISTICAL_PROOF',
+            'metric_timeline_basis':'RETROSPECTIVE_OUTCOMES_BY_PREDICTION_TIME'}
 
 
 def summary(comparisons):
@@ -174,15 +251,19 @@ def aggregate(records, current, holiday=None):
     groups = defaultdict(list)
     for row, conflict in unique:
         if row.get('snapshot_id'): groups[str(row['snapshot_id'])].append((row, conflict))
+    groups = dict(sorted(groups.items(),key=lambda item:(
+        min((stamp(r.get('zaman')) for r,_ in item[1] if stamp(r.get('zaman'))),default=current),item[0])))
     comparisons = [comparison(key, rows, h, current, holiday)
-                   for key, rows in sorted(groups.items()) for h in HORIZONS]
+                   for key, rows in groups.items() for h in HORIZONS]
     periods = {}
     for period, days in PERIODS.items():
         cohort = [r for r in comparisons if stamp(r['snapshot_time']) and
+                  stamp(r['snapshot_time'])<=current and
                   (days is None or stamp(r['snapshot_time']) >= current - timedelta(days=days))]
-        periods[period] = {str(h): summary([r for r in cohort if r['horizon'] == h]) for h in HORIZONS}
+        periods[period] = {str(h):dict(summary([r for r in cohort if r['horizon']==h]),
+            chronological_evaluation=chronological_evaluation([r for r in cohort if r['horizon']==h])) for h in HORIZONS}
     changes = []
-    for key, items in sorted(groups.items(), reverse=True):
+    for key, items in reversed(list(groups.items())):
         base = {r['sembol'] for r, _ in items if r['model'] == MODELS['BASE']}
         learned = {r['sembol'] for r, _ in items if r['model'] == MODELS['LEARNED']}
         emitted = set()
