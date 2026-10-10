@@ -69,13 +69,19 @@ class PostgresStore:
         return applied
 
     def ready(self):
+        # Checks migration provenance only: never applies SQL or repairs metadata.
+        expected={p.name:hashlib.sha256(p.read_bytes()).hexdigest()
+                  for p in sorted((Path(__file__).parent/'migrations').glob('*.sql'))}
         with self.transaction() as db:
             db.execute('SET TRANSACTION READ ONLY')
-            row=db.execute("SELECT to_regclass('bist_v6.schema_migrations') AS name").fetchone()
-            if row['name'] is None:raise StorageError('SCHEMA_MIGRATION_REQUIRED')
+            row=db.execute("SELECT to_regnamespace('bist_v6') AS schema_name, to_regclass('bist_v6.schema_migrations') AS name").fetchone()
+            if row['schema_name'] is None:raise StorageError('SCHEMA_NAMESPACE_MISSING')
+            if row['name'] is None:raise StorageError('SCHEMA_METADATA_MISSING')
             versions={r['version']:r['checksum'] for r in db.execute('SELECT version,checksum FROM bist_v6.schema_migrations')}
-            for path in (Path(__file__).parent/'migrations').glob('*.sql'):
-                if versions.get(path.name)!=hashlib.sha256(path.read_bytes()).hexdigest():raise StorageError('SCHEMA_MIGRATION_REQUIRED')
+            missing=[version for version in expected if version not in versions]
+            mismatched=[version for version in expected if version in versions and versions[version]!=expected[version]]
+            if mismatched:raise StorageError('SCHEMA_MIGRATION_CHECKSUM_MISMATCH')
+            if missing:raise StorageError('SCHEMA_MIGRATION_VERSION_MISSING')
         return True
 
     def hashes(self,dataset):
