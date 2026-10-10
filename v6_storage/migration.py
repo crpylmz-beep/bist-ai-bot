@@ -74,7 +74,7 @@ def metadata(path,shape):
 class Migrator:
     def __init__(self,store=None,batch_size=100):self.store=store;self.batch_size=batch_size
 
-    def run(self,path,shape,apply=False,budget_records=None):
+    def run(self,path,shape,apply=False,budget_records=None,max_records=None):
         path=Path(path)
         if not path.exists():return {'mode':'APPLY' if apply else 'DRY_RUN','status':'UNRESOLVED','error':'SOURCE_NOT_FOUND','records':0,'source_changed':False}
         before=fingerprint(path);raw=checksum(path);source_id=digest({'dataset':shape.dataset,'sha256':raw})
@@ -87,6 +87,8 @@ class Migrator:
                 if apply:cursor=self.store.import_cursor(source_id,field)
                 batch=[];position=0;seen=set()
                 for key,row in pairs(path,field,mode):
+                    if max_records is not None and report['records']>=max_records:
+                        raise StorageError('SOURCE_RECORD_LIMIT')
                     identity=row_key(shape,field,row,key)
                     if identity in seen:raise StorageError('SOURCE_DUPLICATE_ID')
                     seen.add(identity);position+=1;report['records']+=1
