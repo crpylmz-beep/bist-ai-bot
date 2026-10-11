@@ -29,7 +29,7 @@ class Shape:
     kind:str='prediction'
 
 
-def shape_for(path,location,include_news=False):
+def shape_for(path,location,include_news=False,include_engine=False):
     path=Path(path).absolute()
     if path.name in SCHEMAS and (path.name!='haber_dedup.json' or include_news) and path==location.runtime_file(path.name).absolute():
         field,mapping=SCHEMAS[path.name];fields={field:'mapping' if mapping else 'list'}
