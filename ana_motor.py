@@ -70,7 +70,8 @@ def runtime_dir():
 def health_snapshot(directory=None):
     """Public allowlist: never return arbitrary persisted runtime fields."""
     try:
-        data = json.loads(((Path(directory) if directory else runtime_dir())/'ana_motor_durum.json').read_text())
+        from recovery_journal import read_document
+        data = read_document((Path(directory) if directory else runtime_dir())/'ana_motor_durum.json', {})
         stamp = datetime.fromisoformat(data['updated_at'])
         if stamp.tzinfo is None:
             raise ValueError('Naive heartbeat')
@@ -153,7 +154,8 @@ class AnaMotor:
         self.state = {'motor_durumu':'RUNNING', 'tasks':{}, 'son_hata':None, 'yarin_completed_day':None}
         path = self.directory/'ana_motor_durum.json'
         if path.exists():
-            old = json.loads(path.read_text())  # Do not silently destroy damaged state.
+            from recovery_journal import read_document
+            old = read_document(path, {})  # Do not silently destroy damaged state.
             self.state['yarin_completed_day'] = old.get('yarin_completed_day')
             self.state.update({k:v for k,v in old.items() if k.startswith('last_')})
         self.persist()
