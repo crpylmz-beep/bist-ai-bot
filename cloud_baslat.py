@@ -82,13 +82,35 @@ def supervise(launcher=None, stop=None):
         # It does not change STORAGE_BACKEND, delete JSON, or block web startup.
         if os.environ.get('BIST_RUN_POSTGRES_BULK_IMPORT_ONCE') == '1':
             try:
-                subprocess.Popen(
+                proc = subprocess.Popen(
                     [sys.executable, '-u', '-B', '-m', 'v6_storage.bulk_import', '--apply'],
                     cwd=ROOT,
                     env={**os.environ, 'PYTHONUNBUFFERED': '1', 'PYTHONDONTWRITEBYTECODE': '1'},
                     stdout=None, stderr=None, start_new_session=True,
                 )
-                logging.info('[V6_BULK_IMPORT_LAUNCH] started')
+                started = time.monotonic()
+                logging.info('[V6_BULK_IMPORT_LAUNCH] started pid=%s', proc.pid)
+
+                def monitor_bulk_import(process, start):
+                    while True:
+                        try:
+                            code = process.wait(timeout=300)
+                            duration = time.monotonic() - start
+                            if code == 0:
+                                logging.info('[V6_BULK_IMPORT_COMPLETED] pid=%s exit_code=0 duration=%.1fs', process.pid, duration)
+                            else:
+                                logging.error('[V6_BULK_IMPORT_FAILED] pid=%s exit_code=%s duration=%.1fs', process.pid, code, duration)
+                            return
+                        except subprocess.TimeoutExpired:
+                            logging.info('[V6_BULK_IMPORT_HEARTBEAT] pid=%s elapsed=%.1fmin', process.pid, (time.monotonic() - start) / 60)
+                        except Exception:
+                            logging.exception('[V6_BULK_IMPORT_MONITOR_ERROR] pid=%s', process.pid)
+                            return
+
+                threading.Thread(
+                    target=monitor_bulk_import, args=(proc, started),
+                    daemon=True, name='v6-bulk-import-monitor',
+                ).start()
             except OSError:
                 logging.warning('[V6_BULK_IMPORT_LAUNCH] failed')
         if os.environ.get('BIST_RUN_INTEGRITY_ONCE') == '1':
