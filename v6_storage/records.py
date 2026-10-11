@@ -36,6 +36,8 @@ def shape_for(path,location,include_news=False):
         if path.name=='gun_ici_sonuclar.json':fields['listeler']='list'
         if path.name=='tahmin_gecmisi.json':fields['ogrenme_gecmisi']='list'
         return Shape('runtime/'+path.name,fields,'learning' if path.name=='ai_ogrenme_gecmisi.json' else 'news' if path.name=='haber_dedup.json' else 'prediction')
+    if path.name=='haber_zeka_gecmisi.json' and path==location.runtime_file(path.name).absolute():
+        return Shape('runtime/haber_zeka_gecmisi.json',{'haberler':'list'},'news')
     parent=path.parent.name
     if path.parent.parent==location.runtime.absolute() and re.fullmatch(r'\d{4}-\d{2}-\d{2}\.json',path.name):
         if parent=='gunluk_al_sat_gecmisi':return Shape('runtime/'+parent+'/'+path.name,{'events':'mapping'},'signal')
