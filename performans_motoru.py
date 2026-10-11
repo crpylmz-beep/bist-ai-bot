@@ -476,7 +476,9 @@ class PerformansMotoru:
         recent=[r for r in forecasts if usable(r) and r['sonuc_1g'].get('tarih') in complete_dates and daily[r['snapshot_tarihi']]['tamamlandi']]
         report={'updated_at':current.isoformat(),'vadeler':{str(h):summarize(eligible,h) for h in DAILY_HORIZONS},
             'modeller':grouping('model',eligible),'sektorler':grouping('sektor',eligible),'rejimler':grouping('piyasa_rejimi',eligible),
-            'yarin_top10':summarize(forecasts),'yarin_top10_vadeler':{str(h):summarize(forecasts,h) for h in HORIZONS},'son20_gun':summarize(recent),
+            'yarin_top10':summarize(forecasts),'yarin_top10_vadeler':{str(h):summarize(forecasts,h) for h in HORIZONS},
+            'yarin_top10_cok_vadeli':top10_horizon_report(forecasts),
+            'son20_gun':summarize(recent),
             'kriter_performansi':criterion_report(eligible),'yarin_kriter_performansi':criterion_report(forecasts),
             'sinirlamalar':['TATIL_TAKVIMI_ENJEKSIYONLA_DESTEKLENIR','YANLIS_NEGATIF_YALNIZCA_KAYITLI_SINYALLER','KRITER_ILISKISI_NEDENSELLIK_DEGIL']}
         from top10_ogrenme_performansi import safe_publish
