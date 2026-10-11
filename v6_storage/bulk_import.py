@@ -18,7 +18,7 @@ def sources(location):
         candidates.extend((location.runtime / directory).glob("*.json"))
     candidates.extend(location.archives.glob("*.json"))
     for path in sorted(set(candidates)):
-        if path.is_file() and not path.is_symlink() and shape_for(path, location) is not None:
+        if path.is_file() and not path.is_symlink() and shape_for(path, location, include_news=True) is not None:
             yield path
 
 
@@ -41,7 +41,7 @@ def main(argv=None):
             # A malformed or changing source must not prevent later files
             # from being processed. Never expose source content in logs.
             try:
-                result = Migrator(database).run(source, shape_for(source, location), apply=True)
+                result = Migrator(database).run(source, shape_for(source, location, include_news=True), apply=True)
             except Exception as exc:
                 result = {"status": "UNRESOLVED", "records": 0,
                           "error": "UNEXPECTED_" + type(exc).__name__}
