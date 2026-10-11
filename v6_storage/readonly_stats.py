@@ -1,4 +1,8 @@
-"""Opt-in, read-only PostgreSQL V6 dataset counts. No startup integration."""
+"""Explicit, opt-in, read-only PostgreSQL V6 statistics CLI.
+
+Run manually with BIST_V6_READONLY_STATS_ONCE=1. Not wired into startup.
+One invocation produces one snapshot; this is NOT a durable once-only latch.
+"""
 import json
 import os
 import sys
@@ -12,44 +16,55 @@ DATASETS = (
     ("ana_motor_durum", "runtime/ana_motor_durum.json"),
 )
 
+
 def main():
     if os.environ.get("BIST_V6_READONLY_STATS_ONCE") != "1":
         print("[STORAGE_V6_STATS] status=DISABLED")
         return 0
+
     connection = None
     try:
-        from v6_storage.config import Settings
         from psycopg import connect
+        from v6_storage.config import Settings
+
         settings = Settings.from_env()
         settings.require_database()
         connection = connect(settings.connection_dsn(), connect_timeout=settings.timeout)
         with connection.transaction():
             with connection.cursor() as cursor:
                 cursor.execute("SET TRANSACTION READ ONLY")
-                cursor.execute("SELECT to_regclass('bist_v6.records'), to_regclass('bist_v6.import_sources')")
-                tables = cursor.fetchone()
-                if not all(tables):
+                cursor.execute("SELECT to_regclass('bist_v6.records'), to_regclass('bist_v6.import_sources'), to_regclass('bist_v6.documents')")
+                if not all(cursor.fetchone()):
                     print("[STORAGE_V6_STATS] status=SCHEMA_UNAVAILABLE")
                     return 2
                 for label, dataset in DATASETS:
-                    cursor.execute("SELECT COUNT(*) FROM bist_v6.records WHERE dataset LIKE %s", (dataset + "#%",))
-                    count = cursor.fetchone()[0]
+                    # Collection rows are stored as dataset#field, never matched via SQL LIKE.
                     cursor.execute(
-                        "SELECT COUNT(*) FILTER (WHERE status IN ('VERIFIED','POSTGRES_NATIVE')), COUNT(*) FROM bist_v6.import_sources WHERE dataset=%s",
+                        "SELECT COUNT(*) FROM bist_v6.records WHERE split_part(dataset, '#', 1) = %s AND dataset <> %s",
+                        (dataset, dataset),
+                    )
+                    rows = cursor.fetchone()[0]
+                    cursor.execute(
+                        "SELECT COUNT(*) FILTER (WHERE status IN ('VERIFIED','POSTGRES_NATIVE')), COUNT(*) FROM bist_v6.import_sources WHERE dataset = %s",
                         (dataset,),
                     )
                     verified, sources = cursor.fetchone()
+                    cursor.execute("SELECT COUNT(*) FROM bist_v6.documents WHERE dataset = %s", (dataset,))
+                    documents = cursor.fetchone()[0]
                     print("[STORAGE_V6_STATS] " + json.dumps(
-                        {"dataset": label, "rows": count, "verified_sources": verified, "sources": sources},
+                        {"dataset": label, "rows": rows, "verified_sources": verified,
+                         "sources": sources, "documents": documents},
                         separators=(",", ":"), sort_keys=True,
                     ))
         return 0
     except Exception:
+        # Deliberately do not print exception details or credentials.
         print("[STORAGE_V6_STATS] status=ERROR")
         return 2
     finally:
         if connection is not None:
             connection.close()
+
 
 if __name__ == "__main__":
     sys.exit(main())
