@@ -1,0 +1,80 @@
+name: Read-only V6 stats PostgreSQL integration
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - diagnostics/readonly-v6-counts-20261011
+    paths:
+      - v6_storage/readonly_stats.py
+      - .github/workflows/readonly-v6-stats-test.yml
+jobs:
+  postgres-stats:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test_only
+          POSTGRES_DB: bist_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U test -d bist_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://test:test_only@localhost:5432/bist_test
+      BIST_V6_READONLY_STATS_ONCE: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install psycopg v3
+        run: python -m pip install "psycopg[binary]>=3,<4"
+      - name: Create isolated test schema and fixtures
+        env:
+          PGPASSWORD: test_only
+        run: |
+          psql -h localhost -U test -d bist_test -v ON_ERROR_STOP=1 <<'SQL'
+          CREATE SCHEMA bist_v6;
+          CREATE TABLE bist_v6.records (dataset text NOT NULL);
+          CREATE TABLE bist_v6.import_sources (dataset text NOT NULL, status text NOT NULL);
+          CREATE TABLE bist_v6.documents (dataset text NOT NULL);
+          INSERT INTO bist_v6.records(dataset) VALUES
+            ('runtime/tahmin_gecmisi.json#tahminler'),
+            ('runtime/tahmin_gecmisi.json#tahminler'),
+            ('runtime/ai_ogrenme_gecmisi.json#kayitlar'),
+            ('runtime/gun_ici_sonuclar.json#kayitlar');
+          INSERT INTO bist_v6.import_sources(dataset,status) VALUES
+            ('runtime/tahmin_gecmisi.json','VERIFIED'),
+            ('runtime/ai_ogrenme_gecmisi.json','IMPORTING');
+          INSERT INTO bist_v6.documents(dataset) VALUES ('runtime/tahmin_gecmisi.json');
+          SQL
+      - name: Verify real PostgreSQL query counts and success marker
+        run: |
+          python -m v6_storage.readonly_stats | tee /tmp/v6-stats.log
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          lines=Path('/tmp/v6-stats.log').read_text().splitlines()
+          assert lines[-1]=='[STORAGE_V6_STATS] status=SUCCESS',lines
+          values={}
+          for line in lines[:-1]:
+              assert line.startswith('[STORAGE_V6_STATS] '),line
+              row=json.loads(line.split('] ',1)[1])
+              values[row['dataset']]=row
+          assert len(values)==6,values
+          assert values['tahmin_gecmisi']=={'dataset':'tahmin_gecmisi','rows':2,'verified_sources':1,'sources':1,'documents':1}
+          assert values['ai_ogrenme_gecmisi']['rows']==1
+          assert values['gun_ici_sonuclar']['rows']==1
+          assert values['yarin_top10_sonuclar']['rows']==0
+          PY
+      - name: Verify disabled flag never connects
+        env:
+          BIST_V6_READONLY_STATS_ONCE: "0"
+          DATABASE_URL: postgresql://invalid:invalid@127.0.0.1:1/invalid
+        run: |
+          test "$(python -m v6_storage.readonly_stats)" = "[STORAGE_V6_STATS] status=DISABLED"
