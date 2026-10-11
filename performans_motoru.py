@@ -210,6 +210,33 @@ def summarize(records,horizon=1):
         'confusion':{'TP':tp,'FP':fp,'TN':tn,'FN':fn},'durumlar':{s:sum(r[key].get('durum','VERI_YETERSIZ')==s for r in rows) for s in ('BASARILI','KISMEN_BASARILI','BASARISIZ','STOP','VERI_YETERSIZ')}}
 
 
+
+def top10_horizon_report(records, horizons=(1, 3, 5, 10, 20, 60)):
+    """Descriptive TOP 10 evaluation; never trains on incomplete outcomes.
+
+    Accepts records already loaded through the configured storage backend.
+    No filesystem fallback and no mutation of forecasts or learned weights.
+    """
+    selected = [r for r in records if isinstance(r, dict) and (
+        r.get('model') == 'YARIN_TOP10' or r.get('yarin_top10') is True
+    )]
+    by_horizon = {}
+    for horizon in horizons:
+        if not isinstance(horizon, int) or horizon < 1:
+            raise ValueError('INVALID_EVALUATION_HORIZON')
+        key = 'sonuc_' + str(horizon) + 'g'
+        evaluated = [r for r in selected if usable(r, horizon)]
+        by_horizon[str(horizon) + 'g'] = {
+            **summarize(selected, horizon),
+            'bekleyen': len(selected) - len(evaluated),
+            'tamamlanma_orani': len(evaluated) / len(selected) if selected else None,
+            'veri_durumu': 'HAZIR' if evaluated else 'BEKLENIYOR',
+        }
+    return {'model': 'YARIN_TOP10', 'toplam_tahmin': len(selected),
+            'vadeler': by_horizon, 'agirliklar_guncellendi': False,
+            'kayitlar_degistirildi': False}
+
+
 def daily_report(records):
     ordered=sorted(records,key=lambda r:r.get('tahmin_sirasi',999));result=summarize(records)
     completed=[r for r in ordered if usable(r)]
