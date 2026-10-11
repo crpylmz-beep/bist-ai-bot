@@ -38,7 +38,7 @@ def shape_for(path,location,include_news=False):
         return Shape('runtime/'+path.name,fields,'learning' if path.name=='ai_ogrenme_gecmisi.json' else 'news' if path.name=='haber_dedup.json' else 'prediction')
     if path.name=='haber_zeka_gecmisi.json' and path==location.runtime_file(path.name).absolute():
         return Shape('runtime/haber_zeka_gecmisi.json',{'haberler':'list'},'news')
-    if path.name=='ana_motor_durum.json' and path==location.runtime_file(path.name).absolute():
+    if path.name=='ana_motor_durum.json' and __import__('os').environ.get('BIST_POSTGRES_ENGINE_CUTOVER')=='1' and path==location.runtime_file(path.name).absolute():
         return Shape('runtime/ana_motor_durum.json',{'tasks':'mapping'},'engine_state')
     parent=path.parent.name
     if path.parent.parent==location.runtime.absolute() and re.fullmatch(r'\d{4}-\d{2}-\d{2}\.json',path.name):
