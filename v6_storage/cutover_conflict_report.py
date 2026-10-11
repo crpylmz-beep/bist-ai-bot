@@ -15,6 +15,11 @@ def main():
                 WHERE status NOT IN ('VERIFIED', 'POSTGRES_NATIVE')
                 ORDER BY updated_at DESC
             """))
+            import_conflicts = list(conn.execute("""
+                SELECT source_id, collection, record_id
+                FROM bist_v6.import_conflicts
+                ORDER BY source_id, collection, record_id
+            """))
             conflicts = list(conn.execute("""
                 SELECT dataset, record_id, reason
                 FROM bist_v6.conflicts
@@ -27,6 +32,11 @@ def main():
                 for r in unresolved
             ],
             "conflicts_total": len(conflicts),
+            "import_conflicts_total": len(import_conflicts),
+            "import_conflicts": [
+                {"source_id": r["source_id"], "collection": r["collection"],
+                 "record_id": r["record_id"]} for r in import_conflicts
+            ],
             "resolution_policy": "PRESERVE_BOTH_NO_AUTOMATIC_OVERWRITE",
             "conflicts_by_dataset": dict(Counter(r["dataset"] for r in conflicts)),
             "conflicts": [
