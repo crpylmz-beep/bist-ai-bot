@@ -77,11 +77,8 @@ def _normalize(text):
 
 def _load():
     try:
-        if not os.path.exists(HABER_FILE):
-            return {"surum": 1, "haberler": []}
-
-        with open(HABER_FILE, "r", encoding="utf-8") as f:
-            data = json.load(f)
+        from recovery_journal import read_document
+        data = read_document(Path(HABER_FILE), {"surum": 1, "haberler": []})
 
         data.setdefault("surum", 1)
         data.setdefault("haberler", [])
@@ -261,7 +258,7 @@ def haber_kaydet(
     )
 
     target = Path(store_path) if store_path is not None else Path(HABER_FILE)
-    data = json.loads(target.read_text()) if store_path is not None and target.exists() else (_load() if store_path is None else {"surum":1,"haberler":[]})
+    data = _load() if store_path is None else __import__('recovery_journal').read_document(target, {"surum":1,"haberler":[]})
 
     hid = analiz.get("canonical_id") or _haber_id(
         analiz.get("sembol"),
