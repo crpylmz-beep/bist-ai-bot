@@ -1,5 +1,8 @@
 name: Read-only V6 stats PostgreSQL integration
 on:
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
   push:
     branches:
