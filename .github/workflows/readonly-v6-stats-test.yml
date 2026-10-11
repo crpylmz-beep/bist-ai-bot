@@ -75,6 +75,40 @@ jobs:
           assert values['gun_ici_sonuclar']['rows']==1
           assert values['yarin_top10_sonuclar']['rows']==0
           PY
+      - name: Verify PostgreSQL session read-only and timeouts
+        run: |
+          python - <<'PY'
+          from psycopg import connect
+          from v6_storage.config import Settings
+          dsn=Settings.from_env().connection_dsn()
+          with connect(dsn,connect_timeout=5,options="-c default_transaction_read_only=on -c statement_timeout=10000 -c lock_timeout=2000",autocommit=True) as conn:
+              with conn.cursor() as cur:
+                  cur.execute("SHOW default_transaction_read_only")
+                  assert cur.fetchone()[0]=="on"
+                  cur.execute("SHOW statement_timeout")
+                  assert cur.fetchone()[0]=="10s"
+                  cur.execute("SHOW lock_timeout")
+                  assert cur.fetchone()[0]=="2s"
+                  try:
+                      cur.execute("CREATE TABLE bist_v6.must_not_exist (id integer)")
+                  except Exception:
+                      pass
+                  else:
+                      raise AssertionError("Read-only session unexpectedly allowed DDL")
+          PY
+      - name: Verify error marker and nonzero exit when schema is unavailable
+        run: |
+          python - <<'PY'
+          import os,subprocess,sys
+          from psycopg import connect
+          from v6_storage.config import Settings
+          dsn=Settings.from_env().connection_dsn()
+          with connect(dsn,autocommit=True) as conn:
+              conn.execute("DROP SCHEMA bist_v6 CASCADE")
+          p=subprocess.run([sys.executable,"-m","v6_storage.readonly_stats"],capture_output=True,text=True,env=os.environ.copy())
+          assert p.returncode==2,(p.returncode,p.stdout)
+          assert p.stdout.strip()=="[STORAGE_V6_STATS] status=ERROR reason=SCHEMA_UNAVAILABLE",p.stdout
+          PY
       - name: Verify disabled flag never connects
         env:
           BIST_V6_READONLY_STATS_ONCE: "0"
