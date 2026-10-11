@@ -297,6 +297,36 @@ def weight_proposals(report,current):
             'learning_enabled':os.environ.get('LEARNING_ENABLED','false').lower()=='true','minimum_ornek':minimum_samples()}
 
 
+
+def multi_horizon_weight_proposals(records, current, horizons=(1, 3, 5)):
+    """Conservative learning suggestions from completed, independent horizons.
+
+    Never applies weights automatically. A feature is actionable only if at
+    least two horizons independently meet evidence thresholds and agree.
+    """
+    baseline = normalize_weights(current)
+    reports = {str(h) + 'g': criterion_report(records, h) for h in horizons}
+    proposals = {name: weight_proposals(report, baseline) for name, report in reports.items()}
+    votes = {}
+    for label, report in reports.items():
+        for feature, detail in report['kriterler'].items():
+            direction = detail['onerilen_agirlik_yonu']
+            if detail['yeterli_veri'] and direction in ('ARTIR', 'AZALT'):
+                votes.setdefault(feature, []).append({'vade': label, 'yon': direction})
+    agreed = {}
+    for feature, observations in votes.items():
+        ups = sum(v['yon'] == 'ARTIR' for v in observations)
+        downs = sum(v['yon'] == 'AZALT' for v in observations)
+        if max(ups, downs) >= 2 and min(ups, downs) == 0:
+            agreed[feature] = {'yon': 'ARTIR' if ups else 'AZALT',
+                               'kanit_vadeleri': observations}
+    return {'vadeler': reports, 'vade_onerileri': proposals,
+            'uzlasan_kriterler': agreed,
+            'otomatik_uygulandi': False,
+            'neden': 'ONERILER_MANUEL_ONAY_GEREKTIRIR',
+            'kaynak': 'TAMAMLANMIS_CANLI_TAHMINLER'}
+
+
 def provider_history(stock):
     # Same provider/history used by the technical engine; no independent data layer.
     import bist_bot
@@ -509,6 +539,7 @@ class PerformansMotoru:
         current_weights=load(self.location.runtime/'ai_agirliklari.json',{}).get('agirliklar',DEFAULT_WEIGHTS)
         current_weights=normalize_weights(current_weights)
         proposal=weight_proposals(report['yarin_kriter_performansi'],current_weights)
+        report['yarin_cok_vadeli_agirlik_ogrenmesi']=multi_horizon_weight_proposals(forecasts,current_weights)
         atomic_json(self.result_path,{'updated_at':current.isoformat(),'sonuclar':{r['kayit_id']:r for r in forecasts}})
         for name,value in (('performans_gunluk.json',{'updated_at':current.isoformat(),'gunler':daily}),
                            ('performans_ozeti.json',report)):
