@@ -32,6 +32,7 @@ def main():
             return 0
         _already_run = True
     connection = None
+    results = []
     try:
         from psycopg import connect
         from v6_storage.config import Settings
@@ -44,7 +45,7 @@ def main():
                 cursor.execute("SET TRANSACTION READ ONLY")
                 cursor.execute("SELECT to_regclass('bist_v6.records'), to_regclass('bist_v6.import_sources'), to_regclass('bist_v6.documents')")
                 if not all(cursor.fetchone()):
-                    print("[STORAGE_V6_STATS] status=SCHEMA_UNAVAILABLE")
+                    print("[STORAGE_V6_STATS] status=ERROR reason=SCHEMA_UNAVAILABLE")
                     return 2
                 for label, dataset in DATASETS:
                     # Collection rows are stored as dataset#field, never matched via SQL LIKE.
@@ -60,11 +61,14 @@ def main():
                     verified, sources = cursor.fetchone()
                     cursor.execute("SELECT COUNT(*) FROM bist_v6.documents WHERE dataset = %s", (dataset,))
                     documents = cursor.fetchone()[0]
-                    print("[STORAGE_V6_STATS] " + json.dumps(
+                    results.append("[STORAGE_V6_STATS] " + json.dumps(
                         {"dataset": label, "rows": rows, "verified_sources": verified,
                          "sources": sources, "documents": documents},
                         separators=(",", ":"), sort_keys=True,
                     ))
+        for result in results:
+            print(result)
+        print("[STORAGE_V6_STATS] status=SUCCESS")
         return 0
     except Exception:
         # Deliberately do not print exception details or credentials.
