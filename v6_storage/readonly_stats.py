@@ -6,6 +6,10 @@ One invocation produces one snapshot; this is NOT a durable once-only latch.
 import json
 import os
 import sys
+import threading
+
+_run_lock = threading.Lock()
+_already_run = False
 
 DATASETS = (
     ("ai_ogrenme_gecmisi", "runtime/ai_ogrenme_gecmisi.json"),
@@ -18,10 +22,15 @@ DATASETS = (
 
 
 def main():
+    global _already_run
     if os.environ.get("BIST_V6_READONLY_STATS_ONCE") != "1":
         print("[STORAGE_V6_STATS] status=DISABLED")
         return 0
 
+    with _run_lock:
+        if _already_run:
+            return 0
+        _already_run = True
     connection = None
     try:
         from psycopg import connect
