@@ -1,0 +1,182 @@
+def sinyal_sinifi(a):
+
+    if not a:
+        return "NÖTR"
+
+    rsi = guvenli_float(a.get("rsi"))
+    rsi_onceki = guvenli_float(a.get("rsi_onceki"))
+    hacim = guvenli_float(a.get("hacim_orani"))
+    macd = guvenli_float(a.get("macd"))
+    signal = guvenli_float(a.get("signal"))
+    hist = guvenli_float(a.get("hist"))
+    hist_onceki = guvenli_float(a.get("hist_onceki"))
+    degisim = guvenli_float(a.get("degisim"))
+    fiyat = guvenli_float(a.get("fiyat"))
+    acilis = guvenli_float(a.get("acilis"))
+    yuksek = guvenli_float(a.get("yuksek"))
+    dusuk = guvenli_float(a.get("dusuk"))
+    sma20 = guvenli_float(a.get("sma20"))
+    sma50 = guvenli_float(a.get("sma50"))
+
+    yukari_kesisim = bool(
+        a.get("yukari_kesisim")
+    )
+
+    asagi_kesisim = bool(
+        a.get("asagi_kesisim")
+    )
+
+    pozitif_mum = bool(
+        a.get("pozitif_mum")
+    )
+
+    negatif_mum = bool(
+        a.get("negatif_mum")
+    )
+
+    kapanis_pozisyonu = guvenli_float(
+        a.get("kapanis_pozisyonu")
+    )
+
+    # =====================================================
+    # 1. AŞIRI ALIM
+    # =====================================================
+
+    if rsi >= 70:
+        return "ASIRI_ALIM"
+
+    # =====================================================
+    # 2. AŞIRI SATIM / TEPKİ
+    # =====================================================
+
+    if rsi < 30:
+
+        tepki_puan = 0
+
+        if pozitif_mum:
+            tepki_puan += 1
+
+        if kapanis_pozisyonu >= 35:
+            tepki_puan += 1
+
+        if hacim >= 120:
+            tepki_puan += 1
+
+        if hist > hist_onceki:
+            tepki_puan += 1
+
+        if rsi > rsi_onceki:
+            tepki_puan += 1
+
+        if degisim <= -7:
+            tepki_puan -= 1
+
+        if tepki_puan >= 2:
+            return "ASIRI_SATIM"
+
+        return "NÖTR"
+
+    # =====================================================
+    # 3. AŞIRI GÜNLÜK HAREKETLERİ FİLTRELE
+    # =====================================================
+
+    if degisim >= 8:
+        return "NÖTR"
+
+    if degisim <= -8:
+        return "NÖTR"
+
+    # =====================================================
+    # 4. AGRESİF ALIŞ
+    # =====================================================
+
+    alis_puan = 0
+
+    # Agresif alış için günlük değişim POZİTİF olmalı.
+    # Böylece çok düşmüş hisseler sadece teknik puanı
+    # yüksek diye agresif alış olarak işaretlenmez.
+
+    if degisim > 0 and 35 <= rsi < 68:
+
+        if macd > signal:
+            alis_puan += 2
+
+        if hist > 0:
+            alis_puan += 2
+
+        if yukari_kesisim:
+            alis_puan += 3
+
+        if fiyat > sma20:
+            alis_puan += 2
+
+        if sma50 > 0 and sma20 > sma50:
+            alis_puan += 2
+
+        if hacim >= 150:
+            alis_puan += 2
+
+        elif hacim >= 120:
+            alis_puan += 1
+
+        if 0 < degisim < 8:
+            alis_puan += 1
+
+        if pozitif_mum:
+            alis_puan += 1
+
+    # Günlük yükseliş çok sertse puanı azalt
+    if degisim >= 6:
+        alis_puan -= 2
+
+    if alis_puan >= 9:
+        return "AGRESIF_ALIS"
+
+    # =====================================================
+    # 5. AGRESİF SATIŞ
+    # =====================================================
+
+    satis_puan = 0
+
+    # Agresif satış için günlük değişim NEGATİF olmalı.
+    # Böylece alış ve satış sinyalleri birbirine karışmaz.
+
+    if degisim < 0 and 32 <= rsi < 68:
+
+        if macd < signal:
+            satis_puan += 2
+
+        if hist < 0:
+            satis_puan += 2
+
+        if asagi_kesisim:
+            satis_puan += 3
+
+        if fiyat < sma20:
+            satis_puan += 2
+
+        if sma50 > 0 and sma20 < sma50:
+            satis_puan += 2
+
+        if hacim >= 150:
+            satis_puan += 2
+
+        elif hacim >= 120:
+            satis_puan += 1
+
+        if -8 < degisim < 0:
+            satis_puan += 1
+
+        if negatif_mum:
+            satis_puan += 1
+
+    # Çok sert düşüşte satış puanını azalt
+    if degisim <= -6:
+        satis_puan -= 2
+
+    if satis_puan >= 9:
+        return "AGRESIF_SATIS"
+
+    return "NÖTR"
+
+
