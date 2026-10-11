@@ -37,13 +37,28 @@ def guard(settings,selected):
     return database
 
 
+def _report_json_fallback(path, operation):
+    """Make remaining legacy JSON I/O visible without changing its behavior."""
+    from veri_yollari import paths
+    target=Path(path).absolute()
+    location=paths()
+    try:
+        target.relative_to(location.runtime.absolute())
+    except ValueError:
+        return
+    if target.suffix=='.json':
+        logging.warning('[STORAGE_V6] code=POSTGRES_JSON_FALLBACK operation=%s path=%s', operation, target.name)
+
+
 def read(path):
     settings=Settings.from_env()
     if settings.mode!='postgres':
         guard_rollback(path)
         return False,None
     selected=shape(path)
-    if selected is None or selected.kind=='tomorrow_snapshot':return False,None
+    if selected is None or selected.kind=='tomorrow_snapshot':
+        _report_json_fallback(path,'read')
+        return False,None
     if selected.kind in ('signal','signal_outcome') and not Path(path).exists():
         if not settings.cutover_ack:raise StorageError('POSTGRES_CUTOVER_NOT_APPROVED')
         database=store(settings);database.ready()
@@ -131,7 +146,9 @@ def before_write(path,value,overwrite=True):
         guard_rollback(path)
         return False
     selected=shape(path)
-    if selected is None or selected.kind=='tomorrow_snapshot':return False
+    if selected is None or selected.kind=='tomorrow_snapshot':
+        _report_json_fallback(path,'write')
+        return False
     if not overwrite:raise StorageError('POSTGRES_CREATE_ONLY_NOT_SUPPORTED')
     from recovery_journal import apply_overlay
     value=apply_overlay(path,value)
