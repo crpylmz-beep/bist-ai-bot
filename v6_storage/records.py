@@ -29,13 +29,13 @@ class Shape:
     kind:str='prediction'
 
 
-def shape_for(path,location):
+def shape_for(path,location,include_news=False):
     path=Path(path).absolute()
-    if path.name in SCHEMAS and path.name!='haber_dedup.json' and path==location.runtime_file(path.name).absolute():
+    if path.name in SCHEMAS and (path.name!='haber_dedup.json' or include_news) and path==location.runtime_file(path.name).absolute():
         field,mapping=SCHEMAS[path.name];fields={field:'mapping' if mapping else 'list'}
         if path.name=='gun_ici_sonuclar.json':fields['listeler']='list'
         if path.name=='tahmin_gecmisi.json':fields['ogrenme_gecmisi']='list'
-        return Shape('runtime/'+path.name,fields,'learning' if path.name=='ai_ogrenme_gecmisi.json' else 'prediction')
+        return Shape('runtime/'+path.name,fields,'learning' if path.name=='ai_ogrenme_gecmisi.json' else 'news' if path.name=='haber_dedup.json' else 'prediction')
     parent=path.parent.name
     if path.parent.parent==location.runtime.absolute() and re.fullmatch(r'\d{4}-\d{2}-\d{2}\.json',path.name):
         if parent=='gunluk_al_sat_gecmisi':return Shape('runtime/'+parent+'/'+path.name,{'events':'mapping'},'signal')
