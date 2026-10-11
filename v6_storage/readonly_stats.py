@@ -39,7 +39,13 @@ def main():
 
         settings = Settings.from_env()
         settings.require_database()
-        connection = connect(settings.connection_dsn(), connect_timeout=settings.timeout)
+        # Dedicated diagnostic connection; do not alter application DSN or pool.
+        connection = connect(
+            settings.connection_dsn(),
+            connect_timeout=5,
+            options="-c default_transaction_read_only=on -c statement_timeout=10000 -c lock_timeout=2000",
+            autocommit=True,
+        )
         with connection.transaction():
             with connection.cursor() as cursor:
                 cursor.execute("SET TRANSACTION READ ONLY")
@@ -76,7 +82,11 @@ def main():
         return 2
     finally:
         if connection is not None:
-            connection.close()
+            try:
+                connection.close()
+            except Exception:
+                # Never expose connection details in diagnostics.
+                pass
 
 
 if __name__ == "__main__":
