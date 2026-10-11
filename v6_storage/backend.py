@@ -27,7 +27,7 @@ def store(settings=None):
 
 def shape(path):
     from veri_yollari import paths
-    return shape_for(path,paths())
+    return shape_for(path,paths(),include_news=os.environ.get('BIST_POSTGRES_NEWS_CUTOVER')=='1')
 
 
 def guard(settings,selected):
