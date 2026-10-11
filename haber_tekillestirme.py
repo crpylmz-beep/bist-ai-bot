@@ -134,7 +134,8 @@ class CanonicalNews:
         # Enrich the existing canonical record without adding another score/history row.
         with Path(str(self.history_path)+'.lock').open('a') as lock:
             fcntl.flock(lock,fcntl.LOCK_EX)
-            data=json.loads(self.history_path.read_text())
+            from recovery_journal import read_document
+            data=read_document(self.history_path, {'surum':1,'haberler':[]})
             for row in data['haberler']:
                 if row.get('canonical_id')==record['canonical_id']:
                     row.update(kaynak=record['kaynak_etiketi'],kaynaklar=record['kaynaklar'],baslik=record['ana_baslik'],kap_url=record.get('kap_url'),sirket_url=record.get('sirket_url'))
