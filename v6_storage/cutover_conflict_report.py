@@ -27,6 +27,7 @@ def main():
                 for r in unresolved
             ],
             "conflicts_total": len(conflicts),
+            "resolution_policy": "PRESERVE_BOTH_NO_AUTOMATIC_OVERWRITE",
             "conflicts_by_dataset": dict(Counter(r["dataset"] for r in conflicts)),
             "conflicts": [
                 {"dataset": r["dataset"], "record_id": r["record_id"],
