@@ -29,7 +29,6 @@ jobs:
     timeout-minutes: 30
     env:
       BIST_DATA_DIR: ${{ runner.temp }}/bist-e2e-data
-      BIST_RUNTIME_DIR: ${{ runner.temp }}/bist-e2e-runtime
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -45,9 +44,8 @@ jobs:
           import os
           import pathlib
           import bist_bot
-          from veri_yollari import public_file
           rows, total = bist_bot.bist_tara()
-          analyzed = [r for r in rows if isinstance(r, dict) and r.get("sembol") and r.get("fiyat") is not None]
+          analyzed = [r for r in rows if isinstance(r, dict) and r.get("sembol") and (r.get("fiyat") or r.get("son_fiyat"))]
           print("E2E_TOTAL_SYMBOLS", total)
           print("E2E_RETURNED_ROWS", len(rows))
           print("E2E_PRICED_ROWS", len(analyzed))
