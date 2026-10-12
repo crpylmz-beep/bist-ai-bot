@@ -263,6 +263,7 @@ def motoru_calistir():
     son_gun_sonu = None
     son_gun_sonu_deneme = None
     gun_sonu_deneme_sayisi = 0
+    son_deneme_zamani = None
 
     while True:
 
@@ -273,8 +274,11 @@ def motoru_calistir():
                 if son_gun_sonu_deneme != now.date():
                     son_gun_sonu_deneme = now.date()
                     gun_sonu_deneme_sayisi = 0
-                if gun_sonu_deneme_sayisi < 2:
+                if (gun_sonu_deneme_sayisi < 2 and
+                    (son_deneme_zamani is None or
+                     (now - son_deneme_zamani).total_seconds() >= 300)):
                     gun_sonu_deneme_sayisi += 1
+                    son_deneme_zamani = now
                     durum_yaz(motor="AKTIF", durum="GUN_SONU_HESAPLANIYOR")
                     arsiv = Path(bist_bot.YARIN_TOP10_ARSIV_DIR) / (now.strftime("%Y-%m-%d") + ".json")
                     if not arsiv.exists():
