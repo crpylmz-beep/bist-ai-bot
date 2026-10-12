@@ -16,7 +16,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
+      - name: Test bagimliliklarini kur
+        run: pip install -r requirements.txt
       - name: Syntax ve zamanlama testleri
         run: |
           python -m py_compile canli_motor.py
           python -m unittest discover -s tests -p test_canli_motor_zamanlama.py -v
+          python -m unittest discover -s tests -p test_yarin_snapshot.py -v
