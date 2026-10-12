@@ -1,0 +1,257 @@
+{
+  "mode": "READ_ONLY_METADATA",
+  "generated_at": "2026-10-09T00:22:52.364936+03:00",
+  "production_inspected": false,
+  "scope": "LOCAL_REPOSITORY_WEBAPP_DATA_ONLY",
+  "live_scan_atomic_snapshot": false,
+  "categories": {
+    "prediction_history": {
+      "files": 2,
+      "logical_bytes": 1400901,
+      "allocated_bytes": 1404928,
+      "private_logical_bytes": 0,
+      "json_logical_bytes": 1400901,
+      "private_json_bytes": 0,
+      "compressed_bytes": 0,
+      "private_compressed_bytes": 0
+    },
+    "learning_data": {
+      "files": 7,
+      "logical_bytes": 1864311,
+      "allocated_bytes": 1888256,
+      "private_logical_bytes": 0,
+      "json_logical_bytes": 1864311,
+      "private_json_bytes": 0,
+      "compressed_bytes": 0,
+      "private_compressed_bytes": 0
+    },
+    "signal_outcomes": {
+      "files": 0,
+      "logical_bytes": 0,
+      "allocated_bytes": 0,
+      "private_logical_bytes": 0,
+      "json_logical_bytes": 0,
+      "private_json_bytes": 0,
+      "compressed_bytes": 0,
+      "private_compressed_bytes": 0
+    },
+    "temporary_files": {
+      "files": 0,
+      "logical_bytes": 0,
+      "allocated_bytes": 0,
+      "private_logical_bytes": 0,
+      "json_logical_bytes": 0,
+      "private_json_bytes": 0,
+      "compressed_bytes": 0,
+      "private_compressed_bytes": 0
+    },
+    "recovery_records": {
+      "files": 0,
+      "logical_bytes": 0,
+      "allocated_bytes": 0,
+      "private_logical_bytes": 0,
+      "json_logical_bytes": 0,
+      "private_json_bytes": 0,
+      "compressed_bytes": 0,
+      "private_compressed_bytes": 0
+    },
+    "private_user_data": {
+      "files": 0,
+      "logical_bytes": 0,
+      "allocated_bytes": 0,
+      "private_logical_bytes": 0,
+      "json_logical_bytes": 0,
+      "private_json_bytes": 0,
+      "compressed_bytes": 0,
+      "private_compressed_bytes": 0
+    },
+    "reproducible_cache_review": {
+      "files": 0,
+      "logical_bytes": 0,
+      "allocated_bytes": 0,
+      "private_logical_bytes": 0,
+      "json_logical_bytes": 0,
+      "private_json_bytes": 0,
+      "compressed_bytes": 0,
+      "private_compressed_bytes": 0
+    },
+    "other_preserve": {
+      "files": 11,
+      "logical_bytes": 8688985,
+      "allocated_bytes": 8720384,
+      "private_logical_bytes": 0,
+      "json_logical_bytes": 8688983,
+      "private_json_bytes": 0,
+      "compressed_bytes": 0,
+      "private_compressed_bytes": 0
+    }
+  },
+  "largest": [
+    {
+      "category": "other_preserve",
+      "file_token": "d7c1bfd7c09d2e81",
+      "logical_bytes": 7516645,
+      "allocated_bytes": 7520256
+    },
+    {
+      "category": "prediction_history",
+      "file_token": "8bfd1837bf65740e",
+      "logical_bytes": 1381230,
+      "allocated_bytes": 1384448
+    },
+    {
+      "category": "other_preserve",
+      "file_token": "a9574b6f3f2552cd",
+      "logical_bytes": 900435,
+      "allocated_bytes": 901120
+    },
+    {
+      "category": "learning_data",
+      "file_token": "2d4f267ba9e58667",
+      "logical_bytes": 648327,
+      "allocated_bytes": 651264
+    },
+    {
+      "category": "learning_data",
+      "file_token": "8e395090187414fc",
+      "logical_bytes": 648327,
+      "allocated_bytes": 651264
+    },
+    {
+      "category": "learning_data",
+      "file_token": "e24492984456cb5d",
+      "logical_bytes": 566455,
+      "allocated_bytes": 569344
+    },
+    {
+      "category": "other_preserve",
+      "file_token": "9913bc6f47cfe218",
+      "logical_bytes": 161242,
+      "allocated_bytes": 163840
+    },
+    {
+      "category": "other_preserve",
+      "file_token": "c3a49d41ee1f0267",
+      "logical_bytes": 90600,
+      "allocated_bytes": 94208
+    },
+    {
+      "category": "prediction_history",
+      "file_token": "88fa68a06180d0e0",
+      "logical_bytes": 19671,
+      "allocated_bytes": 20480
+    },
+    {
+      "category": "other_preserve",
+      "file_token": "674578c0f29b20b2",
+      "logical_bytes": 16159,
+      "allocated_bytes": 16384
+    },
+    {
+      "category": "other_preserve",
+      "file_token": "6a4698f13a763942",
+      "logical_bytes": 2226,
+      "allocated_bytes": 4096
+    },
+    {
+      "category": "other_preserve",
+      "file_token": "755ec842d2e57055",
+      "logical_bytes": 1027,
+      "allocated_bytes": 4096
+    },
+    {
+      "category": "other_preserve",
+      "file_token": "6152c3dd94b0dea1",
+      "logical_bytes": 452,
+      "allocated_bytes": 4096
+    },
+    {
+      "category": "learning_data",
+      "file_token": "fbc8917d6844d6b5",
+      "logical_bytes": 441,
+      "allocated_bytes": 4096
+    },
+    {
+      "category": "learning_data",
+      "file_token": "6726564910eb66b2",
+      "logical_bytes": 439,
+      "allocated_bytes": 4096
+    },
+    {
+      "category": "learning_data",
+      "file_token": "9be7ec6a4ab6c1af",
+      "logical_bytes": 288,
+      "allocated_bytes": 4096
+    },
+    {
+      "category": "other_preserve",
+      "file_token": "16218eb03ad31272",
+      "logical_bytes": 115,
+      "allocated_bytes": 4096
+    },
+    {
+      "category": "other_preserve",
+      "file_token": "99b4ea3a5ce35c81",
+      "logical_bytes": 82,
+      "allocated_bytes": 4096
+    },
+    {
+      "category": "learning_data",
+      "file_token": "6d4e0b362699910e",
+      "logical_bytes": 34,
+      "allocated_bytes": 4096
+    },
+    {
+      "category": "other_preserve",
+      "file_token": "93d423a8df635d07",
+      "logical_bytes": 2,
+      "allocated_bytes": 4096
+    }
+  ],
+  "filesystem": {
+    "total_bytes": 17871892480,
+    "available_bytes": 17283260416,
+    "used_bytes": 588632064
+  },
+  "tree_allocated_unique_bytes": 12013568,
+  "hardlink_alias_paths": 0,
+  "symlinks_skipped": 0,
+  "errors": 0,
+  "complete": true,
+  "postgresql_capacity_scenario": {
+    "raw_classified_bytes": 3265212,
+    "estimated_bytes_low": 4897818,
+    "estimated_bytes_high": 9795636,
+    "overhead_factor_low": 1.5,
+    "overhead_factor_high": 3.0,
+    "measured_database_bytes": null,
+    "wal_backups_replicas_bytes": null,
+    "unique_record_count": null,
+    "coverage": "CLASSIFIED_UNCOMPRESSED_JSON_ONLY",
+    "unresolved_source_bytes": 8688985,
+    "estimated_total_cutover_bytes": null
+  },
+  "r2_capacity_scenario": {
+    "raw_preservation_bytes": 11954197,
+    "unresolved_preservation_bytes": 8688985,
+    "already_compressed_filename_bytes": 0,
+    "estimated_compressed_bytes_low": 2988550,
+    "estimated_compressed_bytes_high": 8965648,
+    "compression_ratio_low": 0.25,
+    "compression_ratio_high": 0.75,
+    "compression_measured": false
+  },
+  "notes": [
+    "Filename-based classification is advisory; every source is preserved.",
+    "Logical category bytes may include aliases/duplicate records; estimates are not deduplicated migration measurements.",
+    "Temporary/recovery/unknown files may contain unique records; no deletion or migration eligibility is inferred.",
+    "Private user data is excluded from R2 scenario; encryption/access review required before any future archive.",
+    "PG factors and R2 compression ratios are operator assumptions, not measured storage or verified prices.",
+    "Concurrent writes can change sizes during this read-only scan; unreadable entries make the report incomplete.",
+    "Measured repository fallback data only; production /data and .local runtime/user-data were not accessed. This is not a complete deployed-system measurement."
+  ],
+  "source_deleted": false,
+  "source_moved": false,
+  "source_content_read": false,
+  "external_connections": false
+}

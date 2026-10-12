@@ -1,0 +1,19 @@
+{
+  "guncelleme": "2026-10-06 01:26:04",
+  "durum": "OGRENIYOR",
+  "toplam_ornek": 602,
+  "tamamlanan_ornek": 0,
+  "bekleyen_ornek": 602,
+  "basarili_ornek": 0,
+  "basari_yuzde": 0.0,
+  "modeller": {
+    "GUN_ICI": 602
+  },
+  "kararlar": {
+    "IZLE": 472,
+    "AL": 41,
+    "SAT": 89
+  },
+  "minimum_ogrenme_ornegi": 30,
+  "not": "Sistem veri topluyor. Yeterli tamamlanmis ornekten sonra gosterge ve kombinasyon agirliklari hesaplanacak."
+}

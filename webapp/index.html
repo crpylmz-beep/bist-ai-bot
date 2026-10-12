@@ -1,8 +1,13 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#101827">
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>BIST AI</title>
 
 <style>
@@ -380,18 +385,89 @@ body{
         transform:translateX(-50%);
     }
 }
+
+.seviye-columns{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin-top:14px}
+.seviye-panel{border:1px solid #64748b;border-radius:10px;padding:14px}
+.seviye-panel label{display:block;margin:10px 0}
+.seviye-panel input,.seviye-panel select{width:100%;padding:10px;background:#111827;color:#fff;border:1px solid #64748b;border-radius:6px;margin-top:5px}
+.seviye-panel button,.price-alarm-actions button{padding:9px 12px;border:1px solid #64748b;border-radius:6px;background:#1e293b;color:#fff;cursor:pointer;margin:6px 6px 0 0}
+.seviye-panel button:disabled{opacity:.5;cursor:wait}
+.price-alarm-row{padding:12px 0;border-bottom:1px solid #334155}
+
+html{height:100%;overflow:hidden;overscroll-behavior:none}
+body{height:100vh;height:100dvh;background:#111827;overflow:hidden;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
+.page{background:#f4f6f8;flex:1 1 auto;min-height:0;width:100%;overflow-y:auto;overflow-x:hidden;padding-bottom:16px;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch}
+.page > *{min-width:0;max-width:100%}
+.bottom-nav{position:relative;flex:0 0 auto;height:calc(72px + env(safe-area-inset-bottom,0px));padding-bottom:env(safe-area-inset-bottom,0px);width:100%}
+#pushControls{padding:8px 14px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.status-line{display:flex;flex-direction:column;gap:4px;font-size:12px}
+.notification-actions{display:flex;gap:8px}
+#pushControls button{min-height:44px;padding:8px 12px;border:1px solid #94a3b8;border-radius:6px;background:white;color:#17212b;font-weight:600}
+#pushActionMessage{font-size:12px;overflow-wrap:anywhere}
+.detail-grid,.seviye-columns{min-width:0}
+.detail-grid > *{min-width:0;overflow-wrap:anywhere}
+@media(max-width:480px){
+    #homePage .header{padding:12px 14px;border-radius:0 0 16px 16px}
+    #homePage .header h1{font-size:21px}
+    #homePage .header p{display:none}
+    #homePage .market-card{margin:8px 12px;padding:10px 14px}
+    #homePage .market-price{font-size:26px;overflow-wrap:anywhere}
+    #homePage .market-change{font-size:12px}
+    #homePage .section-title{font-size:16px;margin:8px 0}
+    #homePage .signal-grid{gap:8px}
+    #homePage .signal-card{min-height:82px;padding:8px 12px}
+    #homePage .signal-icon{font-size:18px}
+    #homePage .signal-name{font-size:12px;margin-top:4px}
+    #homePage .signal-count{font-size:22px;margin-top:2px}
+    #homePage .main-actions{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:12px}
+    #homePage .action-btn{font-size:12px;padding:12px 6px;min-height:64px}
+    #homePage .update-time{padding:6px 12px;overflow-wrap:anywhere}
+}
+@media(min-width:700px){.bottom-nav{left:auto;right:auto;transform:none;align-self:center}}
+
+:root{--daily-positive:#16a34a;--daily-negative:#dc2626;--daily-neutral:#687386;--daily-border:#d7dde5;--daily-warning:#854d0e}
+.bottom-nav{grid-template-columns:repeat(6,minmax(0,1fr))}
+#dailyPage{font-size:15px}
+.daily-toolbar,.daily-tabs{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}
+.daily-toolbar label{flex:1;min-width:120px}
+.daily-toolbar select,#dailyHorizon{display:block;width:100%;min-height:44px;border:1px solid var(--daily-border);border-radius:8px;background:white;color:inherit;font:inherit}
+.daily-tabs button{flex:1;min-height:48px;border:1px solid var(--daily-border);border-radius:10px;background:white;font:inherit}
+.daily-tabs button[aria-selected="true"]{font-weight:700;border:2px solid var(--daily-neutral)}
+.daily-card{border-left:4px solid var(--daily-neutral);overflow-wrap:anywhere}
+.daily-AL{border-left-color:var(--daily-positive)}.daily-SAT{border-left-color:var(--daily-negative)}
+.daily-card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.daily-card-head button{background:transparent;border:0;color:inherit;min-height:44px;font:inherit;font-weight:700;text-align:left}
+.daily-score{margin:12px 0}.daily-score progress{display:block;width:100%;height:10px;accent-color:var(--daily-neutral)}
+.daily-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.daily-metrics span,.daily-metrics strong{display:block}
+.daily-warning{color:var(--daily-warning);font-weight:600}.daily-badge{border:1px solid var(--daily-border);border-radius:8px;padding:8px}
+#dailyPage summary{cursor:pointer;min-height:44px;padding:12px 0}.daily-loading{padding:30px;background:white;border-radius:12px}
+#dailyCards{display:grid;gap:14px}#dailyCards .detail-card{margin:0}
+@media(min-width:900px){#dailyCards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.context-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:8px;font-size:13px;overflow-wrap:anywhere}
+.context-metrics span,.context-metrics strong{display:block}#marketContextCard summary{cursor:pointer;font-weight:600}
+#marketContextCard h4{margin-bottom:4px}#marketContextDetails{font-size:14px}
+#indicatorPerformanceCard select{max-width:100%;min-width:0;font:inherit}#indicatorPerformanceCard summary{cursor:pointer;font-weight:600}#indicatorPerformanceDetails{font-size:14px;overflow-wrap:anywhere}
+.sector-card{border-top:1px solid #dce1e8;padding:10px 0;overflow-wrap:anywhere}.sector-warning{color:#935000}#sectorStrengthCard summary{cursor:pointer;font-weight:600}#sectorStrengthDetails{font-size:14px;min-width:0}
 </style>
 </head>
 
 <body>
 
+
 <!-- ANA SAYFA -->
 <div id="homePage" class="page">
+
 
     <div class="header">
         <h1>🤖 BIST AI Asistanı</h1>
         <p>Yapay zekâ destekli BIST tarama terminali</p>
     </div>
+
+    <section id="pushControls" aria-label="Sistem ve bildirim durumu">
+        <div class="status-line"><span id="cloudStatus" role="status">Sistem kontrol ediliyor</span><span id="pushStatus" role="status">Bildirimler Kapalı</span></div>
+        <div class="notification-actions"><button onclick="pushAc()" id="pushEnable">Bildirimleri Aç</button><button onclick="pushKapat()" id="pushDisable" hidden>Bildirimleri Kapat</button></div>
+        <span id="pushActionMessage" role="status" hidden></span>
+    </section>
 
     <div class="market-card">
         <div class="market-title">BIST 100</div>
@@ -399,6 +475,13 @@ body{
         <div id="bistChange" class="market-change">--</div>
     </div>
 
+    <details class="market-card" id="marketContextCard"><summary id="marketContextSummary">Piyasa Durumu · Veriler bekleniyor</summary><div id="marketContextDetails"></div></details>
+
+    <details class="market-card" id="indicatorPerformanceCard"><summary id="indicatorPerformanceSummary">İndikatör Performansı · Veriler bekleniyor</summary>
+    <div class="context-metrics"><label>Sinyal ailesi<select id="indicatorFamily" onchange="indikatorYenile()"><option value="ALL">Tümü</option><option value="TOMORROW_TOP10">Yarın TOP10</option><option value="INTRADAY_BUY">Günlük AL</option><option value="INTRADAY_SELL">Günlük SAT</option><option value="AGGRESSIVE_BUY">Agresif Alış</option><option value="AGGRESSIVE_SELL">Agresif Satış</option><option value="OVERSOLD_REACTION">Aşırı Satım Tepkisi</option><option value="TREND">Trend</option></select></label>
+    <label>Yön<select id="indicatorDirection" onchange="indikatorYenile()"><option value="">Tümü</option><option value="BUY">Alış</option><option value="SELL">Satış</option></select></label>
+    <label>Vade<select id="indicatorHorizon" onchange="indikatorYenile()"><option value="">Tümü</option><option value="1">1 işlem günü</option><option value="3">3 işlem günü</option><option value="5">5 işlem günü</option><option value="10">10 işlem günü</option><option value="20">20 işlem günü</option><option value="60">60 işlem günü</option><option value="30m">30 dakika</option><option value="60m">60 dakika</option><option value="120m">120 dakika</option><option value="SEANS">Seans sonu</option></select></label></div><div id="indicatorPerformanceDetails"></div></details>
+    <details class="market-card" id="sectorStrengthCard"><summary id="sectorStrengthSummary">Sektör Gücü · Veriler bekleniyor</summary><div id="sectorStrengthDetails"></div></details>
     <div class="section">
         <div class="section-title">📡 Sinyaller</div>
 
@@ -444,6 +527,16 @@ body{
 
         <button class="action-btn" onclick="showGunIciTop10()">⚡<br>Gün İçi TOP 10</button>
 
+        <button class="action-btn" onclick="showAiLearning()">
+            &#129504;<br>
+            AI &#214;&#287;renme
+        </button>
+
+        <button class="action-btn" onclick="showKapAlarms()">
+            🚨<br>
+            KAP / Haber
+        </button>
+
         <button class="action-btn" onclick="showSearch()">
             🔎<br>
             Hisse Ara
@@ -454,6 +547,33 @@ body{
     <div id="updateTime" class="update-time">
         Veri yükleniyor...
     </div>
+</div>
+
+
+
+<!-- KAP / HABER ALARMLARI -->
+<div id="kapAlarmPage" class="page" style="display:none">
+
+    <div class="page-header">
+        <button class="back-btn" onclick="goHome()">←</button>
+
+        <div>
+            <div style="font-weight:800;font-size:19px">
+                🚨 Anlık KAP / Haber Alarmı
+            </div>
+
+            <div style="font-size:12px;opacity:.65;margin-top:3px">
+                AI ile analiz edilen önemli şirket haberları
+            </div>
+        </div>
+    </div>
+
+    <div id="kapAlarmList" class="list">
+        <div class="empty">
+            KAP alarm verisi yükleniyor...
+        </div>
+    </div>
+
 </div>
 
 
@@ -593,9 +713,36 @@ body{
 <div id="gunIciTop10Page" class="page" style="display:none">
     <div class="page-header">
         <button class="back-btn" onclick="goHome()">‹ Geri</button>
-        <div class="page-title">⚡ Gün İçi TOP 10</div>
+        <div>
+            <div class="page-title">⚡ Gün İçi TOP 10</div>
+            <div id="gunIciFreshness" style="font-size:13px;margin-top:6px" aria-live="polite">
+                Son Güncelleme: — · Veri Yaşı: bilinmiyor
+            </div>
+        </div>
     </div>
+    <div id="gunIciWarning" role="status" style="display:none;margin:0 0 14px;padding:14px;border:2px solid #f59e0b;border-radius:10px;background:#3b260a;color:#fff;font-weight:700"></div>
     <div id="gunIciTop10List" class="list"></div>
+</div>
+
+
+<!-- AI OGRENME -->
+<div id="aiLearningPage" class="page" style="display:none">
+
+    <div class="page-header">
+        <button class="back-btn" onclick="goHome()">&#8249; Geri</button>
+
+        <div>
+            <div class="page-title">&#129504; AI &#214;&#287;renme</div>
+            <div class="page-subtitle">
+                Algoritman&#305;n ger&#231;ek sinyallerden &#246;&#287;renme merkezi
+            </div>
+        </div>
+    </div>
+
+    <div id="aiLearningContent" class="list">
+        <div class="empty">AI verileri y&#252;kleniyor...</div>
+    </div>
+
 </div>
 
 <!-- HİSSE ARA -->
@@ -667,6 +814,16 @@ body{
 </div>
 
 
+<div id="dailyPage" class="page" style="display:none">
+ <div class="header"><h1>GÜNLÜK AL/SAT</h1><p>5 dakikalık gerçek piyasa verileriyle gün içi teknik fırsatlar</p></div>
+ <div class="section"><p id="dailyMarket" role="status"></p><p id="dailyUpdated"></p>
+ <div class="daily-toolbar">
+ <label>Minimum Güven<select id="dailyConfidence" onchange="gunlukGoster()"><option value="0">Tümü</option><option>50</option><option>60</option><option>70</option><option>80</option><option>90</option></select></label>
+ <label>Minimum Teknik Güç<select id="dailyTechnical" onchange="gunlukGoster()"><option value="0">Tümü</option><option>50</option><option>60</option><option>70</option><option>80</option><option>90</option></select></label>
+ <label>Teyit seviyesi<select id="dailyConfirmation" onchange="gunlukGoster()"><option value="0">Tümü</option><option value="4">Orta ve üzeri</option><option value="6">Güçlü ve üzeri</option><option value="8">Çok Güçlü</option></select></label></div>
+ <div class="daily-tabs" role="tablist" aria-label="Günlük AL/SAT adayları"><button role="tab" aria-controls="dailyCards" id="dailyTabAL" onclick="gunlukSekme('AL')">AL Adayları</button><button role="tab" aria-controls="dailyCards" id="dailyTabSAT" onclick="gunlukSekme('SAT')">SAT Adayları</button><button role="tab" aria-controls="dailyCards" id="dailyTabIZLE" onclick="gunlukSekme('IZLE')">İzle</button></div>
+ <div id="dailyCards" role="tabpanel" aria-live="polite"></div><section id="dailyPerformance" class="detail-card" aria-label="Günlük AL/SAT Performans"></section></div>
+</div>
 <!-- ALT MENÜ -->
 <div class="bottom-nav">
 
@@ -677,6 +834,7 @@ body{
         Ana Sayfa
     </button>
 
+    <button id="navDaily" class="nav-btn" onclick="showDaily()"><span class="nav-icon">↗</span>Günlük AL/SAT</button>
     <button id="navScanner"
             class="nav-btn"
             onclick="goScanner()">
@@ -708,12 +866,15 @@ body{
 <script>
 
 let tumVeriler = [];
+let anaUpdatedAt = null;
+let anaBist100 = {};
+let anaSinyalVeriler = [];
 let oncekiSayfa = "home";
 
 
 /* VERİYİ YÜKLE */
 
-async function gercekVeriyiYukle(){
+async function gercekVeriyiYukle(openStock = true){
 
     try{
 
@@ -721,10 +882,19 @@ async function gercekVeriyiYukle(){
             "data/bist_data.json?t=" + Date.now()
         );
 
+        if(!cevap.ok) throw new Error("Ana veri okunamadı");
         const veri = await cevap.json();
+        anaUpdatedAt = veri.updated_at || null;
+        anaBist100 = veri.bist100 || {};
 
         if(Array.isArray(veri)){
             tumVeriler = veri;
+        }
+        else if(
+            veri &&
+            Array.isArray(veri.hisseler)
+        ){
+            tumVeriler = veri.hisseler;
         }
         else if(Array.isArray(veri.hisseler)){
             tumVeriler = veri.hisseler;
@@ -736,7 +906,68 @@ async function gercekVeriyiYukle(){
             tumVeriler = [];
         }
 
+        anaSinyalVeriler = tumVeriler.slice();
+
+        // Gun ici 5 dakikalik analizleri yukle ve ana hisse verisiyle birlestir.
+        try{
+            const gunIciCevap = await fetch(
+                "data/gun_ici_tum.json?t=" + Date.now(),
+                {cache:"no-store"}
+            );
+
+            if(gunIciCevap.ok){
+                const gunIciVeri = await gunIciCevap.json();
+
+                const gunIciListe =
+                    gunIciVeri && Array.isArray(gunIciVeri.hisseler)
+                    ? gunIciVeri.hisseler
+                    : [];
+
+                const gunIciMap = new Map();
+
+                gunIciListe.forEach(x => {
+                    const kod = String(
+                        x.sembol ?? x.symbol ?? ""
+                    ).toUpperCase();
+
+                    if(kod){
+                        gunIciMap.set(kod, x);
+                    }
+                });
+
+                tumVeriler = tumVeriler.map(hisse => {
+                    const kod = String(
+                        hisse.sembol ?? hisse.symbol ?? ""
+                    ).toUpperCase();
+
+                    const gunIci = gunIciMap.get(kod);
+
+                    const dailyTime = Date.parse(hisse.canli_guncelleme || anaUpdatedAt);
+                    const intraTime = Date.parse(gunIciVeri.updated_at);
+                    return gunIci && Number.isFinite(intraTime) && (!Number.isFinite(dailyTime) || intraTime >= dailyTime)
+                        ? {...hisse, ...gunIci}
+                        : hisse;
+                });
+
+                console.log(
+                    "Gun ici veri birlestirildi:",
+                    gunIciListe.length
+                );
+            }
+        }
+        catch(gunIciHata){
+            console.warn(
+                "Gun ici veri henuz mevcut degil:",
+                gunIciHata
+            );
+        }
+
         anaSayfayiDoldur();
+        if (openStock && typeof window !== 'undefined') {
+            const stock = new URLSearchParams(window.location.search).get('stock');
+            const selected = tumVeriler.find(row => row.sembol === stock);
+            if (selected) hisseDetay(selected);
+        }
 
     }
     catch(hata){
@@ -753,9 +984,7 @@ async function gercekVeriyiYukle(){
 
 function anaSayfayiDoldur(){
 
-    if(!tumVeriler.length) return;
-
-    const bist = tumVeriler.find(x =>
+    const bist = Object.keys(anaBist100).length ? anaBist100 : tumVeriler.find(x =>
         String(x.sembol || x.symbol || "").toUpperCase() === "BIST100"
     );
 
@@ -774,23 +1003,28 @@ function anaSayfayiDoldur(){
             bist.change_percent;
 
         document.getElementById("bistPrice").innerText =
-            fiyat != null ? Number(fiyat).toFixed(2) : "--";
+            fiyat != null ? Number(fiyat).toFixed(2) : "Endeks sağlayıcısından geçerli veri bekleniyor";
 
         document.getElementById("bistChange").innerText =
-            degisim != null
-                ? "%" + Number(degisim).toFixed(2)
-                : "--";
+            (degisim != null ? "%" + Number(degisim).toFixed(2) : "Değişim verisi yok") +
+            (!piyasaAcikMi() ? " · Son seans" : gunIciVeriYasi(bist.updated_at).status !== "normal" ? " · Son kayıt" : "");
 
         document.getElementById("bistChange").className =
             "market-change " +
             (Number(degisim) >= 0 ? "up" : "down");
     }
 
+    if(!bist){
+        document.getElementById("bistPrice").innerText = "Endeks verisi henüz alınamadı; ilk batch bekleniyor";
+        document.getElementById("bistChange").innerText = "";
+    }
     sayilariGuncelle();
 
+    const freshness = gunIciVeriYasi(anaUpdatedAt);
     document.getElementById("updateTime").innerText =
-        "Son güncelleme: " +
-        new Date().toLocaleString("tr-TR");
+        "Son güncelleme: " + freshness.time + " (İstanbul) · Veri yaşı: " + freshness.age +
+        (freshness.status !== "normal" ? " · SON KAYIT / ESKİ VERİ — canlı değil" : "") +
+        (!piyasaAcikMi() ? " · Piyasa kapalı / Son seans" : "");
 }
 
 
@@ -814,7 +1048,7 @@ function sayilariGuncelle(){
     let satim = 0;
     let alim = 0;
 
-    tumVeriler.forEach(hisse => {
+    (anaSinyalVeriler.length ? anaSinyalVeriler : tumVeriler).forEach(hisse => {
 
         const tip = sinyalTip(hisse);
 
@@ -842,11 +1076,18 @@ function sayilariGuncelle(){
 /* SAYFA GİZLE */
 
 function tumSayfalariGizle(){
+    clearInterval(gunlukUI.timer);gunlukUI.timer=null;
+    document.getElementById("dailyPage").style.display="none";
+
+    clearInterval(gunIciFreshnessTimer);
+    clearInterval(fiyatAlarmTimer);
 
     document.getElementById("homePage").style.display = "none";
     document.getElementById("scannerPage").style.display = "none";
     document.getElementById("top10Page").style.display = "none";
     document.getElementById("gunIciTop10Page").style.display = "none";
+    document.getElementById("kapAlarmPage").style.display = "none";
+    document.getElementById("aiLearningPage").style.display = "none";
     document.getElementById("searchPage").style.display = "none";
     document.getElementById("signalPage").style.display = "none";
     document.getElementById("stockPage").style.display = "none";
@@ -864,6 +1105,230 @@ function goHome(){
     oncekiSayfa = "home";
 
     navAktif("navHome");
+}
+
+
+
+/* AI OGRENME */
+
+async function showAiLearning(){
+
+    tumSayfalariGizle();
+
+    document.getElementById("aiLearningPage").style.display = "block";
+
+    oncekiSayfa = "ai_learning";
+
+    const alan = document.getElementById("aiLearningContent");
+
+    alan.innerHTML =
+        '<div class="empty">AI verileri y&#252;kleniyor...</div>';
+
+    try{
+
+        const ts = Date.now();
+
+        const [ozetCevap, agirlikCevap] = await Promise.all([
+            fetch("data/ai_ogrenme_ozeti.json?t=" + ts, {
+                cache: "no-store"
+            }),
+            fetch("data/ai_ogrenilmis_agirliklar.json?t=" + ts, {
+                cache: "no-store"
+            })
+        ]);
+
+        if(!ozetCevap.ok){
+            throw new Error("AI ozet verisi bulunamadi");
+        }
+
+        const ozet = await ozetCevap.json();
+
+        let agirlik = {
+            durum: "VERI_TOPLANIYOR",
+            aktif: false,
+            tamamlanan_sinyal: 0,
+            minimum_gerekli: 30,
+            kalan: 30,
+            gostergeler: {}
+        };
+
+        if(agirlikCevap.ok){
+            agirlik = await agirlikCevap.json();
+        }
+
+        const toplam = Number(ozet.toplam_ornek || 0);
+        const tamamlanan = Number(agirlik.tamamlanan_sinyal || 0);
+        const minimum = Number(agirlik.minimum_gerekli || 30);
+        const kalan = Math.max(0, minimum - tamamlanan);
+        const basari = Number(
+            agirlik.genel_basari_yuzde ??
+            ozet.basari_yuzde ??
+            0
+        );
+
+        const referans = Math.max(
+            0,
+            toplam -
+            Number(ozet.tamamlanan_ornek || 0) -
+            Number(ozet.bekleyen_ornek || 0)
+        );
+
+        const yuzde = Math.min(
+            100,
+            Math.round((tamamlanan / Math.max(1, minimum)) * 100)
+        );
+
+        const durumYazi = agirlik.aktif
+            ? "AKT?F ??RENME"
+            : "VERİ TOPLANIYOR";
+
+        const durumRenk = agirlik.aktif
+            ? "#22c55e"
+            : "#f59e0b";
+
+        const kararlar = ozet.kararlar || {};
+
+        alan.innerHTML = `
+            <div class="detail-card">
+
+                <div class="detail-title">
+                    &#129504; AI Öğrenme Durumu
+                </div>
+
+                <div style="
+                    font-size:22px;
+                    font-weight:800;
+                    margin:10px 0;
+                    color:${durumRenk};
+                ">
+                    ${durumYazi}
+                </div>
+
+                <div style="margin:12px 0;">
+                    <div style="
+                        height:10px;
+                        background:rgba(255,255,255,.10);
+                        border-radius:10px;
+                        overflow:hidden;
+                    ">
+                        <div style="
+                            width:${yuzde}%;
+                            height:100%;
+                            background:${durumRenk};
+                        "></div>
+                    </div>
+
+                    <div style="
+                        margin-top:7px;
+                        font-size:13px;
+                        opacity:.75;
+                    ">
+                        Gerçek tamamlanmış sinyal:
+                        ${tamamlanan} / ${minimum}
+                    </div>
+                </div>
+
+                <div class="detail-row">
+                    <span>Ham Veri</span>
+                    <strong>${toplam}</strong>
+                </div>
+
+                <div class="detail-row">
+                    <span>Referans Veri</span>
+                    <strong>${referans}</strong>
+                </div>
+
+                <div class="detail-row">
+                    <span>Gerçek Eğitim Sonucu</span>
+                    <strong>${tamamlanan}</strong>
+                </div>
+
+                <div class="detail-row">
+                    <span>Kalan Minimum Örnek</span>
+                    <strong>${kalan}</strong>
+                </div>
+
+                <div class="detail-row">
+                    <span>Başarı Oranı</span>
+                    <strong>
+                        ${tamamlanan > 0 ? basari.toFixed(1) + "%" : "-"}
+                    </strong>
+                </div>
+
+                <div class="detail-row">
+                    <span>AI Ağırlıkları</span>
+                    <strong>
+                        ${agirlik.aktif ? "AKT?F" : "PASİF"}
+                    </strong>
+                </div>
+
+            </div>
+
+            <div class="detail-card">
+
+                <div class="detail-title">
+                    Gün İçi Veri Havuzu
+                </div>
+
+                <div class="detail-row">
+                    <span>AL</span>
+                    <strong>${Number(kararlar.AL || 0)}</strong>
+                </div>
+
+                <div class="detail-row">
+                    <span>SAT</span>
+                    <strong>${Number(kararlar.SAT || 0)}</strong>
+                </div>
+
+                <div class="detail-row">
+                    <span>İZLE</span>
+                    <strong>${Number(kararlar.IZLE || 0)}</strong>
+                </div>
+
+            </div>
+
+            <div class="detail-card">
+
+                <div class="detail-title">
+                    Öğrenilen Göstergeler
+                </div>
+
+                <div style="
+                    line-height:1.7;
+                    font-size:14px;
+                    opacity:.85;
+                ">
+                    VWAP<br>
+                    EMA 9 / EMA 21<br>
+                    OBV<br>
+                    RSI<br>
+                    Hacim<br>
+                    15 / 30 dk Momentum<br>
+                    Hacimli Kırılım<br>
+                    Risk / Getiri
+                </div>
+
+                <div style="
+                    margin-top:14px;
+                    font-size:13px;
+                    opacity:.70;
+                ">
+                    Bu ekrandaki sonuçlar ölçüm ve shadow önerisidir.
+                    Otomatik ağırlık ve karar eşiği değişimi kapalıdır.
+                </div>
+
+            </div>
+        `;
+
+    }catch(e){
+
+        console.error("AI OGRENME HATASI:", e);
+
+        alan.innerHTML =
+            '<div class="empty">AI Öğrenme verileri y?klenemedi.</div>';
+    }
+    await teknikOlcumleriYukle(alan);
+    await modelPerformansiYukle(alan);
 }
 
 
@@ -967,17 +1432,17 @@ function signalBack(){
 
 /* TOP 10 */
 
-async function showTop10(){
+async function showTop10(refresh = false){
 
     oncekiSayfa = "top10";
 
-    tumSayfalariGizle();
+    if(!refresh) tumSayfalariGizle();
 
     document.getElementById("top10Page").style.display = "block";
 
     const alan = document.getElementById("top10List");
 
-    alan.innerHTML =
+    if(!refresh) alan.innerHTML =
         '<div class="empty">Kilitli Yarın TOP 10 yükleniyor...</div>';
 
     try{
@@ -991,27 +1456,62 @@ async function showTop10(){
             throw new Error("Yarın TOP10 dosyası bulunamadı.");
         }
 
-        const veri = await cevap.json();
+        let veri = await cevap.json();
+        // Ekran dosyasi sadece tarih isaretcisi; asil tahmin gunluk arsivdir.
+        if(/^\d{4}-\d{2}-\d{2}$/.test(veri.analiz_tarihi || "")){
+            const arsiv = await fetch(
+                `data/yarin_top10_arsiv/${veri.analiz_tarihi}.json?t=${Date.now()}`,
+                {cache: "no-store"}
+            );
+            if(arsiv.ok){
+                const snapshot = await arsiv.json();
+                if(snapshot.analiz_tarihi !== veri.analiz_tarihi){
+                    throw new Error("Snapshot tarihi uyuşmuyor.");
+                }
+                veri = snapshot;
+            }else if(arsiv.status !== 404){
+                throw new Error("Snapshot arşivi okunamadı.");
+            }
+            // 404: arşiv öncesi eski kaydı değiştirmeden göster.
+        }
+        let canliVeri = {};
+        try{
+            const canliCevap = await fetch(
+                "data/yarin_top10_canli.json?t=" + Date.now(), {cache:"no-store"}
+            );
+            if(canliCevap.ok){
+                const kayit = await canliCevap.json();
+                if(kayit.analiz_tarihi === veri.analiz_tarihi){
+                    canliVeri = kayit;
+                }
+            }
+        }catch(e){
+            console.warn("Yarın TOP10 canlı verisi okunamadı:", e);
+        }
+        const canliMap = new Map(
+            (Array.isArray(canliVeri.top10) ? canliVeri.top10 : [])
+                .map(h => [h.sembol, h])
+        );
 
         const liste = Array.isArray(veri.top10)
             ? veri.top10
             : [];
 
-        if(!liste.length){
+        if(!liste.length && !veri.pozitif_havuz){
 
             alan.innerHTML =
-                '<div class="empty">Kilitli Yarın TOP 10 listesi henüz oluşturulmadı.</div>';
+                '<div class="empty">Geçerli geçmiş snapshot bulunamadı. İlk başarılı kapanış tahmini bekleniyor.</div>';
 
             return;
         }
 
-        alan.innerHTML = liste.map((hisse,index) =>
-            hisseSatiri(
-                hisse,
-                hisse.yarin_top10_sira ?? (index + 1),
-                "YARIN_TOP10"
-            )
-        ).join("");
+        if(veri.pozitif_havuz){
+            pozitifYarinGorunumu={snapshot:veri,live:canliMap};pozitifYarinGoster();
+        }else{
+            alan.innerHTML = liste.map((hisse,index) =>
+                yarinTop10Karti(hisse, veri, canliMap.get(hisse.sembol), index + 1)
+            ).join("");
+        }
 
     }catch(e){
 
@@ -1022,6 +1522,156 @@ async function showTop10(){
     }
 }
 
+
+/* YARIN: dondurulmus alanlar canli alanlarla birlestirilmez. */
+function yarinMetin(value){
+    if(value === null || value === undefined || value === "") return "--";
+    return String(value).replace(/[&<>"']/g, c => ({
+        "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
+    }[c]));
+}
+
+function yarinSayi(value, suffix = ""){
+    if(value === null || value === undefined || value === "" || !Number.isFinite(Number(value))){
+        return "--";
+    }
+    return Number(value).toFixed(2) + suffix;
+}
+
+function yarinZaman(value){
+    if(typeof value !== "string" || !/(?:Z|[+-]\d{2}:\d{2})$/.test(value)) return "--";
+    const date = new Date(value);
+    if(!Number.isFinite(date.getTime())) return "--";
+    return new Intl.DateTimeFormat("tr-TR", {
+        timeZone:"Europe/Istanbul", dateStyle:"short", timeStyle:"medium"
+    }).format(date) + " (İstanbul)";
+}
+
+function yarinTop10Karti(hisse, snapshot, kayit = {}, sira = 1){
+    const tahmin = hisse.tahmin || {};
+    const canli = kayit.canli || {};
+    const performans = kayit.performans || {};
+    const fiyat = tahmin.fiyat ?? hisse.fiyat;
+    const age = gunIciVeriYasi(canli.updated_at);
+    const bugun = new Intl.DateTimeFormat("sv-SE", {
+        timeZone:"Europe/Istanbul", year:"numeric", month:"2-digit", day:"2-digit"
+    }).format(new Date());
+    const durum = canli.fiyat_tarihi && canli.fiyat_tarihi !== bugun
+        ? "Fiyat verisi bugüne ait değil — son alınan değerler; güncel fiyat doğrulanmadı."
+        : !canli.updated_at || age.status === "unknown"
+        ? "Canlı veri güncelliği doğrulanamadı."
+        : age.status === "stale" ? "ESKİ VERİ — son alınan değerler; canlı fiyat olarak kullanmayın."
+        : age.status === "delayed" ? "Gecikmiş olabilir — son alınan değerler."
+        : "Son alınan teknik analiz verisi; anlık fiyat akışı değildir.";
+    const kriter = tahmin.kriter_ozeti || {nedenler:hisse.nedenler};
+    const ozet = Object.entries(kriter)
+        .filter(([,v]) => v !== undefined && v !== null)
+        .map(([k,v]) => `${yarinMetin(k)}: ${yarinMetin(Array.isArray(v) ? v.join("; ") : v)}`)
+        .join("<br>") || "--";
+    const yesNo = value => value === true ? "Evet" : value === false ? "Hayır" : "--";
+    // Simdiki performans da snapshot fiyatindan hesaplanir; snapshot nesnesine yazilmaz.
+    const currentPerformance = fiyat != null && Number(fiyat) > 0 && canli.fiyat != null && Number(canli.fiyat) > 0
+        ? (Number(canli.fiyat) / Number(fiyat) - 1) * 100 : null;
+    const field = (label, value) => `<div><span style="opacity:.7">${label}</span><br><strong>${value}</strong></div>`;
+    return `
+        <article class="detail-card">
+            <h3>${sira}. ${yarinMetin(hisse.sembol)}</h3>
+            ${pozitifFirsatOzet(hisse)}
+            <section style="padding:14px;border:1px solid #38bdf8;border-radius:10px;margin-bottom:14px">
+                <b>CANLI DURUM</b>
+                <p style="font-size:13px;color:#fbbf24">${durum}</p>
+                <div class="detail-grid">
+                    ${field("Güncel fiyat", yarinSayi(canli.fiyat, " TL"))}
+                    ${field("Günlük değişim", yarinSayi(canli.degisim, "%"))}
+                    ${field("Teknik skor", yarinSayi(canli.teknik_skor, "/100"))}
+                    ${field("AI skoru", yarinSayi(canli.ai_skor, "/100"))}
+                    ${field("Güncel karar", yarinMetin(canli.karar))}
+                    ${field("Haber / Makro", yarinSayi(canli.haber_puani) + " / " + yarinSayi(canli.makro_puani))}
+                    ${field("Son canlı güncelleme", yarinZaman(canli.updated_at))}
+                    ${field("Fiyat verisinin tarihi", yarinMetin(canli.fiyat_tarihi))}
+                </div>
+            </section>
+            <section style="padding:14px;border:1px solid #a78bfa;border-radius:10px;margin-bottom:14px">
+                <b>🔒 DONDURULMUŞ TAHMİN</b>
+                <div class="detail-grid" style="margin-top:12px">
+                    ${field("Tahmin zamanı", yarinZaman(tahmin.tahmin_zamani ?? snapshot.tahmin_zamani))}
+                    ${field("Tahmin fiyatı", yarinSayi(fiyat, " TL"))}
+                    ${field("Tahmin skoru", yarinSayi(tahmin.skor ?? hisse.yarin_top10_puani, "/100"))}
+                    ${field("Tahmin kararı", yarinMetin(tahmin.karar ?? hisse.yarin_ai_karar ?? hisse.karar))}
+                    ${field("Tahmin AL bölgesi", yarinSayi(tahmin.alim_alt ?? hisse.ai_yarin_alim_alt ?? hisse.yarin_alim_alt) + " – " + yarinSayi(tahmin.alim_ust ?? hisse.ai_yarin_alim_ust ?? hisse.yarin_alim_ust))}
+                    ${field("Tahmin HEDEF", yarinSayi(tahmin.hedef ?? hisse.ai_yarin_hedef ?? hisse.yarin_kar_al, " TL"))}
+                    ${field("Tahmin STOP", yarinSayi(tahmin.stop ?? hisse.ai_yarin_stop ?? hisse.yarin_stop, " TL"))}
+                    ${field("Tahmin Haber / Makro", yarinSayi(tahmin.haber_puani ?? hisse.haber_puani) + " / " + yarinSayi(tahmin.makro_puani ?? hisse.makro_puani))}
+                </div>
+                <p style="font-size:13px">Kriter özeti:<br>${ozet}</p>
+                ${snapshot.zaman_kaynagi === "LEGACY_BELIRSIZ" || !snapshot.tahmin_zamani
+                    ? `<p style="font-size:12px">Eski kayıt zamanı: ${yarinMetin(snapshot.olusturma_zamani)} — saat dilimi doğrulanamadı.</p>` : ""}
+            </section>
+            <section style="padding:14px;border:1px solid #64748b;border-radius:10px">
+                <b>TAHMİNDEN BERİ PERFORMANS</b>
+                <div class="detail-grid" style="margin-top:12px">
+                    ${field("Şu anki performans", yarinSayi(currentPerformance, "%"))}
+                    ${field("En yüksek", yarinSayi(performans.en_yuksek_yuzde, "%"))}
+                    ${field("En düşük", yarinSayi(performans.en_dusuk_yuzde, "%"))}
+                    ${field("Hedefe ulaştı mı?", yesNo(performans.hedefe_ulasti))}
+                    ${field("Stop oldu mu?", yesNo(performans.stop_oldu))}
+                </div>
+                <p style="font-size:12px">${yarinMetin(performans.not || "Geçmiş fiyat verisi henüz doğrulanmadı.")}</p>
+            </section>
+        </article>`;
+}
+
+let pozitifYarinGorunumu=null;
+let pozitifListeLimiti=30;
+function pozitifFirsatOzet(row){
+    const f=row?.positive_opportunity;if(!f)return '';
+    return '<div class="detail-card"><p>Gelecek fırsat: '+yarinSayi(f.future_opportunity_score,'/100')+
+        ' · Beklenen getiri: '+yarinSayi(f.expected_return_next_session,'%')+' · Devam olasılığı: '+yarinSayi(f.continuation_probability,'%')+'</p>'+
+        '<p>Güven: '+yarinSayi(f.confidence,'/100')+' · Risk: '+yarinMetin(f.risk)+' · Karar: '+yarinMetin(row.nihai_karar?.karar)+'</p>'+
+        '<p>'+yarinMetin(f.neden_bu_sirada)+'</p><p>Ana risk: '+yarinMetin(f.risks?.[0])+'</p>'+
+        '<small>'+(f.probability_calibrated?'Benzer geçmiş sinyallerden istatistiksel beklenti.':'Teknik senaryo; istatistiksel kalibrasyon için yeterli örnek yok.')+'</small></div>';
+}
+function pozitifAdayKarti(row,live){
+    const f=row.positive_opportunity || {};
+    return '<article class="detail-card"><h3>'+yarinMetin(f.selection_rank ?? f.rank)+'. '+yarinMetin(row.sembol)+'</h3>'+
+        '<p>Kapanış / son seans fiyatı: '+yarinSayi(row.fiyat,' TL')+' · Tahmin gününün değişimi: '+yarinSayi(row.degisim,'%')+'</p>'+
+        (live?.fiyat != null ? '<p>Son alınan fiyat: '+yarinSayi(live.fiyat,' TL')+' · '+yarinZaman(live.updated_at)+'</p>' : '')+
+        pozitifFirsatOzet(row)+'</article>';
+}
+function pozitifListeSec(limit){if(![10,20,30,50].includes(limit))return;pozitifListeLimiti=limit;pozitifYarinGoster();}
+function pozitifYarinGoster(){
+    if(!pozitifYarinGorunumu)return;
+    const {snapshot,live}=pozitifYarinGorunumu;const pool=snapshot.pozitif_havuz;
+    const map=new Map((pool.adaylar || []).map(r=>[r.sembol,r]));
+    const rows=(pool.eligible_symbols || []).map(s=>map.get(s)).filter(Boolean);
+    const controls='<p>'+[10,20,30,50].map(n=>'<button onclick="pozitifListeSec('+n+')">TOP'+n+'</button>').join(' ')+'</p>';
+    let output='<p>Son kapanış analizi: '+yarinMetin(snapshot.analiz_tarihi)+' · Pozitif: '+yarinMetin(pool.positive_count)+' · Analiz: '+yarinMetin(pool.analyzed_count)+'</p>'+controls;
+    output+='<h3>Günün En Güçlü Adayı</h3>'+(rows[0]?pozitifAdayKarti(rows[0],live.get(rows[0].sembol)):'<p>Kalite ve hard-safety kontrollerini geçen aday yok.</p>');
+    output+='<h3>YARIN İÇİN TOP10</h3>'+(snapshot.top10 || []).map((row,i)=>yarinTop10Karti(row,snapshot,live.get(row.sembol),i+1)).join('');
+    if(pozitifListeLimiti>10)output+='<h3>DİĞER GÜÇLÜ ADAYLAR · 11–20</h3>'+rows.slice(10,20).map(r=>pozitifAdayKarti(r,live.get(r.sembol))).join('');
+    if(pozitifListeLimiti>20)output+='<h3>DİĞER GÜÇLÜ ADAYLAR · 21–30</h3>'+rows.slice(20,30).map(r=>pozitifAdayKarti(r,live.get(r.sembol))).join('');
+    if(pozitifListeLimiti>30)output+='<h3>Daha Fazla · TOP50</h3>'+rows.slice(30,50).map(r=>pozitifAdayKarti(r,live.get(r.sembol))).join('');
+    document.getElementById('top10List').innerHTML=output;
+}
+function pozitifOgrenmeGoster(report){
+    if(!report?.horizons)return '<div class="detail-card"><h3>Pozitif Hisselerden Öğrenme</h3><p>Henüz kapanış havuzu ölçümü yok. Learning: KAPALI</p></div>';
+    const h=report.horizons['1'] || {};const top=h.capture?.top || {};const pct=v=>yarinSayi(v == null ? null : v*100,'%');
+    const combos=Object.entries(h.patterns?.['60']?.combinations || {}).filter(([k,v])=>v.strong).sort((a,b)=>b[1].success_rate-a[1].success_rate).slice(0,3);
+    const horizons=[1,2,3,5,10].map(n=>{
+        const v=report.horizons[n] || {},s=v.stats || {},t=v.capture?.top || {};
+        return '<div class="detail-card"><strong>'+n+'G · İşlem günü</strong><p>Başarı: '+pct(s.success_rate)+' · Medyan: '+yarinSayi(s.median_return,'%')+' · Ortalama: '+yarinSayi(s.average_return,'%')+'</p>'+
+            '<p>TOP10 / TOP30 / TOP50: '+[10,30,50].map(k=>pct(t[k]?.continuation_success_rate)).join(' / ')+'</p>'+
+            '<p>Hedef: '+pct(s.target_hit_rate)+' · Stop: '+pct(s.stop_hit_rate)+' · MFE: '+yarinSayi(s.mfe?.median,'%')+' · MAE: '+yarinSayi(s.mae?.median,'%')+'</p></div>';
+    }).join('');
+    const best=Object.entries(report.best_horizons?.combinations || {}).filter(([k,v])=>v.sufficient && v.best_horizon).slice(0,3)
+        .map(([k,v])=>yarinMetin(k)+': '+v.best_horizon+'G'+(v.conclusive?'':' (gözlenen; fark teyitli değil)')).join('; ');
+    return '<div class="detail-card"><h3>Pozitif Hisselerden Öğrenme</h3><p>Analiz günü: '+yarinMetin(report.analysis_date)+' · Artı kapanan: '+yarinMetin(report.positive_count)+' · Analiz edilen: '+yarinMetin(report.analyzed_count)+'</p>'+
+        '<p>TOP10 / TOP30 / TOP50 başarı: '+[10,30,50].map(n=>pct(top[n]?.continuation_success_rate)).join(' / ')+'</p>'+
+        '<p>Devam başarısı: '+pct(h.stats?.success_rate)+' · Kaçırılan güçlü aday: '+yarinMetin(report.missed_winner_count)+'</p>'+
+        '<p>En sık başarısızlık nedeni: '+yarinMetin(report.most_common_failure)+'</p>'+
+        '<p>En güçlü continuation kriterleri: '+yarinMetin(combos.map(([k,v])=>k).join('; ') || 'Yetersiz veri')+'</p>'+horizons+
+        '<p>Hangi vadede çalışıyor? '+(best || 'Yeterli olgunlaşmış örnek yok.')+'</p><p>Learning: KAPALI · Ölçüm kapsamı: pozitif kapanış havuzu</p></div>';
+}
 
 /* HİSSE SATIRI */
 
@@ -1124,19 +1774,280 @@ function puanGetir(hisse){
 }
 
 
+
+/* KAP / HABER ALARMLARI */
+
+async function showKapAlarms(){
+
+    oncekiSayfa = "kap_alarm";
+
+    tumSayfalariGizle();
+
+    document.getElementById(
+        "kapAlarmPage"
+    ).style.display = "block";
+
+    const alan = document.getElementById(
+        "kapAlarmList"
+    );
+
+    alan.innerHTML =
+        '<div class="empty">KAP alarmları yükleniyor...</div>';
+
+    try{
+
+        const sources = await Promise.allSettled([
+            fetch('data/canonical_haberler.json?t=' + Date.now(), {cache:'no-store'}).then(r => {if(!r.ok) throw new Error('No canonical data'); return r.json();}),
+            fetch('data/kap_alarmlar.json?t=' + Date.now(), {cache:'no-store'}).then(r => {if(!r.ok) throw new Error('No legacy data'); return r.json();})
+        ]);
+        const canonical = sources[0].status === 'fulfilled' ? sources[0].value.alarmlar || [] : [];
+        const legacy = sources[1].status === 'fulfilled' ? sources[1].value.alarmlar || [] : [];
+        const liste = haberListesiniBirlestir(canonical, legacy);
+
+        if(!liste.length){
+
+            alan.innerHTML = `
+                <div class="empty">
+                    🚨 Henüz önemli yeni KAP alarmı yok.
+                    <br><br>
+                    Güçlü pozitif veya negatif haber
+                    geldiğinde burada görünecek.
+                </div>
+            `;
+
+            return;
+        }
+
+
+        alan.innerHTML = liste.map(
+            (a) => {
+
+                const pozitif =
+                    String(a.etki_sinifi || "")
+                    .includes("POZITIF");
+
+                const negatif =
+                    String(a.etki_sinifi || "")
+                    .includes("NEGATIF");
+
+                const ikon =
+                    pozitif
+                    ? "🟢"
+                    : negatif
+                    ? "🔴"
+                    : "🟡";
+
+                const yon =
+                    pozitif
+                    ? "Pozitif Etki"
+                    : negatif
+                    ? "Negatif Etki"
+                    : "Nötr";
+
+                return `
+                    <div class="detail-card"
+                         style="
+                            margin-bottom:12px;
+                            border-left:5px solid ${
+                                pozitif
+                                ? "#20c997"
+                                : negatif
+                                ? "#ff5b5b"
+                                : "#f0b429"
+                            };
+                         ">
+
+                        <div style="
+                            display:flex;
+                            justify-content:space-between;
+                            gap:10px;
+                            align-items:flex-start;
+                        ">
+
+                            <div>
+                                <div style="
+                                    font-size:20px;
+                                    font-weight:900;
+                                ">
+                                    ${ikon}
+                                    ${yarinMetin(a.sembol || "-")}
+                                </div>
+
+                                <div style="
+                                    margin-top:4px;
+                                    font-size:13px;
+                                    opacity:.7;
+                                ">
+                                    ${yarinMetin(yarinZaman(a.tarih) !== "--" ? yarinZaman(a.tarih) : (a.tarih || "--"))}
+                                </div>
+                            </div>
+
+                            <div style="
+                                text-align:right;
+                                font-weight:800;
+                            ">
+                                ${yon}
+                                <br>
+                                ${Number(
+                                    a.etki_puani || 0
+                                ).toFixed(1)}/10
+                            </div>
+
+                        </div>
+
+                        <div style="
+                            margin-top:12px;
+                            font-weight:700;
+                            line-height:1.45;
+                        ">
+                            ${yarinMetin(a.baslik || "")}
+                            <div style="font-size:12px;opacity:.7;margin-top:6px">${yarinMetin(a.kaynak_etiketi || "KAP")}</div>
+                        </div>
+
+                        <div style="
+                            display:grid;
+                            grid-template-columns:
+                                repeat(2,minmax(0,1fr));
+                            gap:8px;
+                            margin-top:14px;
+                        ">
+
+                            <div class="detail-box">
+                                <div class="detail-label">
+                                    🤖 AI Güven
+                                </div>
+                                <div class="detail-value">
+                                    %${Number(
+                                        a.guven || 0
+                                    ).toFixed(0)}
+                                </div>
+                            </div>
+
+                            <div class="detail-box">
+                                <div class="detail-label">
+                                    ⚡ Önem
+                                </div>
+                                <div class="detail-value">
+                                    %${Number(
+                                        a.onem || 0
+                                    ).toFixed(0)}
+                                </div>
+                            </div>
+
+                            <div class="detail-box">
+                                <div class="detail-label">
+                                    📊 Sınıf
+                                </div>
+                                <div class="detail-value">
+                                    ${
+                                        a.etki_sinifi
+                                        || "NOTR"
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="detail-box">
+                                <div class="detail-label">
+                                    💹 Fiyatlanma
+                                </div>
+                                <div class="detail-value">
+                                    ${
+                                        a.fiyatlandi_riski
+                                        || "BILINMIYOR"
+                                    }
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+                `;
+            }
+        ).join("");
+
+    }
+    catch(e){
+
+        alan.innerHTML = `
+            <div class="empty">
+                🚨 Henüz kaydedilmiş KAP alarmı yok.
+                <br><br>
+                Canlı izleme yeni önemli haber
+                yakaladığında bu ekran otomatik dolacak.
+            </div>
+        `;
+    }
+}
+
+
 /* HİSSE ARA */
 
-async function showGunIciTop10(){
+let gunIciUpdatedAt = null;
+let gunIciLegacyTime = null;
+let gunIciFreshnessTimer = null;
+
+function piyasaAcikMi(now = new Date()){
+    const parts = new Intl.DateTimeFormat('en-GB', {timeZone:'Europe/Istanbul', weekday:'short',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(now);
+    const get = type => parts.find(p => p.type === type)?.value;
+    const minutes = Number(get('hour')) * 60 + Number(get('minute'));
+    return !['Sat','Sun'].includes(get('weekday')) && minutes >= 600 && minutes < 1090;
+}
+
+function gunIciVeriYasi(updatedAt, now = Date.now()){
+    // Saat dilimi olmayan eski guncelleme alanini tahmin ederek kullanma.
+    const iso = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
+    const timestamp = typeof updatedAt === "string" && iso.test(updatedAt)
+        ? Date.parse(updatedAt)
+        : NaN;
+    if(!Number.isFinite(timestamp) || timestamp > now){
+        return {time: "—", age: "bilinmiyor", status: "unknown"};
+    }
+    const minutes = (now - timestamp) / 60000;
+    return {
+        time: new Intl.DateTimeFormat("tr-TR", {
+            timeZone: "Europe/Istanbul", hour: "2-digit",
+            minute: "2-digit", second: "2-digit", hourCycle: "h23"
+        }).format(new Date(timestamp)),
+        age: Math.floor(minutes) + " dk",
+        status: minutes > 20 ? "stale" : minutes > 10 ? "delayed" : "normal"
+    };
+}
+
+function gunIciGuncellikGoster(){
+    const state = gunIciVeriYasi(gunIciUpdatedAt);
+    const labels = {
+        normal: "", delayed: "Gecikmiş olabilir", stale: "ESKİ VERİ",
+        unknown: "Güncelliği doğrulanamadı"
+    };
+    document.getElementById("gunIciFreshness").textContent =
+        `Son Güncelleme: ${state.time} (İstanbul) · Veri Yaşı: ${state.age}` +
+        (labels[state.status] ? ` · ${labels[state.status]}` : "") +
+        (!piyasaAcikMi() ? " · Piyasa kapalı / Son seans" : state.status !== "normal" ? " · Son kayıt" : "") +
+        (gunIciLegacyTime && !gunIciUpdatedAt ? ` · Eski kayıt zamanı: ${gunIciLegacyTime} (saat dilimi doğrulanamadı)` : "");
+    const warning = document.getElementById("gunIciWarning");
+    warning.style.display = state.status === "normal" ? "none" : "block";
+    warning.textContent = state.status === "stale"
+        ? "⚠ ESKİ VERİ — Bu kartlar güncel piyasa durumunu göstermeyebilir. Canlı veri olarak kullanmayın."
+        : state.status === "delayed"
+        ? "⚠ Gecikmiş olabilir — Son veri güncellemesi 10 dakikadan eski."
+        : "⚠ Güncelliği doğrulanamadı — Güvenilir güncelleme zamanı yok veya saat bilgisi hatalı. Kartları canlı veri olarak kullanmayın.";
+}
+
+async function showGunIciTop10(refresh = false){
 
     oncekiSayfa = "gunici_top10";
 
-    tumSayfalariGizle();
+    if(!refresh) tumSayfalariGizle();
 
     document.getElementById("gunIciTop10Page").style.display = "block";
 
     const alan = document.getElementById("gunIciTop10List");
 
-    alan.innerHTML =
+    clearInterval(gunIciFreshnessTimer);
+    if(!refresh) gunIciUpdatedAt = null;
+    gunIciGuncellikGoster();
+
+    if(!refresh) alan.innerHTML =
         '<div class="empty">Gün İçi TOP 10 yükleniyor...</div>';
 
     try{
@@ -1152,6 +2063,12 @@ async function showGunIciTop10(){
 
         const veri = await cevap.json();
 
+        gunIciUpdatedAt = veri.updated_at;
+        gunIciLegacyTime = veri.guncelleme || null;
+        gunIciGuncellikGoster();
+        // Ekran acik kaldiginda da veri yasi ve uyari eskimesin.
+        gunIciFreshnessTimer = setInterval(gunIciGuncellikGoster, 15000);
+
         const liste = Array.isArray(veri.top10)
             ? veri.top10
             : [];
@@ -1159,7 +2076,7 @@ async function showGunIciTop10(){
         if(!liste.length){
 
             alan.innerHTML =
-                '<div class="empty">Gün İçi TOP 10 verisi bulunamadı.</div>';
+                '<div class="empty">Son seans kaydı henüz yok. İlk açık seans taraması bekleniyor; veri uydurulmaz.</div>';
 
             return;
         }
@@ -1215,14 +2132,6 @@ function aramaYap(){
     const alan =
         document.getElementById("searchResults");
 
-    if(!arama){
-
-        alan.innerHTML =
-            '<div class="empty">Hisse kodunu yazın.</div>';
-
-        return;
-    }
-
     const sonuc = tumVeriler
         .filter(hisse => {
 
@@ -1240,15 +2149,30 @@ function aramaYap(){
                 ""
             ).toUpperCase();
 
+            if(!arama){
+                return true;
+            }
+
             return sembol.includes(arama) ||
                    isim.includes(arama);
         })
-        .slice(0,30);
+        .sort((a,b) => {
+
+            const sa = String(
+                a.sembol ?? a.symbol ?? a.kod ?? ""
+            ).toUpperCase();
+
+            const sb = String(
+                b.sembol ?? b.symbol ?? b.kod ?? ""
+            ).toUpperCase();
+
+            return sa.localeCompare(sb);
+        });
 
     if(!sonuc.length){
 
         alan.innerHTML =
-            '<div class="empty">Hisse bulunamadı.</div>';
+            '<div class="empty">Hisse bulunamad\u0131.</div>';
 
         return;
     }
@@ -1341,6 +2265,19 @@ function hisseDetay(hisse){
         hisse.risk_getiri ??
         "-";
 
+    const algoritmaKarar = hisse.karar ?? "IZLE";
+    const guvenSkoru = hisse.guven_skoru ?? 0;
+    const alPuani = hisse.al_puani ?? 0;
+    const satPuani = hisse.sat_puani ?? 0;
+
+    const kararGirisAlt = hisse.karar_giris_alt ?? "-";
+    const kararGirisUst = hisse.karar_giris_ust ?? "-";
+    const kararHedef = hisse.karar_hedef ?? "-";
+    const kararStop = hisse.karar_stop ?? "-";
+    const kararRisk = hisse.karar_risk ?? 0;
+    const kararGetiri = hisse.karar_getiri ?? 0;
+    const kararRR = hisse.karar_rr ?? 0;
+
     const yarinAlimAlt = hisse.yarin_alim_alt ?? "-";
     const yarinAlimUst = hisse.yarin_alim_ust ?? "-";
     const yarinSatimAlt = hisse.yarin_satim_alt ?? "-";
@@ -1356,7 +2293,54 @@ function hisseDetay(hisse){
     const yarinTop10Detayi =
         oncekiSayfa === "top10";
 
-    const gunIciMi = oncekiSayfa === "gunici_top10";
+    const gunIciMi =
+        oncekiSayfa === "gunici_top10" ||
+        hisse.gun_ici_puan != null;
+
+    const gunIciKarar =
+        hisse.gun_ici_karar ?? "IZLE";
+
+    const gunIciGuven =
+        hisse.gun_ici_guven ?? 0;
+
+    const gunIciAlPuani =
+        hisse.gun_ici_al_puani ?? 0;
+
+    const gunIciSatPuani =
+        hisse.gun_ici_sat_puani ?? 0;
+
+    const gunIciRR =
+        hisse.gun_ici_rr ?? 0;
+
+    const gunIciRisk =
+        hisse.gun_ici_risk ?? 0;
+
+    const gunIciGetiri =
+        hisse.gun_ici_getiri ?? 0;
+
+    const seansVwap =
+        hisse.seans_vwap ?? "-";
+
+    const seansVwapUzaklik =
+        hisse.seans_vwap_uzaklik ?? 0;
+
+    const gunIciAnaNeden =
+        hisse.gun_ici_ana_neden ?? "-";
+
+    const gunIciAnaRisk =
+        hisse.gun_ici_ana_risk ?? "-";
+
+    const gunIciRsi =
+        hisse.rsi5 ?? "-";
+
+    const gunIciHacim =
+        hisse.hacim3_orani ?? "-";
+
+    const gunIciMomentum15 =
+        hisse.momentum15 ?? "-";
+
+    const gunIciMomentum30 =
+        hisse.momentum30 ?? "-";
 
     const gunIciAlimAlt =
         hisse.gun_ici_alim_alt ?? "-";
@@ -1422,6 +2406,8 @@ function hisseDetay(hisse){
 
     document.getElementById("stockDetail").innerHTML = `
 
+        ${kullaniciSeviyeBolumu()}
+
         <div class="detail-card">
 
             <div class="detail-symbol">
@@ -1472,42 +2458,122 @@ function hisseDetay(hisse){
         ${
             gunIciMi
             ? `
+        
         <div class="detail-card">
 
-            <b>⚡ GÜN İÇİ</b>
+            <b>&#9889; G&#220;N &#304;&#199;&#304;</b>
 
             <div class="detail-grid" style="margin-top:12px">
 
                 ${detayKutu(
-                    "🟢 Alım Bölgesi",
+                    "Karar",
+                    gunIciKarar === "AL"
+                        ? "AL"
+                        : gunIciKarar === "SAT"
+                        ? "SAT"
+                        : "IZLE"
+                )}
+
+                ${detayKutu(
+                    "G&#252;ven",
+                    Number(gunIciGuven).toFixed(0) + "/100"
+                )}
+
+                ${detayKutu(
+                    "AL Puan&#305;",
+                    Number(gunIciAlPuani).toFixed(0) + "/100"
+                )}
+
+                ${detayKutu(
+                    "SAT Puan&#305;",
+                    Number(gunIciSatPuani).toFixed(0) + "/100"
+                )}
+
+                ${detayKutu(
+                    "Seans VWAP",
+                    fiyatYaz(seansVwap)
+                )}
+
+                ${detayKutu(
+                    "VWAP Uzakl&#305;k",
+                    Number(seansVwapUzaklik).toFixed(2) + "%"
+                )}
+
+                ${detayKutu(
+                    "Al&#305;m B&#246;lgesi",
                     fiyatYaz(gunIciAlimAlt) +
                     " - " +
                     fiyatYaz(gunIciAlimUst)
                 )}
 
                 ${detayKutu(
-                    "🎯 Kısa Vade Kâr Al",
+                    "K&#226;r Al",
                     fiyatYaz(gunIciKarAl)
                 )}
 
                 ${detayKutu(
-                    "🛑 Kısa Vade Stop",
+                    "Stop",
                     fiyatYaz(gunIciStop)
                 )}
 
                 ${detayKutu(
-                    "🚀 Hacimli Kırılım",
+                    "Beklenen Getiri",
+                    Number(gunIciGetiri).toFixed(2) + "%"
+                )}
+
+                ${detayKutu(
+                    "Risk",
+                    Number(gunIciRisk).toFixed(2) + "%"
+                )}
+
+                ${detayKutu(
+                    "R/R",
+                    Number(gunIciRR).toFixed(2)
+                )}
+
+                ${detayKutu(
+                    "5dk RSI",
+                    Number(gunIciRsi).toFixed(1)
+                )}
+
+                ${detayKutu(
+                    "Hacim",
+                    Number(gunIciHacim).toFixed(0) + "%"
+                )}
+
+                ${detayKutu(
+                    "15dk Momentum",
+                    Number(gunIciMomentum15).toFixed(2) + "%"
+                )}
+
+                ${detayKutu(
+                    "30dk Momentum",
+                    Number(gunIciMomentum30).toFixed(2) + "%"
+                )}
+
+                ${detayKutu(
+                    "Hacimli K&#305;r&#305;l&#305;m",
                     fiyatYaz(gunIciKirilim)
                 )}
 
                 ${detayKutu(
-                    "🎯 Kırılım Sonrası Hedef",
+                    "K&#305;r&#305;l&#305;m Hedefi",
                     fiyatYaz(gunIciKirilimHedef)
                 )}
 
                 ${detayKutu(
-                    "📊 Kırılım Durumu",
+                    "K&#305;r&#305;l&#305;m Durumu",
                     gunIciKirilimYazi
+                )}
+
+                ${detayKutu(
+                    "Ana Neden",
+                    gunIciAnaNeden
+                )}
+
+                ${detayKutu(
+                    "Ana Risk",
+                    gunIciAnaRisk
                 )}
 
             </div>
@@ -1517,59 +2583,8 @@ function hisseDetay(hisse){
             : ""
         }
 
-        <div class="detail-card">
-
-            ${
-                yarinTop10Detayi
-                ? ""
-                : "<b>📅 YARIN İÇİN</b>"
-            }
-
-            <div class="detail-grid" style="margin-top:12px">
-
-                ${detayKutu(
-                    "🟢 Alım Bölgesi",
-                    fiyatYaz(yarinAlimAlt) + " - " + fiyatYaz(yarinAlimUst)
-                )}
-
-                ${detayKutu(
-                    "🔴 Satım Bölgesi",
-                    fiyatYaz(yarinSatimAlt) + " - " + fiyatYaz(yarinSatimUst)
-                )}
-
-                ${detayKutu(
-                    "🎯 Kısa Vade Kâr Al",
-                    fiyatYaz(yarinKarAl)
-                )}
-
-                ${detayKutu(
-                    "🛑 Kısa Vade Stop",
-                    fiyatYaz(yarinStop)
-                )}
-
-                ${detayKutu(
-                    "🚀 Hacimli Kırılım",
-                    fiyatYaz(yarinKirilim)
-                )}
-
-                ${detayKutu(
-                    "🎯 Kırılım Sonrası Hedef",
-                    fiyatYaz(yarinKirilimHedef)
-                )}
-
-                ${detayKutu(
-                    "📊 Kırılım Durumu",
-                    kirilimYazi
-                )}
-
-                ${detayKutu(
-                    "🕐 İlk Hacimli Kırılım",
-                    ilkHacimliKirilimSaati
-                )}
-
-            </div>
-
-        </div>
+        <section class="detail-card" id="stockSectorStrength"><h3>Sektör Gücü</h3><p>Yeterli sektör verisi yok</p></section>
+        <section class="detail-card" id="tomorrowPlanSection" aria-label="Yarın İçin"><h3>Yarın İçin</h3><p role="status">Kapanış planı yükleniyor…</p></section>
 
         <div class="detail-card">
 
@@ -1617,8 +2632,452 @@ function hisseDetay(hisse){
 
         </div>
     `;
+    kullaniciSeviyeAc(hisse);
 }
 
+
+/* Kullanici seviyeleri ve fiyat alarmlari: teknik veriye yazilmaz. */
+let seviyeContext = null;
+let fiyatAlarmTimer = null;
+
+/* Günlük AL/SAT: presentation only; backend order and values are preserved. */
+let gunlukUI={report:null,tab:'AL',busy:false,error:false,timer:null,performance:null,performanceError:false,horizon:'60m'};
+const gunlukStates={YENI_AL:'Yeni AL',AL_DEVAM:'AL Devam',ZAYIFLIYOR:'Zayıflıyor',SAT_DONUS:"SAT’a Döndü",YENI_SAT:'Yeni SAT',SAT_DEVAM:'SAT Devam',TOPARLANIYOR:'Toparlanıyor',IZLE:'İzle'};
+const gunlukBreakout={CONFIRMED:'Hacimli kırılım gerçekleşti',WEAK_CONFIRMATION:'Fiyat kırdı, hacim teyidi zayıf',WAITING:'Hacimli kırılım bekleniyor'};
+function gunlukNum(value,digits=2){return typeof value==='number' && Number.isFinite(value) ? value.toLocaleString('tr-TR',{maximumFractionDigits:digits,minimumFractionDigits:digits}) : '—';}
+function gunlukSaat(value){const d=new Date(value || '');return Number.isNaN(d.getTime())?'—':d.toLocaleTimeString('tr-TR',{timeZone:'Europe/Istanbul',hour:'2-digit',minute:'2-digit'});}
+function gunlukYas(value){if(typeof value!=='number'||!Number.isFinite(value)||value<0)return '—';const m=Math.floor(value);return m<60?m+' dk':Math.floor(m/60)+' sa '+m%60+' dk';}
+function gunlukKart(row,detail=false){
+ const esc=yarinMetin,side=row.signal==='AL_ADAYI'?'AL':row.signal==='SAT_ADAYI'?'SAT':'IZLE';
+ const level={ZAYIF:'Zayıf',ORTA:'Orta',GUCLU:'Güçlü',COK_GUCLU:'Çok Güçlü'}[row.confirmation_level]||'—';
+ const quality={GOOD:'İyi',LIMITED:'Sınırlı',INSUFFICIENT:'Yetersiz'}[row.data_quality]||'—';
+ const liquidity={GOOD:'İyi',LOW:'Düşük',INSUFFICIENT:'Yetersiz',LIMITED:'Sınırlı',UNKNOWN:'Bilinmiyor'}[row.liquidity_status]||'—';
+ const metric=(label,value)=>`<div><span>${esc(label)}</span><strong>${esc(value)}</strong></div>`;
+ const bar=(label,value)=>`<div class="daily-score">${esc(label)} <strong>${gunlukNum(value,0)}/100</strong><progress max="100" value="${typeof value==='number'&&Number.isFinite(value)?Math.min(100,Math.max(0,value)):0}" aria-label="${label}"></progress></div>`;
+ const texts=(title,values)=>Array.isArray(values)&&values.length?`<h4>${title}</h4><ul>${values.map(x=>'<li>'+esc(x)+'</li>').join('')}</ul>`:'';
+ const levels=side==='AL'?`<div class="daily-metrics">${metric('Alım Bölgesi',row.buy_zone_low!=null&&row.buy_zone_high!=null?gunlukNum(row.buy_zone_low)+' – '+gunlukNum(row.buy_zone_high):'Yeterli veri yok')}${metric('Kâr Al',row.take_profit==null?'Yeterli veri yok':gunlukNum(row.take_profit))}${metric('Stop',row.stop_loss==null?'Yeterli veri yok':gunlukNum(row.stop_loss))}${metric('Risk/Getiri',gunlukNum(row.risk_reward_ratio,1))}</div>`:'';
+ const boll=row.Bollinger||{};
+ return `<article class="detail-card daily-card daily-${side}" aria-label="${esc(row.symbol)} ${side}">
+ <div class="daily-card-head">${detail?'<b>'+esc(row.symbol)+'</b>':`<button type="button" data-daily-stock="${esc(row.symbol)}">${esc(row.symbol)} · Detay ›</button>`}<b>${side==='IZLE'?'İZLE':side+' ADAYI'}</b></div>
+ <p>Son gerçek fiyat: <strong>${gunlukNum(row.price)} TL</strong>${row.live_signal===false?' · Son kayıt / canlı sinyal değil':''}</p>
+ ${bar('Teknik Güç',row.technical_score)}${bar('Güven',row.confidence_score)}
+ <p>Teyit ${gunlukNum(row.confirmation_count,0)}/${gunlukNum(row.confirmation_total,0)} — ${level} Teyit</p>
+ <p>Sinyal: ${esc(gunlukStates[row.signal_state]||'—')} · Yaş: ${gunlukYas(row.signal_age_minutes)}<br>Son güncelleme: ${gunlukSaat(row.last_updated_at||row.data_timestamp)}</p>
+ <p>Veri kalitesi: ${quality}</p>
+ ${row.stale?'<p class="daily-warning">Eski veri — canlı fırsat değildir.</p>':''}
+ ${row.data_quality==='INSUFFICIENT'?'<p class="daily-warning">Yetersiz veri: fırsat olarak değerlendirilmemeli.</p>':''}
+ ${row.liquidity_status&&row.liquidity_status!=='GOOD'?'<p class="daily-warning">Likidite teyidi yetersiz.</p>':''}
+ ${row.extended_move_penalty>0?'<p class="daily-warning">Aşırı uzama riski</p>':''}
+ ${levels}<p class="daily-badge">${esc(gunlukBreakout[row.breakout_status]||'Kırılım verisi yok')}</p>
+ <details><summary>Teknik detay ve gerekçeler</summary><div class="daily-metrics">
+ ${[['VWAP',row.VWAP],['EMA9',row.EMA9],['EMA21',row.EMA21],['RSI',row.RSI],['MACD',row.MACD],['Hacim / ortalama',row.volume_ratio],['OBV',row.OBV],['Bollinger alt',boll.lower],['Bollinger orta',boll.middle],['Bollinger üst',boll.upper],['ATR',row.ATR]].map(([k,v])=>metric(k,gunlukNum(v))).join('')}
+ ${metric('Likidite',liquidity)}</div>${texts(side==='AL'?'Neden AL?':side==='SAT'?'Neden SAT?':'Teknik Durum',row.reasons)}${texts('Dikkat',row.warnings)}</details></article>`;
+}
+function gunlukFiltre(rows){const val=id=>Number(document.getElementById(id)?.value||0);return rows.filter(r=>r.confidence_score>=val('dailyConfidence')&&r.technical_score>=val('dailyTechnical')&&r.confirmation_count>=val('dailyConfirmation'));}
+function gunlukGoster(){
+ const report=gunlukUI.report,target=document.getElementById('dailyCards');
+ document.getElementById('dailyMarket').textContent=report?.market_open===true?'Piyasa Açık':report?.market_open===false?'Piyasa şu anda kapalı':'Piyasa durumu alınamadı';
+ document.getElementById('dailyUpdated').textContent='Son güncelleme: '+gunlukSaat(report?.updated_at);
+ if(gunlukUI.error){target.innerHTML='<p role="alert">Günlük AL/SAT verileri şu anda alınamıyor.</p>';return;}
+ if(!report){target.innerHTML='<p role="status" class="daily-loading">Günlük AL/SAT yükleniyor…</p>';return;}
+ if(report.enabled===false){target.innerHTML='<p>Günlük AL/SAT şu anda devre dışı.</p>';return;}
+ const groups={AL:[],SAT:[],IZLE:[]};
+ for(const r of gunlukFiltre(report.signals||[])){const key=r.signal==='AL_ADAYI'?'AL':r.signal==='SAT_ADAYI'?'SAT':'IZLE';groups[key].push(r);}
+ for(const key of Object.keys(groups)){const b=document.getElementById('dailyTab'+key);b.textContent=({AL:'AL Adayları',SAT:'SAT Adayları',IZLE:'İzle'})[key]+' ('+groups[key].length+')';b.setAttribute('aria-selected',String(key===gunlukUI.tab));}
+ const rows=groups[gunlukUI.tab];target.innerHTML=rows.length?rows.map(r=>gunlukKart(r)).join(''):'<p>'+ (report.market_open===false?'Piyasa şu anda kapalı. Son kayıtları İzle sekmesinde görebilirsiniz.':gunlukUI.tab==='IZLE'?'Şu anda izlenecek kayıt bulunmuyor.':'Şu anda kriterleri karşılayan '+gunlukUI.tab+' adayı bulunmuyor.')+'</p>';
+ target.querySelectorAll('[data-daily-stock]').forEach(b=>b.addEventListener('click',()=>gunlukDetay(b.dataset.dailyStock)));
+}
+function gunlukSekme(tab){if(!['AL','SAT','IZLE'].includes(tab))return;gunlukUI.tab=tab;gunlukGoster();}
+function gunlukDetay(symbol){const row=gunlukUI.report?.signals.find(r=>r.symbol===symbol);if(!row)return;oncekiSayfa='daily';const existing=tumVeriler.find(r=>(r.sembol||r.symbol||r.kod)===symbol);hisseDetay(existing||{sembol:symbol,fiyat:row.price});}
+function gunlukPerformansGoster(){
+ const target=document.getElementById('dailyPerformance');
+ if(gunlukUI.performanceError){target.textContent='Performans verileri şu anda alınamıyor.';return;}
+ const groups=gunlukUI.performance?.groups||[];const stats=groups.filter(g=>g.period==='all_time'&&g.horizon===gunlukUI.horizon&&g.min_confidence===0);
+ const horizons={'30m':'30 dk','60m':'60 dk','120m':'120 dk',SEANS:'Seans Sonu',D1:'D+1',D3:'D+3'};
+ target.innerHTML='<h3>Performans · Doğrulanmış sonuçlar</h3><label>Ölçüm ufku <select id="dailyHorizon">'+Object.entries(horizons).map(([k,v])=>`<option value="${k}" ${k===gunlukUI.horizon?'selected':''}>${v}</option>`).join('')+'</select></label>'+['AL','SAT'].map(side=>{
+ const entries=stats.filter(g=>g.signal===side);
+ return entries.length ? entries.map(g=>{const s=g.summary;const sideLabel=side+' · '+(gunlukStates[g.state]||'—');
+ if(!s)return '<p>'+side+': Performans için veri birikiyor.</p>';
+ const pct=v=>typeof v==='number'?gunlukNum(v*100)+'%':'—';
+ return '<h4>'+yarinMetin(sideLabel)+'</h4><p>Tamamlanan sinyal: '+gunlukNum(s.completed_count,0)+'</p>'+(s.sample_size>=30&&s.sufficient?'<p>Başarı oranı: '+pct(s.success_rate)+' · Ortalama yön getirisi: '+gunlukNum(s.mean_direction_return)+'%</p>':'<p>Performans için veri birikiyor.</p>')+'<details><summary>Ölçüm ayrıntıları</summary><p>Örnek: '+gunlukNum(s.sample_size,0)+' · Güvenilirlik: '+yarinMetin({LOW:'Düşük',MEDIUM:'Orta',HIGH:'Yüksek'}[s.reliability]||'Yetersiz')+' (30 / 100 / 300)</p><p>MFE: '+gunlukNum(s.mean_MFE)+'% · MAE: '+gunlukNum(s.mean_MAE)+'%</p><p>Hedef: '+pct(s.target_hit_rate)+' · Stop: '+pct(s.stop_hit_rate)+'</p></details>';
+ }).join('') : '<p>'+side+': Performans için veri birikiyor.</p>';
+ }).join('');
+ document.getElementById('dailyHorizon').addEventListener('change',e=>{gunlukUI.horizon=e.target.value;gunlukPerformansYukle();});
+}
+async function gunlukPerformansYukle(){try{gunlukUI.performance=await seviyeApi('/api/intraday-signal-performance?period=all_time&horizon='+encodeURIComponent(gunlukUI.horizon));gunlukUI.performanceError=false;}catch(_){gunlukUI.performanceError=true;}gunlukPerformansGoster();}
+async function gunlukYenile(){
+ if(gunlukUI.busy||document.hidden||document.getElementById('dailyPage').style.display==='none')return;
+ gunlukUI.busy=true;
+ try{const report=await seviyeApi('/api/intraday-signals?limit=1000');if(!Array.isArray(report.signals)||typeof report.enabled!=='boolean')throw new Error('contract');gunlukUI.report=report;gunlukUI.error=false;}catch(_){gunlukUI.error=true;}finally{gunlukUI.busy=false;gunlukGoster();}
+ if(gunlukUI.report?.enabled!==false){await gunlukPerformansYukle();}
+ else document.getElementById('dailyPerformance').textContent='';
+}
+function showDaily(){tumSayfalariGizle();document.getElementById('dailyPage').style.display='block';oncekiSayfa='daily';navAktif('navDaily');gunlukGoster();gunlukYenile();gunlukUI.timer=setInterval(gunlukYenile,60000);document.onvisibilitychange=()=>{if(!document.hidden)gunlukYenile();};}
+
+function tomorrowPlanGoster(plan){
+ const esc=yarinMetin;
+ if(!plan)return '<h3>Yarın İçin</h3><p>Yarın planı şu anda alınamıyor. Yeterli veri yok.</p>';
+ const num=value=>typeof value==='number'&&Number.isFinite(value)&&value>0 ? gunlukNum(value) : 'Yeterli veri yok';
+ const range=(low,high)=>low!=null&&high!=null ? num(low)+' – '+num(high) : 'Yeterli veri yok';
+ const field=(label,value)=>detayKutu(label,esc(value));
+ const states={UYGUN:'Uygun',TEMKINLI:'Temkinli',BEKLE:'Bekle',YETERSIZ_VERI:'Yetersiz Veri'};
+ const breakout={CONFIRMED:'Hacimli kırılım gerçekleşti',WEAK_CONFIRMATION:'Fiyat kırdı ama hacim teyidi zayıf',WAITING:'Hacimli kırılım bekleniyor'};
+ const date=new Date(plan.as_of||'');
+ const reference=Number.isNaN(date.getTime())?'Yeterli veri yok':date.toLocaleDateString('tr-TR',{timeZone:'Europe/Istanbul'})+' kapanışı';
+ const lists=(title,items)=>Array.isArray(items)&&items.length?'<h4>'+title+'</h4><ul>'+items.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>':'';
+ return '<h3>Yarın İçin</h3><p>Sonraki işlem günü planı · Orta/uzun vade seviyelerinden ayrıdır.</p><p>Veri: '+esc(reference)+' · Referans fiyat: '+num(plan.reference_price)+' TL</p><p>İşlem günü: '+esc(plan.plan_session||'—')+'</p>'+ (plan.is_current_reference===false?'<p class="daily-warning">Eski kapanış kaydı; güncel yarın fırsatı değildir.</p>':'')+
+ '<div class="detail-grid">'+field('Plan Durumu',states[plan.view_status||plan.plan_status]||'Yetersiz Veri')+field('Güven',gunlukNum(plan.confidence_score,0)+'/100')+field('Teyit',gunlukNum(plan.confirmation_count,0)+'/'+gunlukNum(plan.confirmation_total,0))+
+ field('Alım Bölgesi',range(plan.buy_zone_low,plan.buy_zone_high))+field('Kısa Vade Kâr Al',range(plan.take_profit_low,plan.take_profit_high))+field('Kısa Vade Stop-Loss',num(plan.stop_loss))+field('Risk/Getiri',num(plan.risk_reward_ratio))+
+ field('Hacimli Kırılım',breakout[plan.volume_breakout_status]||'Yeterli veri yok')+field('Kırılım Seviyesi',num(plan.volume_breakout_level))+field(plan.volume_breakout_status==='CONFIRMED'?'Kırılım Sonrası Olası Hedef':'Kırılım Gerçekleşirse Olası Hedef',num(plan.breakout_target))+field('Destek',num(plan.support))+field('Direnç',num(plan.resistance))+'</div>'+
+ '<details><summary>Teknik bağlam</summary><div class="detail-grid">'+field('ATR',num(plan.atr))+field('RSI',gunlukNum(plan.rsi))+field('Hacim / ortalama',gunlukNum(plan.volume_ratio)+'%')+field('Trend',({POSITIVE:'Pozitif',NEUTRAL:'Nötr',NEGATIVE:'Negatif'})[plan.trend_state]||'Yeterli veri yok')+field('MACD',({POSITIVE:'Pozitif',IMPROVING:'İyileşiyor',WEAKENING:'Zayıflıyor',NEGATIVE:'Negatif'})[plan.macd_state]||'Yeterli veri yok')+'</div></details><p>Risk/getiri: alım bölgesi orta noktası ve kâr al alt seviyesi esas alınır. Plan kesin getiri taahhüdü değildir.</p>'+lists('Nedenler',plan.reasons)+lists('Dikkat',plan.warnings);
+}
+
+function kullaniciSeviyeBolumu(){
+    const input = (key, label) => `<label>${label}<input id="${key}" type="number" min="0.01" step="any" inputmode="decimal" placeholder="--"></label>`;
+    return `<section class="detail-card" id="userLevelsSection">
+        <h3>AL / SAT / STOP / HEDEF / ALARM</h3>
+        <div class="seviye-columns">
+            <div class="seviye-panel">
+                <b>🤖 BIST Asistanı Otomatik</b>
+                <div id="automaticLevels" style="margin-top:12px">Analiz seviyeleri yükleniyor…</div>
+            </div>
+            <div class="seviye-panel">
+                <b>👤 Benim Seviyelerim</b>
+                ${input("manuel_al", "Manuel AL")}
+                ${input("manuel_sat", "Manuel SAT")}
+                ${input("manuel_stop", "Manuel STOP")}
+                ${input("manuel_hedef", "Manuel HEDEF")}
+                <button class="level-action" onclick="manuelSeviyeKaydet()">Seviyelerimi Kaydet</button>
+                <div id="manualLevelTime" style="font-size:12px;margin-top:8px"></div>
+            </div>
+        </div>
+        <div class="seviye-panel" style="margin-top:14px">
+            <b>Fiyat Alarmı Oluştur</b>
+            <label>Alarm türü<select id="priceAlarmType" onchange="fiyatAlarmTuruDegisti()">
+                <option value="FIYAT_USTU">MANUEL · Fiyat X olunca / üstüne çıkınca (≥)</option>
+                <option value="FIYAT_ALTI">MANUEL · Fiyat X altına düşünce (≤)</option>
+                <option value="MANUEL_AL">MANUEL · Kaydedilmiş AL seviyem (≤)</option>
+                <option value="MANUEL_SAT">MANUEL · Kaydedilmiş SAT seviyem (≥)</option>
+                <option value="MANUEL_STOP">MANUEL · Kaydedilmiş STOP seviyem (≤)</option>
+                <option value="MANUEL_HEDEF">MANUEL · Kaydedilmiş HEDEF seviyem (≥)</option>
+                <option value="AI_ALIM_BOLGESI">AI · Alım bölgesine girince</option>
+                <option value="AI_HEDEF">AI · Hedefe ulaşınca (≥)</option>
+                <option value="AI_STOP">AI · Stop seviyesine gelince (≤)</option>
+            </select></label>
+            <label id="alarmPriceLabel">Hedef fiyat<input id="alarmPrice" type="number" min="0.01" step="any" inputmode="decimal"></label>
+            <button class="level-action" onclick="fiyatAlarmOlustur()">Alarm Oluştur</button>
+            <p style="font-size:12px">Manuel seviye alarmları kaydedilmiş değerlerinizi kullanır. AI alarmı oluşturulurken seçilen seviyeler dondurulur.</p>
+            <p style="font-size:12px">Alarmlar fiyat kontrol motoru çalıştırıldığında kontrol edilir. Push bildirimi için “Bildirimleri Aç” düğmesini kullanın. Gönderim motoru ayrıca çalıştırılmalıdır.</p>
+        </div>
+        <div id="levelsStatus" role="status" style="margin-top:12px"></div>
+        <button onclick="fiyatAlarmlariYenile()" style="margin-top:14px;padding:8px">Alarmları Yenile</button>
+        <div id="priceAlarmList" style="margin-top:14px">Alarmlar yükleniyor…</div>
+        <p style="font-size:12px;opacity:.7">Kayıtlarınız bu tarayıcıya özeldir. Çerezleri silerseniz veya başka cihaz kullanırsanız bu kayıtlara erişemezsiniz.</p>
+    </section>`;
+}
+
+async function seviyeApi(url, method = "GET", body){
+    const response = await fetch(url, {
+        method, credentials:"same-origin", cache:"no-store",
+        headers:{"Content-Type":"application/json", "X-Bist-Request":"1"},
+        ...(body === undefined ? {} : {body:JSON.stringify(body)})
+    });
+    const result = await response.json();
+    if(!response.ok){
+        const error = new Error(result.error || "Kayıt işlemi tamamlanamadı.");
+        error.status = response.status;
+        throw error;
+    }
+    return result;
+}
+
+function otomatikSeviyeGoster(a){
+    const field = (label, value) => detayKutu(label, value);
+    return `<div class="detail-grid">
+        ${field("ALIM BÖLGESİ", yarinSayi(a.alim_alt) + " – " + yarinSayi(a.alim_ust))}
+        ${field("SAT / KÂR AL", yarinSayi(a.sat_kar_al, " TL"))}
+        ${field("STOP", yarinSayi(a.stop, " TL"))}
+        ${field("HEDEF", yarinSayi(a.hedef, " TL"))}
+        ${field("Destek", yarinSayi(a.destek))}${field("Direnç", yarinSayi(a.direnc))}
+        ${field("Hacimli Kırılım", yarinSayi(a.hacimli_kirilim))}
+        ${field("Risk/Getiri", yarinSayi(a.risk_getiri))}
+        ${field("Teknik karar", yarinMetin(a.karar))}
+        ${field("Analiz AI puanı", yarinSayi(a.nihai_ai_puan))}
+        ${field("Güven", yarinSayi(a.guven))}
+    </div>${standartGostergelerGoster(a.teknik_gostergeler)}<p style="font-size:12px">${a.model === "GUN_ICI" ? "Gün içi analiz" : "Günlük analiz"} ·
+        Son analiz: ${a.updated_at ? yarinZaman(a.updated_at) : yarinMetin(a.eski_zaman_metni) + " (saat dilimi doğrulanamadı)"}.
+        Bunlar son kaydedilmiş analiz seviyeleridir.</p>`;
+}
+
+function standartGostergelerGoster(doc){
+    const names={VWAP_USTU:'Üstünde',VWAP_ALTI:'Altında',VWAP_YAKIN:'Yakın',OBV_YUKSELEN:'Güçlü',OBV_DUSEN:'Zayıf',OBV_YATAY:'Nötr',GUCLENIYOR:'Güçleniyor',ZAYIFLIYOR:'Zayıflıyor',NOTR:'Nötr'};
+    const text=(group,key) => group?.status === 'OK' ? yarinMetin(names[group[key]] || '--') : '--';
+    const bb=doc?.bollinger;
+    const bbState=bb?.status !== 'OK' ? '--' : bb.squeeze_volume_momentum_break ? 'Hacimli kırılım' : bb.upper_break ? 'Üst kırılım' : bb.lower_break ? 'Alt kırılım' : bb.return_inside ? 'Banda dönüş' : bb.squeeze ? 'Sıkışma' : 'Normal';
+    const vwap=doc?.vwap;
+    return '<h3>Teyit Göstergeleri</h3><div class="detail-grid">' +
+        detayKutu('Seans VWAP',vwap?.status === 'OK' ? yarinSayi(vwap.session_value,' TL') : '--') +
+        detayKutu('VWAP konumu',text(vwap,'position')) +
+        detayKutu('OBV',text(doc?.obv,'trend')) + detayKutu('Bollinger',bbState) +
+        detayKutu('Momentum',text(doc?.momentum,'state')) +
+        (vwap?.reference_20 != null && doc?.mode === 'TOMORROW' ? detayKutu('VWAP20 referansı',yarinSayi(vwap.reference_20,' TL')) : '') +
+        '</div><p style="font-size:12px">' +
+        (doc?.stale ? 'Eski teknik veri — teyit olarak kullanılmamalı. ' : '') +
+        'Gösterge zamanı: ' + yarinZaman(doc?.data_time) + ' · Güven: ' + yarinSayi(doc?.confidence,'%') + '</p>';
+}
+
+function teknikKriterRaporuGoster(report,label){
+    const names={VWAP_USTU:'VWAP üstü',VWAP_RECLAIM:'VWAP reclaim',OBV_POZITIF_TREND:'OBV yükselen',OBV_KIRILIM:'OBV kırılım',OBV_POZITIF_UYUMSUZLUK:'OBV pozitif uyumsuzluk',OBV_NEGATIF_UYUMSUZLUK:'OBV negatif uyumsuzluk',BOLLINGER_SIKISMA_KIRILIM:'Bollinger sıkışma kırılımı',BOLLINGER_BANDA_DONUS:'Bollinger banda dönüş',MOMENTUM_GUCLENME:'Momentum güçlenme',MOMENTUM_ZAYIFLAMA:'Momentum zayıflama'};
+    if(!report?.vadeler) return `<p>${yarinMetin(label)}: henüz tamamlanmış ölçüm yok.</p>`;
+    return Object.entries(report.vadeler).map(([horizon,criteria]) => {
+        const rows=Object.entries(criteria).map(([key,entry])=>{
+            const value=entry.varken || {};
+            return `<tr><td>${yarinMetin(names[key] || key)}</td><td>${yarinSayi(value.sample_count)}</td><td>${yarinSayi(value.success_rate == null ? null : value.success_rate*100,'%')}</td><td>${yarinSayi(value.median_return,'%')}</td><td>${yarinSayi(value.trimmed_mean,'%')}</td><td>${entry.confidence === 'YETERLI' ? 'Yeterli' : 'Düşük'}</td></tr>`;
+        }).join('');
+        return `<details><summary>${yarinMetin(label)} · ${horizon === 'SEANS' ? 'Seans sonu' : yarinMetin(horizon) + (report.unit === 'DAKIKA' ? ' dk' : ' işlem günü')}</summary><table style="width:100%;table-layout:fixed;font-size:11px;overflow-wrap:anywhere"><thead><tr><th>Kriter</th><th>Örnek</th><th>Başarı</th><th>Medyan</th><th>Trim</th><th>Güven</th></tr></thead><tbody>${rows}</tbody></table></details>`;
+    }).join('');
+}
+
+async function teknikOlcumleriYukle(alan){
+    const results=await Promise.allSettled(['data/gun_ici_performans.json','data/performans_ozeti.json'].map(async url=>{
+        const response=await fetch(url+'?t='+Date.now(),{cache:'no-store'});
+        return response.ok ? (await response.json()).standart_teknik_kriterler : null;
+    }));
+    if(document.getElementById('aiLearningPage').style.display !== 'block') return;
+    alan.insertAdjacentHTML('beforeend','<div class="detail-card"><h3>Teknik Kriter Ölçümleri</h3><p>Yeni kriterler ölçülüyor; otomatik ağırlık uygulaması kapalı.</p>' +
+        teknikKriterRaporuGoster(results[0].status === 'fulfilled' ? results[0].value : null,'Gün İçi') +
+        teknikKriterRaporuGoster(results[1].status === 'fulfilled' ? results[1].value : null,'Yarın') + '</div>');
+}
+
+function modelPerformansiGoster(report){
+    if(!report?.modes) return '<p>Model performansı için henüz tamamlanmış ölçüm yok.</p>';
+    return Object.entries(report.modes).map(([mode,model])=>{
+        const latest=Object.values(model.comparisons || {}).at(-1);
+        const percent=value=>yarinSayi(value == null ? null : value*100,'%');
+        const criteria=model.criteria?.[mode==='INTRADAY'?'60':'1'] || {};
+        const valid=Object.entries(criteria).filter(([key,value])=>value.confidence==='YETERLI' && value.success_difference != null);
+        const ordered=valid.sort((a,b)=>b[1].success_difference-a[1].success_difference);
+        const list=entries=>entries.length ? '<ul>'+entries.map(([key,value])=>'<li>'+yarinMetin(key.replaceAll('_',' '))+' · '+percent(value.success_difference)+'</li>').join('')+'</ul>' : '<p>Yeterli ölçüm yok.</p>';
+        return '<div class="detail-card"><h3>Model Performansı · '+(mode==='INTRADAY'?'Gün İçi':'Yarın / Günlük')+'</h3>' +
+            '<p>Learning: KAPALI · Shadow: '+(model.shadow_active?'AKTİF':'PASİF')+'</p>' +
+            '<p>Ana model başarı: '+percent(latest?.main?.success_rate)+' · Shadow başarı: '+percent(latest?.shadow?.success_rate)+'</p>' +
+            '<p>Değerlendirme örneği: '+yarinMetin(latest?.main?.sample_count ?? 0)+' / '+yarinMetin(latest?.shadow?.sample_count ?? 0)+'</p>' +
+            '<p>'+(latest ? (latest.promotion_candidate?'Kontrollü geçiş için aday; otomatik uygulama yok.':'Ayrı değerlendirmede yeterli üstünlük kanıtlanmadı.') : 'Öneriden sonraki ayrı değerlendirme verisi bekleniyor.')+'</p>' +
+            '<details><summary>En güçlü 5 kriter</summary>'+list(ordered.filter(([k,v])=>v.success_difference>0).slice(0,5))+'</details>' +
+            '<details><summary>En zayıf 5 kriter</summary>'+list([...ordered].reverse().filter(([k,v])=>v.success_difference<0).slice(0,5))+'</details>' +
+            '<p>Son model güncelleme: '+yarinZaman(model.updated_at)+' · Minimum '+yarinMetin(model.minimum_samples)+' örnek / '+yarinMetin(model.minimum_days)+' işlem günü</p></div>';
+    }).join('');
+}
+
+function algoritmaSaglikGoster(report, combinations){
+    if(!report?.modes) return '<div class="detail-card"><h3>Model Sağlığı</h3><p>Yetersiz veri · Learning: KAPALI</p></div>';
+    const percent=value=>yarinSayi(value == null ? null : value*100,'%');
+    return Object.entries(report.modes).map(([mode,health])=>{
+        const primary=mode==='INTRADAY'?'60':'1';
+        const all=combinations?.modes?.[mode]?.combinations?.[primary]?.LIVE || {};
+        const qualified=Object.entries(all).filter(([k,v])=>v.strong || (v.confidence==='YETERLI' && v.shadow_contribution_proposal<0));
+        const list=items=>items.length ? '<ul>'+items.map(([key,value])=>'<li>'+yarinMetin(key.replaceAll('!','ZAYIF ').replaceAll('_',' '))+' · '+percent(value.success_rate)+'</li>').join('')+'</ul>' : '<p>Yeterli ölçüm yok.</p>';
+        const best=qualified.filter(([k,v])=>v.shadow_contribution_proposal>0).sort((a,b)=>b[1].success_rate-a[1].success_rate).slice(0,3);
+        const worst=qualified.filter(([k,v])=>v.shadow_contribution_proposal<0).sort((a,b)=>a[1].success_rate-b[1].success_rate).slice(0,3);
+        const status={COK_IYI:'Çok iyi',IYI:'İyi',NORMAL:'Normal',ZAYIF:'Zayıf',YETERSIZ_VERI:'Yetersiz veri'};
+        const drift=health.model_drift?.assessed ? (health.model_drift.warning?'Var':'Yok') : 'Yetersiz veri';
+        return '<div class="detail-card"><h3>Model Sağlığı · '+(mode==='INTRADAY'?'Gün İçi':'Günlük')+'</h3>'+
+            '<p>'+yarinMetin(status[health.health_status] || 'Yetersiz veri')+' · Learning: KAPALI</p>'+
+            '<p>Ana Model: '+percent(health.main_model_success)+' · Shadow: '+percent(health.shadow_success)+'</p>'+
+            '<p>Canlı başarı: '+percent(health.sources?.LIVE?.success_rate)+' · LIVE '+yarinMetin(health.live_sample_count ?? 0)+' / BACKTEST '+yarinMetin(health.backtest_sample_count ?? 0)+' / SHADOW '+yarinMetin(health.shadow_sample_count ?? 0)+'</p>'+
+            '<p>En sık hata tipi: '+yarinMetin(health.most_common_error || '--')+' · Model Drift: '+yarinMetin(drift)+'</p>'+
+            '<details><summary>En iyi kombinasyonlar</summary>'+list(best)+'</details>'+
+            '<details><summary>En kötü kombinasyonlar</summary>'+list(worst)+'</details>'+
+            '<p>Confidence / teyit uyarısı: '+yarinMetin((health.calibration?.confidence_warnings?.length || 0)+' / '+(health.calibration?.confirmation_warnings?.length || 0))+'</p></div>';
+    }).join('');
+}
+
+async function modelPerformansiYukle(alan){
+    try{
+        const response=await fetch('data/kriter_performansi.json?t='+Date.now(),{cache:'no-store'});
+        if(document.getElementById('aiLearningPage').style.display!=='block') return;
+        alan.insertAdjacentHTML('beforeend',modelPerformansiGoster(response.ok ? await response.json() : null));
+        const loadReport=async name=>{try{const r=await fetch('data/'+name+'?t='+Date.now(),{cache:'no-store'});return r.ok ? await r.json() : null;}catch(error){return null;}};
+        const [health,combinations,positive]=await Promise.all([loadReport('algoritma_saglik.json'),loadReport('kombinasyon_performansi.json'),loadReport('pozitif_hisseler_performansi.json')]);
+        if(document.getElementById('aiLearningPage').style.display==='block') alan.insertAdjacentHTML('beforeend',algoritmaSaglikGoster(health,combinations)+pozitifOgrenmeGoster(positive));
+    }catch(error){
+        if(document.getElementById('aiLearningPage').style.display==='block') alan.insertAdjacentHTML('beforeend',modelPerformansiGoster(null)+algoritmaSaglikGoster(null,null));
+    }
+}
+
+function nihaiKararGoster(final){
+    if(!final) return '<p>Nihai karar için güncel analiz bekleniyor.</p>';
+    const field=(label,value)=>detayKutu(label,value);
+    const reasons=(values)=> (values || []).slice(0,5).map(value=>'<li>'+yarinMetin(value)+'</li>').join('');
+    return '<h3>Nihai Karar</h3><div class="detail-grid">' +
+        field('Karar',yarinMetin(final.karar)) + field('Karar Puanı',yarinSayi(final.karar_puani,'/100')) +
+        field('Confidence / Güven',yarinSayi(final.confidence,'/100')) + field('Teknik Güç',yarinSayi(final.teknik_gucluluk,'/100')) +
+        field('Risk Puanı',yarinSayi(final.risk_puani,'/100')) +
+        field('Teyit',yarinMetin(final.teyit_sayisi)+'/'+yarinMetin(final.teyit_toplam)) +
+        '</div><p><strong>Ana Neden:</strong> '+yarinMetin(final.ana_secim_nedeni)+'</p><p><strong>Ana Risk:</strong> '+yarinMetin(final.ana_risk)+'</p>' +
+        '<details><summary>Kararın gerekçeleri</summary><ul>'+reasons(final.pozitif_gerekceler)+reasons(final.negatif_gerekceler)+'</ul></details>' +
+        '<p style="font-size:12px">'+(final.zaman_dilimi==='INTRADAY'?'Gün İçi':'Günlük')+' · Karar zamanı: '+yarinZaman(final.updated_at)+' · Veri zamanı: '+yarinZaman(final.veri_zamani)+'</p>';
+}
+
+function ortakAiGoster(ai){
+    if(!ai) return '<p>Ortak AI özeti henüz yok.</p>';
+    const field = (label,value) => detayKutu(label,value);
+    const freshness = gunIciVeriYasi(ai.updated_at);
+    const parts = ai.katkilar || {};
+    return '<h3>Ortak AI Kararı</h3><div class="detail-grid">' +
+        (ai.nihai_karar ? '' : field('Karar',yarinMetin(ai.karar))) + field('AI puanı',yarinSayi(ai.ai_score)) +
+        field('Confidence / Güven',yarinSayi(ai.confidence)) +
+        field('Piyasa rejimi',yarinMetin(ai.piyasa_rejimi)) +
+        field('Piyasa breadth',yarinSayi(ai.piyasa_baglami?.breadth_score)) +
+        field('Sektör relatif güç',yarinSayi(ai.piyasa_baglami?.sektor_rs_score)) +
+        field('Haber/KAP etkisi',yarinSayi(parts.haber)) + field('Makro etkisi',yarinSayi(parts.makro)) +
+        field('Sektör etkisi',yarinSayi(parts.sektor)) + '</div><p>' +
+        yarinMetin(ai.kisa_gerekce) + '</p><p>Son güncelleme: ' + yarinZaman(ai.updated_at) +
+        ' · Veri yaşı: ' + yarinMetin(freshness.age) +
+        (freshness.status !== 'normal' ? ' · ESKİ / GÜNCELLİĞİ DOĞRULANAMAYAN ANALİZ' : '') + '</p>';
+}
+
+function fiyatAlarmListesi(alarms){
+    if(!alarms.length) return "Bu hisse için fiyat alarmınız yok.";
+    const names = {
+        FIYAT_USTU:"Fiyat üst sınırı", FIYAT_ALTI:"Fiyat alt sınırı",
+        MANUEL_AL:"Manuel AL", MANUEL_SAT:"Manuel SAT", MANUEL_STOP:"Manuel STOP",
+        MANUEL_HEDEF:"Manuel HEDEF", AI_ALIM_BOLGESI:"AI alım bölgesi",
+        AI_HEDEF:"AI hedef", AI_STOP:"AI stop"
+    };
+    return alarms.map(a => {
+        const triggered = a.status === "TRIGGERED" || Boolean(a.triggered_at);
+        const status = triggered ? "TETİKLENDİ" : a.aktif ? "Aktif" : "Pasif";
+        const range = a.hedef_fiyat_ust != null ? ` ve ≤ ${yarinSayi(a.hedef_fiyat_ust)}` : "";
+        const actions = /^[a-f0-9]{32}$/.test(a.id) ? `<div class="price-alarm-actions">
+            ${a.aktif && !triggered ? `<button class="level-action" onclick="fiyatAlarmDegistir('${a.id}',false)">Pasif Yap</button>` : ""}
+            <button class="level-action" onclick="fiyatAlarmDegistir('${a.id}',true)">Sil</button></div>` : "";
+        return `<div class="price-alarm-row"><b>${status} · ${yarinMetin(a.kaynak)}</b>
+            <div>${yarinMetin(names[a.alarm_turu] || a.alarm_turu)} · ${yarinMetin(a.operator)} ${yarinSayi(a.hedef_fiyat)}${range} TL</div>
+            <div style="font-size:12px">Oluşturma: ${yarinZaman(a.created_at)} · Tetiklenme: ${yarinZaman(a.triggered_at)}</div>
+            ${triggered ? `<div>Tetiklenme fiyatı: ${yarinSayi(a.triggered_price, " TL")}</div>` : ""}${actions}</div>`;
+    }).join("");
+}
+
+function kullaniciSeviyeAc(hisse){
+    const stock = String(hisse.sembol ?? hisse.symbol ?? "").toUpperCase();
+    const model = hisse.gun_ici_puan != null ? "GUN_ICI" : "GUNLUK";
+    const context = {stock, model, busy:false, ready:false, otomatik:null};
+    seviyeContext = context;
+    document.getElementById("userLevelsSection").querySelectorAll(".level-action")
+        .forEach(b => {b.disabled = true;});
+    kullaniciSeviyeYukle(context).then(() => {
+        if(context === seviyeContext && document.getElementById("stockPage").style.display === "block"){
+            fiyatAlarmTimer = setInterval(fiyatAlarmlariYenile, 30000);
+        }
+    }).catch(error => {
+        if(seviyeContext === context){
+            document.getElementById("levelsStatus").textContent = error.message;
+            const tomorrow=document.getElementById("tomorrowPlanSection");if(tomorrow)tomorrow.innerHTML=tomorrowPlanGoster(null);
+        }
+    });
+}
+
+async function kullaniciSeviyeYukle(context){
+    const data = await seviyeApi(`/api/stocks/${encodeURIComponent(context.stock)}?model=${context.model}`);
+    if(context !== seviyeContext) return;
+    context.otomatik = data.otomatik || {};
+    const sector=document.getElementById("stockSectorStrength");if(sector)sector.innerHTML=sektorHisseGoster(data.stock_sector_context);
+    document.getElementById("tomorrowPlanSection").innerHTML=tomorrowPlanGoster(data.tomorrow_plan);
+    let daily=document.getElementById("stockDailySignal");
+    if(!daily){daily=document.createElement("section");daily.id="stockDailySignal";document.getElementById("stockDetail").appendChild(daily);}
+    daily.innerHTML=data.intraday_signal ? "<h3>Günlük AL/SAT</h3>"+gunlukKart(data.intraday_signal,true) : "";
+    document.getElementById("automaticLevels").innerHTML = nihaiKararGoster(data.nihai_karar || context.otomatik.nihai_karar || data.ai_ozet?.nihai_karar) + otomatikSeviyeGoster(context.otomatik) + ortakAiGoster(data.ai_ozet);
+    for(const field of ["manuel_al", "manuel_sat", "manuel_stop", "manuel_hedef"]){
+        document.getElementById(field).value = data.manuel?.[field] ?? "";
+    }
+    document.getElementById("manualLevelTime").textContent = data.manuel?.updated_at
+        ? "Son kayıt: " + yarinZaman(data.manuel.updated_at) : "Henüz manuel seviye kaydedilmedi.";
+    document.getElementById("priceAlarmList").innerHTML = fiyatAlarmListesi(data.alarmlar || []);
+    context.ready = true;
+    if(!context.busy){
+        document.getElementById("userLevelsSection").querySelectorAll(".level-action")
+            .forEach(b => {b.disabled = false;});
+    }
+}
+
+function fiyatAlarmTuruDegisti(){
+    const kind = document.getElementById("priceAlarmType").value;
+    document.getElementById("alarmPriceLabel").style.display = kind.startsWith("FIYAT_") ? "block" : "none";
+}
+
+async function fiyatAlarmlariYenile(){
+    const context = seviyeContext;
+    if(!context || !context.ready || context.busy) return;
+    const revision = context.alarmRevision;
+    try{
+        const data = await seviyeApi(`/api/stocks/${encodeURIComponent(context.stock)}?model=${context.model}`);
+        if(context !== seviyeContext || context.busy || revision !== context.alarmRevision) return;
+        // Update saved analysis and alarms without replacing unsaved manual input.
+        context.otomatik = data.otomatik || {};
+    const sector=document.getElementById("stockSectorStrength");if(sector)sector.innerHTML=sektorHisseGoster(data.stock_sector_context);
+        document.getElementById("automaticLevels").innerHTML = nihaiKararGoster(data.nihai_karar || context.otomatik.nihai_karar || data.ai_ozet?.nihai_karar) + otomatikSeviyeGoster(context.otomatik) + ortakAiGoster(data.ai_ozet);
+        document.getElementById("priceAlarmList").innerHTML = fiyatAlarmListesi(data.alarmlar || []);
+    }catch(error){
+        if(context === seviyeContext) document.getElementById("levelsStatus").textContent = error.message;
+    }
+}
+
+async function seviyeIslem(action, message){
+    const context = seviyeContext;
+    if(!context || context.busy || !context.ready) return;
+    context.busy = true;
+    context.alarmRevision = (context.alarmRevision || 0) + 1;
+    const buttons = document.getElementById("userLevelsSection").querySelectorAll(".level-action");
+    buttons.forEach(b => {b.disabled = true;});
+    try{
+        await action(context);
+        await kullaniciSeviyeYukle(context);
+        if(context === seviyeContext) document.getElementById("levelsStatus").textContent =
+            typeof message === "function" ? message() : message;
+    }catch(error){
+        if(context === seviyeContext){
+            document.getElementById("levelsStatus").textContent = error.message;
+            // AI seviyeleri degistiyse yeni analizi goster; eski hedefi sessizce degistirme.
+            if(error.status === 409) await kullaniciSeviyeYukle(context).catch(() => {});
+        }
+    }finally{
+        context.busy = false;
+        if(context === seviyeContext) buttons.forEach(b => {b.disabled = false;});
+    }
+}
+
+function manuelSeviyeKaydet(){
+    const data = {};
+    for(const field of ["manuel_al", "manuel_sat", "manuel_stop", "manuel_hedef"]){
+        const input = document.getElementById(field);
+        const value = input.value;
+        if(input.validity?.badInput || (value !== "" && (!Number.isFinite(Number(value)) || Number(value) <= 0))){
+            document.getElementById("levelsStatus").textContent = "Manuel seviyeler pozitif ve geçerli fiyatlar olmalı.";
+            return;
+        }
+        data[field] = value === "" ? null : Number(value);
+    }
+    return seviyeIslem(c => seviyeApi(`/api/stocks/${c.stock}/levels`, "PUT", data), "Manuel seviyeleriniz kaydedildi.");
+}
+
+function fiyatAlarmOlustur(){
+    const kind = document.getElementById("priceAlarmType").value;
+    const source = kind.startsWith("AI_") ? "AI" : "MANUEL";
+    let created = true;
+    return seviyeIslem(async c => {
+        const result = await seviyeApi(`/api/stocks/${c.stock}/alarms`, "POST", {
+            kaynak:source, alarm_turu:kind, hedef_fiyat:Number(document.getElementById("alarmPrice").value),
+            model:c.model, analiz_kimligi:c.otomatik?.analiz_kimligi
+        });
+        created = result.created;
+    }, () => created ? "Alarm kaydı hazır. Fiyat kontrol motoru çalıştırıldığında izlenecek." : "Bu alarm zaten mevcut; ikinci kayıt oluşturulmadı.");
+}
+
+function fiyatAlarmDegistir(id, remove){
+    return seviyeIslem(() => seviyeApi(`/api/alarms/${id}`, remove ? "DELETE" : "PATCH",
+        remove ? undefined : {aktif:false}), remove ? "Alarm silindi." : "Alarm pasifleştirildi.");
+}
 
 function detayKutu(label,value){
 
@@ -1635,7 +3094,8 @@ function detayKutu(label,value){
 
 function stockBack(){
 
-    if(oncekiSayfa === "top10"){
+    if(oncekiSayfa === "daily"){showDaily();}
+    else if(oncekiSayfa === "top10"){
         showTop10();
     }
     else if(oncekiSayfa === "search"){
@@ -1685,8 +3145,232 @@ function goAI(){
 }
 
 
+
+let pushBusy = false;
+async function pushDurumHazirla(){
+    // Inspect permission/subscription without requesting permission on startup.
+    let enabled=false;
+    try {
+        const registration = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration('/') : null;
+        const subscription = registration ? await registration.pushManager.getSubscription() : null;
+        enabled=Boolean(subscription && typeof Notification !== 'undefined' && Notification.permission==='granted');
+    } catch (_) {}
+    document.getElementById('pushStatus').textContent=enabled ? 'Bildirimler Açık' : 'Bildirimler Kapalı';
+    document.getElementById('pushEnable').hidden=enabled;
+    document.getElementById('pushDisable').hidden=!enabled;
+}
+
+function pushMesaj(text) {
+    const message=document.getElementById('pushActionMessage');
+    message.textContent=text;
+    message.hidden=false;
+    if(text === 'Bildirimler bu tarayıcı için açık.' || text === 'Bildirimler bu tarayıcı için kapalı.'){
+        message.hidden=true;
+        pushDurumHazirla();
+    }
+}
+
+const PUSH_KEY_ERROR = 'Bildirim anahtarı geçersiz. Sistem yöneticisi ayarı kontrol etmeli.';
+function pushKey(key) {
+    try {
+        if(typeof key !== 'string') throw new Error();
+        key=key.trim().replace(/^VAPID_PUBLIC_KEY=/,'').trim().replace(/^(["'])(.*)\1$/,'$2').replace(/\s/g,'');
+        if(!/^[A-Za-z0-9_+\/-]+={0,2}$/.test(key)) throw new Error();
+        const unpadded=key.replace(/=+$/,'');
+        if(unpadded.length % 4 === 1) throw new Error();
+        const base64=unpadded.replace(/-/g,'+').replace(/_/g,'/') + '='.repeat((4-unpadded.length % 4) % 4);
+        const binary=atob(base64);
+        const bytes=Uint8Array.from(binary,c=>c.charCodeAt(0));
+        if(bytes.length !== 65 || bytes[0] !== 4) throw new Error();
+        return bytes;
+    } catch (_) {throw new Error(PUSH_KEY_ERROR);}
+}
+
+async function pushAc() {
+    if (pushBusy) return;
+    if (!window.isSecureContext || !('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
+        pushMesaj('Bu tarayıcıda push desteklenmiyor. HTTPS ve iPhone’da Ana Ekran PWA gerekir.'); return;
+    }
+    const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    if (ios && !navigator.standalone && !window.matchMedia('(display-mode: standalone)').matches) {
+        pushMesaj('Safari paylaş menüsünden Ana Ekran’a ekleyin ve uygulamayı oradan açın (iOS 16.4+).'); return;
+    }
+    pushBusy = true;
+    try {
+        // Permission request begins directly inside the explicit button gesture.
+        const permission = await Notification.requestPermission();
+        if (permission !== 'granted') { pushMesaj('Bildirim izni verilmedi. Tarayıcı ayarlarından değiştirebilirsiniz.'); return; }
+        const config = await seviyeApi('/api/push/config');
+        if(config.public_key_error || !config.public_key) throw new Error(PUSH_KEY_ERROR);
+        if (!config.configured) throw new Error('Sunucuda VAPID anahtarları henüz yapılandırılmadı.');
+        const applicationServerKey=pushKey(config.public_key);
+        if(crypto.subtle){
+            try {await crypto.subtle.importKey('raw',applicationServerKey,{name:'ECDSA',namedCurve:'P-256'},false,['verify']);}
+            catch (_) {throw new Error(PUSH_KEY_ERROR);}
+        }
+        await navigator.serviceWorker.register('/service-worker.js', {scope:'/'});
+        const registration = await navigator.serviceWorker.ready;
+        let subscription = await registration.pushManager.getSubscription();
+        if (!subscription) subscription = await registration.pushManager.subscribe({userVisibleOnly:true, applicationServerKey});
+        let browser = localStorage.getItem('bist_push_browser');
+        if (!browser) { browser = crypto.randomUUID(); localStorage.setItem('bist_push_browser', browser); }
+        try {
+            const saved = await seviyeApi('/api/push/subscriptions', 'POST', {...subscription.toJSON(), browser_id:browser});
+            localStorage.setItem('bist_push_subscription', saved.id);
+        } catch (error) { await subscription.unsubscribe(); throw error; }
+        pushMesaj('Bildirimler bu tarayıcı için açık.');
+    } catch (error) { pushMesaj(/applicationServerKey|P-256|InvalidCharacterError/i.test(error.message || '') ? PUSH_KEY_ERROR : error.message); }
+    finally { pushBusy = false; }
+}
+async function pushKapat() {
+    if (pushBusy) return;
+    pushBusy = true;
+    try {
+        let subscription = null;
+        if ('serviceWorker' in navigator) {
+            const registration = await navigator.serviceWorker.getRegistration('/');
+            subscription = registration ? await registration.pushManager.getSubscription() : null;
+        }
+        let id = localStorage.getItem('bist_push_subscription');
+        if (!id && subscription) {
+            const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(subscription.endpoint));
+            id = Array.from(new Uint8Array(hash), b => b.toString(16).padStart(2,'0')).join('');
+        }
+        if (id) {
+            try { await seviyeApi('/api/push/subscriptions/' + id, 'DELETE'); }
+            catch (error) { if (error.status !== 404) throw error; }
+        }
+        if (subscription) await subscription.unsubscribe();
+        localStorage.removeItem('bist_push_subscription');
+        pushMesaj('Bildirimler bu tarayıcı için kapalı.');
+    } catch (error) { pushMesaj(error.message); }
+    finally { pushBusy = false; }
+}
+
+
+function haberListesiniBirlestir(canonical, legacy) {
+    const result = [];
+    const ids = new Set();
+    const title = a => String(a.sembol || '') + '|' + String(a.baslik || '').toLocaleLowerCase('tr-TR').replace(/[^\p{L}\p{N}]+/gu,' ').trim();
+    const stamp = a => Date.parse(String(a.tarih || '').includes('T') ? a.tarih : String(a.tarih || '').replace(' ','T') + '+03:00');
+    for (const row of canonical) {
+        const id = row.canonical_id || row.id;
+        if (id && ids.has(id)) continue;
+        if (id) ids.add(id);
+        result.push(row);
+    }
+    for (const row of legacy) {
+        const id = row.canonical_id || row.id;
+        if (id && ids.has(id)) continue;
+        if (canonical.some(a => title(a) === title(row) && Number.isFinite(stamp(a)) && Number.isFinite(stamp(row)) && Math.abs(stamp(a)-stamp(row)) <= 21600000)) continue;
+        if (id) ids.add(id);
+        result.push(row);
+    }
+    return result;
+}
+
 /* BAŞLAT */
 
+function indikatorEtiket(value){return ({INSUFFICIENT:'Yetersiz örnek',INSUFFICIENT_DATA:'Yetersiz veri',EARLY:'Erken veri',USABLE:'Kullanılabilir veri',STRONG_SAMPLE:'Güçlü örneklem',CANDIDATE:'Aday',STABLE:'Kararlı aday',TOMORROW_TOP10:'Yarın TOP10',INTRADAY_BUY:'Günlük AL',INTRADAY_SELL:'Günlük SAT',AGGRESSIVE_BUY:'Agresif Alış',AGGRESSIVE_SELL:'Agresif Satış',OVERSOLD_REACTION:'Aşırı Satım Tepkisi',TREND:'Trend',BUY:'Alış',SELL:'Satış',LOW_SAMPLE:'Yetersiz örnek',LOW_CONFIDENCE:'Düşük güven',REGIME_SAMPLE_LOW:'Rejim bazında örnek az',SECTOR_SAMPLE_LOW:'Sektör bazında örnek az',FEATURE_NOT_CAPTURED:'Bazı kayıtlarda özellik yakalanmamış',STALE_DATA:'Eski veri',OUTLIER_SENSITIVE:'Uç değerlere duyarlı',INCONSISTENT_HORIZONS:'Vadeler arasında tutarsızlık',INCONSISTENT_REGIMES:'Rejimler arasında tutarsızlık',STRONG_BULL:'Güçlü Pozitif',BULL:'Pozitif',NEUTRAL:'Nötr',BEAR:'Negatif',STRONG_BEAR:'Güçlü Negatif',LEADING:'Lider',WEAKENING:'Güç Kaybediyor',LAGGING:'Geride',IMPROVING:'Güçleniyor'})[value]||value||'--';}
+function indikatorGoster(doc){
+ const esc=yarinMetin,n=v=>gunlukNum(v,2),rate=v=>typeof v==='number'?n(v*100)+'%':'--';
+ if(doc?.enabled===false)return {summary:'İndikatör Performansı · Devre dışı',details:''};
+ if(doc?.engine_version!=='INDICATOR_PERFORMANCE_V1'||doc.production_applied!==false||!Array.isArray(doc.rows))return {summary:'İndikatör Performansı · Veriler bekleniyor',details:'Ölçüm Modu — Skorlara uygulanmıyor'};
+ const summary=doc.summary||{};
+ const breakdown=(name,values)=>Object.keys(values||{}).length?Object.entries(values).map(([key,value])=>'<div>'+name+': '+esc(indikatorEtiket(key))+' · '+esc(value.eligible_sample_count)+' örnek · '+(name==='Yakın dönem'||value.eligible_sample_count>=30?rate(value.success_rate):'Yeterli veri yok')+'</div>').join(''):'<div>'+name+': Yeterli veri yok</div>';
+ const list=doc.rows.map(r=>`<article class="sector-card"><strong>${esc(r.indicator_name)}</strong><p>${esc(indikatorEtiket(r.signal_family))} · ${esc(indikatorEtiket(r.direction))} · ${esc(r.horizon)}${/^\d+$/.test(r.horizon)?' işlem günü':''}</p><div class="context-metrics"><div>Örnek / Çözümlenen<strong>${esc(r.sample_count)} / ${esc(r.eligible_sample_count)}</strong></div><div>Başarı / Baseline<strong>${rate(r.success_rate)} / ${rate(r.baseline?.success_rate)}</strong></div><div>Teyitli / Teyitsiz<strong>${rate(r.with_feature_success_rate)} / ${rate(r.without_feature_success_rate)}</strong></div><div>Baseline farkı<strong>${typeof r.delta_success_rate==='number'?n(r.delta_success_rate*100)+' puan':'--'}</strong></div><div>Ortalama yön getirisi / Medyan<strong>${n(r.avg_return)}% / ${n(r.median_return)}%</strong></div><div>Güven<strong>${n(r.confidence)}/100</strong></div><div>MFE / MAE<strong>${n(r.avg_favorable_excursion)}% / ${n(r.avg_adverse_excursion)}%</strong></div><div>Aday ağırlık<strong>${n(r.learned_weight_candidate)}</strong></div></div><p>${esc(indikatorEtiket(r.data_status))} · ${esc(indikatorEtiket(r.weight_status))}</p><p>${esc((r.reasons||[]).join(' · '))}</p><p class="sector-warning">${esc((r.warnings||[]).map(indikatorEtiket).join(' · '))}</p><details><summary>Rejim / Sektör / Son örnekler</summary>${breakdown('Piyasa Rejimi',r.breakdown?.market_regime)}${breakdown('Sektör Gücü',r.breakdown?.sector_strength)}${breakdown('Yakın dönem',r.recency)}</details></article>`).join('');
+ const combos=(doc.combinations||[]).map(r=>'<div>'+esc(r.indicator_id)+' · '+esc(indikatorEtiket(r.signal_family))+' · '+esc(r.horizon)+' · '+esc(r.eligible_sample_count)+' örnek · '+rate(r.success_rate)+'</div>').join('');
+ return {summary:'İndikatör Performansı · '+(summary.resolved_sample_count??0)+' çözümlenmiş ölçüm',details:`<p><strong>Ölçüm Modu — Skorlara uygulanmıyor</strong></p><p>${esc(summary.tracked_indicator_count??0)} indikatör · ${esc(summary.usable_indicator_count??0)} yeterli veri · Son güncelleme: ${esc(gunlukSaat(doc.updated_at))}</p>${doc.stale?'<p class="sector-warning">Eski veri</p>':''}${doc.status==='DEGRADED'?'<p class="sector-warning">Bazı kaynaklar alınamadı; ölçüm kapsamı sınırlı.</p>':''}<p>İlişki ölçümüdür; nedensellik veya yatırım tavsiyesi değildir. Eski kayıtlara özellik eklenmez.</p>${list||'<p>Henüz doğrulanmış özellikli örnek yok.</p>'}${combos?'<details><summary>Teyit kombinasyonları</summary>'+combos+'</details>':''}`};
+}
+let indikatorRequest=0;
+async function indikatorYenile(){
+ const summary=document.getElementById('indicatorPerformanceSummary'),details=document.getElementById('indicatorPerformanceDetails');if(!summary||!details)return;
+ const request=++indikatorRequest,query=new URLSearchParams();
+ for(const [key,id] of [['family','indicatorFamily'],['direction','indicatorDirection'],['horizon','indicatorHorizon']]){const value=document.getElementById(id)?.value;if(value)query.set(key,value);}
+ if(!query.has('family'))query.set('family','ALL');
+ try{const view=indikatorGoster(await seviyeApi('/api/indicator-performance?'+query));if(request!==indikatorRequest)return;summary.textContent=view.summary;details.innerHTML=view.details;}
+ catch(_){if(request!==indikatorRequest)return;summary.textContent='İndikatör Performansı · Veriler alınamıyor';details.textContent='Ölçüm Modu — Skorlara uygulanmıyor. Önbellek hazırlanıyor olabilir.';}
+}
+
+function piyasaContextGoster(doc){
+ const esc=yarinMetin,percent=n=>typeof n==='number'&&Number.isFinite(n)?gunlukNum(n,1)+'%':'—';
+ const regime={STRONG_BULL:'Güçlü Pozitif',BULL:'Pozitif',NEUTRAL:'Nötr',BEAR:'Negatif',STRONG_BEAR:'Güçlü Negatif'};
+ const breadth={VERY_STRONG:'Çok Güçlü',STRONG:'Güçlü',NEUTRAL:'Nötr',WEAK:'Zayıf',VERY_WEAK:'Çok Zayıf'};
+ const risk={LOW:'Düşük',NORMAL:'Normal',HIGH:'Yüksek',EXTREME:'Çok Yüksek'};
+ const trend={POSITIVE:'Pozitif',NEUTRAL:'Nötr',NEGATIVE:'Negatif'};
+ if(doc?.enabled===false)return {summary:'Piyasa Durumu · Devre dışı',details:''};
+ if(doc?.engine_version!=='MARKET_REGIME_V1')return {summary:'Piyasa Durumu · Veriler şu anda alınamıyor',details:''};
+ const field=(k,v)=>'<div><span>'+k+'</span><strong>'+esc(v)+'</strong></div>';
+ const summary='Piyasa Durumu · '+(doc.stale?'Eski veri':regime[doc.regime]||'Veri sınırlı');
+ const main='<div class="context-metrics">'+field('Rejim',gunlukNum(doc.regime_score,0)+'/100')+field('Güven',gunlukNum(doc.regime_confidence,0)+'/100')+field('Genişlik',breadth[doc.breadth_state]||'—')+field('Yükselen / Düşen',gunlukNum(doc.advancing_count,0)+' / '+gunlukNum(doc.declining_count,0))+field('SMA20 / SMA50 üstü',percent(doc.above_sma20_pct)+' / '+percent(doc.above_sma50_pct))+field('Risk',risk[doc.risk_state]||'—')+'</div>';
+ const lists=(name,items)=>Array.isArray(items)&&items.length?'<h4>'+name+'</h4><ul>'+items.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>':'';
+ const details='<p>'+(doc.market_open?'Piyasa Açık':'Piyasa Kapalı')+' · Tamamlanmış günlük veriler</p><div class="context-metrics">'+field('Geçerli hisse',gunlukNum(doc.valid_stock_count,0))+field('A/D oranı / net',gunlukNum(doc.advance_decline_ratio)+' / '+gunlukNum(doc.advance_decline_net,0))+field('Yukarı / aşağı hacim',percent(doc.up_volume_pct)+' / '+percent(doc.down_volume_pct))+field('Yeni yüksek / düşük',gunlukNum(doc.new_high_count,0)+' / '+gunlukNum(doc.new_low_count,0))+field('Endeks trend / momentum',(trend[doc.index_trend]||'—')+' / '+(trend[doc.index_momentum]||'—'))+field('Volatilite',risk[doc.index_volatility]||'—')+'</div><p>Veri zamanı: '+yarinZaman(doc.as_of)+' · Veri yaşı: '+gunlukYas(doc.data_age)+'</p>'+lists('Nedenler',doc.reasons)+lists('Dikkat',doc.warnings);
+ return {summary:summary+main,details};
+}
+// Descriptive sector observations from the backend; no scores calculated here.
+function sektorEtiket(value){return ({LEADING:'Lider',STRONG:'Güçlü',NEUTRAL:'Nötr',WEAK:'Zayıf',LAGGING:'Geride',WEAKENING:'Güç Kaybediyor',IMPROVING:'Güçleniyor',STRONG_ALIGNMENT:'Güçlü Pozitif',POSITIVE_ALIGNMENT:'Pozitif',MIXED:'Karışık',NEGATIVE_ALIGNMENT:'Negatif',UNKNOWN:'Bilinmiyor',BULL:'Pozitif',STRONG_BULL:'Güçlü Pozitif',BEAR:'Negatif',STRONG_BEAR:'Güçlü Negatif'})[value] || value || '--';}
+function sektorSayi(value,suffix=''){return typeof value==='number' && Number.isFinite(value) ? gunlukNum(value)+suffix : '--';}
+function sektorHisseGoster(stock){
+ const title='<h3>Sektör Gücü</h3>';
+ if(!stock || stock.sector_name==='UNKNOWN' || stock.stock_relative_strength_score==null)return title+'<p>Yeterli sektör verisi yok</p>';
+ return title+`<p>${yarinMetin(stock.sector_name)} · ${yarinMetin(sektorEtiket(stock.sector_state))}</p><div class="context-metrics"><div>Sektör Gücü<strong>${sektorSayi(stock.sector_relative_strength_score,'/100')}</strong></div><div>Hissenin sektöre göre gücü<strong>${sektorSayi(stock.stock_relative_strength_score,'/100')}</strong></div><div>Uyum<strong>${yarinMetin(sektorEtiket(stock.alignment_state))}</strong></div></div><p>${yarinMetin((stock.warnings||[]).join(' · '))}</p>${stock.stale?'<p>Eski veri · Son seans</p>':''}`;
+}
+function sektorGoster(doc){
+ if(doc?.enabled===false)return {summary:'Sektör Gücü · Devre dışı',details:''};
+ if(!doc || !Array.isArray(doc.sectors))return {summary:'Sektör Gücü · Veriler bekleniyor',details:'Yeterli sektör verisi yok'};
+ const market=doc.market_context?.market_regime;
+ const list=doc.sectors.map(s=>`<article class="sector-card"><h4>${yarinMetin(s.sector_name)} · ${yarinMetin(sektorEtiket(s.sector_state))}</h4><div class="context-metrics"><div>Relatif Güç<strong>${sektorSayi(s.relative_strength_score,'/100')}</strong></div><div>Güven<strong>${sektorSayi(s.sector_confidence,'/100')}</strong></div><div>Güç / momentum<strong>${yarinMetin(sektorEtiket(s.rrg_quadrant))}</strong></div>${[1,5,20].map(h=>`<div>${h}G · XU100'e göre<strong>${sektorSayi(s['relative_strength_'+h+'d'],' puan')}</strong></div>`).join('')}<div>SMA20 üstü<strong>${sektorSayi(s.above_sma20_pct,'%')}</strong></div><div>SMA50 üstü<strong>${sektorSayi(s.above_sma50_pct,'%')}</strong></div><div>Yükselen / Düşen<strong>${yarinMetin(s.advancing_count??'--')} / ${yarinMetin(s.declining_count??'--')}</strong></div></div><p>${s.benchmark_source==='OFFICIAL_INDEX'?'Doğrulanmış endeks: '+yarinMetin(s.sector_benchmark):'Eşit ağırlıklı sektör üyeleri'}</p>${s.sector_confidence<50?'<p class="sector-warning">Düşük güven · Yetersiz kapsam</p>':''}<p>${yarinMetin((s.reasons||[]).join(' · '))}</p><p class="sector-warning">${yarinMetin((s.warnings||[]).join(' · '))}</p><details><summary>Sektör içi relatif güç</summary><p>Önde: ${yarinMetin((s.top_stocks||[]).map(v=>v.symbol+' ('+sektorSayi(v.score)+')').join(', ')||'--')}</p><p>Geride: ${yarinMetin((s.lagging_stocks||[]).map(v=>v.symbol+' ('+sektorSayi(v.score)+')').join(', ')||'--')}</p><p>Bu alan performans ölçümüdür; AL/SAT sinyali değildir.</p></details></article>`).join('');
+ return {summary:'Sektör Gücü · '+doc.sectors.length+' sektör'+(doc.stale?' · Eski veri':''),details:`<p>Piyasa Rejimi: ${yarinMetin(sektorEtiket(market))}</p><p>Relatif güç/momentum sınıflandırması: Lider, Güç Kaybediyor, Geride, Güçleniyor. Lisanslı JdK formülü değildir.</p>${doc.stale?'<p class="sector-warning">Snapshot eski · Son seans</p>':''}${list||'<p>Yeterli sektör verisi yok</p>'}<p>${yarinMetin((doc.warnings||[]).join(' · '))}</p><p>Veri zamanı: ${yarinMetin(gunlukSaat(doc.as_of))}</p>`};
+}
+async function sektorYenile(){
+ const summary=document.getElementById('sectorStrengthSummary'),details=document.getElementById('sectorStrengthDetails');if(!summary||!details)return;
+ try{const view=sektorGoster(await seviyeApi('/api/sector-strength'));summary.textContent=view.summary;details.innerHTML=view.details;}
+ catch(_){summary.textContent='Sektör Gücü · Veriler alınamıyor';details.textContent='Yeterli sektör verisi yok';}
+}
+
+async function piyasaContextYenile(){
+ const summary=document.getElementById('marketContextSummary'),details=document.getElementById('marketContextDetails');
+ try{const doc=await seviyeApi('/api/market-context');const view=piyasaContextGoster(doc);summary.innerHTML=view.summary;details.innerHTML=view.details;}
+ catch(_){summary.textContent='Piyasa Durumu · Veriler şu anda alınamıyor';details.textContent='';}
+}
+async function cloudDurumYenile(){
+    try {
+        const response = await fetch('/health', {cache:'no-store'});
+        if(!response.ok) throw new Error('health');
+        const status = (await response.json()).ana_motor || {};
+        document.getElementById('cloudStatus').textContent =
+            status.healthy ? 'Sistem Aktif' : 'Sistem kontrol ediliyor';
+    } catch (_) {
+        document.getElementById('cloudStatus').textContent = 'Sistem bağlantısı bekleniyor';
+    }
+}
+
+if(typeof document.addEventListener === "function"){
+    cloudDurumYenile();
+    piyasaContextYenile();
+    sektorYenile();
+    indikatorYenile();
+    const standalone=Boolean(navigator.standalone || window.matchMedia('(display-mode: standalone)').matches);
+    document.documentElement.dataset.displayMode=standalone ? 'standalone' : 'browser';
+    pushDurumHazirla();
+    let refreshing = false;
+    setInterval(async () => {
+        if(document.hidden || refreshing) return;
+        refreshing = true;
+        try {
+            await cloudDurumYenile();
+            if(document.getElementById("homePage").style.display === "block"){await piyasaContextYenile();await sektorYenile();await indikatorYenile();}
+            if(document.getElementById("gunIciTop10Page").style.display === "block") await showGunIciTop10(true);
+            else if(document.getElementById("top10Page").style.display === "block") await showTop10(true);
+            else if(document.getElementById("kapAlarmPage").style.display === "block") await showKapAlarms();
+            else if(document.getElementById("homePage").style.display === "block") await gercekVeriyiYukle(false);
+            else if(document.getElementById("searchPage").style.display === "block"){
+                await gercekVeriyiYukle(false);
+                aramaYap();
+            }
+        } finally { refreshing = false; }
+    }, 60000);
+}
 gercekVeriyiYukle();
 
 </script>

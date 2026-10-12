@@ -1,2 +1,16 @@
+<<<<<<< HEAD
 ﻿streamlit
 pandas
+=======
+python-telegram-bot==22.8
+borsapy==0.11.0
+requests==2.34.2
+
+pywebpush==2.1.2
+cryptography==50.0.2
+exchange-calendars==4.13.2
+psycopg[binary]==3.3.6
+psycopg-pool==3.3.3
+boto3==1.43.109
+ijson==3.4.0.post0
+>>>>>>> de4705344fbda7cbe6bed1c1ad617cc717b80e0b

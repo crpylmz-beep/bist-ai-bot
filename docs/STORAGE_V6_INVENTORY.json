@@ -1,0 +1,2825 @@
+{
+  "scope": "REPOSITORY_CODE_ONLY",
+  "production_inspected": false,
+  "generated_at": "2026-10-08T23:03:11.225482+03:00",
+  "json_references": [
+    {
+      "name": "ai_ogrenme_gecmisi.json",
+      "classification": "CRITICAL_PRESERVE",
+      "references": [
+        {
+          "module": "ai_karar_motoru.py",
+          "line": 71
+        },
+        {
+          "module": "ai_karar_motoru.py",
+          "line": 525
+        },
+        {
+          "module": "atomik_depolama.py",
+          "line": 90
+        },
+        {
+          "module": "atomik_depolama.py",
+          "line": 103
+        },
+        {
+          "module": "atomik_depolama.py",
+          "line": 106
+        },
+        {
+          "module": "atomik_temp_temizligi.py",
+          "line": 22
+        },
+        {
+          "module": "bist_bot.py",
+          "line": 4557
+        },
+        {
+          "module": "bist_bot.py",
+          "line": 4754
+        },
+        {
+          "module": "bist_bot.py",
+          "line": 4865
+        },
+        {
+          "module": "bist_bot.py",
+          "line": 5204
+        },
+        {
+          "module": "bist_bot.py",
+          "line": 2258
+        },
+        {
+          "module": "bist_bot_backup_ai_learning_core.py",
+          "line": 3880
+        },
+        {
+          "module": "bist_bot_backup_ai_learning_core.py",
+          "line": 4064
+        },
+        {
+          "module": "bist_bot_backup_ai_learning_core.py",
+          "line": 4185
+        },
+        {
+          "module": "bist_bot_backup_ai_learning_web_calisan.py",
+          "line": 3880
+        },
+        {
+          "module": "bist_bot_backup_ai_learning_web_calisan.py",
+          "line": 4086
+        },
+        {
+          "module": "bist_bot_backup_ai_learning_web_calisan.py",
+          "line": 4201
+        },
+        {
+          "module": "bist_bot_backup_ai_learning_web_calisan.py",
+          "line": 4543
+        },
+        {
+          "module": "bist_bot_backup_ai_ogrenme_602.py",
+          "line": 3880
+        },
+        {
+          "module": "bist_bot_backup_ai_ogrenme_602.py",
+          "line": 4064
+        },
+        {
+          "module": "bist_bot_backup_ai_sonuc_oncesi.py",
+          "line": 3880
+        },
+        {
+          "module": "bist_bot_backup_ai_sonuc_oncesi.py",
+          "line": 4064
+        },
+        {
+          "module": "bist_bot_fiyat_format_yedek.py",
+          "line": 4484
+        },
+        {
+          "module": "bist_bot_fiyat_format_yedek.py",
+          "line": 4690
+        },
+        {
+          "module": "bist_bot_fiyat_format_yedek.py",
+          "line": 4805
+        },
+        {
+          "module": "bist_bot_fiyat_format_yedek.py",
+          "line": 5147
+        },
+        {
+          "module": "bist_bot_gunici_ekran_yedek.py",
+          "line": 4293
+        },
+        {
+          "module": "bist_bot_gunici_ekran_yedek.py",
+          "line": 4499
+        },
+        {
+          "module": "bist_bot_gunici_ekran_yedek.py",
+          "line": 4614
+        },
+        {
+          "module": "bist_bot_gunici_ekran_yedek.py",
+          "line": 4956
+        },
+        {
+          "module": "bist_bot_gunici_haber_ai_yedek.py",
+          "line": 4130
+        },
+        {
+          "module": "bist_bot_gunici_haber_ai_yedek.py",
+          "line": 4336
+        },
+        {
+          "module": "bist_bot_gunici_haber_ai_yedek.py",
+          "line": 4451
+        },
+        {
+          "module": "bist_bot_gunici_haber_ai_yedek.py",
+          "line": 4793
+        },
+        {
+          "module": "bist_bot_makro_ai_yedek.py",
+          "line": 4293
+        },
+        {
+          "module": "bist_bot_makro_ai_yedek.py",
+          "line": 4499
+        },
+        {
+          "module": "bist_bot_makro_ai_yedek.py",
+          "line": 4614
+        },
+        {
+          "module": "bist_bot_makro_ai_yedek.py",
+          "line": 4956
+        },
+        {
+          "module": "bist_bot_makro_tetik_yedek.py",
+          "line": 4404
+        },
+        {
+          "module": "bist_bot_makro_tetik_yedek.py",
+          "line": 4610
+        },
+        {
+          "module": "bist_bot_makro_tetik_yedek.py",
+          "line": 4725
+        },
+        {
+          "module": "bist_bot_makro_tetik_yedek.py",
+          "line": 5067
+        },
+        {
+          "module": "bist_bot_negatif_etki_koruma_yedek.py",
+          "line": 4436
+        },
+        {
+          "module": "bist_bot_negatif_etki_koruma_yedek.py",
+          "line": 4642
+        },
+        {
+          "module": "bist_bot_negatif_etki_koruma_yedek.py",
+          "line": 4757
+        },
+        {
+          "module": "bist_bot_negatif_etki_koruma_yedek.py",
+          "line": 5099
+        },
+        {
+          "module": "bist_bot_yarin_haber_ai_yedek.py",
+          "line": 4293
+        },
+        {
+          "module": "bist_bot_yarin_haber_ai_yedek.py",
+          "line": 4499
+        },
+        {
+          "module": "bist_bot_yarin_haber_ai_yedek.py",
+          "line": 4614
+        },
+        {
+          "module": "bist_bot_yarin_haber_ai_yedek.py",
+          "line": 4956
+        },
+        {
+          "module": "bist_bot_yedek_haber_oncesi.py",
+          "line": 3881
+        },
+        {
+          "module": "bist_bot_yedek_haber_oncesi.py",
+          "line": 4087
+        },
+        {
+          "module": "bist_bot_yedek_haber_oncesi.py",
+          "line": 4202
+        },
+        {
+          "module": "bist_bot_yedek_haber_oncesi.py",
+          "line": 4544
+        },
+        {
+          "module": "disk_bakimi.py",
+          "line": 36
+        },
+        {
+          "module": "disk_forensik.py",
+          "line": 143
+        },
+        {
+          "module": "disk_forensik.py",
+          "line": 120
+        },
+        {
+          "module": "disk_forensik.py",
+          "line": 151
+        },
+        {
+          "module": "disk_forensik.py",
+          "line": 153
+        },
+        {
+          "module": "disk_forensik.py",
+          "line": 343
+        },
+        {
+          "module": "disk_koruma.py",
+          "line": 39
+        },
+        {
+          "module": "disk_resumable.py",
+          "line": 25
+        },
+        {
+          "module": "disk_resumable.py",
+          "line": 37
+        },
+        {
+          "module": "performans_motoru.py",
+          "line": 331
+        },
+        {
+          "module": "recovery_journal.py",
+          "line": 94
+        },
+        {
+          "module": "sinyal_performansi.py",
+          "line": 773
+        },
+        {
+          "module": "storage_izleme.py",
+          "line": 85
+        },
+        {
+          "module": "storage_schemas.py",
+          "line": 5
+        },
+        {
+          "module": "storage_schemas.py",
+          "line": 30
+        },
+        {
+          "module": "veri_yollari.py",
+          "line": 18
+        },
+        {
+          "module": "yarin_kalibrasyon.py",
+          "line": 153
+        },
+        {
+          "module": "yarin_kalibrasyon.py",
+          "line": 149
+        },
+        {
+          "module": "yarin_kalibrasyon.py",
+          "line": 154
+        },
+        {
+          "module": "yarin_kalibrasyon.py",
+          "line": 150
+        }
+      ]
+    },
+    {
+      "name": "ai_agirliklari.json",
+      "classification": "UNKNOWN_PRESERVE",
+      "references": [
+        {
+          "module": "ai_karar_motoru.py",
+          "line": 523
+        },
+        {
+          "module": "disk_forensik.py",
+          "line": 25
+        },
+        {
+          "module": "performans_motoru.py",
+          "line": 480
+        }
+      ]
+    },
+    {
+      "name": "ai_hisse_ozetleri.json",
+      "classification": "UNKNOWN_PRESERVE",
+      "references": [
+        {
+          "module": "ai_karar_motoru.py",
+          "line": 524
+        },
+        {
+          "module": "ai_karar_motoru.py",
+          "line": 715
+        },
+        {
+          "module": "pozitif_kapanis.py",
+          "line": 20
+        }
+      ]
+    },
+    {
+      "name": "ai_fiyat_teyit.json",
+      "classification": "UNKNOWN_PRESERVE",
+      "references": [
+        {
+          "module": "ai_karar_motoru.py",
+          "line": 526
+        },
+        {
+          "module": "disk_forensik.py",
+          "line": 26
+        },
+        {
+          "module": "performans_motoru.py",
+          "line": 389
+        }
+      ]
+    },
+    {
+      "name": "bist_data.json",
+      "classification": "UNKNOWN_PRESERVE",
+      "references": [
+        {
+          "module": "ai_karar_motoru.py",
+          "line": 564
+        },
+        {
+          "module": "bist_bot.py",
+          "line": 28
+        },
+        {
+          "module": "bist_bot_backup_ai_learning_core.py",
+          "line": 26
+        },
+        {
+          "module": "bist_bot_backup_ai_learning_web_calisan.py",
+          "line": 26
+        },
+        {
+          "module": "bist_bot_backup_ai_ogrenme_602.py",
+          "line": 26
+        },
+        {
+          "module": "bist_bot_backup_ai_ogrenme_v1.py",
+          "line": 26
+        },
+        {
+          "module": "bist_bot_backup_ai_sonuc_oncesi.py",
+          "line": 26
+        },
+        {
+          "module": "bist_bot_backup_before_speed.py",
+          "line": 26
+        },
+        {
+          "module": "bist_bot_backup_gunici_v1.py",
+          "line": 26
+        },
+        {
+          "module": "bist_bot_backup_gunici_v1_calisan.py",
+          "line": 26
+        },
+        {
+          "module": "bist_bot_backup_madde3.py",
+          "line": 26
+        },
+        {
+          "module": "bist_bot_backup_madde4.py",
+          "line": 26
+        },
+        {
+          "module": "bist_bot_backup_madde5_vwap.py",
+          "line": 26
+        },
+        {
+          "module": "bist_bot_backup_madde6_bollinger.py",
+          "line": 26
+        },
+        {
+          "module": "bist_bot_backup_madde7.py",
+          "line": 26
+        },
+        {
+          "module": "bist_bot_backup_retry_scan.py",
+          "line": 26
+        },
+        {
+          "module": "bist_bot_backup_sinyal_v1.py",
+          "line": 26
+        },
+        {
+          "module": "bist_bot_backup_top10_v1.py",
+          "line": 26
+        },
+        {
+          "module": "bist_bot_backup_top10_v3.py",
+          "line": 26
+        },
+        {
+          "module": "bist_bot_backup_tum_bist_arama.py",
+          "line": 26
+        },
+        {
+          "module": "bist_bot_fiyat_format_yedek.py",
+          "line": 28
+        },
+        {
+          "module": "bist_bot_gunici_ekran_yedek.py",
+          "line": 28
+        },
+        {
+          "module": "bist_bot_gunici_haber_ai_yedek.py",
+          "line": 28
+        },
+        {
+          "module": "bist_bot_makro_ai_yedek.py",
+          "line": 28
+        },
+        {
+          "module": "bist_bot_makro_tetik_yedek.py",
+          "line": 28
+        },
+        {
+          "module": "bist_bot_negatif_etki_koruma_yedek.py",
+          "line": 28
+        },
+        {
+          "module": "bist_bot_yarin_haber_ai_yedek.py",
+          "line": 28
+        },
+        {
+          "module": "bist_bot_yedek_haber_oncesi.py",
+          "line": 27
+        },
+        {
+          "module": "cloud_bootstrap.py",
+          "line": 11
+        },
+        {
+          "module": "cloud_bootstrap.py",
+          "line": 13
+        },
+        {
+          "module": "disk_koruma.py",
+          "line": 14
+        },
+        {
+          "module": "fiyat_alarm_motoru.py",
+          "line": 46
+        },
+        {
+          "module": "kullanici_kayitlari.py",
+          "line": 104
+        },
+        {
+          "module": "makro_ai.py",
+          "line": 420
+        },
+        {
+          "module": "piyasa_baglami.py",
+          "line": 249
+        },
+        {
+          "module": "piyasa_baglami.py",
+          "line": 278
+        },
+        {
+          "module": "piyasa_baglami.py",
+          "line": 390
+        },
+        {
+          "module": "yarin_plani.py",
+          "line": 156
+        }
+      ]
+    },
+    {
+      "name": "haber_dedup.json",
+      "classification": "UNKNOWN_PRESERVE",
+      "references": [
+        {
+          "module": "ai_karar_motoru.py",
+          "line": 582
+        },
+        {
+          "module": "disk_forensik.py",
+          "line": 26
+        },
+        {
+          "module": "disk_forensik.py",
+          "line": 155
+        },
+        {
+          "module": "disk_forensik.py",
+          "line": 118
+        },
+        {
+          "module": "disk_forensik.py",
+          "line": 343
+        },
+        {
+          "module": "disk_resumable.py",
+          "line": 24
+        },
+        {
+          "module": "haber_tekillestirme.py",
+          "line": 108
+        },
+        {
+          "module": "performans_motoru.py",
+          "line": 390
+        },
+        {
+          "module": "storage_schemas.py",
+          "line": 8
+        },
+        {
+          "module": "storage_schemas.py",
+          "line": 19
+        },
+        {
+          "module": "storage_schemas.py",
+          "line": 22
+        },
+        {
+          "module": "storage_schemas.py",
+          "line": 23
+        }
+      ]
+    },
+    {
+      "name": "makro_canli_etki.json",
+      "classification": "UNKNOWN_PRESERVE",
+      "references": [
+        {
+          "module": "ai_karar_motoru.py",
+          "line": 585
+        },
+        {
+          "module": "bist_bot.py",
+          "line": 222
+        },
+        {
+          "module": "bist_bot_fiyat_format_yedek.py",
+          "line": 268
+        },
+        {
+          "module": "bist_bot_makro_tetik_yedek.py",
+          "line": 268
+        },
+        {
+          "module": "bist_bot_negatif_etki_koruma_yedek.py",
+          "line": 268
+        },
+        {
+          "module": "makro_ai.py",
+          "line": 21
+        },
+        {
+          "module": "pozitif_kapanis.py",
+          "line": 23
+        }
+      ]
+    },
+    {
+      "name": "gun_ici_tum.json",
+      "classification": "UNKNOWN_PRESERVE",
+      "references": [
+        {
+          "module": "ai_karar_motoru.py",
+          "line": 586
+        },
+        {
+          "module": "bist_bot.py",
+          "line": 4433
+        },
+        {
+          "module": "bist_bot.py",
+          "line": 5552
+        },
+        {
+          "module": "bist_bot_backup_ai_learning_core.py",
+          "line": 3752
+        },
+        {
+          "module": "bist_bot_backup_ai_learning_core.py",
+          "line": 4515
+        },
+        {
+          "module": "bist_bot_backup_ai_learning_web_calisan.py",
+          "line": 3752
+        },
+        {
+          "module": "bist_bot_backup_ai_learning_web_calisan.py",
+          "line": 4877
+        },
+        {
+          "module": "bist_bot_backup_ai_ogrenme_602.py",
+          "line": 3752
+        },
+        {
+          "module": "bist_bot_backup_ai_ogrenme_602.py",
+          "line": 4291
+        },
+        {
+          "module": "bist_bot_backup_ai_ogrenme_v1.py",
+          "line": 3752
+        },
+        {
+          "module": "bist_bot_backup_ai_ogrenme_v1.py",
+          "line": 4002
+        },
+        {
+          "module": "bist_bot_backup_ai_sonuc_oncesi.py",
+          "line": 3752
+        },
+        {
+          "module": "bist_bot_backup_ai_sonuc_oncesi.py",
+          "line": 4299
+        },
+        {
+          "module": "bist_bot_backup_gunici_v1_calisan.py",
+          "line": 3748
+        },
+        {
+          "module": "bist_bot_fiyat_format_yedek.py",
+          "line": 4356
+        },
+        {
+          "module": "bist_bot_fiyat_format_yedek.py",
+          "line": 5481
+        },
+        {
+          "module": "bist_bot_gunici_ekran_yedek.py",
+          "line": 4165
+        },
+        {
+          "module": "bist_bot_gunici_ekran_yedek.py",
+          "line": 5290
+        },
+        {
+          "module": "bist_bot_gunici_haber_ai_yedek.py",
+          "line": 4002
+        },
+        {
+          "module": "bist_bot_gunici_haber_ai_yedek.py",
+          "line": 5127
+        },
+        {
+          "module": "bist_bot_makro_ai_yedek.py",
+          "line": 4165
+        },
+        {
+          "module": "bist_bot_makro_ai_yedek.py",
+          "line": 5290
+        },
+        {
+          "module": "bist_bot_makro_tetik_yedek.py",
+          "line": 4276
+        },
+        {
+          "module": "bist_bot_makro_tetik_yedek.py",
+          "line": 5401
+        },
+        {
+          "module": "bist_bot_negatif_etki_koruma_yedek.py",
+          "line": 4308
+        },
+        {
+          "module": "bist_bot_negatif_etki_koruma_yedek.py",
+          "line": 5433
+        },
+        {
+          "module": "bist_bot_yarin_haber_ai_yedek.py",
+          "line": 4165
+        },
+        {
+          "module": "bist_bot_yarin_haber_ai_yedek.py",
+          "line": 5290
+        },
+        {
+          "module": "bist_bot_yedek_haber_oncesi.py",
+          "line": 3753
+        },
+        {
+          "module": "bist_bot_yedek_haber_oncesi.py",
+          "line": 4878
+        },
+        {
+          "module": "cloud_bootstrap.py",
+          "line": 11
+        },
+        {
+          "module": "cloud_bootstrap.py",
+          "line": 15
+        },
+        {
+          "module": "disk_koruma.py",
+          "line": 14
+        },
+        {
+          "module": "fiyat_alarm_motoru.py",
+          "line": 46
+        },
+        {
+          "module": "fiyat_alarm_motoru.py",
+          "line": 56
+        },
+        {
+          "module": "kullanici_kayitlari.py",
+          "line": 104
+        },
+        {
+          "module": "pozitif_kapanis.py",
+          "line": 21
+        }
+      ]
+    },
+    {
+      "name": "piyasa_durumu.json",
+      "classification": "CACHE_REVIEW_ONLY",
+      "references": [
+        {
+          "module": "ai_karar_motoru.py",
+          "line": 588
+        },
+        {
+          "module": "piyasa_baglami.py",
+          "line": 235
+        },
+        {
+          "module": "pozitif_kapanis.py",
+          "line": 18
+        }
+      ]
+    },
+    {
+      "name": "haber_zeka_gecmisi.json",
+      "classification": "CRITICAL_PRESERVE",
+      "references": [
+        {
+          "module": "ai_karar_motoru.py",
+          "line": 584
+        },
+        {
+          "module": "disk_forensik.py",
+          "line": 23
+        },
+        {
+          "module": "haber_tekillestirme.py",
+          "line": 110
+        },
+        {
+          "module": "haber_zeka.py",
+          "line": 13
+        },
+        {
+          "module": "sirket_site_motoru.py",
+          "line": 55
+        },
+        {
+          "module": "veri_yollari.py",
+          "line": 19
+        }
+      ]
+    },
+    {
+      "name": "ana_motor_durum.json",
+      "classification": "CACHE_REVIEW_ONLY",
+      "references": [
+        {
+          "module": "ana_motor.py",
+          "line": 137
+        },
+        {
+          "module": "ana_motor.py",
+          "line": 146
+        },
+        {
+          "module": "ana_motor.py",
+          "line": 71
+        },
+        {
+          "module": "atomik_temp_temizligi.py",
+          "line": 23
+        }
+      ]
+    },
+    {
+      "name": ".json",
+      "classification": "UNKNOWN_PRESERVE",
+      "references": [
+        {
+          "module": "ana_motor.py",
+          "line": 124
+        },
+        {
+          "module": "ana_motor_gorevleri.py",
+          "line": 206
+        },
+        {
+          "module": "bist_bot.py",
+          "line": 2311
+        },
+        {
+          "module": "bist_bot.py",
+          "line": 2202
+        },
+        {
+          "module": "bist_bot.py",
+          "line": 2210
+        },
+        {
+          "module": "cloud_bootstrap.py",
+          "line": 57
+        },
+        {
+          "module": "disk_koruma.py",
+          "line": 222
+        },
+        {
+          "module": "disk_koruma.py",
+          "line": 54
+        },
+        {
+          "module": "gun_ici_performans.py",
+          "line": 318
+        },
+        {
+          "module": "gun_ici_performans.py",
+          "line": 259
+        },
+        {
+          "module": "gunluk_al_sat.py",
+          "line": 198
+        },
+        {
+          "module": "piyasa_baglami.py",
+          "line": 364
+        },
+        {
+          "module": "piyasa_baglami.py",
+          "line": 293
+        },
+        {
+          "module": "pozitif_kapanis.py",
+          "line": 348
+        },
+        {
+          "module": "sinyal_performansi.py",
+          "line": 836
+        },
+        {
+          "module": "storage_izleme.py",
+          "line": 32
+        },
+        {
+          "module": "veri_yollari.py",
+          "line": 54
+        },
+        {
+          "module": "web_server.py",
+          "line": 42
+        },
+        {
+          "module": "yarin_plani.py",
+          "line": 196
+        },
+        {
+          "module": "yarin_plani.py",
+          "line": 207
+        }
+      ]
+    },
+    {
+      "name": "public_bootstrap_complete.json",
+      "classification": "UNKNOWN_PRESERVE",
+      "references": [
+        {
+          "module": "ana_motor.py",
+          "line": 215
+        },
+        {
+          "module": "ana_motor.py",
+          "line": 213
+        },
+        {
+          "module": "ana_motor_gorevleri.py",
+          "line": 187
+        },
+        {
+          "module": "ana_motor_gorevleri.py",
+          "line": 183
+        }
+      ]
+    },
+    {
+      "name": "oncelik_kuyrugu.json",
+      "classification": "UNKNOWN_PRESERVE",
+      "references": [
+        {
+          "module": "ana_motor_gorevleri.py",
+          "line": 34
+        }
+      ]
+    },
+    {
+      "name": "pozitif_kapanis_tarama.json",
+      "classification": "UNKNOWN_PRESERVE",
+      "references": [
+        {
+          "module": "ana_motor_gorevleri.py",
+          "line": 209
+        }
+      ]
+    },
+    {
+      "name": "provider_unsupported.json",
+      "classification": "UNKNOWN_PRESERVE",
+      "references": [
+        {
+          "module": "ana_motor_gorevleri.py",
+          "line": 118
+        },
+        {
+          "module": "gunluk_al_sat.py",
+          "line": 229
+        },
+        {
+          "module": "gunluk_al_sat.py",
+          "line": 262
+        }
+      ]
+    },
+    {
+      "name": "tahmin_gecmisi.json",
+      "classification": "CRITICAL_PRESERVE",
+      "references": [
+        {
+          "module": "ana_motor_gorevleri.py",
+          "line": 165
+        },
+        {
+          "module": "atomik_temp_temizligi.py",
+          "line": 22
+        },
+        {
+          "module": "bist_bot.py",
+          "line": 30
+        },
+        {
+          "module": "bist_bot_backup_ai_learning_core.py",
+          "line": 33
+        },
+        {
+          "module": "bist_bot_backup_ai_learning_web_calisan.py",
+          "line": 33
+        },
+        {
+          "module": "bist_bot_backup_ai_ogrenme_602.py",
+          "line": 33
+        },
+        {
+          "module": "bist_bot_backup_ai_ogrenme_v1.py",
+          "line": 33
+        },
+        {
+          "module": "bist_bot_backup_ai_sonuc_oncesi.py",
+          "line": 33
+        },
+        {
+          "module": "bist_bot_backup_before_speed.py",
+          "line": 33
+        },
+        {
+          "module": "bist_bot_backup_gunici_v1.py",
+          "line": 33
+        },
+        {
+          "module": "bist_bot_backup_gunici_v1_calisan.py",
+          "line": 33
+        },
+        {
+          "module": "bist_bot_backup_madde3.py",
+          "line": 33
+        },
+        {
+          "module": "bist_bot_backup_madde4.py",
+          "line": 33
+        },
+        {
+          "module": "bist_bot_backup_madde5_vwap.py",
+          "line": 33
+        },
+        {
+          "module": "bist_bot_backup_madde6_bollinger.py",
+          "line": 33
+        },
+        {
+          "module": "bist_bot_backup_madde7.py",
+          "line": 33
+        },
+        {
+          "module": "bist_bot_backup_retry_scan.py",
+          "line": 33
+        },
+        {
+          "module": "bist_bot_backup_sinyal_v1.py",
+          "line": 33
+        },
+        {
+          "module": "bist_bot_backup_top10_v1.py",
+          "line": 33
+        },
+        {
+          "module": "bist_bot_backup_top10_v3.py",
+          "line": 33
+        },
+        {
+          "module": "bist_bot_backup_tum_bist_arama.py",
+          "line": 33
+        },
+        {
+          "module": "bist_bot_fiyat_format_yedek.py",
+          "line": 35
+        },
+        {
+          "module": "bist_bot_gunici_ekran_yedek.py",
+          "line": 35
+        },
+        {
+          "module": "bist_bot_gunici_haber_ai_yedek.py",
+          "line": 35
+        },
+        {
+          "module": "bist_bot_makro_ai_yedek.py",
+          "line": 35
+        },
+        {
+          "module": "bist_bot_makro_tetik_yedek.py",
+          "line": 35
+        },
+        {
+          "module": "bist_bot_negatif_etki_koruma_yedek.py",
+          "line": 35
+        },
+        {
+          "module": "bist_bot_yarin_haber_ai_yedek.py",
+          "line": 35
+        },
+        {
+          "module": "bist_bot_yedek_haber_oncesi.py",
+          "line": 34
+        },
+        {
+          "module": "disk_forensik.py",
+          "line": 143
+        },
+        {
+          "module": "disk_forensik.py",
+          "line": 119
+        },
+        {
+          "module": "disk_forensik.py",
+          "line": 151
+        },
+        {
+          "module": "disk_forensik.py",
+          "line": 153
+        },
+        {
+          "module": "disk_forensik.py",
+          "line": 343
+        },
+        {
+          "module": "disk_koruma.py",
+          "line": 39
+        },
+        {
+          "module": "disk_resumable.py",
+          "line": 37
+        },
+        {
+          "module": "performans_motoru.py",
+          "line": 335
+        },
+        {
+          "module": "recovery_journal.py",
+          "line": 94
+        },
+        {
+          "module": "sinyal_performansi.py",
+          "line": 774
+        },
+        {
+          "module": "storage_schemas.py",
+          "line": 6
+        },
+        {
+          "module": "storage_schemas.py",
+          "line": 31
+        },
+        {
+          "module": "veri_yollari.py",
+          "line": 17
+        }
+      ]
+    },
+    {
+      "name": "gun_ici_mumlar.json",
+      "classification": "CRITICAL_PRESERVE",
+      "references": [
+        {
+          "module": "atomik_temp_temizligi.py",
+          "line": 22
+        },
+        {
+          "module": "disk_koruma.py",
+          "line": 39
+        },
+        {
+          "module": "gun_ici_performans.py",
+          "line": 127
+        }
+      ]
+    },
+    {
+      "name": "performans_fiyat_cache.json",
+      "classification": "CACHE_REVIEW_ONLY",
+      "references": [
+        {
+          "module": "atomik_temp_temizligi.py",
+          "line": 23
+        },
+        {
+          "module": "disk_koruma.py",
+          "line": 39
+        },
+        {
+          "module": "disk_koruma.py",
+          "line": 110
+        },
+        {
+          "module": "disk_koruma.py",
+          "line": 209
+        },
+        {
+          "module": "gun_ici_performans.py",
+          "line": 284
+        },
+        {
+          "module": "performans_motoru.py",
+          "line": 333
+        },
+        {
+          "module": "yarin_plani.py",
+          "line": 148
+        }
+      ]
+    },
+    {
+      "name": "yarin_top10_sonuclar.json",
+      "classification": "CRITICAL_PRESERVE",
+      "references": [
+        {
+          "module": "atomik_temp_temizligi.py",
+          "line": 23
+        },
+        {
+          "module": "disk_forensik.py",
+          "line": 122
+        },
+        {
+          "module": "disk_forensik.py",
+          "line": 155
+        },
+        {
+          "module": "disk_forensik.py",
+          "line": 343
+        },
+        {
+          "module": "disk_koruma.py",
+          "line": 39
+        },
+        {
+          "module": "disk_resumable.py",
+          "line": 24
+        },
+        {
+          "module": "disk_resumable.py",
+          "line": 37
+        },
+        {
+          "module": "performans_motoru.py",
+          "line": 334
+        },
+        {
+          "module": "storage_schemas.py",
+          "line": 9
+        },
+        {
+          "module": "storage_schemas.py",
+          "line": 31
+        }
+      ]
+    },
+    {
+      "name": "gun_ici_performans_durum.json",
+      "classification": "CACHE_REVIEW_ONLY",
+      "references": [
+        {
+          "module": "atomik_temp_temizligi.py",
+          "line": 24
+        },
+        {
+          "module": "disk_forensik.py",
+          "line": 31
+        },
+        {
+          "module": "disk_koruma.py",
+          "line": 39
+        }
+      ]
+    },
+    {
+      "name": "indicator_performance_state.json",
+      "classification": "UNKNOWN_PRESERVE",
+      "references": [
+        {
+          "module": "atomik_temp_temizligi.py",
+          "line": 24
+        },
+        {
+          "module": "disk_forensik.py",
+          "line": 31
+        },
+        {
+          "module": "disk_forensik.py",
+          "line": 22
+        },
+        {
+          "module": "disk_forensik.py",
+          "line": 177
+        },
+        {
+          "module": "disk_forensik.py",
+          "line": 179
+        },
+        {
+          "module": "disk_forensik.py",
+          "line": 343
+        },
+        {
+          "module": "sinyal_performansi.py",
+          "line": 766
+        }
+      ]
+    },
+    {
+      "name": "yarin_top10_canli.json",
+      "classification": "UNKNOWN_PRESERVE",
+      "references": [
+        {
+          "module": "bist_bot.py",
+          "line": 36
+        },
+        {
+          "module": "fiyat_alarm_motoru.py",
+          "line": 46
+        },
+        {
+          "module": "fiyat_alarm_motoru.py",
+          "line": 49
+        },
+        {
+          "module": "fiyat_alarm_motoru.py",
+          "line": 52
+        }
+      ]
+    },
+    {
+      "name": "yarin_top10.json",
+      "classification": "UNKNOWN_PRESERVE",
+      "references": [
+        {
+          "module": "bist_bot.py",
+          "line": 32
+        },
+        {
+          "module": "bist_bot_backup_ai_learning_core.py",
+          "line": 40
+        },
+        {
+          "module": "bist_bot_backup_ai_learning_web_calisan.py",
+          "line": 40
+        },
+        {
+          "module": "bist_bot_backup_ai_ogrenme_602.py",
+          "line": 40
+        },
+        {
+          "module": "bist_bot_backup_ai_ogrenme_v1.py",
+          "line": 40
+        },
+        {
+          "module": "bist_bot_backup_ai_sonuc_oncesi.py",
+          "line": 40
+        },
+        {
+          "module": "bist_bot_backup_before_speed.py",
+          "line": 40
+        },
+        {
+          "module": "bist_bot_backup_gunici_v1.py",
+          "line": 40
+        },
+        {
+          "module": "bist_bot_backup_gunici_v1_calisan.py",
+          "line": 40
+        },
+        {
+          "module": "bist_bot_backup_madde3.py",
+          "line": 40
+        },
+        {
+          "module": "bist_bot_backup_madde4.py",
+          "line": 40
+        },
+        {
+          "module": "bist_bot_backup_madde5_vwap.py",
+          "line": 40
+        },
+        {
+          "module": "bist_bot_backup_madde6_bollinger.py",
+          "line": 40
+        },
+        {
+          "module": "bist_bot_backup_madde7.py",
+          "line": 40
+        },
+        {
+          "module": "bist_bot_backup_retry_scan.py",
+          "line": 40
+        },
+        {
+          "module": "bist_bot_backup_sinyal_v1.py",
+          "line": 40
+        },
+        {
+          "module": "bist_bot_backup_top10_v1.py",
+          "line": 40
+        },
+        {
+          "module": "bist_bot_backup_top10_v3.py",
+          "line": 40
+        },
+        {
+          "module": "bist_bot_backup_tum_bist_arama.py",
+          "line": 40
+        },
+        {
+          "module": "bist_bot_fiyat_format_yedek.py",
+          "line": 42
+        },
+        {
+          "module": "bist_bot_gunici_ekran_yedek.py",
+          "line": 42
+        },
+        {
+          "module": "bist_bot_gunici_haber_ai_yedek.py",
+          "line": 42
+        },
+        {
+          "module": "bist_bot_makro_ai_yedek.py",
+          "line": 42
+        },
+        {
+          "module": "bist_bot_makro_tetik_yedek.py",
+          "line": 42
+        },
+        {
+          "module": "bist_bot_negatif_etki_koruma_yedek.py",
+          "line": 42
+        },
+        {
+          "module": "bist_bot_yarin_haber_ai_yedek.py",
+          "line": 42
+        },
+        {
+          "module": "bist_bot_yedek_haber_oncesi.py",
+          "line": 41
+        },
+        {
+          "module": "cloud_bootstrap.py",
+          "line": 11
+        },
+        {
+          "module": "cloud_bootstrap.py",
+          "line": 16
+        },
+        {
+          "module": "cloud_bootstrap.py",
+          "line": 54
+        },
+        {
+          "module": "cloud_bootstrap.py",
+          "line": 57
+        },
+        {
+          "module": "cloud_bootstrap.py",
+          "line": 64
+        },
+        {
+          "module": "disk_koruma.py",
+          "line": 14
+        }
+      ]
+    },
+    {
+      "name": "gun_ici_gecersiz_semboller.json",
+      "classification": "CACHE_REVIEW_ONLY",
+      "references": [
+        {
+          "module": "bist_bot.py",
+          "line": 39
+        },
+        {
+          "module": "bist_bot_backup_ai_learning_core.py",
+          "line": 47
+        },
+        {
+          "module": "bist_bot_backup_ai_learning_web_calisan.py",
+          "line": 47
+        },
+        {
+          "module": "bist_bot_backup_ai_ogrenme_602.py",
+          "line": 47
+        },
+        {
+          "module": "bist_bot_backup_ai_ogrenme_v1.py",
+          "line": 47
+        },
+        {
+          "module": "bist_bot_backup_ai_sonuc_oncesi.py",
+          "line": 47
+        },
+        {
+          "module": "bist_bot_backup_before_speed.py",
+          "line": 47
+        },
+        {
+          "module": "bist_bot_backup_gunici_v1.py",
+          "line": 47
+        },
+        {
+          "module": "bist_bot_backup_gunici_v1_calisan.py",
+          "line": 47
+        },
+        {
+          "module": "bist_bot_backup_madde3.py",
+          "line": 47
+        },
+        {
+          "module": "bist_bot_backup_madde4.py",
+          "line": 47
+        },
+        {
+          "module": "bist_bot_backup_madde5_vwap.py",
+          "line": 47
+        },
+        {
+          "module": "bist_bot_backup_madde6_bollinger.py",
+          "line": 47
+        },
+        {
+          "module": "bist_bot_backup_madde7.py",
+          "line": 47
+        },
+        {
+          "module": "bist_bot_backup_retry_scan.py",
+          "line": 47
+        },
+        {
+          "module": "bist_bot_backup_sinyal_v1.py",
+          "line": 47
+        },
+        {
+          "module": "bist_bot_backup_top10_v1.py",
+          "line": 47
+        },
+        {
+          "module": "bist_bot_backup_top10_v3.py",
+          "line": 47
+        },
+        {
+          "module": "bist_bot_backup_tum_bist_arama.py",
+          "line": 47
+        },
+        {
+          "module": "bist_bot_fiyat_format_yedek.py",
+          "line": 49
+        },
+        {
+          "module": "bist_bot_gunici_ekran_yedek.py",
+          "line": 49
+        },
+        {
+          "module": "bist_bot_gunici_haber_ai_yedek.py",
+          "line": 49
+        },
+        {
+          "module": "bist_bot_makro_ai_yedek.py",
+          "line": 49
+        },
+        {
+          "module": "bist_bot_makro_tetik_yedek.py",
+          "line": 49
+        },
+        {
+          "module": "bist_bot_negatif_etki_koruma_yedek.py",
+          "line": 49
+        },
+        {
+          "module": "bist_bot_yarin_haber_ai_yedek.py",
+          "line": 49
+        },
+        {
+          "module": "bist_bot_yedek_haber_oncesi.py",
+          "line": 48
+        },
+        {
+          "module": "disk_forensik.py",
+          "line": 24
+        },
+        {
+          "module": "veri_yollari.py",
+          "line": 18
+        }
+      ]
+    },
+    {
+      "name": "ai_ogrenme_ozeti.json",
+      "classification": "CRITICAL_PRESERVE",
+      "references": [
+        {
+          "module": "bist_bot.py",
+          "line": 4757
+        },
+        {
+          "module": "bist_bot_backup_ai_learning_core.py",
+          "line": 4068
+        },
+        {
+          "module": "bist_bot_backup_ai_learning_web_calisan.py",
+          "line": 4090
+        },
+        {
+          "module": "bist_bot_backup_ai_ogrenme_602.py",
+          "line": 4068
+        },
+        {
+          "module": "bist_bot_backup_ai_sonuc_oncesi.py",
+          "line": 4068
+        },
+        {
+          "module": "bist_bot_fiyat_format_yedek.py",
+          "line": 4694
+        },
+        {
+          "module": "bist_bot_gunici_ekran_yedek.py",
+          "line": 4503
+        },
+        {
+          "module": "bist_bot_gunici_haber_ai_yedek.py",
+          "line": 4340
+        },
+        {
+          "module": "bist_bot_makro_ai_yedek.py",
+          "line": 4503
+        },
+        {
+          "module": "bist_bot_makro_tetik_yedek.py",
+          "line": 4614
+        },
+        {
+          "module": "bist_bot_negatif_etki_koruma_yedek.py",
+          "line": 4646
+        },
+        {
+          "module": "bist_bot_yarin_haber_ai_yedek.py",
+          "line": 4503
+        },
+        {
+          "module": "bist_bot_yedek_haber_oncesi.py",
+          "line": 4091
+        }
+      ]
+    },
+    {
+      "name": "ai_ogrenilmis_agirliklar.json",
+      "classification": "CRITICAL_PRESERVE",
+      "references": [
+        {
+          "module": "bist_bot.py",
+          "line": 4869
+        },
+        {
+          "module": "bist_bot_backup_ai_learning_web_calisan.py",
+          "line": 4206
+        },
+        {
+          "module": "bist_bot_fiyat_format_yedek.py",
+          "line": 4810
+        },
+        {
+          "module": "bist_bot_gunici_ekran_yedek.py",
+          "line": 4619
+        },
+        {
+          "module": "bist_bot_gunici_haber_ai_yedek.py",
+          "line": 4456
+        },
+        {
+          "module": "bist_bot_makro_ai_yedek.py",
+          "line": 4619
+        },
+        {
+          "module": "bist_bot_makro_tetik_yedek.py",
+          "line": 4730
+        },
+        {
+          "module": "bist_bot_negatif_etki_koruma_yedek.py",
+          "line": 4762
+        },
+        {
+          "module": "bist_bot_yarin_haber_ai_yedek.py",
+          "line": 4619
+        },
+        {
+          "module": "bist_bot_yedek_haber_oncesi.py",
+          "line": 4207
+        }
+      ]
+    },
+    {
+      "name": "gun_ici_top10.json",
+      "classification": "UNKNOWN_PRESERVE",
+      "references": [
+        {
+          "module": "bist_bot.py",
+          "line": 5528
+        },
+        {
+          "module": "bist_bot_backup_ai_learning_core.py",
+          "line": 4482
+        },
+        {
+          "module": "bist_bot_backup_ai_learning_web_calisan.py",
+          "line": 4844
+        },
+        {
+          "module": "bist_bot_backup_ai_ogrenme_602.py",
+          "line": 4258
+        },
+        {
+          "module": "bist_bot_backup_ai_ogrenme_v1.py",
+          "line": 3969
+        },
+        {
+          "module": "bist_bot_backup_ai_sonuc_oncesi.py",
+          "line": 4266
+        },
+        {
+          "module": "bist_bot_backup_before_speed.py",
+          "line": 2948
+        },
+        {
+          "module": "bist_bot_backup_gunici_v1.py",
+          "line": 3540
+        },
+        {
+          "module": "bist_bot_backup_gunici_v1_calisan.py",
+          "line": 3715
+        },
+        {
+          "module": "bist_bot_backup_madde3.py",
+          "line": 3025
+        },
+        {
+          "module": "bist_bot_backup_madde4.py",
+          "line": 3113
+        },
+        {
+          "module": "bist_bot_backup_madde5_vwap.py",
+          "line": 3129
+        },
+        {
+          "module": "bist_bot_backup_madde6_bollinger.py",
+          "line": 3183
+        },
+        {
+          "module": "bist_bot_backup_madde7.py",
+          "line": 3249
+        },
+        {
+          "module": "bist_bot_backup_retry_scan.py",
+          "line": 3441
+        },
+        {
+          "module": "bist_bot_backup_sinyal_v1.py",
+          "line": 2948
+        },
+        {
+          "module": "bist_bot_backup_top10_v1.py",
+          "line": 2948
+        },
+        {
+          "module": "bist_bot_backup_top10_v3.py",
+          "line": 2948
+        },
+        {
+          "module": "bist_bot_backup_tum_bist_arama.py",
+          "line": 3415
+        },
+        {
+          "module": "bist_bot_fiyat_format_yedek.py",
+          "line": 5448
+        },
+        {
+          "module": "bist_bot_gunici_ekran_yedek.py",
+          "line": 5257
+        },
+        {
+          "module": "bist_bot_gunici_haber_ai_yedek.py",
+          "line": 5094
+        },
+        {
+          "module": "bist_bot_makro_ai_yedek.py",
+          "line": 5257
+        },
+        {
+          "module": "bist_bot_makro_tetik_yedek.py",
+          "line": 5368
+        },
+        {
+          "module": "bist_bot_negatif_etki_koruma_yedek.py",
+          "line": 5400
+        },
+        {
+          "module": "bist_bot_yarin_haber_ai_yedek.py",
+          "line": 5257
+        },
+        {
+          "module": "bist_bot_yedek_haber_oncesi.py",
+          "line": 4845
+        },
+        {
+          "module": "cloud_bootstrap.py",
+          "line": 11
+        },
+        {
+          "module": "cloud_bootstrap.py",
+          "line": 14
+        },
+        {
+          "module": "disk_koruma.py",
+          "line": 14
+        }
+      ]
+    },
+    {
+      "name": "canli_motor_durum.json",
+      "classification": "CACHE_REVIEW_ONLY",
+      "references": [
+        {
+          "module": "canli_motor.py",
+          "line": 23
+        },
+        {
+          "module": "disk_forensik.py",
+          "line": 31
+        },
+        {
+          "module": "disk_forensik.py",
+          "line": 24
+        },
+        {
+          "module": "veri_yollari.py",
+          "line": 17
+        }
+      ]
+    },
+    {
+      "name": "bist_veri.json",
+      "classification": "UNKNOWN_PRESERVE",
+      "references": [
+        {
+          "module": "canli_motor.py",
+          "line": 374
+        }
+      ]
+    },
+    {
+      "name": "webapp/data/canli_motor_durum.json",
+      "classification": "CACHE_REVIEW_ONLY",
+      "references": [
+        {
+          "module": "canli_motor_kap_yedek.py",
+          "line": 19
+        }
+      ]
+    },
+    {
+      "name": "sektor_haritasi.json",
+      "classification": "UNKNOWN_PRESERVE",
+      "references": [
+        {
+          "module": "cloud_bootstrap.py",
+          "line": 45
+        },
+        {
+          "module": "disk_koruma.py",
+          "line": 14
+        },
+        {
+          "module": "sektor_haritasi.py",
+          "line": 14
+        },
+        {
+          "module": "sektor_haritasi.py",
+          "line": 25
+        }
+      ]
+    },
+    {
+      "name": "sirket_site_haritasi.json",
+      "classification": "UNKNOWN_PRESERVE",
+      "references": [
+        {
+          "module": "cloud_bootstrap.py",
+          "line": 45
+        },
+        {
+          "module": "disk_koruma.py",
+          "line": 14
+        },
+        {
+          "module": "sirket_site_haritasi.py",
+          "line": 15
+        },
+        {
+          "module": "sirket_site_ikinci_tur.py",
+          "line": 7
+        },
+        {
+          "module": "sirket_site_motoru.py",
+          "line": 44
+        }
+      ]
+    },
+    {
+      "name": "*.json",
+      "classification": "UNKNOWN_PRESERVE",
+      "references": [
+        {
+          "module": "cloud_bootstrap.py",
+          "line": 49
+        },
+        {
+          "module": "cloud_bootstrap.py",
+          "line": 59
+        },
+        {
+          "module": "veri_yollari.py",
+          "line": 142
+        },
+        {
+          "module": "veri_yollari.py",
+          "line": 146
+        },
+        {
+          "module": "veri_yollari.py",
+          "line": 148
+        },
+        {
+          "module": "veri_yollari.py",
+          "line": 149
+        }
+      ]
+    },
+    {
+      "name": "\\d{4}-\\d{2}-\\d{2}\\.json",
+      "classification": "UNKNOWN_PRESERVE",
+      "references": [
+        {
+          "module": "cloud_bootstrap.py",
+          "line": 50
+        },
+        {
+          "module": "cloud_bootstrap.py",
+          "line": 60
+        },
+        {
+          "module": "veri_yollari.py",
+          "line": 147
+        },
+        {
+          "module": "web_server.py",
+          "line": 39
+        }
+      ]
+    },
+    {
+      "name": "performans_durum.json",
+      "classification": "CACHE_REVIEW_ONLY",
+      "references": [
+        {
+          "module": "disk_forensik.py",
+          "line": 31
+        },
+        {
+          "module": "disk_forensik.py",
+          "line": 21
+        },
+        {
+          "module": "performans_motoru.py",
+          "line": 332
+        }
+      ]
+    },
+    {
+      "name": "intraday_signal_performance_state.json",
+      "classification": "CRITICAL_PRESERVE",
+      "references": [
+        {
+          "module": "disk_forensik.py",
+          "line": 31
+        },
+        {
+          "module": "disk_forensik.py",
+          "line": 22
+        },
+        {
+          "module": "gun_ici_performans.py",
+          "line": 250
+        }
+      ]
+    },
+    {
+      "name": "gun_ici_sonuclar.json",
+      "classification": "CRITICAL_PRESERVE",
+      "references": [
+        {
+          "module": "disk_forensik.py",
+          "line": 21
+        },
+        {
+          "module": "disk_forensik.py",
+          "line": 143
+        },
+        {
+          "module": "disk_forensik.py",
+          "line": 144
+        },
+        {
+          "module": "disk_forensik.py",
+          "line": 121
+        },
+        {
+          "module": "disk_forensik.py",
+          "line": 153
+        },
+        {
+          "module": "disk_forensik.py",
+          "line": 343
+        },
+        {
+          "module": "gun_ici_performans.py",
+          "line": 125
+        },
+        {
+          "module": "storage_schemas.py",
+          "line": 7
+        },
+        {
+          "module": "storage_schemas.py",
+          "line": 24
+        }
+      ]
+    },
+    {
+      "name": "sinyal_performansi.json",
+      "classification": "UNKNOWN_PRESERVE",
+      "references": [
+        {
+          "module": "disk_forensik.py",
+          "line": 21
+        },
+        {
+          "module": "disk_forensik.py",
+          "line": 177
+        },
+        {
+          "module": "disk_forensik.py",
+          "line": 343
+        },
+        {
+          "module": "sinyal_performansi.py",
+          "line": 288
+        },
+        {
+          "module": "sinyal_performansi.py",
+          "line": 296
+        }
+      ]
+    },
+    {
+      "name": "makro_ai_gecmisi.json",
+      "classification": "CRITICAL_PRESERVE",
+      "references": [
+        {
+          "module": "disk_forensik.py",
+          "line": 23
+        },
+        {
+          "module": "makro_ai.py",
+          "line": 19
+        },
+        {
+          "module": "performans_motoru.py",
+          "line": 408
+        },
+        {
+          "module": "veri_yollari.py",
+          "line": 19
+        }
+      ]
+    },
+    {
+      "name": "kap_son_gorulen.json",
+      "classification": "UNKNOWN_PRESERVE",
+      "references": [
+        {
+          "module": "disk_forensik.py",
+          "line": 23
+        },
+        {
+          "module": "kap_canli.py",
+          "line": 26
+        },
+        {
+          "module": "kap_canli_ai_tetik_yedek.py",
+          "line": 23
+        },
+        {
+          "module": "veri_yollari.py",
+          "line": 15
+        },
+        {
+          "module": "veri_yollari.py",
+          "line": 15
+        }
+      ]
+    },
+    {
+      "name": "makro_gorulen.json",
+      "classification": "UNKNOWN_PRESERVE",
+      "references": [
+        {
+          "module": "disk_forensik.py",
+          "line": 24
+        },
+        {
+          "module": "makro_kaynak.py",
+          "line": 19
+        },
+        {
+          "module": "veri_yollari.py",
+          "line": 17
+        }
+      ]
+    },
+    {
+      "name": "yarin_kalibrasyon.json",
+      "classification": "UNKNOWN_PRESERVE",
+      "references": [
+        {
+          "module": "disk_forensik.py",
+          "line": 25
+        },
+        {
+          "module": "disk_koruma.py",
+          "line": 39
+        },
+        {
+          "module": "performans_motoru.py",
+          "line": 784
+        },
+        {
+          "module": "performans_motoru.py",
+          "line": 1214
+        },
+        {
+          "module": "yarin_kalibrasyon.py",
+          "line": 117
+        }
+      ]
+    },
+    {
+      "name": "gun_ici_agirliklari.json",
+      "classification": "UNKNOWN_PRESERVE",
+      "references": [
+        {
+          "module": "disk_forensik.py",
+          "line": 25
+        },
+        {
+          "module": "disk_koruma.py",
+          "line": 39
+        },
+        {
+          "module": "gun_ici_performans.py",
+          "line": 126
+        },
+        {
+          "module": "performans_motoru.py",
+          "line": 784
+        },
+        {
+          "module": "performans_motoru.py",
+          "line": 1214
+        }
+      ]
+    },
+    {
+      "name": "karar_hata_gunlugu.json",
+      "classification": "UNKNOWN_PRESERVE",
+      "references": [
+        {
+          "module": "disk_forensik.py",
+          "line": 26
+        },
+        {
+          "module": "disk_koruma.py",
+          "line": 39
+        },
+        {
+          "module": "performans_motoru.py",
+          "line": 1178
+        },
+        {
+          "module": "pozitif_kapanis.py",
+          "line": 366
+        }
+      ]
+    },
+    {
+      "name": "disk_cleanup_manifest.json",
+      "classification": "UNKNOWN_PRESERVE",
+      "references": [
+        {
+          "module": "disk_forensik.py",
+          "line": 189
+        }
+      ]
+    },
+    {
+      "name": "disk_reclaim_v1.json",
+      "classification": "UNKNOWN_PRESERVE",
+      "references": [
+        {
+          "module": "disk_koruma.py",
+          "line": 195
+        }
+      ]
+    },
+    {
+      "name": "runtime/performans_fiyat_cache.json",
+      "classification": "CACHE_REVIEW_ONLY",
+      "references": [
+        {
+          "module": "disk_koruma.py",
+          "line": 214
+        }
+      ]
+    },
+    {
+      "name": "disk_forensic_checkpoint.json",
+      "classification": "UNKNOWN_PRESERVE",
+      "references": [
+        {
+          "module": "disk_resumable.py",
+          "line": 50
+        }
+      ]
+    },
+    {
+      "name": "fiyat_alarmlari.json",
+      "classification": "CRITICAL_PRESERVE",
+      "references": [
+        {
+          "module": "fiyat_alarm_motoru.py",
+          "line": 127
+        },
+        {
+          "module": "fiyat_alarm_motoru.py",
+          "line": 180
+        },
+        {
+          "module": "kullanici_kayitlari.py",
+          "line": 145
+        },
+        {
+          "module": "kullanici_kayitlari.py",
+          "line": 175
+        },
+        {
+          "module": "kullanici_kayitlari.py",
+          "line": 190
+        },
+        {
+          "module": "push_bildirim_motoru.py",
+          "line": 15
+        },
+        {
+          "module": "veri_yollari.py",
+          "line": 13
+        }
+      ]
+    },
+    {
+      "name": "gun_ici_performans.json",
+      "classification": "UNKNOWN_PRESERVE",
+      "references": [
+        {
+          "module": "gun_ici_performans.py",
+          "line": 450
+        }
+      ]
+    },
+    {
+      "name": "gun_ici_onerilen_agirliklar.json",
+      "classification": "UNKNOWN_PRESERVE",
+      "references": [
+        {
+          "module": "gun_ici_performans.py",
+          "line": 453
+        }
+      ]
+    },
+    {
+      "name": "gunluk_al_sat_state.json",
+      "classification": "UNKNOWN_PRESERVE",
+      "references": [
+        {
+          "module": "gunluk_al_sat.py",
+          "line": 189
+        }
+      ]
+    },
+    {
+      "name": "gunluk_al_sat.json",
+      "classification": "UNKNOWN_PRESERVE",
+      "references": [
+        {
+          "module": "gunluk_al_sat.py",
+          "line": 190
+        },
+        {
+          "module": "gunluk_al_sat.py",
+          "line": 280
+        }
+      ]
+    },
+    {
+      "name": "canonical_haberler.json",
+      "classification": "UNKNOWN_PRESERVE",
+      "references": [
+        {
+          "module": "haber_tekillestirme.py",
+          "line": 109
+        },
+        {
+          "module": "sirket_site_motoru.py",
+          "line": 56
+        }
+      ]
+    },
+    {
+      "name": "intraday_signal_performance.json",
+      "classification": "CRITICAL_PRESERVE",
+      "references": [
+        {
+          "module": "intraday_sinyal_performansi.py",
+          "line": 307
+        },
+        {
+          "module": "intraday_sinyal_performansi.py",
+          "line": 323
+        }
+      ]
+    },
+    {
+      "name": "????-??-??.json",
+      "classification": "UNKNOWN_PRESERVE",
+      "references": [
+        {
+          "module": "intraday_sinyal_performansi.py",
+          "line": 68
+        },
+        {
+          "module": "performans_motoru.py",
+          "line": 339
+        },
+        {
+          "module": "sinyal_performansi.py",
+          "line": 776
+        }
+      ]
+    },
+    {
+      "name": "kap_alarmlar.json",
+      "classification": "CRITICAL_PRESERVE",
+      "references": [
+        {
+          "module": "kap_canli.py",
+          "line": 285
+        },
+        {
+          "module": "sirket_site_motoru.py",
+          "line": 195
+        }
+      ]
+    },
+    {
+      "name": "webapp/data/kap_alarmlar.json",
+      "classification": "CRITICAL_PRESERVE",
+      "references": [
+        {
+          "module": "kap_canli_ai_tetik_yedek.py",
+          "line": 307
+        }
+      ]
+    },
+    {
+      "name": "kullanici_seviyeleri.json",
+      "classification": "CRITICAL_PRESERVE",
+      "references": [
+        {
+          "module": "kullanici_kayitlari.py",
+          "line": 85
+        },
+        {
+          "module": "kullanici_kayitlari.py",
+          "line": 92
+        },
+        {
+          "module": "veri_yollari.py",
+          "line": 13
+        }
+      ]
+    },
+    {
+      "name": "webapp/data/makro_ai_gecmisi.json",
+      "classification": "CRITICAL_PRESERVE",
+      "references": [
+        {
+          "module": "makro_ai_canli_yedek.py",
+          "line": 16
+        }
+      ]
+    },
+    {
+      "name": "makro_kaynak_durum.json",
+      "classification": "CACHE_REVIEW_ONLY",
+      "references": [
+        {
+          "module": "makro_kaynak.py",
+          "line": 17
+        }
+      ]
+    },
+    {
+      "name": "algoritma_saglik.json",
+      "classification": "UNKNOWN_PRESERVE",
+      "references": [
+        {
+          "module": "performans_motoru.py",
+          "line": 1223
+        },
+        {
+          "module": "performans_motoru.py",
+          "line": 1189
+        }
+      ]
+    },
+    {
+      "name": "kombinasyon_performansi.json",
+      "classification": "UNKNOWN_PRESERVE",
+      "references": [
+        {
+          "module": "performans_motoru.py",
+          "line": 1223
+        },
+        {
+          "module": "performans_motoru.py",
+          "line": 1189
+        }
+      ]
+    },
+    {
+      "name": "onerilen_agirliklar.json",
+      "classification": "UNKNOWN_PRESERVE",
+      "references": [
+        {
+          "module": "performans_motoru.py",
+          "line": 488
+        },
+        {
+          "module": "performans_motoru.py",
+          "line": 1217
+        },
+        {
+          "module": "performans_motoru.py",
+          "line": 1321
+        }
+      ]
+    },
+    {
+      "name": "kriter_performansi.json",
+      "classification": "UNKNOWN_PRESERVE",
+      "references": [
+        {
+          "module": "performans_motoru.py",
+          "line": 1217
+        },
+        {
+          "module": "performans_motoru.py",
+          "line": 1320
+        }
+      ]
+    },
+    {
+      "name": "shadow_model_ozeti.json",
+      "classification": "UNKNOWN_PRESERVE",
+      "references": [
+        {
+          "module": "performans_motoru.py",
+          "line": 1217
+        },
+        {
+          "module": "performans_motoru.py",
+          "line": 1320
+        }
+      ]
+    },
+    {
+      "name": "performans_gunluk.json",
+      "classification": "UNKNOWN_PRESERVE",
+      "references": [
+        {
+          "module": "performans_motoru.py",
+          "line": 484
+        }
+      ]
+    },
+    {
+      "name": "performans_ozeti.json",
+      "classification": "UNKNOWN_PRESERVE",
+      "references": [
+        {
+          "module": "performans_motoru.py",
+          "line": 485
+        }
+      ]
+    },
+    {
+      "name": "sector_index_discovery.json",
+      "classification": "UNKNOWN_PRESERVE",
+      "references": [
+        {
+          "module": "piyasa_baglami.py",
+          "line": 894
+        }
+      ]
+    },
+    {
+      "name": "market_context_index.json",
+      "classification": "UNKNOWN_PRESERVE",
+      "references": [
+        {
+          "module": "piyasa_baglami.py",
+          "line": 956
+        },
+        {
+          "module": "piyasa_baglami.py",
+          "line": 304
+        },
+        {
+          "module": "piyasa_baglami.py",
+          "line": 394
+        }
+      ]
+    },
+    {
+      "name": "sector_bootstrap_state.json",
+      "classification": "UNKNOWN_PRESERVE",
+      "references": [
+        {
+          "module": "piyasa_baglami.py",
+          "line": 989
+        }
+      ]
+    },
+    {
+      "name": "market_context.json",
+      "classification": "UNKNOWN_PRESERVE",
+      "references": [
+        {
+          "module": "piyasa_baglami.py",
+          "line": 276
+        },
+        {
+          "module": "piyasa_baglami.py",
+          "line": 395
+        },
+        {
+          "module": "piyasa_baglami.py",
+          "line": 266
+        },
+        {
+          "module": "sinyal_performansi.py",
+          "line": 536
+        }
+      ]
+    },
+    {
+      "name": "sector_context.json",
+      "classification": "UNKNOWN_PRESERVE",
+      "references": [
+        {
+          "module": "piyasa_baglami.py",
+          "line": 364
+        },
+        {
+          "module": "piyasa_baglami.py",
+          "line": 347
+        },
+        {
+          "module": "sinyal_performansi.py",
+          "line": 537
+        }
+      ]
+    },
+    {
+      "name": "market_context_universe.json",
+      "classification": "UNKNOWN_PRESERVE",
+      "references": [
+        {
+          "module": "piyasa_baglami.py",
+          "line": 280
+        },
+        {
+          "module": "piyasa_baglami.py",
+          "line": 368
+        },
+        {
+          "module": "piyasa_baglami.py",
+          "line": 375
+        }
+      ]
+    },
+    {
+      "name": "pozitif_hisseler_performansi.json",
+      "classification": "UNKNOWN_PRESERVE",
+      "references": [
+        {
+          "module": "pozitif_kapanis.py",
+          "line": 339
+        },
+        {
+          "module": "pozitif_kapanis.py",
+          "line": 376
+        }
+      ]
+    },
+    {
+      "name": "push_subscriptions.json",
+      "classification": "CRITICAL_PRESERVE",
+      "references": [
+        {
+          "module": "push_bildirim_motoru.py",
+          "line": 14
+        },
+        {
+          "module": "veri_yollari.py",
+          "line": 14
+        }
+      ]
+    },
+    {
+      "name": "indicator_performance.json",
+      "classification": "UNKNOWN_PRESERVE",
+      "references": [
+        {
+          "module": "sinyal_performansi.py",
+          "line": 766
+        },
+        {
+          "module": "sinyal_performansi.py",
+          "line": 706
+        }
+      ]
+    },
+    {
+      "name": "sirket_site_durum.json",
+      "classification": "CACHE_REVIEW_ONLY",
+      "references": [
+        {
+          "module": "sirket_site_motoru.py",
+          "line": 42
+        }
+      ]
+    },
+    {
+      "name": "sirket_haberleri.json",
+      "classification": "UNKNOWN_PRESERVE",
+      "references": [
+        {
+          "module": "sirket_site_motoru.py",
+          "line": 45
+        }
+      ]
+    },
+    {
+      "name": "top10_ogrenme_performansi.json",
+      "classification": "CRITICAL_PRESERVE",
+      "references": [
+        {
+          "module": "top10_ogrenme_performansi.py",
+          "line": 149
+        },
+        {
+          "module": "top10_ogrenme_performansi.py",
+          "line": 169
+        }
+      ]
+    },
+    {
+      "name": "pending_notifications.json",
+      "classification": "CRITICAL_PRESERVE",
+      "references": [
+        {
+          "module": "veri_yollari.py",
+          "line": 14
+        }
+      ]
+    },
+    {
+      "name": "yarin_agirlik_gecmisi.json",
+      "classification": "CRITICAL_PRESERVE",
+      "references": [
+        {
+          "module": "yarin_kalibrasyon.py",
+          "line": 118
+        }
+      ]
+    },
+    {
+      "name": "kalibrasyon_durumu.json",
+      "classification": "CACHE_REVIEW_ONLY",
+      "references": [
+        {
+          "module": "yarin_kalibrasyon.py",
+          "line": 231
+        }
+      ]
+    }
+  ],
+  "tracked_json_files": [
+    {
+      "path": "kap_son_gorulen.json",
+      "bytes": 87678,
+      "classification": "SOURCE_PRESERVE"
+    },
+    {
+      "path": "webapp/data/ai_ogrenilmis_agirliklar.json",
+      "bytes": 288,
+      "classification": "SOURCE_PRESERVE"
+    },
+    {
+      "path": "webapp/data/ai_ogrenme_gecmisi.json",
+      "bytes": 648327,
+      "classification": "SOURCE_PRESERVE"
+    },
+    {
+      "path": "webapp/data/ai_ogrenme_gecmisi_backup_602.json",
+      "bytes": 566455,
+      "classification": "SOURCE_PRESERVE"
+    },
+    {
+      "path": "webapp/data/ai_ogrenme_gecmisi_before_learning.json",
+      "bytes": 648327,
+      "classification": "SOURCE_PRESERVE"
+    },
+    {
+      "path": "webapp/data/ai_ogrenme_ozeti.json",
+      "bytes": 439,
+      "classification": "SOURCE_PRESERVE"
+    },
+    {
+      "path": "webapp/data/ai_ogrenme_ozeti_backup_602.json",
+      "bytes": 441,
+      "classification": "SOURCE_PRESERVE"
+    },
+    {
+      "path": "webapp/data/bist_data.json",
+      "bytes": 7516645,
+      "classification": "SOURCE_PRESERVE"
+    },
+    {
+      "path": "webapp/data/gun_ici_gecersiz_semboller.json",
+      "bytes": 2226,
+      "classification": "SOURCE_PRESERVE"
+    },
+    {
+      "path": "webapp/data/gun_ici_top10.json",
+      "bytes": 16159,
+      "classification": "SOURCE_PRESERVE"
+    },
+    {
+      "path": "webapp/data/gun_ici_tum.json",
+      "bytes": 900435,
+      "classification": "SOURCE_PRESERVE"
+    },
+    {
+      "path": "webapp/data/haber_zeka_gecmisi.json",
+      "bytes": 34,
+      "classification": "SOURCE_PRESERVE"
+    },
+    {
+      "path": "webapp/data/kap_alarmlar.json",
+      "bytes": 452,
+      "classification": "SOURCE_PRESERVE"
+    },
+    {
+      "path": "webapp/data/makro_canli_etki.json",
+      "bytes": 115,
+      "classification": "SOURCE_PRESERVE"
+    },
+    {
+      "path": "webapp/data/makro_gorulen.json",
+      "bytes": 1027,
+      "classification": "SOURCE_PRESERVE"
+    },
+    {
+      "path": "webapp/data/makro_kaynak_durum.json",
+      "bytes": 82,
+      "classification": "SOURCE_PRESERVE"
+    },
+    {
+      "path": "webapp/data/sektor_haritasi.json",
+      "bytes": 90600,
+      "classification": "SOURCE_PRESERVE"
+    },
+    {
+      "path": "webapp/data/sirket_site_haritasi.json",
+      "bytes": 161242,
+      "classification": "SOURCE_PRESERVE"
+    },
+    {
+      "path": "webapp/data/tahmin_gecmisi.json",
+      "bytes": 1381230,
+      "classification": "SOURCE_PRESERVE"
+    },
+    {
+      "path": "webapp/data/yarin_top10.json",
+      "bytes": 19671,
+      "classification": "SOURCE_PRESERVE"
+    }
+  ]
+}
