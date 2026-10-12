@@ -23,3 +23,41 @@ jobs:
           python -m py_compile canli_motor.py
           python -m unittest discover -s tests -p test_canli_motor_zamanlama.py -v
           python -m unittest discover -s tests -p test_yarin_snapshot.py -v
+
+  live-bist-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      BIST_DATA_DIR: ${{ runner.temp }}/bist-e2e-data
+      BIST_RUNTIME_DIR: ${{ runner.temp }}/bist-e2e-runtime
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Bagimliliklari kur
+        run: pip install -r requirements.txt
+      - name: Gercek BIST verisiyle tam tarama
+        timeout-minutes: 25
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import pathlib
+          import bist_bot
+          from veri_yollari import public_file
+          rows, total = bist_bot.bist_tara()
+          analyzed = [r for r in rows if isinstance(r, dict) and r.get("sembol") and r.get("fiyat") is not None]
+          print("E2E_TOTAL_SYMBOLS", total)
+          print("E2E_RETURNED_ROWS", len(rows))
+          print("E2E_PRICED_ROWS", len(analyzed))
+          assert total > 0, "BIST sembol listesi bos"
+          assert len(analyzed) > 0, "Canli kaynaktan analizli hisse gelmedi"
+          data_file = pathlib.Path(bist_bot.DATA_FILE)
+          assert data_file.exists(), f"Web verisi uretilmedi: {data_file}"
+          payload = json.loads(data_file.read_text(encoding="utf-8"))
+          assert isinstance(payload, dict) and isinstance(payload.get("hisseler"), list), "Web verisi beklenen bicimde degil"
+          print("E2E_WEB_ROWS", len(payload["hisseler"]))
+          assert len(payload["hisseler"]) > 0, "Web hisse listesi bos"
+          print("E2E_PASS")
+          PY
