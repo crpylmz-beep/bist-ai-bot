@@ -254,11 +254,12 @@ def motoru_calistir():
             now = datetime.now(ZoneInfo("Europe/Istanbul"))
             if now.weekday() < 5 and 1100 <= now.hour*60+now.minute < 1110 and son_gun_sonu != now.date():
                 durum_yaz(motor="AKTIF", durum="GUN_SONU_HESAPLANIYOR")
-                if Path(bist_bot.YARIN_TOP10_ARSIV_DIR, now.strftime("%Y-%m-%d") + ".json").exists():
+                arsiv = Path(bist_bot.YARIN_TOP10_ARSIV_DIR, now.strftime("%Y-%m-%d") + ".json")
+                if arsiv.exists():
                     print("GUN SONU ZATEN ARSIVLENMIS")
                 else:
                     bist_bot.bist_tara()
-                if not Path(bist_bot.YARIN_TOP10_ARSIV_DIR, now.strftime("%Y-%m-%d") + ".json").exists():
+                if not arsiv.exists():
                     raise RuntimeError("GUN SONU ARSIVI OLUSMADI")
                 son_gun_sonu = now.date()
                 durum_yaz(motor="UYKU", durum="GUN_SONU_TAMAMLANDI")
