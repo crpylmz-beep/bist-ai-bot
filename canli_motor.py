@@ -246,10 +246,26 @@ def motoru_calistir():
     )
 
     son_gun_ici_top10 = 0
+    son_gun_sonu = None
 
     while True:
 
         try:
+            now = datetime.now(ZoneInfo("Europe/Istanbul"))
+            if now.weekday() < 5 and 1100 <= now.hour*60+now.minute < 1110 and son_gun_sonu != now.date():
+                durum_yaz(motor="AKTIF", durum="GUN_SONU_HESAPLANIYOR")
+                if Path(bist_bot.YARIN_TOP10_ARSIV_DIR, now.strftime("%Y-%m-%d") + ".json").exists():
+                    print("GUN SONU ZATEN ARSIVLENMIS")
+                else:
+                    bist_bot.bist_tara()
+                if not Path(bist_bot.YARIN_TOP10_ARSIV_DIR, now.strftime("%Y-%m-%d") + ".json").exists():
+                    raise RuntimeError("GUN SONU ARSIVI OLUSMADI")
+                son_gun_sonu = now.date()
+                durum_yaz(motor="UYKU", durum="GUN_SONU_TAMAMLANDI")
+            if now.weekday() >= 5 or not (585 <= now.hour*60+now.minute < 1080):
+                durum_yaz(motor="UYKU", durum="SEANS_DISI")
+                time.sleep(30)
+                continue
             # Tum hisseleri tazele.
             tam_hisse_turu()
 
