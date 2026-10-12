@@ -11,3 +11,5 @@ __pycache__/
 *.pyc
 *.key
 vapid_keys/
+webapp/bist_records_yedek.json
+bist_records_yedek.json
