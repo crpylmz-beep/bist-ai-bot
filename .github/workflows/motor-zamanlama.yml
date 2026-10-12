@@ -1,0 +1,22 @@
+name: Motor Zamanlama Testleri
+on:
+  pull_request:
+    paths:
+      - "canli_motor.py"
+      - "tests/test_canli_motor_zamanlama.py"
+      - ".github/workflows/motor-zamanlama.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  schedule-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Syntax ve zamanlama testleri
+        run: |
+          python -m py_compile canli_motor.py
+          python -m unittest discover -s tests -p test_canli_motor_zamanlama.py -v
