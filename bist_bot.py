@@ -297,7 +297,8 @@ def hisse_analiz_hesapla(
         # Reject future-dated provider rows before any historical scoring.
         if isinstance(veri.index,pd.DatetimeIndex):
             index=veri.index.tz_localize('Europe/Istanbul') if veri.index.tz is None else veri.index.tz_convert('Europe/Istanbul')
-            veri=veri.loc[index<=datetime.now(ZoneInfo('Europe/Istanbul'))]
+            veri=veri.copy();veri.index=index
+            veri=veri.loc[veri.index<=datetime.now(ZoneInfo('Europe/Istanbul'))]
             if len(veri)<2:return None
 
         close = veri["Close"]
@@ -319,6 +320,13 @@ def hisse_analiz_hesapla(
 
         son = veri.iloc[-1]
         onceki = veri.iloc[-2]
+        onceki_tarih = None
+        if isinstance(veri.index, pd.DatetimeIndex):
+            prior_sessions = veri.loc[veri.index.date < veri.index[-1].date()].sort_index()
+            if prior_sessions.empty:
+                return None
+            onceki = prior_sessions.iloc[-1]
+            onceki_tarih = prior_sessions.index[-1].date().isoformat()
 
         fiyat = guvenli_float(
             son["Close"]
@@ -1263,6 +1271,10 @@ def hisse_analiz_hesapla(
             **__import__('fiyat_guncelligi').price_metadata(veri.index[-1], daily=True,
                 now=datetime.now(ZoneInfo('Europe/Istanbul'))),
             "degisim": gunluk_degisim,
+            "gunluk_degisim": gunluk_degisim,
+            "gunluk_degisim_kaynagi": "PREVIOUS_SESSION_CLOSE",
+            "onceki_kapanis": onceki_fiyat,
+            "onceki_kapanis_tarihi": onceki_tarih,
             "yuksek": yuksek,
             "dusuk": dusuk,
             "acilis": acilis,

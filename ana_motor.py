@@ -22,9 +22,11 @@ from gorev_hatalari import describe,public_issue,TaskIssue,log_source,diagnostic
 ROOT = Path(__file__).resolve().parent
 ISTANBUL = ZoneInfo('Europe/Istanbul')
 DEFAULTS = {'bootstrap':30, 'kap':60, 'macro':120, 'alarm':30, 'push':20,
+            'quote_refresh':60,
             'intraday_top10':300, 'company_site':900, 'full_scan':30,
             'priority':2, 'yarin_top10':60, 'performance':900, 'intraday_performance':300, 'market_context':300}
 ENV_NAMES = {'bootstrap':'BOOTSTRAP', 'kap':'KAP', 'macro':'MACRO', 'alarm':'ALARM', 'push':'PUSH',
+             'quote_refresh':'QUOTE_REFRESH',
              'intraday_top10':'INTRADAY_TOP10', 'company_site':'COMPANY_SITE',
              'full_scan':'FULL_SCAN', 'priority':'PRIORITY', 'yarin_top10':'YARIN_TOP10', 'performance':'PERFORMANCE', 'intraday_performance':'INTRADAY_PERFORMANCE', 'market_context':'MARKET_CONTEXT'}
 DEFAULTS['economy_news']=900
@@ -180,6 +182,8 @@ class AnaMotor:
                         self.state['last_full_scan_batch']=current.isoformat(timespec='seconds')
                         if result.get('cycle_complete') and task.scheduled_day==current.date().isoformat() and after_close(current,self.holiday):
                             self.state['last_close_scan_day']=current.date().isoformat()
+                            from fiyat_guncelligi import QUOTE_VERSION
+                            self.state['last_close_quote_version']=QUOTE_VERSION
                     report=diagnostics(result.get('diagnostics')) if isinstance(result,dict) else {}
                     task_status=('OK_WITH_SKIPS' if report.get('successful') else 'SKIPPED') if report.get('skipped') else 'OK'
                     self.state['tasks'][name] = {'status':task_status, 'last_success':current.isoformat(timespec='seconds'),**({'diagnostics':report} if report else {})}
@@ -248,7 +252,8 @@ class AnaMotor:
                     from gunluk_al_sat import enabled
                     if not enabled():continue
                 if name=='full_scan' and not market_open(current,self.holiday):
-                    if not after_close(current,self.holiday) or self.state.get('last_close_scan_day')==current.date().isoformat():
+                    from fiyat_guncelligi import QUOTE_VERSION
+                    if not after_close(current,self.holiday) or current.time()<day_time(18,30) or (self.state.get('last_close_scan_day')==current.date().isoformat() and self.state.get('last_close_quote_version')==QUOTE_VERSION):
                         continue
                 if name in ('intraday_top10','market_context','intraday_signals') and not market_open(current,self.holiday):
                     if name=='intraday_signals' and mono>=self._intraday_closed_log_due:

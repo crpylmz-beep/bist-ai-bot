@@ -250,7 +250,16 @@ class WorkerTasks:
         self.ai_context(rows)
         return len(rows)
 
+    def quote_refresh(self):
+        result=self.quote_engine.round()
+        if not result.get('market_closed') and (not result.get('provider_valid') or result.get('not_observed') or result.get('missing') or result.get('invalid')):
+            raise TaskIssue({'code':'PROVIDER_DATA'},completed=result.get('provider_valid',0)+result.get('subscriptions_added',0),details={'processed':result.get('coverage',0),'successful':result.get('provider_valid',0),'failed':result.get('not_observed',0)+result.get('invalid',0)})
+        return result
+
     def callbacks(self):
+        from borsa_fiyat_motoru import BorsaFiyatMotoru
+        from pay_evreni import symbols
+        self.quote_engine=BorsaFiyatMotoru(symbols)
         import kap_canli
         import makro_kaynak
         from ekonomi_haberleri import EconomyNews
@@ -259,6 +268,7 @@ class WorkerTasks:
         from haber_kaynak_politikasi import SourceRestrictions
         news_policy=SourceRestrictions()
         result={'bootstrap':self.bootstrap, 'kap':lambda:news_policy.call('KAP',kap_canli.kap_kontrol), 'macro':makro_kaynak.yeni_haberleri_isle,
+                'quote_refresh':self.quote_refresh,
                 'alarm':self.alarm, 'push':self.push,
                 'priority':self.priority, 'full_scan':self.full_scan,
                 'intraday_top10':self.intraday, 'yarin_top10':self.tomorrow,
@@ -349,6 +359,7 @@ class WorkerTasks:
         return result
 
     def close(self):
+        if getattr(self,'quote_engine',None):self.quote_engine.close()
         self.technical_pool.shutdown(wait=True,cancel_futures=True)
         self.live.oncelikli_hisse_guncelle=self.original_priority
         self.live.gun_ici_top10_guncelle=self.original_intraday

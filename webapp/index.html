@@ -743,21 +743,89 @@ function mergeFreshStockPrice(base,intraday){
            ===new Date(b).toLocaleDateString('sv-SE',{timeZone:'Europe/Istanbul'});
     if(closeWins || !Number.isFinite(a) || !Number.isFinite(b) || b<=a){
         ['fiyat','degisim','gunluk_degisim','price','change','fiyat_zamani',
-         'fiyat_kaynagi','fiyat_turu','fiyat_alinma_zamani'].forEach(key=>{
+         'fiyat_kaynagi','fiyat_turu','fiyat_alinma_zamani','onceki_kapanis',
+         'onceki_kapanis_tarihi','gunluk_degisim_kaynagi','onceki_kapanis_beklenen_tarih',
+         'sonraki_islem_tarihi'].forEach(key=>{
             if(Object.prototype.hasOwnProperty.call(base,key))value[key]=base[key];
             else delete value[key];
         });
     }
+    // The previous daily close may be reused only within the same session.
+    const sameDay=Number.isFinite(a) && Number.isFinite(b)
+        && new Date(a).toLocaleDateString('sv-SE',{timeZone:'Europe/Istanbul'})
+           ===new Date(b).toLocaleDateString('sv-SE',{timeZone:'Europe/Istanbul'});
+    if(sameDay && base.onceki_kapanis!=null && base.onceki_kapanis_tarihi===base.onceki_kapanis_beklenen_tarih){
+        value.onceki_kapanis=base.onceki_kapanis;
+        value.onceki_kapanis_tarihi=base.onceki_kapanis_tarihi;
+    }
+    if(!sameDay && Number.isFinite(b) && Number.isFinite(a) && b>a && intraday.onceki_kapanis==null){
+        delete value.onceki_kapanis;delete value.onceki_kapanis_tarihi;
+        delete value.gunluk_degisim_kaynagi;delete value.gunluk_degisim;
+    }
+    const change=dailyStockChange(value);
+    if(change!==null){value.degisim=change;value.gunluk_degisim=change;}
     return value;
+}
+function mergeCanonicalQuote(analysis,quote){
+    const fresh=Date.parse(quote.fiyat_zamani || ''),old=Date.parse(analysis.fiyat_zamani || '');
+    if(!Number.isFinite(fresh) || fresh>Date.now() || (Number.isFinite(old) && fresh<old))return analysis;
+    return {...analysis,...quote};
+}
+function dailyStockChange(stock){
+    const price=Number(stock.fiyat),previous=Number(stock.onceki_kapanis);
+    const moment=Date.parse(stock.fiyat_zamani || '');
+    const day=Number.isFinite(moment) ? new Date(moment).toLocaleDateString('sv-SE',{timeZone:'Europe/Istanbul'}) : null;
+    const prior=stock.onceki_kapanis_tarihi;
+    if(day && /^\d{4}-\d{2}-\d{2}$/.test(prior || '') && prior<day
+       && prior===stock.onceki_kapanis_beklenen_tarih
+       && stock.onceki_kapanis!=null && Number.isFinite(price) && Number.isFinite(previous) && price>0 && previous>0)
+        return (price/previous-1)*100;
+    return null;
+}
+function currentStockQuote(stock){
+    const symbol=String(stock.sembol ?? stock.symbol ?? '').trim().toUpperCase();
+    const current=tumVeriler.find(row=>String(row.sembol ?? row.symbol ?? '').trim().toUpperCase()===symbol);
+    let quote=current || {fiyat:null};
+    const stamp=Date.parse(quote.fiyat_zamani || ''),now=Date.now();
+    const next=Date.parse((quote.sonraki_islem_tarihi || '')+'T10:00:00+03:00');
+    const fetched=stamp; // Analysis/file rewrite time cannot refresh an old trade.
+    const valid=Number.isFinite(stamp) && stamp<=now
+        && (quote.fiyat_turu==='SESSION_CLOSE'
+            ? Number.isFinite(next) && now<next
+            : Number.isFinite(fetched) && fetched<=now && now-fetched<=600000);
+    const confirmed=Number.isFinite(stamp) && stamp<=now && quote.fiyat!=null && Number(quote.fiyat)>0;
+    return confirmed ? {...quote,_quote_status:valid ? 'CURRENT':'STALE'}
+        : {...quote,fiyat:null,price:null,onceki_kapanis:null,gunluk_degisim:null,_quote_status:'MISSING'};
+}
+function quoteNotice(quote){
+    const stamp=Date.parse(quote.fiyat_zamani || '');
+    if(!Number.isFinite(stamp) || quote._quote_status==='MISSING')return 'Doğrulanmış fiyat verisi yok';
+    const title=quote._quote_status==='STALE' ? 'Gecikmiş / son doğrulanmış veri' : quote.fiyat_turu==='SESSION_CLOSE' ? 'Son seans' : 'Sağlayıcı verisi';
+    return title+' • '+new Date(stamp).toLocaleString('tr-TR',{timeZone:'Europe/Istanbul'})
+        +(quote.fiyat_kaynagi==='borsapy.TradingViewStream' ? ' • Gerçek zaman garantisi yok' : '');
+}
+function refreshVisibleQuotes(){
+    document.querySelectorAll('[data-current-stock]').forEach(element=>{
+        const quote=currentStockQuote({sembol:element.dataset.currentStock});
+        const part=element.dataset.quotePart,change=dailyStockChange(quote);
+        element.textContent=part==='notice' ? quoteNotice(quote) : part==='change'
+            ? change===null ? '--' : (change>=0 ? '+' : '')+change.toFixed(2)+'%'
+            : quote.fiyat==null ? '--' : Number(quote.fiyat).toFixed(2);
+        if(part==='change')element.className=change===null ? '' : change>=0 ? 'up':'down';
+    });
 }
 
 let tumVeriler = [];
 let oncekiSayfa = "home";
+let fiyatYuklemeAktif = false;
+let merkeziFiyatlar = new Map();
 
 
 /* VERİYİ YÜKLE */
 
 async function gercekVeriyiYukle(){
+    if(fiyatYuklemeAktif)return;
+    fiyatYuklemeAktif=true;
 
     try{
 
@@ -838,7 +906,28 @@ async function gercekVeriyiYukle(){
             );
         }
 
+        try{
+            const response=await fetch('data/borsa_fiyatlari.json?t='+Date.now(),{cache:'no-store'});
+            if(response.ok){
+                const quotes=await response.json();
+                (quotes.hisseler || []).forEach(row=>{
+                    const key=String(row.sembol || '').toUpperCase();
+                    if(!key || !Number.isFinite(Date.parse(row.fiyat_zamani || '')))return;
+                    const previous=merkeziFiyatlar.get(key) || {};
+                    const merged=mergeCanonicalQuote(previous,row);
+                    if(merged.fiyat_zamani)merkeziFiyatlar.set(key,merged);
+                });
+            }
+        }catch(error){console.warn('Merkezi fiyat akışı geçici olarak erişilemiyor');}
+        const remaining=new Map(merkeziFiyatlar);
+        tumVeriler=tumVeriler.map(row=>{
+            const key=String(row.sembol ?? row.symbol ?? '').toUpperCase();
+            remaining.delete(key);
+            return merkeziFiyatlar.has(key) ? mergeCanonicalQuote(row,merkeziFiyatlar.get(key)) : row;
+        });
+        remaining.forEach(row=>tumVeriler.push({...row,analiz_durumu:'VERI_YOK'}));
         anaSayfayiDoldur();
+        refreshVisibleQuotes();
 
     }
     catch(hata){
@@ -848,6 +937,7 @@ async function gercekVeriyiYukle(){
         document.getElementById("updateTime").innerText =
             "Veri yüklenemedi";
     }
+    finally{fiyatYuklemeAktif=false;}
 }
 
 
@@ -1352,6 +1442,7 @@ async function showTop10(){
 /* HİSSE SATIRI */
 
 function hisseSatiri(hisse, sira, sayfaTipi = ""){
+    const quote=currentStockQuote(hisse);
 
     const sembol =
         hisse.sembol ??
@@ -1360,15 +1451,11 @@ function hisseSatiri(hisse, sira, sayfaTipi = ""){
         "-";
 
     const fiyat =
-        hisse.fiyat ??
-        hisse.price ??
+        quote.fiyat ??
+        quote.price ??
         "-";
 
-    const degisim =
-        hisse.degisim ??
-        hisse.change ??
-        hisse.yuzde ??
-        0;
+    const degisim = dailyStockChange(quote);
 
     const tepkiSayfasi =
         sayfaTipi === "GUCLU_TEPKI" ||
@@ -1410,16 +1497,15 @@ function hisseSatiri(hisse, sira, sayfaTipi = ""){
                 </div>
 
                 <div class="stock-price">
-                    ${Number.isFinite(Number(fiyat)) ? Number(fiyat).toFixed(2) : "-"} TL
+                    <span data-current-stock="${sembol}" data-quote-part="price">${Number.isFinite(Number(fiyat)) ? Number(fiyat).toFixed(2) : "-"}</span> TL
                 </div>
 
             </div>
 
             <div class="stock-bottom">
 
-                <span class="${Number(degisim) >= 0 ? "up" : "down"}">
-                    ${Number(degisim) >= 0 ? "+" : ""}
-                    ${Number(degisim).toFixed(2)}%
+                <span data-current-stock="${sembol}" data-quote-part="change" class="${degisim===null ? '' : Number(degisim) >= 0 ? "up" : "down"}">
+                    ${degisim===null ? "--" : (Number(degisim)>=0 ? "+" : "")+Number(degisim).toFixed(2)+"%"}
                 </span>
 
                 <span class="${renk}">
@@ -1427,6 +1513,7 @@ function hisseSatiri(hisse, sira, sayfaTipi = ""){
                 </span>
 
             </div>
+            <small data-current-stock="${sembol}" data-quote-part="notice">${quoteNotice(quote)}</small>
 
         </div>
     `;
@@ -1495,7 +1582,7 @@ async function showGunIciTop10(){
             const kopya = {
                 ...hisse,
                 puan: Number(hisse.gun_ici_puan || 0),
-                degisim: Number(hisse.acilisa_gore_degisim || 0)
+                degisim: dailyStockChange(hisse)
             };
 
             return hisseSatiri(
@@ -1595,6 +1682,7 @@ function aramaYap(){
 /* HİSSE DETAY */
 
 function hisseDetay(hisse){
+    const quote=currentStockQuote(hisse);
 
     tumSayfalariGizle();
 
@@ -1607,14 +1695,11 @@ function hisseDetay(hisse){
         "Hisse";
 
     const fiyat =
-        hisse.fiyat ??
-        hisse.price ??
+        quote.fiyat ??
+        quote.price ??
         "-";
 
-    const degisim =
-        hisse.degisim ??
-        hisse.change ??
-        0;
+    const degisim = dailyStockChange(quote);
 
     const rsi =
         hisse.rsi ?? "-";
@@ -1822,13 +1907,13 @@ function hisseDetay(hisse){
             </div>
 
             <div class="detail-price">
-                ${fiyat} TL
+                <span data-current-stock="${hisse.sembol ?? hisse.symbol}" data-quote-part="price">${fiyat}</span> TL
             </div>
 
-            <div class="${Number(degisim) >= 0 ? "up" : "down"}">
-                ${Number(degisim) >= 0 ? "+" : ""}
-                ${Number(degisim).toFixed(2)}%
+            <div data-current-stock="${hisse.sembol ?? hisse.symbol}" data-quote-part="change" class="${degisim===null ? '' : Number(degisim) >= 0 ? "up" : "down"}">
+                ${degisim===null ? "--" : (Number(degisim)>=0 ? "+" : "")+Number(degisim).toFixed(2)+"%"}
             </div>
+            <small data-current-stock="${hisse.sembol ?? hisse.symbol}" data-quote-part="notice">${quoteNotice(quote)}</small>
 
             <br>
 
@@ -2161,6 +2246,7 @@ function goAI(){
 /* BAŞLAT */
 
 gercekVeriyiYukle();
+setInterval(gercekVeriyiYukle,60000);
 
 </script>
 

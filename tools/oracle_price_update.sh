@@ -25,8 +25,9 @@ if (( ${#units[@]} == 0 || ${#units[@]} > 3 )); then
   exit 1
 fi
 git fetch origin main
+"$py" -B -c 'import borsapy; assert hasattr(borsapy,"TradingViewStream"), "Mevcut borsapy sürümünde TradingViewStream eksik; servisler yeniden başlatılmadı."'
 git merge --ff-only origin/main
-"$py" -B -m unittest tests.test_price_freshness -q
+"$py" -B -m unittest tests.test_price_freshness tests.test_borsa_fiyat_motoru tests.test_quote_universe -q
 sudo systemctl restart "${units[@]}"
 for unit in "${units[@]}"; do systemctl is-active --quiet "$unit"; done
-echo 'Uygulama servisleri aktif. Fiyatlar sağlayıcıdan sıradaki kapanış taramasında yenilenecek.'
+echo 'Uygulama servisleri aktif. Merkezi fiyat görevi açık seansta 60 saniyede bir yenilenir; sağlayıcı gecikmesi ekranda gösterilir.'
