@@ -35,6 +35,17 @@ GUN_ICI_TOP10_SANIYE = 300
 # Tarama zaten uzun surerse hemen yeni tur baslar.
 TUR_ARASI_SANIYE = 30
 
+ISTANBUL = ZoneInfo("Europe/Istanbul")
+
+def piyasa_dakikasi(now):
+    return now.hour * 60 + now.minute
+
+def gun_ici_acik(now):
+    return now.weekday() < 5 and 585 <= piyasa_dakikasi(now) < 1080
+
+def gun_sonu_zamani(now):
+    return now.weekday() < 5 and 1100 <= piyasa_dakikasi(now) < 1110
+
 
 def simdi():
     return datetime.now(ZoneInfo("Europe/Istanbul")).isoformat(timespec="seconds")
@@ -69,6 +80,9 @@ def durum_yaz(**alanlar):
 
 
 def tek_hisse_guncelle(sembol):
+    # Kuyrukta bekleyen yeni isler kapanistan sonra baslamasin.
+    if not gun_ici_acik(datetime.now(ISTANBUL)):
+        return sembol, None
     try:
         sonuc = bist_bot.hisse_analiz_hesapla(
             sembol,
@@ -246,12 +260,44 @@ def motoru_calistir():
     )
 
     son_gun_ici_top10 = 0
+    son_gun_sonu = None
+    son_gun_sonu_deneme = None
+    gun_sonu_deneme_sayisi = 0
+    son_deneme_zamani = None
 
     while True:
 
         try:
+            now = datetime.now(ISTANBUL)
+            if gun_sonu_zamani(now) and son_gun_sonu != now.date():
+                # Bir gunde en fazla 2 deneme; ayni dakika icinde tekrarlama yok.
+                if son_gun_sonu_deneme != now.date():
+                    son_gun_sonu_deneme = now.date()
+                    gun_sonu_deneme_sayisi = 0
+                if (gun_sonu_deneme_sayisi < 2 and
+                    (son_deneme_zamani is None or
+                     (now - son_deneme_zamani).total_seconds() >= 300)):
+                    gun_sonu_deneme_sayisi += 1
+                    son_deneme_zamani = now
+                    durum_yaz(motor="AKTIF", durum="GUN_SONU_HESAPLANIYOR")
+                    arsiv = Path(bist_bot.YARIN_TOP10_ARSIV_DIR) / (now.strftime("%Y-%m-%d") + ".json")
+                    if not arsiv.exists():
+                        bist_bot.bist_tara()
+                    if not arsiv.exists():
+                        raise RuntimeError("GUN SONU ARSIVI OLUSMADI")
+                    son_gun_sonu = now.date()
+                    durum_yaz(motor="UYKU", durum="GUN_SONU_TAMAMLANDI")
+            if not gun_ici_acik(now):
+                durum_yaz(motor="UYKU", durum="SEANS_DISI")
+                time.sleep(30)
+                continue
             # Tum hisseleri tazele.
             tam_hisse_turu()
+
+            # Uzun hisse turu kapanisi gectiyse yeni TOP10 baslatma.
+            if not gun_ici_acik(datetime.now(ISTANBUL)):
+                durum_yaz(motor="UYKU", durum="SEANS_BITTI")
+                continue
 
             # Gun Ici TOP10 5 dakikadan eskiyse yenile.
             simdi_ts = time.time()
