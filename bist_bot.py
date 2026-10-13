@@ -1837,16 +1837,8 @@ def web_verisi_kaydet(sonuclar, tum_semboller=None):
 
     try:
 
-        cached_document = {}
-        try:
-            with open(DATA_FILE, encoding='utf-8') as previous_file:
-                cached_document = json.load(previous_file)
-        except (OSError, ValueError):
-            pass
-        if isinstance(cached_document, list):
-            cached_document = {'hisseler': cached_document}
-        elif not isinstance(cached_document, dict):
-            cached_document = {}
+        from public_veri_guvenligi import read_public,write_public
+        cached_document,damaged_projection=read_public(DATA_FILE)
         previous_prices = {row.get('sembol'): row for row in cached_document.get('hisseler', [])
                            if isinstance(row, dict)}
 
@@ -1898,12 +1890,7 @@ def web_verisi_kaydet(sonuclar, tum_semboller=None):
         xu100 = None
         from ai_karar_motoru import stamp
         endeks_simdi = datetime.now(ZoneInfo('Europe/Istanbul'))
-        cached_index = {}
-        try:
-            with open(DATA_FILE,encoding='utf-8') as cached_file:
-                cached_index = json.load(cached_file).get('bist100') or {}
-        except (OSError,ValueError):
-            pass
+        cached_index = cached_document.get('bist100') or {}
         cached_at = stamp(cached_index.get('updated_at'))
         index_cache_valid = bool(cached_at and cached_at<=endeks_simdi and cached_at.date()==endeks_simdi.date()
                                  and (endeks_simdi-cached_at).total_seconds()<300)
@@ -1963,7 +1950,7 @@ def web_verisi_kaydet(sonuclar, tum_semboller=None):
         from kullanici_kayitlari import atomic_json, now
         veri['updated_at'] = now()
         # Preserve the existing default=str conversion for provider scalar values.
-        atomic_json(Path(DATA_FILE), json.loads(json.dumps(veri, default=str)))
+        return write_public(Path(DATA_FILE), json.loads(json.dumps(veri, default=str)))
 
     except Exception as e:
 
@@ -2146,6 +2133,10 @@ def json_atomik_yaz(dosya, veri, overwrite=True):
     """Preserve create-only archives and existing JSON encoding through one writer."""
     from atomik_depolama import atomic_write_json
     os.makedirs(os.path.dirname(os.path.abspath(dosya)),exist_ok=True)
+    from pathlib import Path
+    from public_veri_guvenligi import NAMES,write_public
+    if overwrite and Path(dosya).name in NAMES:
+        return write_public(dosya,json.loads(json.dumps(veri,default=str)))
     return atomic_write_json(dosya,veri,overwrite=overwrite,prefix='.snapshot-',default=str)
 
 

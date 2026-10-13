@@ -103,7 +103,8 @@ class UserRecords:
             raise RecordError('Geçersiz analiz kaynağı.')
         path = self.public_dir / ('gun_ici_tum.json' if model == 'GUN_ICI' else 'bist_data.json')
         try:
-            data = json.loads(path.read_text(encoding='utf-8'))
+            from public_veri_guvenligi import read_public
+            data,damaged_projection = read_public(path)
             row = next((h for h in data.get('hisseler', []) if h.get('sembol') == stock), {})
         except (OSError, ValueError, AttributeError, TypeError):
             row, data = {}, {}

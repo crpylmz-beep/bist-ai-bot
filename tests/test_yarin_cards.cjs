@@ -33,10 +33,13 @@ const live = {canli:{fiyat:105,degisim:1.2,teknik_skor:73,ai_skor:75,karar:'IZLE
   updated_at:timestamp},performans:{en_yuksek_yuzde:10,en_dusuk_yuzde:-10,
   hedefe_ulasti:true,stop_oldu:false}};
 const original = JSON.stringify(snapshot);
+// Current quote is supplied by the shared verified provider projection, never the frozen forecast.
+vm.runInContext('tumVeriler='+JSON.stringify([{sembol:'THYAO',fiyat:105,onceki_kapanis:105/1.012,
+ fiyat_zamani:timestamp,onceki_kapanis_tarihi:'2026-10-12',onceki_kapanis_beklenen_tarih:'2026-10-12',fiyat_turu:'INTRADAY',sonraki_islem_tarihi:'2026-10-14'}])+';',ctx);
 let result = ctx.yarinTop10Karti(frozen,snapshot,live,1);
 for(const label of ['CANLI DURUM','DONDURULMUŞ TAHMİN','TAHMİNDEN BERİ PERFORMANS',
   '105.00 TL','100.00 TL','5.00%','10.00%','-10.00%','Evet','Hayır',
-  'Hacim &lt;teyit&gt;','(İstanbul)']) assert.ok(result.includes(label), label);
+  'Hacim &lt;teyit&gt;','(İstanbul)']) assert.ok(result.replace(/<[^>]*>/g,'').includes(label), label);
 assert.ok(result.indexOf('CANLI DURUM') < result.indexOf('DONDURULMUŞ TAHMİN'));
 assert.equal(JSON.stringify(snapshot),original);
 for(const legacy of [{sembol:'OLD'},{},{sembol:'ZERO',fiyat:0}]) {
@@ -56,12 +59,13 @@ async function main() {
   };
   await ctx.showTop10();
   result=elements.get('top10List').innerHTML;
-  assert.ok(result.includes('105.00 TL') && result.includes('100.00 TL'));
+  assert.ok(result.replace(/<[^>]*>/g,'').includes('105.00 TL') && result.includes('100.00 TL'));
   assert.ok(!result.includes('WRONG'));
   assert.ok(!requested.some(url=>url.includes('gun_ici')));
   responses['data/yarin_top10_canli.json'].body.analiz_tarihi='2026-10-05';
   await ctx.showTop10();
-  assert.ok(!elements.get('top10List').innerHTML.includes('105.00 TL'));
+  // An unrelated technical snapshot must not erase the independently verified current quote.
+  assert.ok(elements.get('top10List').innerHTML.replace(/<[^>]*>/g,'').includes('105.00 TL'));
   responses['data/yarin_top10_arsiv/2026-10-06.json']={status:404};
   responses['data/yarin_top10.json']={body:{analiz_tarihi:'2026-10-06',top10:[{sembol:'LEGACY'}]}};
   responses['data/yarin_top10_canli.json']={status:404};

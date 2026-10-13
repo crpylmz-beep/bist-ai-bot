@@ -381,15 +381,8 @@ def oncelikli_hisse_guncelle(
             "hisseler": []
         }
 
-        if data_file.exists():
-            try:
-                mevcut = json.loads(
-                    data_file.read_text(
-                        encoding="utf-8"
-                    )
-                )
-            except Exception:
-                pass
+        from public_veri_guvenligi import read_public,write_public
+        mevcut,_=read_public(data_file)
 
         hisseler = mevcut.get(
             "hisseler",
@@ -438,7 +431,10 @@ def oncelikli_hisse_guncelle(
             exist_ok=True
         )
 
-        atomic_json(data_file, json.loads(json.dumps(mevcut, default=str)))
+        publication=write_public(data_file, json.loads(json.dumps(mevcut, default=str)))
+        if publication['pending']:
+            from gorev_hatalari import TaskIssue
+            raise TaskIssue({'code':'PUBLIC_JSON_CORRUPT'},completed=1)
 
         durum_yaz(
             son_oncelikli_hisse=sembol,

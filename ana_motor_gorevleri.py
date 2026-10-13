@@ -141,7 +141,8 @@ class WorkerTasks:
         if after_close(current) and hasattr(self,'_close_scan_day') and self._close_scan_day!=current.date().isoformat():
             self.cursor=0;self._close_scan_day=current.date().isoformat()
         if not self.symbols or self.cursor>=len(self.symbols):
-            self.symbols=self.bot.bist_hisseleri_getir();self.cursor=0;self.cycle_successful=0
+            from pay_evreni import symbols
+            self.symbols=symbols();self.cursor=0;self.cycle_successful=0;self.cycle_outcomes={}
             if not self.symbols:raise TaskIssue({'code':'EMPTY_UNIVERSE'})
         batch=self.symbols[self.cursor:self.cursor+self.batch_size]
         results=list(self.technical_pool.map(self.scan_one,batch))
@@ -149,16 +150,27 @@ class WorkerTasks:
         skipped=[{'symbol':stock,**issue} for stock,row,issue in results if issue and issue['code']=='PROVIDER_UNSUPPORTED']
         failures=[(stock,issue) for stock,row,issue in results if issue and issue['code']!='PROVIDER_UNSUPPORTED']
         details={'processed':len(results),'successful':len(successful),'skipped':len(skipped),'unsupported':len(skipped),'failed':len(failures),'reasons':skipped}
+        outcomes=getattr(self,'cycle_outcomes',{})
+        from borsa_fiyat_motoru import BorsaFiyatMotoru
+        expected=istanbul_now().date() if market_open(istanbul_now()) else BorsaFiyatMotoru._closed_day(istanbul_now())
+        for stock,row,issue in results:
+            verified=bool(row) and BorsaFiyatMotoru._verified(row)
+            current=verified and BorsaFiyatMotoru._stamp(row).date()==expected
+            outcomes[stock]={'analysis':bool(row),'price_verified':verified,'current_price':current,
+                             'code':issue.get('code') if issue else None}
+        self.cycle_outcomes=outcomes
         for item in skipped:self.record_unsupported(item['symbol'])
         if not successful:
             # One permanently invalid batch cannot starve the rest of the universe.
             for stock,_ in failures:self.enqueue(stock)
             self.cursor+=len(batch)
+            self.scan_report()
             if failures:raise TaskIssue(strongest(issue for _,issue in failures),details=details)
             return {'updated':0,'cycle_complete':self.cursor>=len(self.symbols),'diagnostics':details}
         # Merge updated rows without replacing remaining live stocks with placeholders.
         path=Path(self.bot.DATA_FILE)
-        current=json.loads(path.read_text()) if path.exists() else {'hisseler':[]}
+        from public_veri_guvenligi import read_public
+        current,damaged_projection=read_public(path)
         merged={row['sembol']:row for row in current.get('hisseler',[]) if isinstance(row,dict) and row.get('sembol')}
         for row in merged.values():
             if not row.get('canli_guncelleme'):
@@ -167,7 +179,7 @@ class WorkerTasks:
             row['canli_guncelleme']=self.live.simdi()
             from fiyat_guncelligi import preserve_newer_price
             merged[row['sembol']]=preserve_newer_price(merged.get(row['sembol'],{}),row)
-        self.bot.web_verisi_kaydet(list(merged.values()),self.symbols)
+        publication=self.bot.web_verisi_kaydet(list(merged.values()),self.symbols)
         from veri_yollari import paths
         if not self.bot.tahminleri_kaydet(successful,len(self.symbols),kaynak='GUNLUK_TARAMA',
                 liste_kaydet=False,dosya_yolu=paths().runtime_file('tahmin_gecmisi.json'),strict=True):
@@ -176,10 +188,28 @@ class WorkerTasks:
         self.market_context()
         self.ai_context(successful)
         self.cursor+=len(batch)
+        self.scan_report()
+        if damaged_projection or (isinstance(publication,dict) and publication.get('pending')):
+            raise TaskIssue({'code':'PUBLIC_JSON_CORRUPT'},len(successful),details)
         if failures:
             for stock,_ in failures:self.enqueue(stock)
             raise TaskIssue(strongest(issue for _,issue in failures),len(successful),details)
         return {'updated':len(successful), 'cycle_complete':self.cursor>=len(self.symbols),'diagnostics':details}
+
+    def scan_report(self):
+        rows=getattr(self,'cycle_outcomes',{})
+        report={'updated_at':istanbul_now().isoformat(),'universe_count':len(self.symbols),
+                'processed':len(rows),'successful':sum(r['analysis'] for r in rows.values()),
+                'verified_prices':sum(r['price_verified'] for r in rows.values()),
+                'current_prices':sum(r['current_price'] for r in rows.values()),
+                'stale_prices':sum(r['price_verified'] and not r['current_price'] for r in rows.values()),
+                'failed':sum(not r['analysis'] and r['code']!='PROVIDER_UNSUPPORTED' for r in rows.values()),
+                'unsupported':sum(r['code']=='PROVIDER_UNSUPPORTED' for r in rows.values()),
+                'remaining':len(self.symbols)-self.cursor,'cycle_complete':self.cursor>=len(self.symbols)}
+        atomic_json(self.directory/'full_scan_coverage.json',report)
+        logging.info('[FULL_SCAN_DATA] universe=%d processed=%d successful=%d verified_prices=%d failed=%d unsupported=%d remaining=%d cycle_complete=%s',
+                     *(report[k] for k in ('universe_count','processed','successful','verified_prices','failed','unsupported','remaining','cycle_complete')))
+        return report
 
     def bootstrap(self):
         # One bounded daily-analysis pass even outside the trading session.
@@ -252,8 +282,21 @@ class WorkerTasks:
 
     def quote_refresh(self):
         result=self.quote_engine.round()
-        if not result.get('market_closed') and (not result.get('provider_valid') or result.get('not_observed') or result.get('missing') or result.get('invalid')):
-            raise TaskIssue({'code':'PROVIDER_DATA'},completed=result.get('provider_valid',0)+result.get('subscriptions_added',0),details={'processed':result.get('coverage',0),'successful':result.get('provider_valid',0),'failed':result.get('not_observed',0)+result.get('invalid',0)})
+        details={'processed':result.get('universe_count',0),'successful':result.get('provider_valid',0),
+                 'failed':result.get('missing',0)+result.get('invalid',0),'reasons':result.get('reasons',[])}
+        def fail(issue,completed):
+            from gorev_hatalari import quote_diagnostics
+            error=TaskIssue(issue,completed,details);error.quote_data=quote_diagnostics(result)
+            raise error
+        issues=result.get('issues',[])
+        if issues:fail(strongest(issues),result.get('provider_valid',0)+result.get('subscriptions_added',0))
+        if result.get('status')=='NO_DATA' or (not result.get('status') and not result.get('market_closed') and not result.get('provider_valid')):
+            fail({'code':'QUOTE_NO_DATA'},result.get('subscriptions_added',0))
+        if result.get('missing') or result.get('invalid') or result.get('stale') or result.get('unconfirmed_close'):
+            fail({'code':'PROVIDER_DATA'},result.get('provider_valid',0)+result.get('subscriptions_added',0))
+        if not result.get('market_closed') and result.get('delayed'):
+            fail({'code':'QUOTE_STALE'},result.get('provider_valid',0))
+
         return result
 
     def callbacks(self):

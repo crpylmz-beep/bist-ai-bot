@@ -1,10 +1,10 @@
 """Provider observation time, independent of file rewrite/analysis time."""
-from datetime import datetime, time
+from datetime import datetime, time, timedelta
 from zoneinfo import ZoneInfo
 import math
 
 IST = ZoneInfo('Europe/Istanbul')
-QUOTE_VERSION = 'PREVIOUS_SESSION_CLOSE_V1'
+QUOTE_VERSION = 'PREVIOUS_SESSION_CLOSE_V2'
 PRICE_FIELDS = ('fiyat','degisim','gunluk_degisim','price','change','fiyat_zamani',
                 'fiyat_kaynagi','fiyat_turu','fiyat_alinma_zamani',
                 'onceki_kapanis','onceki_kapanis_tarihi','gunluk_degisim_kaynagi',
@@ -38,15 +38,29 @@ def preserve_newer_price(previous, incoming):
     return result
 
 
+def session_close_time(day):
+    """XIST continuous-session close plus the closing auction (also half days)."""
+    from performans_motoru import bist_calendar
+    return bist_calendar(day.year).session_close(day.isoformat()).tz_convert(IST).to_pydatetime()+timedelta(minutes=10)
+
+
+def session_confirmation_time(day):
+    # Conservative allowance for the anonymous delayed feed, not a realtime promise.
+    return session_close_time(day)+timedelta(minutes=20)
+
+
 def price_metadata(index, daily=False, now=None):
     now = now or datetime.now(IST)
     value = index.to_pydatetime() if hasattr(index, 'to_pydatetime') else index
     if not isinstance(value, datetime):
         return {'fiyat_kaynagi': 'borsapy', 'fiyat_zamani': None}
     value = value.replace(tzinfo=IST) if value.tzinfo is None else value.astimezone(IST)
-    closed = daily and (value.date() < now.date() or now.time() >= time(18, 30))
-    if closed:
-        value = datetime.combine(value.date(), time(18, 10), IST)
+    closed=False
+    if daily:
+        try:
+            closed=value.date()<now.date() or now>=session_confirmation_time(value.date())
+            if closed:value=session_close_time(value.date())
+        except (ValueError,KeyError,ImportError):closed=False
     previous = following = None
     try:
         from performans_motoru import bist_calendar

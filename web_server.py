@@ -44,6 +44,8 @@ class BistHandler(SimpleHTTPRequestHandler):
                 target = root / parts[0]
             else:
                 return missing
+            from public_veri_guvenligi import NAMES,serving_path
+            if target.name in NAMES:target=serving_path(target)
             resolved = target.resolve()
             return str(resolved) if resolved.is_relative_to(root.resolve()) and resolved.is_file() else missing
         target = Path(super().translate_path(path)).resolve()

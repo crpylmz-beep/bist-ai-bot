@@ -56,7 +56,7 @@ class PartialBatchBoundaryTests(unittest.TestCase):
  def test_unsupported_stock_does_not_discard_successful_full_scan(self):
   worker=self.worker();worker.symbols=['AAA','BBB'];worker.batch_size=2
   issue=describe(APIError("TradingView error: ['ser_1', 'invalid symbol']"))
-  with patch.object(worker.bot,'DATA_FILE',str(self.location.public/'test_hisseler.json')),patch.object(worker,'scan_one',side_effect=[('AAA',None,issue),('BBB',{'sembol':'BBB'},None)]),patch.object(worker.bot,'web_verisi_kaydet') as write,patch.object(worker,'market_context'),patch.object(worker,'ai_context'):
+  with patch.object(worker.bot,'DATA_FILE',str(self.location.public/'bist_data.json')),patch.object(worker,'scan_one',side_effect=[('AAA',None,issue),('BBB',{'sembol':'BBB'},None)]),patch.object(worker.bot,'web_verisi_kaydet') as write,patch.object(worker,'market_context'),patch.object(worker,'ai_context'):
    result=worker.full_scan()
   self.assertEqual(result['diagnostics']['unsupported'],1);self.assertEqual(result['diagnostics']['successful'],1)
   self.assertEqual(write.call_args.args[0][0]['sembol'],'BBB');self.assertEqual(worker.cursor,2);self.assertNotIn('AAA',worker.events)

@@ -82,7 +82,7 @@ print(json.dumps({
         self.assertFalse((self.location.public/'fiyat_alarmlari.json').exists())
 
     def test_public_archive_routes_and_private_runtime_isolation(self):
-        (self.location.public/'bist_data.json').write_text('{"volume":true}')
+        (self.location.public/'bist_data.json').write_text('{"volume":true,"hisseler":[]}')
         archive=self.location.archives/'2026-10-06.json';archive.write_text('{"immutable":true}')
         private=self.location.users/'fiyat_alarmlari.json';private.write_text('{"secret":"private"}')
         runtime=self.location.runtime/'ana_motor_durum.json';runtime.write_text('{"internal":true}')

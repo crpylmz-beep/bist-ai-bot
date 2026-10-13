@@ -220,8 +220,8 @@ class AdapterTests(unittest.TestCase):
 
     def test_bounded_full_batch_preserves_other_stocks_and_retries_failures(self):
         adapter=self.adapter();adapter.batch_size=2
-        path=self.root/'live.json';path.write_text(json.dumps({'hisseler':[{'sembol':'KEEP','fiyat':10}]}))
-        with patch.object(adapter.bot,'DATA_FILE',str(path)),patch.object(adapter.bot,'bist_hisseleri_getir',return_value=['AAA','BBB','CCC']), \
+        path=self.root/'bist_data.json';path.write_text(json.dumps({'hisseler':[{'sembol':'KEEP','fiyat':10}]}))
+        with patch.object(adapter.bot,'DATA_FILE',str(path)),patch('pay_evreni.symbols',return_value=['AAA','BBB','CCC']), \
              patch.object(adapter.live,'tek_hisse_guncelle',side_effect=lambda stock:(stock,{'sembol':stock,'fiyat':100,'karar':'AL'}) if stock!='BBB' else (stock,None)), \
              patch.object(adapter.bot,'web_verisi_kaydet') as write,patch.object(adapter,'market_context',return_value={}) as market:
             from gorev_hatalari import TaskIssue

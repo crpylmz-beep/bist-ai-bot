@@ -19,6 +19,8 @@ from kullanici_kayitlari import atomic_json
 from veri_yollari import paths
 from gorev_hatalari import describe,public_issue,TaskIssue,log_source,diagnostics
 
+from gorev_hatalari import quote_diagnostics
+
 ROOT = Path(__file__).resolve().parent
 ISTANBUL = ZoneInfo('Europe/Istanbul')
 DEFAULTS = {'bootstrap':30, 'kap':60, 'macro':120, 'alarm':30, 'push':20,
@@ -87,6 +89,7 @@ def health_snapshot(directory=None):
                 tasks[name] = {key: task[key] for key in ('status', 'last_success', 'started_at', 'failures', 'retry_in_seconds') if key in task}
                 if task.get('last_error'):tasks[name]['last_error']=public_issue(task['last_error'])
                 if task.get('diagnostics'):tasks[name]['diagnostics']=diagnostics(task['diagnostics'])
+                if name=='quote_refresh' and task.get('quote_data'):tasks[name]['quote_data']=quote_diagnostics(task['quote_data'])
         result = {'motor_durumu': data.get('motor_durumu', 'UNKNOWN'), 'healthy': healthy,
                   'worker_status': status, 'heartbeat_age_seconds': round(age, 1),
                   'updated_at': data['updated_at'], 'tasks': tasks}
@@ -104,6 +107,16 @@ def health_snapshot(directory=None):
                     result['news_sources'][name]={'status':status,'code':('NONE' if row.get('code')=='NONE' else public_issue(row)['code']),
                         **{key:max(0,min(row[key],10000)) for key in ('processed','ignored') if type(row.get(key)) is int},
                         'checked_at':str(row.get('checked_at',''))[:40]}
+        except (OSError,ValueError,TypeError,AttributeError):pass
+        try:
+            with ((Path(directory) if directory else runtime_dir())/'full_scan_coverage.json').open('rb') as stream:raw=stream.read(8193)
+            if len(raw)<=8192:
+                scan=json.loads(raw)
+                keys=('universe_count','processed','successful','verified_prices','current_prices','stale_prices','failed','unsupported','remaining')
+                result['full_scan_data']={key:max(0,min(scan[key],100000)) for key in keys if type(scan.get(key)) is int}
+                if type(scan.get('cycle_complete')) is bool:result['full_scan_data']['cycle_complete']=scan['cycle_complete']
+                at=datetime.fromisoformat(scan.get('updated_at',''))
+                if at.tzinfo is not None:result['full_scan_data']['updated_at']=at.isoformat()
         except (OSError,ValueError,TypeError,AttributeError):pass
         result.update({k:v for k,v in data.items() if k.startswith('last_') and isinstance(v,str) and k in {
             'last_'+name+suffix for name in DEFAULTS for suffix in ('','_check','_batch')}})
@@ -186,6 +199,7 @@ class AnaMotor:
                             self.state['last_close_quote_version']=QUOTE_VERSION
                     report=diagnostics(result.get('diagnostics')) if isinstance(result,dict) else {}
                     task_status=('OK_WITH_SKIPS' if report.get('successful') else 'SKIPPED') if report.get('skipped') else 'OK'
+                    if name=='quote_refresh' and result.get('market_closed'):task_status='LAST_SESSION' if result.get('coverage') else 'SKIPPED'
                     self.state['tasks'][name] = {'status':task_status, 'last_success':current.isoformat(timespec='seconds'),**({'diagnostics':report} if report else {})}
                     if name == 'yarin_top10':
                         self.state['yarin_completed_day'] = task.scheduled_day
@@ -196,6 +210,9 @@ class AnaMotor:
                         summary=f" {result.get('sent',0)} gönderildi / {result.get('failed',0)} hata"
                     if report:
                         summary+=' '+ ' '.join(f'{key}={report.get(key,0)}' for key in ('processed','successful','skipped','unsupported','failed','tls_errors','http_errors','response_too_large','systemic_errors'))
+                    if name=='quote_refresh':
+                        summary+=' '+ ' '.join(f'{key}={result.get(key,0)}' for key in ('universe_count','provider_valid','coverage','current_session_count','missing','delayed','stale','invalid'))
+                        self.state['tasks'][name]['quote_data']=quote_diagnostics(result)
                     if name != 'priority' or (result.get('diagnostics',{}).get('processed',0) if isinstance(result,dict) else result):
                         logging.info('[%s] %s %s%s', current.strftime('%H:%M:%S'), name.upper(),task_status, summary)
                     task.next_due = mono + task.interval
@@ -221,6 +238,7 @@ class AnaMotor:
                     self.state['son_hata'] = detail
                     status='DEGRADED' if progressed or site_isolated or (systemic and error.completed>0) else 'RETRYING' if issue['category'] in ('REMOTE','SOURCE_DATA') or issue['code'] in ('STORAGE_PENDING','STORAGE_SHUTDOWN') else 'ERROR'
                     self.state['tasks'][name] = {'status':status, 'failures':task.failures, 'retry_in_seconds':delay, 'completed':error.completed if isinstance(error,TaskIssue) else 0, **detail,**({'diagnostics':error.details} if isinstance(error,TaskIssue) and error.details else {})}
+                    if name=='quote_refresh' and getattr(error,'quote_data',None):self.state['tasks'][name]['quote_data']=quote_diagnostics(error.quote_data)
                     logging.warning('[%s] %s %s code=%s category=%s retry=%ss',current.strftime('%H:%M:%S'),name.upper(),status,issue['code'],issue['category'],delay)
                     if not isinstance(error,TaskIssue):log_source(error,'TASK')
                     # Stack locations only: never format exception args or source lines containing secrets.

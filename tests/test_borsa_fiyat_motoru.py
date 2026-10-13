@@ -23,7 +23,7 @@ class QuoteEngineTests(unittest.TestCase):
         return {'last':price,'prev_close':previous,'timestamp':(at or self.now-timedelta(seconds=30)).timestamp()}
     def engine(self,quotes,symbols=None):
         stream=FakeStream(quotes)
-        engine=BorsaFiyatMotoru(lambda:symbols or list(quotes),self.root,lambda:stream,lambda:self.now)
+        engine=BorsaFiyatMotoru(lambda:symbols or list(quotes),self.root,lambda:stream,lambda:self.now,history_fetcher=lambda _:None)
         self.addCleanup(engine.close)
         return engine,stream
     def test_same_provider_price_and_previous_close(self):
@@ -71,7 +71,7 @@ class QuoteEngineTests(unittest.TestCase):
         self.now=datetime(2026,10,17,12,tzinfo=IST)
         engine,stream=self.engine({'AAA':self.quote()})
         self.assertTrue(engine.round()['market_closed']);self.assertEqual(stream.connects,0)
-        self.assertFalse(engine.path.exists())
+        self.assertEqual(json.loads(engine.path.read_text())['status'],'NO_DATA')
     def test_old_update_cannot_overwrite(self):
         engine,stream=self.engine({'AAA':self.quote()});engine.round()
         stream.quotes['AAA']=self.quote(price=6,at=self.now-timedelta(minutes=5))
@@ -89,7 +89,7 @@ class QuoteEngineTests(unittest.TestCase):
         from web_server import create_server
         location=DataPaths({'BIST_DATA_DIR':str(self.root/'volume')});location.ensure()
         stream=FakeStream({'GENKM':self.quote()})
-        engine=BorsaFiyatMotoru(lambda:['GENKM'],location.public,lambda:stream,lambda:self.now)
+        engine=BorsaFiyatMotoru(lambda:['GENKM'],location.public,lambda:stream,lambda:self.now,history_fetcher=lambda _:None)
         self.addCleanup(engine.close);engine.round()
         server=create_server(port=0,data_paths=location)
         thread=threading.Thread(target=server.serve_forever,daemon=True);thread.start()
@@ -100,8 +100,10 @@ class QuoteEngineTests(unittest.TestCase):
             self.assertAlmostEqual(saved['hisseler'][0]['gunluk_degisim'],-2/3)
         finally:server.shutdown();server.server_close();thread.join()
     def test_close_is_saved_without_history_writes(self):
+        engine,stream=self.engine({'AAA':self.quote()});engine.round()
         self.now=datetime(2026,10,13,19,tzinfo=IST)
-        engine,_=self.engine({'AAA':self.quote(at=self.now.replace(hour=18,minute=10))});engine.round()
+        stream.quotes['AAA']=self.quote(at=self.now.replace(hour=18,minute=10))
+        engine.round()
         row=json.loads(engine.path.read_text())['hisseler'][0]
         self.assertEqual(row['fiyat_turu'],'SESSION_CLOSE')
         self.assertAlmostEqual(row['gunluk_degisim'],-2/3)
@@ -109,10 +111,10 @@ class QuoteEngineTests(unittest.TestCase):
         from requests.exceptions import ConnectionError
         engine,stream=self.engine({'AAA':self.quote()});engine.round()
         stream.is_connected=False
-        with self.assertRaises(ConnectionError):engine.round()
+        self.assertEqual(engine.round()['issues'][0]['code'],'NETWORK_CONNECTION')
         self.assertEqual(engine.rows['AAA']['fiyat'],7.45)
         self.now+=timedelta(minutes=10)
-        with self.assertRaises(ConnectionError):engine.round()
+        self.assertEqual(engine.round()['issues'][0]['code'],'NETWORK_CONNECTION')
         self.assertIsNone(engine.stream)
         engine.round();self.assertEqual(stream.connects,2)
     def test_scheduler_quote_failure_does_not_replace_other_jobs(self):

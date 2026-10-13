@@ -14,6 +14,9 @@ from borsapy.exceptions import (APIError, AuthenticationError, RateLimitError,
     DataNotAvailableError, TickerNotFoundError, InvalidPeriodError, InvalidIntervalError)
 
 ERRORS={
+ 'PUBLIC_JSON_CORRUPT':('STORAGE','Canlı JSON bozuk; asıl dosya korundu, yeniden üretilen görünüm ayrı dosyada.',True),
+ 'QUOTE_NO_DATA':('SOURCE_DATA','Henüz doğrulanmış fiyat alınamadı.',True),
+ 'QUOTE_STALE':('SOURCE_DATA','Fiyatlar son doğrulanmış seansa ait; güncel fiyat kapsamı eksik.',True),
  'SOURCE_ACCESS_RESTRICTED':('SOURCE_DATA','Haber kaynağı erişim koşulları nedeniyle işlenmedi.',True),
  'SOURCE_ROBOTS_DENIED':('SOURCE_DATA','Haber kaynağı robots.txt politikasına göre işlenmedi.',True),
  'SOURCE_INVALID_FEED':('SOURCE_DATA','Haber kaynağı geçerli RSS sağlamadı.',True),
@@ -73,6 +76,16 @@ def diagnostics(value):
     result['reasons']=[{'symbol':row['symbol'],'reason':public_issue(row.get('reason') if isinstance(row.get('reason'),dict) else row)}
         for row in rows[:25] if isinstance(row,dict)
         and isinstance(row.get('symbol'),str) and re.fullmatch(r'[A-Z0-9]{2,12}',row['symbol'])]
+    return result
+
+
+def quote_diagnostics(value):
+    if not isinstance(value,dict):return {}
+    keys=('universe_count','provider_valid','coverage','current_session_count','missing','delayed','stale','invalid','unconfirmed_close')
+    result={key:max(0,min(value[key],100000)) for key in keys if type(value.get(key)) is int}
+    if value.get('mode') in ('OPEN','CLOSED'):result['mode']=value['mode']
+    if value.get('status') in ('CURRENT','LAST_SESSION','PARTIAL','DELAYED','NO_DATA'):result['status']=value['status']
+    if isinstance(value.get('expected_session'),str) and re.fullmatch(r'\d{4}-\d{2}-\d{2}',value['expected_session']):result['expected_session']=value['expected_session']
     return result
 
 
