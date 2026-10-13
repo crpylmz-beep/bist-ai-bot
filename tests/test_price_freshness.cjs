@@ -1,0 +1,18 @@
+const assert=require('node:assert/strict');
+const fs=require('node:fs'),vm=require('node:vm');
+const html=fs.readFileSync(require('node:path').join(__dirname,'../webapp/index.html'),'utf8');
+const start=html.indexOf('function mergeFreshStockPrice');
+const end=html.indexOf('\nlet tumVeriler',start);
+const ctx={Date,Number};vm.createContext(ctx);vm.runInContext(html.slice(start,end),ctx);
+const merge=ctx.mergeFreshStockPrice;
+const base={fiyat:7.45,degisim:2,fiyat_zamani:'2026-10-13T18:10:00+03:00'};
+const old={fiyat:7.43,degisim:1,fiyat_zamani:'2026-10-13T17:55:00+03:00',gun_ici_puan:80};
+assert.equal(merge(base,old).fiyat,7.45);
+assert.equal(merge(base,old).degisim,2);
+assert.equal(merge(base,old).gun_ici_puan,80);
+assert.equal(merge(base,{fiyat:7.4}).fiyat,7.45);
+assert.equal(merge({fiyat:7.45},old).fiyat,7.45);
+assert.equal(merge(base,{fiyat:7.5,fiyat_zamani:'2026-10-14T10:05:00+03:00'}).fiyat,7.5);
+assert.equal(base.fiyat,7.45);
+assert.equal(merge({...base,fiyat_turu:'SESSION_CLOSE'}, {...old,fiyat_zamani:'2026-10-13T18:15:00+03:00'}).fiyat,7.45);
+console.log('price freshness PASS');

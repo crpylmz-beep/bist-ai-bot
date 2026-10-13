@@ -1260,6 +1260,8 @@ def hisse_analiz_hesapla(
         sonuc = {
             "sembol": sembol,
             "fiyat": fiyat,
+            **__import__('fiyat_guncelligi').price_metadata(veri.index[-1], daily=True,
+                now=datetime.now(ZoneInfo('Europe/Istanbul'))),
             "degisim": gunluk_degisim,
             "yuksek": yuksek,
             "dusuk": dusuk,
@@ -1823,6 +1825,19 @@ def web_verisi_kaydet(sonuclar, tum_semboller=None):
 
     try:
 
+        cached_document = {}
+        try:
+            with open(DATA_FILE, encoding='utf-8') as previous_file:
+                cached_document = json.load(previous_file)
+        except (OSError, ValueError):
+            pass
+        if isinstance(cached_document, list):
+            cached_document = {'hisseler': cached_document}
+        elif not isinstance(cached_document, dict):
+            cached_document = {}
+        previous_prices = {row.get('sembol'): row for row in cached_document.get('hisseler', [])
+                           if isinstance(row, dict)}
+
         web_hisseler = []
 
         for hisse in sonuclar:
@@ -1860,6 +1875,9 @@ def web_verisi_kaydet(sonuclar, tum_semboller=None):
                     "veri_mesaji": "Analiz verisi su anda alinamadi."
                 })
 
+        from fiyat_guncelligi import preserve_newer_price
+        web_hisseler = [preserve_newer_price(previous_prices.get(row.get('sembol'), {}), row)
+                       for row in web_hisseler]
         web_hisseler.sort(
             key=lambda x: str(x.get("sembol", "")).upper()
         )
@@ -4308,6 +4326,7 @@ def gun_ici_analiz_hesapla(sembol, veri=None):
         sonuc = {
             "sembol": sembol,
             "fiyat": fiyat,
+            **__import__('fiyat_guncelligi').price_metadata(bugun.index[-1]),
             "gun_ici_puan": puan,
             "teknik_gun_ici_puan": teknik_gun_ici_puan,
             "haber_puani": haber_puani,

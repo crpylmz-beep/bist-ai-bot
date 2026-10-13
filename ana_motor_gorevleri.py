@@ -25,6 +25,9 @@ def check_configuration():
 
 class WorkerTasks:
     def __init__(self):
+        from ana_motor import after_close
+        created=istanbul_now()
+        self._close_scan_day=created.date().isoformat() if after_close(created) else None
         import bist_bot
         import canli_motor
         self.bot, self.live = bist_bot, canli_motor
@@ -133,6 +136,10 @@ class WorkerTasks:
         return stock,row,(issues[0] if issues else public_issue({'code':'ANALYSIS_NO_RESULT'})) if not row else None
 
     def full_scan(self):
+        from ana_motor import after_close
+        current=istanbul_now()
+        if after_close(current) and hasattr(self,'_close_scan_day') and self._close_scan_day!=current.date().isoformat():
+            self.cursor=0;self._close_scan_day=current.date().isoformat()
         if not self.symbols or self.cursor>=len(self.symbols):
             self.symbols=self.bot.bist_hisseleri_getir();self.cursor=0;self.cycle_successful=0
             if not self.symbols:raise TaskIssue({'code':'EMPTY_UNIVERSE'})
@@ -158,7 +165,8 @@ class WorkerTasks:
                 row['canli_guncelleme']=current.get('updated_at') or current.get('guncelleme')
         for row in successful:
             row['canli_guncelleme']=self.live.simdi()
-            merged[row['sembol']]=row
+            from fiyat_guncelligi import preserve_newer_price
+            merged[row['sembol']]=preserve_newer_price(merged.get(row['sembol'],{}),row)
         self.bot.web_verisi_kaydet(list(merged.values()),self.symbols)
         from veri_yollari import paths
         if not self.bot.tahminleri_kaydet(successful,len(self.symbols),kaynak='GUNLUK_TARAMA',

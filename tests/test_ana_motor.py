@@ -70,7 +70,7 @@ class CoordinatorTests(unittest.TestCase):
 
     def test_closed_market_weekend_and_holiday(self):
         callback=Mock();self.current=datetime(2026,10,6,19,tzinfo=engine.ISTANBUL)
-        motor=self.motor({'intraday_top10':callback,'full_scan':callback});motor.tick();callback.assert_not_called()
+        motor=self.motor({'intraday_top10':callback});motor.tick();callback.assert_not_called()
         self.current=datetime(2026,10,10,12,tzinfo=engine.ISTANBUL);motor.tick();callback.assert_not_called()
         self.current=datetime(2026,10,6,12,tzinfo=engine.ISTANBUL)
         self.assertFalse(engine.market_open(self.current,lambda day:True))

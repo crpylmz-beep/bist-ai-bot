@@ -413,7 +413,7 @@ def oncelikli_hisse_guncelle(
 
             if kod == sembol:
                 yeni_liste.append(
-                    dict(sonuc)
+                    __import__('fiyat_guncelligi').preserve_newer_price(h,sonuc)
                 )
                 bulundu = True
             else:

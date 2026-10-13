@@ -178,6 +178,8 @@ class AnaMotor:
                         self.state['last_'+name+('_check' if name in ('kap','macro','alarm','push','company_site') else '')] = current.isoformat(timespec='seconds')
                     if name == 'full_scan' and isinstance(result,dict):
                         self.state['last_full_scan_batch']=current.isoformat(timespec='seconds')
+                        if result.get('cycle_complete') and task.scheduled_day==current.date().isoformat() and after_close(current,self.holiday):
+                            self.state['last_close_scan_day']=current.date().isoformat()
                     report=diagnostics(result.get('diagnostics')) if isinstance(result,dict) else {}
                     task_status=('OK_WITH_SKIPS' if report.get('successful') else 'SKIPPED') if report.get('skipped') else 'OK'
                     self.state['tasks'][name] = {'status':task_status, 'last_success':current.isoformat(timespec='seconds'),**({'diagnostics':report} if report else {})}
@@ -245,7 +247,10 @@ class AnaMotor:
                 if name=='intraday_signals':
                     from gunluk_al_sat import enabled
                     if not enabled():continue
-                if name in ('intraday_top10','full_scan','market_context','intraday_signals') and not market_open(current,self.holiday):
+                if name=='full_scan' and not market_open(current,self.holiday):
+                    if not after_close(current,self.holiday) or self.state.get('last_close_scan_day')==current.date().isoformat():
+                        continue
+                if name in ('intraday_top10','market_context','intraday_signals') and not market_open(current,self.holiday):
                     if name=='intraday_signals' and mono>=self._intraday_closed_log_due:
                         logging.info('[INTRADAY_SIGNAL] market_closed skip')
                         self._intraday_closed_log_due=mono+max(INTRADAY_SIGNAL_INTERVAL,task.interval)
@@ -255,6 +260,8 @@ class AnaMotor:
                     if not after_close(current,self.holiday) or self.state['yarin_completed_day'] == day or self.snapshot_exists(day):
                         continue
                     task.scheduled_day=day
+                if name == 'full_scan':
+                    task.scheduled_day=current.date().isoformat() if after_close(current,self.holiday) else None
                 if name in TECHNICAL and any(t.future for n,t in self.tasks.items() if n in TECHNICAL):
                     continue
                 previous=self.state['tasks'].get(name,{})

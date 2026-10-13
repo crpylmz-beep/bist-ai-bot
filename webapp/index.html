@@ -732,6 +732,24 @@ body{
 
 
 <script>
+// Provider observation time, not JSON file rewrite time, decides price precedence.
+function mergeFreshStockPrice(base,intraday){
+    if(!intraday)return base;
+    const value={...base,...intraday};
+    const a=Date.parse(base.fiyat_zamani || '');
+    const b=Date.parse(intraday.fiyat_zamani || '');
+    const closeWins=base.fiyat_turu==='SESSION_CLOSE' && Number.isFinite(a) && Number.isFinite(b)
+        && new Date(a).toLocaleDateString('sv-SE',{timeZone:'Europe/Istanbul'})
+           ===new Date(b).toLocaleDateString('sv-SE',{timeZone:'Europe/Istanbul'});
+    if(closeWins || !Number.isFinite(a) || !Number.isFinite(b) || b<=a){
+        ['fiyat','degisim','gunluk_degisim','price','change','fiyat_zamani',
+         'fiyat_kaynagi','fiyat_turu','fiyat_alinma_zamani'].forEach(key=>{
+            if(Object.prototype.hasOwnProperty.call(base,key))value[key]=base[key];
+            else delete value[key];
+        });
+    }
+    return value;
+}
 
 let tumVeriler = [];
 let oncekiSayfa = "home";
@@ -803,7 +821,7 @@ async function gercekVeriyiYukle(){
                     const gunIci = gunIciMap.get(kod);
 
                     return gunIci
-                        ? {...hisse, ...gunIci}
+                        ? mergeFreshStockPrice(hisse, gunIci)
                         : hisse;
                 });
 
