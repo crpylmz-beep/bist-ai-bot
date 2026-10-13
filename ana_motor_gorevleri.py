@@ -226,6 +226,17 @@ class WorkerTasks:
         # Avoid freezing an empty or severely incomplete provider outage result.
         if len(rows)<max(1,int(len(symbols)*0.8)):
             raise RuntimeError('Kapanış taraması eksik; snapshot üretilmedi')
+        # Publish verified closing-session rows to the same public file used by
+        # the home screen. Full scans are market-gated after 18:10, so without
+        # this step the UI can keep showing an earlier intraday price.
+        public_path=Path(self.bot.DATA_FILE)
+        public_data=json.loads(public_path.read_text(encoding='utf-8')) if public_path.exists() else {}
+        merged={item['sembol']:item for item in public_data.get('hisseler',[])
+                if isinstance(item,dict) and item.get('sembol')}
+        for row in rows:
+            row['canli_guncelleme']=self.live.simdi()
+            merged[row['sembol']]=row
+        self.bot.web_verisi_kaydet(list(merged.values()),symbols)
         if not self.bot.yarin_top10_kilitli_kaydet(rows,len(symbols),pozitif_kapanis=True):
             raise RuntimeError('Snapshot kaydedilemedi')
         self.ai_context(rows)
